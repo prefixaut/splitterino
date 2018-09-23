@@ -1,0 +1,45 @@
+{
+  "name": "splitterino",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "build:electron": "vue-cli-service build:electron",
+    "serve:electron": "vue-cli-service serve:electron",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "aevum": "^2.0.0",
+    "performance-now": "^2.1.0",
+    "vue": "^2.5.17",
+    "vue-class-component": "^6.0.0",
+    "vue-property-decorator": "^7.0.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.0.3",
+    "@vue/cli-plugin-eslint": "^3.0.3",
+    "@vue/cli-plugin-typescript": "^3.0.3",
+    "@vue/cli-service": "^3.0.3",
+    "@vue/eslint-config-typescript": "^3.0.3",
+    "electron": "^2.0.2",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-plugin-prettier": "^2.6.2",
+    "eslint-plugin-vue": "^4.7.1",
+    "typescript": "^3.0.0",
+    "vue-cli-plugin-electron-builder": "^1.0.0-rc.3",
+    "vue-template-compiler": "^2.5.17"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ],
+  "main": "dist_electron/bundled/background.js"
+}
