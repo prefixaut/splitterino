@@ -8,6 +8,10 @@ export interface Segment {
      */
     time: number;
     /**
+     * The time of how long the timer was paused in this segment
+     */
+    pauseTime: number;
+    /**
      * The time of the personal best in milliseconds
      */
     personalBest: number;
