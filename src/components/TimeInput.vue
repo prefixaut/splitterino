@@ -3,51 +3,51 @@
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
         <div class="content-wrapper">
-            <number-input
+            <spl-number-input
                 class="part hour"
                 :value="hour"
                 :min="0"
                 :max="99999"
                 @change="onChange($event, 'hour')"
                 @focus="activate"
-                @blur="deactivate">
-            </number-input>
+                @blur="deactivate"
+            />
 
             <span class="colon">:</span>
 
-            <number-input
+            <spl-number-input
                 class="part"
                 :value="minute"
                 :min="0"
                 :max="59"
                 @change="onChange($event, 'minute')"
                 @focus="activate"
-                @blur="deactivate">
-            </number-input>
+                @blur="deactivate"
+            />
 
             <span class="colon">:</span>
 
-            <number-input
+            <spl-number-input
                 class="part"
                 :value="second"
                 :min="0"
                 :max="59"
                 @change="onChange($event, 'second')"
                 @focus="activate"
-                @blur="deactivate">
-            </number-input>
+                @blur="deactivate"
+            />
 
             <span class="dot">.</span>
 
-            <number-input
+            <spl-number-input
                 class="part"
                 :value="milli"
                 :min="0"
                 :max="999"
                 @change="onChange($event, 'milli')"
                 @focus="activate"
-                @blur="deactivate">
-            </number-input>
+                @blur="deactivate"
+            />
         </div>
     </div>
 </template>

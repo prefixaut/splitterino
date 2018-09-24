@@ -19,21 +19,23 @@
                             <input @value="segment.name" @input="formChange(index, 'name', $event)" @focus="setFocus(index)" @blur="removeFocus" />
                         </div>
 
-                        <time-input
+                        <spl-time-input
                             class="time pb"
                             label="Personal Best"
                             :value="segment.personalBest"
                             @change="segment.personalBest = $event"
                             @focus="setFocus(index)"
-                            @blur="removeFocus"/>
+                            @blur="removeFocus"
+                        />
 
-                        <time-input
+                        <spl-time-input
                             class="time ob"
                             label="Overall Best"
                             :value="segment.overallBest"
                             @change="segment.overallBest = $event"
                             @focus="setFocus(index)"
-                            @blur="removeFocus" />
+                            @blur="removeFocus"
+                        />
                     </div>
 
                     <div class="delete-trigger" @click="remove(index)">

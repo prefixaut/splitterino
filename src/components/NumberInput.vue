@@ -17,14 +17,6 @@
         />
         <span class="visible-content" @click="activate(true)" v-show="!active">{{ content }}</span>
       </div>
-      <div v-if="spinners" class="spinner-wrapper">
-        <div class="spinner up" :class="{ disabled: !enableUp }" @click="up">
-          <ui-icon>keyboard_arrow_up</ui-icon>
-        </div>
-        <div class="spinner down" :class="{ disabled: !enableDown }" @click="down">
-          <ui-icon>keyboard_arrow_down</ui-icon>
-        </div>
-      </div>
     </div>
   </div>
 </template>

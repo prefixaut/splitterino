@@ -1,7 +1,10 @@
 <template>
     <div v-if="typeof segments !== 'undefined' && segments !== null && segments.length > 0" class="splits-root" :class="['state-' + state]">
         <div class="splits">
-            <div v-for="(segment, index) in segments" :key="index" :class="[
+            <div
+                v-for="(segment, index) in segments"
+                :key="index"
+                :class="[
                     'split',
 
                     {'visible':
@@ -23,7 +26,8 @@
                     {'final': index === segments.length - 1},
                     {'is-personal-best': segment.hasNewPersonalBest},
                     {'is-overall-best': segment.hasNewOverallBest}
-                ]">
+                ]"
+            >
                 <span class="name">{{ segment.name }}</span>
                 <span class="seperator"></span>
                 <span class="time">{{ segment.time | aevum }}</span>
@@ -45,108 +49,38 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import * as now from 'performance-now';
 import { mapState } from 'vuex';
-import { Events, Emitter } from '../events';
 
-// Possible states of the Splits
-export const STATE_STOPPED = 'STOPPED';
-export const STATE_RUNNING = 'RUNNING';
-export const STATE_PAUSED = 'PAUSED';
-export const STATE_FINISHED = 'FINISHED';
+import { Segment } from '@/common/segments';
 
-/*
-  SEGMENT
-  ---------------------------
-
-  - name: Name of the Split which is being displayed
-  - startTime: Internal starting time of the segment
-  - time: Time in milliseconds for this segment
-
-  - personalBest: Personal Best time in milliseconds
-  - hasNewPersonalBest: If the segment has a new personal-best. The Object must have a previosPersonalBest property
-  - previousPersonalBest: Time of the previous personal-best
-
-  - overallBest: Overall Best time in milliseconds
-  - hasNewOverallBest: If the segment has a new overall-best. The Object must have a previousOverallBest property
-  - previousOverallBest: Time of the previous overall-best
-
-  - done: If the segment has been passed (Used to know if it should be resetted)
-  - skipped: If the segment has been skipped
-*/
+enum State {
+    /**
+     * When the Splits are in a _clean_ state.
+     * No timer is running and it's currently idle.
+     */
+    STOPPED,
+    /**
+     * When the timer is running
+     */
+    RUNNING,
+    /**
+     * When the user/script paused the timer
+     */
+    PAUSED,
+    /**
+     * When the last segment has been finished.
+     * This state remains in this until the user splits again which _confirms_
+     * the state.
+     * On confirmation the content is getting saved, cleaned up and set to
+     * {@link STOPPED} again to be able to start a new run.
+     */
+    FINISHED,
+}
 
 export default {
     created: function() {
-        // Setup Global-Hotkeys
-        Emitter.registerHandler(
-            Events.splits.start,
-            payload =>
-                new Promise((resolve, reject) => {
-                    this.start().then(() => {
-                        resolve({
-                            state: this.state,
-                            segments: this.segments
-                        });
-                    });
-                })
-        );
-        Emitter.registerHandler(
-            Events.splits.split,
-            payload =>
-                new Promise((resolve, reject) => {
-                    if (this.split()) {
-                        resolve({
-                            state: this.state,
-                            segments: this.segments
-                        });
-                    } else {
-                        reject();
-                    }
-                })
-        );
-        Emitter.registerHandler(
-            Events.splits.pause,
-            payload =>
-                new Promise((resolve, reject) => {
-                    if (this.pause()) {
-                        resolve({
-                            state: this.state,
-                            segments: this.segments
-                        });
-                    } else {
-                        reject();
-                    }
-                })
-        );
-        Emitter.registerHandler(
-            Events.splits.unpause,
-            payload =>
-                new Promisse((resolve, reject) => {
-                    if (this.unpause()) {
-                        resolve({
-                            state: this.state,
-                            segments: this.segments
-                        });
-                    } else {
-                        reject();
-                    }
-                })
-        );
-        Emitter.registerHandler(
-            Events.splits.reset,
-            payload =>
-                new Promise((resolve, reject) => {
-                    if (this.reset()) {
-                        resolve({
-                            state: this.state,
-                            segments: this.segments
-                        });
-                    } else {
-                        reject();
-                    }
-                })
-        );
     },
     computed: {
         ...mapState('Segments', {
@@ -155,14 +89,7 @@ export default {
     },
     data() {
         return {
-            /* Status the splits are currently in
-             * STATE_STOPPED - Completely reseted and clean setup.
-             * STATE_RUNNING - Time is currently STATE_RUNNING
-             * STATE_FINISHED - Last segement just got finished, but still running in the background
-             *      in case of wrong splitting
-             * STATE_PAUSED - It's paused, time is frozen and will be ignored
-            */
-            state: STATE_STOPPED,
+            state: State.STOPPED,
 
             // Time when the Timer started
             // Only used for internal calculations
@@ -192,25 +119,25 @@ export default {
     methods: {
         start() {
             let promise = Promise.resolve();
-            if (this.state === STATE_FINISHED) {
+            if (this.state === State.FINISHED) {
                 promise = this.reset();
             }
-            if (this.state !== STATE_STOPPED) {
+            if (this.state !== State.STOPPED) {
                 return promise.then(() => Promise.reject(new Error()));
             }
             const segment = this.segments[this.currentSegment];
             this.currentSegment = this.totalPauseTime = segment.pauseTime = 0;
             this.totalStartTime = segment.startTime = now() + this.startDelay;
-            this.state = STATE_RUNNING;
+            this.state = State.RUNNING;
             this.startTimer();
             return promise.then(() => {});
         },
         split() {
             switch (this.state) {
-                case STATE_FINISHED:
+                case State.FINISHED:
                     this.reset();
                     return true;
-                case STATE_RUNNING:
+                case State.RUNNING:
                     break;
                 default:
                     return false;
@@ -261,15 +188,15 @@ export default {
             return true;
         },
         pause() {
-            if (this.state !== STATE_RUNNING) {
+            if (this.state !== State.RUNNING) {
                 return false;
             }
-            this.state = STATE_PAUSED;
+            this.state = State.PAUSED;
             this.pauseStartTime = now();
             return true;
         },
         unpause() {
-            if (this.state !== STATE_PAUSED) {
+            if (this.state !== State.PAUSED) {
                 return false;
             }
             const pause = now() - this.pauseStartTime;
@@ -277,12 +204,12 @@ export default {
             segment.pauseTime += pause;
             this.totalPauseTime += pause;
             this.pauseStartTime = 0;
-            this.state = STATE_RUNNING;
+            this.state = State.RUNNING;
             this.startTimer();
             return true;
         },
         revertSplit() {
-            if (this.state !== STATE_RUNNING || this.currentSegment < 1) {
+            if (this.state !== State.RUNNING || this.currentSegment < 1) {
                 return false;
             }
 
@@ -311,7 +238,7 @@ export default {
         },
         skipSplit() {
             if (
-                this.state !== STATE_RUNNING ||
+                this.state !== State.RUNNING ||
                 this.currentSegment + 1 >= this.segments.length
             ) {
                 return false;
@@ -329,12 +256,12 @@ export default {
             return true;
         },
         finish() {
-            if (this.state !== STATE_RUNNING) {
+            if (this.state !== State.RUNNING) {
                 return false;
             }
 
-            this.state = STATE_FINISHED;
-            this.segments.forEach(segment => {
+            this.state = State.FINISHED;
+            (this.segments as Segment[]).forEach(segment => {
                 segment.previousPersonalBest = segment.personalBest;
                 segment.previousOverallBest = segment.overallBest;
             });
@@ -342,33 +269,35 @@ export default {
             return true;
         },
         reset() {
-            if (this.state === STATE_STOPPED) {
-                return Promise.reject();
+            if (this.state === State.STOPPED) {
+                return Promise.reject(new Error());
             }
             if (
                 (!this.hasOverallBest && !this.hasPersonalBest) ||
-                this.state === STATE_FINISHED
+                this.state === State.FINISHED
             ) {
                 this.doApplyingReset();
                 return Promise.resolve();
             }
 
             this.pause();
-
+            return Promise.resolve();
+/*
             return Emitter.request(Events.modals.open, {
                 // TODO: What do I actually send?
             }).then(response => {
                 // TODO: What do I expect to receive?
             });
+            */
         },
         doApplyingReset() {
             this.currentSegment = 0;
-            this.state = STATE_STOPPED;
-            this.totalStartTime = undefined;
+            this.state = State.STOPPED;
+            this.totalStartTime = 0;
             this.totalTime = 0;
             this.totalPauseTime = 0;
 
-            this.segments.forEach(segment => {
+            (this.segments as Segment[]).forEach(segment => {
                 segment.skipped = false;
                 segment.done = false;
 
@@ -385,11 +314,11 @@ export default {
         },
         doDiscardingReset() {
             this.currentSegment = 0;
-            this.state = STATE_STOPPED;
-            this.totalStartTime = undefined;
+            this.state = State.STOPPED;
+            this.totalStartTime = 0;
             this.totalPauseTime = 0;
 
-            this.segments.forEach(segment => {
+            (this.segments as Segment[]).forEach(segment => {
                 segment.skipped = false;
                 segment.startTime = undefined;
                 segment.time = undefined;
@@ -412,20 +341,21 @@ export default {
             });
         },
         startTimer() {
+            const that = this;
             const func = function() {
-                if (this.state !== STATE_RUNNING) {
+                if (that.state !== State.RUNNING) {
                     return;
                 }
 
-                this.totalTime =
-                    now() - this.totalStartTime - this.totalPauseTime;
+                that.totalTime =
+                    now() - that.totalStartTime - that.totalPauseTime;
 
-                const segment = this.segments[this.currentSegment];
+                const segment = that.segments[that.currentSegment];
                 const s = now() - segment.startTime - segment.pauseTime;
                 segment.time = s;
 
                 setTimeout(func, 1);
-            }.bind(this);
+            }
             func();
         }
     }
