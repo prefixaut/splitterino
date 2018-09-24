@@ -1,8 +1,15 @@
+import Vue from 'vue';
+import Vuex, { Store } from 'vuex';
 import modules from './modules';
 
-export function SplitterinoVuexPlugin(vuex) {
-    vuex.registerModule('splitterino', {
-        namespaced: true,
-        modules
-    });
-}
+Vue.use(Vuex);
+
+export const store = new Store({
+    strict: true,
+    modules: {
+        splitterino: {
+            namespaced: true,
+            modules: { ...modules }
+        }
+    }
+});
