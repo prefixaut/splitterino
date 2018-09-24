@@ -1,0 +1,71 @@
+@import 'config';
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px; // Set REM
+    margin: 0; // Remove margin
+    user-select: none; // Make disable text-selection
+    font-family: 'Roboto', sans-serif;
+    color: $color-white;
+}
+
+body {
+    background: $color-black;
+    margin: 0;
+}
+
+// [ TYPOGRAPHY ]
+// -----------------------
+
+p, div, span  {
+    font-family: inherit;
+    color: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+h1 {
+    font-family: inherit;
+    color: inherit;
+    margin-top: 1rem;
+    margin-bottom: 1.8rem;
+    font-size: 2.2rem;
+}
+
+h2 {
+    font-family: inherit;
+    color: inherit;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+}
+
+h3 {
+    font-family: inherit;
+    color: inherit;
+    margin-top: 1rem;
+    margin-bottom: 1.8rem;
+    font-size: 1.6rem;
+}
+
+h4 {
+    font-family: inherit;
+    color: inherit;
+    margin-top: 1rem;
+    margin-bottom: 1.6rem;
+    font-size: 1.4rem;
+}
+
+// [ LAYOUT ]
+// -----------------------
+
+.container {
+    width: 100%;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+}
