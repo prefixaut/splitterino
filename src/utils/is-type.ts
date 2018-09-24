@@ -4,7 +4,7 @@ export function isType(item, type) {
             return type.toLowerCase() === 'any' ? true : typeof item === type;
         } else if (Array.isArray(type)) {
             type.forEach(i => {
-                if (this.isType(item, i)) {
+                if (isType(item, i)) {
                     return true;
                 }
             });

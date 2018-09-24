@@ -1,63 +1,85 @@
-import { isType } from './utils/is-type';
+import { isType } from './is-type';
+
+type Content = { [name: string]: any };
 
 export class Configuration {
+    private data: Content = {};
 
-    constructor(content) {
-        this._data = {};
-        this.setAll(content);
+    constructor(content?: Content) {
+        if (content) {
+            this.setAll(content);
+        }
     }
 
-    has(path, type) {
-        const split = path.split('.');
-        split.forEach(s => {
-            if (this._data.hasOwnProperty(s) && typeof this._data[s] !== 'undefined' && this._data[s] !== null) {
-                this._data = this._data[s];
+    has(path: string | string[], type?: string): boolean {
+        const split = this.toPath(path);
+
+        for (let splitPart in split) {
+            if (
+                this.data.hasOwnProperty(splitPart) &&
+                typeof this.data[splitPart] !== 'undefined' &&
+                this.data[splitPart] !== null
+            ) {
+                this.data = this.data[splitPart];
             } else {
                 return false;
             }
-        });
+        }
 
-        if (typeof type !== 'undefined' && type !== null) {
-            return isType(this._data, type);
+        if (type != null) {
+            return isType(this.data, type);
         } else {
             return true;
         }
     }
 
-    get(path, type, defaultValue) {
-        const split = path.split('.');
-        split.forEach(s => {
-            if (this._data.hasOwnProperty(s) && typeof this._data[s] !== 'undefined' && this._data[s] !== null) {
-                this._data = this._data[s];
+    get(path: string | string[], defaultValue: any = null, type?: string) {
+        const split = this.toPath(path);
+
+        for (let splitPart in split) {
+            if (
+                this.data.hasOwnProperty(splitPart) &&
+                typeof this.data[splitPart] == null
+            ) {
+                this.data = this.data[splitPart];
             } else {
                 return defaultValue;
             }
-        });
+        }
 
-        if (typeof type !== 'undefined' && type !== null) {
-            return isType(this._data, type) ? this._data : defaultValue;
+        if (type == null) {
+            return isType(this.data, type) ? this.data : defaultValue;
         } else {
-            return this._data;
+            return this.data;
         }
     }
 
-    getAll() {
-        return this._data;
+    getAll(): Content {
+        return this.data;
     }
 
-    clear() {
-        this._data = {};
+    clear(): void {
+        this.data = {};
     }
 
-    set(path, content) {
-        this._apply(this._data, path, content);
+    set(path, content): void {
+        this.apply(this.data, path, content);
     }
 
-    setAll(content) {
-        this._data = (typeof content === 'object' && content !== null) ? content : {};
+    setAll(content): void {
+        this.data =
+            typeof content === 'object' && content !== null ? content : {};
     }
 
-    _apply(object, path, content) {
+    private toPath(path: string | string[]): string[] {
+        if (typeof path === 'string') {
+            return path.includes('.') ? path.split('.') : [path];
+        }
+
+        return path;
+    }
+
+    private apply(object, path, content): void {
         if (typeof path === 'string') {
             path = path.split('.');
         }
@@ -67,7 +89,7 @@ export class Configuration {
             if (object[first] === null || typeof object[first] !== 'object') {
                 object[first] = {};
             }
-            this._apply(object[first], path, content);
+            this.apply(object[first], path, content);
         } else {
             object[path[0]] = content;
         }
