@@ -1,12 +1,18 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import Vue from 'vue';
+import Vuex from 'vuex';
+
+import { app, protocol, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import {
     createProtocol,
     installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib';
+
+import { config as storeConfig } from './store';
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 if (isDevelopment) {
     // Don't load any native (external) modules until the following line is run:
@@ -16,6 +22,38 @@ if (isDevelopment) {
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow: BrowserWindow;
 
+const clients: any[] = [];
+
+// Main instance of the Vuex-Store
+Vue.use(Vuex);
+const store = new Vuex.Store({
+    ...storeConfig,
+    plugins: [
+        store => {
+            store.subscribe((mutation, state) => {
+                Object.keys(clients).forEach(id => {
+                    clients[id].send('vuex-apply-mutation', mutation);
+                });
+            });
+        }
+    ]
+});
+
+// Listener to transfer the current state of the store
+ipcMain.on('vuex-connect', event => {
+    const windowId = BrowserWindow.fromWebContents(event.sender).id;
+    console.log('[background] vuex-connect', windowId);
+
+    clients[windowId] = event.sender;
+    event.returnValue = store.state;
+});
+
+// Listener to perform a delegate mutation on the main store
+ipcMain.on('vuex-mutate', (event, { type, payload }) => {
+    console.log('[background] vuex-mutate', type, payload);
+    store.dispatch(type, ...payload);
+});
+
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true });
 function createMainWindow() {
@@ -24,7 +62,8 @@ function createMainWindow() {
     if (isDevelopment) {
         // Load the url of the dev server if in development mode
         window.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-        if (!process.env.IS_TEST) window.webContents.openDevTools();
+        if (!process.env.IS_TEST)
+            window.webContents.openDevTools({ mode: 'detach' });
     } else {
         createProtocol('app');
         //   Load the index.html when not in development

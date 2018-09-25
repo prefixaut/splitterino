@@ -35,7 +35,7 @@ const state = {
 const mutations = {
     clearSegments(state) {
         state.elements = [];
-        return true;
+        return;
     },
     removeSegment(state, index) {
         if (
@@ -45,24 +45,24 @@ const mutations = {
             index < 0 ||
             state.elements.length < index
         ) {
-            return false;
+            return;
         }
         state.elements.splice(index, 1);
-        return true;
+        return;
     },
     addSegment(state, segment) {
         if (segment == null || typeof segment !== 'object') {
-            return false;
+            return;
         }
         if (!segment.hasOwnProperty('name')) {
-            return false;
+            return;
         }
         state.elements.push(segment);
-        return true;
+        return;
     },
     updateSegment(state, data) {
         if (data == null || typeof data !== 'object') {
-            return false;
+            return;
         }
         const index = data.index;
         const segment = data.segment || null;
@@ -74,30 +74,30 @@ const mutations = {
             index < 0 ||
             state.elements.length < index
         ) {
-            return false;
+            return;
         }
         if (segment == null || typeof segment !== 'object') {
-            return false;
+            return;
         }
         if (!segment.hasOwnProperty('name')) {
-            return false;
+            return;
         }
         state.elements[index] = Object.assign(state.elements[index], segment);
         return true;
     },
     updateAllSegments(state, segments) {
         if (!Array.isArray(segments)) {
-            return false;
+            return;
         }
         state.elements = segments;
-        return true;
+        return;
     }
 };
 
 const actions = {
     test: (context, args) => {
+        context.commit('updateAllSegments', [{name: 'yeet'}]);
     }
-    // TODO: Move mutitations to actions (delegate) + IO File update (If file exists)
 };
 
 export default {

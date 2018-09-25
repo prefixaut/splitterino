@@ -40,11 +40,12 @@
                 <span class="text">Total Time:</span>
                 <span>{{ totalTime | aevum }}</span>
             </p>
-            <button v-on:click="split()">{{ state !== 'stopped' ? 'Split' : 'Start' }}</button>
-            <button v-on:click="reset()">Reset</button>
-            <button v-on:click="pause()">{{ state === 'paused' ? 'Unpause' : 'Pause' }}</button>
-            <button v-on:click="skipSplit()">Skip Split</button>
-            <button v-on:click="revertSplit()">Revert Button</button>
+            <button @click="split()">{{ state !== 'stopped' ? 'Split' : 'Start' }}</button>
+            <button @click="reset()">Reset</button>
+            <button @click="pause()">{{ state === 'paused' ? 'Unpause' : 'Pause' }}</button>
+            <button @click="skipSplit()">Skip Split</button>
+            <button @click="revertSplit()">Revert Button</button>
+            <button @click="child">Spawn Child</button>
         </div>
     </div>
 </template>
@@ -54,6 +55,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import now from 'performance-now';
 import { mapState } from 'vuex';
+import { remote } from 'electron';
 
 import { Segment } from '../common/segment';
 
@@ -128,6 +130,15 @@ export default class Splits extends Vue {
     public hasOverallBest = false;
 
     @segmentsModule.State('elements') public segments: Segment[];
+
+    child() {
+        let child = new remote.BrowserWindow({
+            parent: remote.getCurrentWindow()
+        });
+        child.loadURL('http://localhost:8080');
+        if (!remote.process.env.IS_TEST) child.webContents.openDevTools();
+        child.show();
+    }
 
     start() {
         let promise = Promise.resolve();
