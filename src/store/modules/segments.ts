@@ -85,18 +85,18 @@ const mutations = {
         state.elements[index] = Object.assign(state.elements[index], segment);
         return true;
     },
-    updateAllSegments(state, segments) {
+    updateAllSegments(state, { segments }) {
         if (!Array.isArray(segments)) {
-            return;
+            return false;
         }
         state.elements = segments;
-        return;
+        return true;
     }
 };
 
 const actions = {
     test: (context, args) => {
-        context.commit('updateAllSegments', [{name: 'yeet'}]);
+        context.commit('updateAllSegments', { segments: [{ name: 'yeet' }] });
     }
 };
 
