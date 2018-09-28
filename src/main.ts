@@ -28,10 +28,9 @@ Vue.filter('aevum', value => {
     return formatter.format(value);
 });
 
-Vue.use(Vuex);
 Vue.config.productionTip = false;
 
 new Vue({
     render: h => h(App),
-    store: getClientStore(Vue) as any,
+    store: getClientStore(Vue) as any
 }).$mount('#app');

@@ -37,7 +37,7 @@ export function getClientStore(_Vue) {
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         console.log('[client] vuex-apply-mutation', type);
-        store.dispatch(type, ...payload);
+        store.commit(type, ...payload);
     });
 
     return store;
