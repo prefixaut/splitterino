@@ -1,5 +1,6 @@
 import Vuex, { Store } from 'vuex';
 import { ipcRenderer } from 'electron';
+import { OverlayHostPlugin } from 'vue-overlay-host';
 
 import modules from './modules';
 
@@ -18,6 +19,7 @@ export function getClientStore(_Vue) {
 
     const store: any = new Vuex.Store({
         state: ipcRenderer.sendSync('vuex-connect'),
+        plugins: [OverlayHostPlugin],
         ...config
     });
 

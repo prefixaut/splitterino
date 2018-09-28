@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { Aevum } from 'aevum';
+import { OverlayHost } from 'vue-overlay-host';
 
 import { getClientStore } from './store';
 import App from './App.vue';
@@ -12,6 +13,7 @@ import SplitsEditor from './components/SplitsEditor.vue';
 import TimeInput from './components/TimeInput.vue';
 
 // Register Components
+Vue.component('vue-overlay-host', OverlayHost);
 Vue.component('spl-configuiration-editor', ConfigurationEditor);
 Vue.component('spl-number-input', NumberInput);
 Vue.component('spl-splits', Splits);

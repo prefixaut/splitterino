@@ -10,6 +10,7 @@ import {
     createProtocol,
     installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib';
+import { OverlayHostPlugin } from 'vue-overlay-host';
 
 import { config as storeConfig } from './store';
 
@@ -29,6 +30,7 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     ...storeConfig,
     plugins: [
+        OverlayHostPlugin,
         store => {
             store.subscribe((mutation, state) => {
                 Object.keys(clients).forEach(id => {
