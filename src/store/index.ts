@@ -19,7 +19,18 @@ export function getClientStore(_Vue) {
 
     const store: any = new Vuex.Store({
         state: ipcRenderer.sendSync('vuex-connect'),
-        plugins: [OverlayHostPlugin],
+        plugins: [
+            OverlayHostPlugin,
+            events => {
+                events.subscribe((mutation, state) => {
+                    if (!mutation.type.includes('overlay-host')) {
+                        _Vue.prototype.$eventHub.$emit(
+                            `commit:${mutation.type}`
+                        );
+                    }
+                });
+            }
+        ],
         ...config
     });
 
@@ -31,8 +42,10 @@ export function getClientStore(_Vue) {
             type = type.type;
         }
 
-        console.log('[client] dispatching ', type, payload);
-        ipcRenderer.send('vuex-mutate', { type, payload });
+        if (!type.includes('overlay-host')) {
+            console.log('[client] dispatching ', type, payload);
+            ipcRenderer.send('vuex-mutate', { type, payload });
+        }
     };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {

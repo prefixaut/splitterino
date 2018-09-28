@@ -12,6 +12,9 @@ import Splits from './components/Splits.vue';
 import SplitsEditor from './components/SplitsEditor.vue';
 import TimeInput from './components/TimeInput.vue';
 
+// Global Event Bus
+Vue.prototype.$eventHub = new Vue();
+
 // Register Components
 Vue.component('vue-overlay-host', OverlayHost);
 Vue.component('spl-configuiration-editor', ConfigurationEditor);
