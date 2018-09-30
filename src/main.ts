@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
 import { Aevum } from 'aevum';
 import { OverlayHost } from 'vue-overlay-host';
 
@@ -11,6 +10,8 @@ import NumberInput from './components/NumberInput.vue';
 import Splits from './components/Splits.vue';
 import SplitsEditor from './components/SplitsEditor.vue';
 import TimeInput from './components/TimeInput.vue';
+import ContextMenu from './components/ContextMenu.vue';
+import { ctxMenuDirective } from './common/contextMenu';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
@@ -22,6 +23,10 @@ Vue.component('spl-number-input', NumberInput);
 Vue.component('spl-splits', Splits);
 Vue.component('spl-splits-editor', SplitsEditor);
 Vue.component('spl-time-input', TimeInput);
+Vue.component('spl-context-menu', ContextMenu);
+
+// Register Directives
+Vue.directive('spl-ctx-menu', ctxMenuDirective);
 
 const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
 Vue.filter('aevum', value => {

@@ -42,10 +42,8 @@ export function getClientStore(_Vue) {
             type = type.type;
         }
 
-        if (!type.includes('overlay-host')) {
-            console.log('[client] dispatching ', type, payload);
-            ipcRenderer.send('vuex-mutate', { type, payload });
-        }
+        console.log('[client] dispatching ', type, payload);
+        ipcRenderer.send('vuex-mutate', { type, payload });
     };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
