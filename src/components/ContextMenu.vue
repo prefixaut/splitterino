@@ -29,16 +29,16 @@ export default class ContextMenu extends Vue {
     }
 
     private mounted() {
-        let left = this.x;
-        let top = this.y;
-        if (left + this.$el.offsetWidth >= window.innerWidth) {
-            left -= this.$el.offsetWidth;
-        }
-        if (top + this.$el.offsetHeight >= window.innerHeight) {
-            top -= this.$el.offsetHeight;
-        }
-        this.pos.left = left + 'px';
-        this.pos.top = top + 'px';
+        // + 5 is a workaround to avoid squashing the context menu
+        // TODO: Maybe find a better solution instead of adding a constant value
+        const overflowWidth =
+            this.x + this.$el.offsetWidth + 5 - window.innerWidth;
+        overflowWidth > 0
+            ? (this.pos.left = this.x - overflowWidth + 'px')
+            : (this.pos.left = this.x + 'px');
+        this.y + this.$el.offsetHeight >= window.innerHeight
+            ? (this.pos.top = this.y - this.$el.offsetHeight + 'px')
+            : (this.pos.top = this.y + 'px');
     }
 
     private executeActions(actions: Function[]) {
