@@ -1,6 +1,6 @@
 <template>
     <div v-if="segments != null && segments.length > 0" class="splits-root" :class="['state-' + state]">
-        <div class="splits">
+        <div class="splits" v-spl-ctx-menu="['splitter', 'def']">
             <div
                 v-for="(segment, index) in segments"
                 :key="index"
@@ -129,7 +129,8 @@ export default class Splits extends Vue {
      */
     public hasOverallBest = false;
 
-    @segmentsModule.State('elements') public segments: Segment[];
+    @segmentsModule.State('elements')
+    public segments: Segment[];
 
     child() {
         let child = new remote.BrowserWindow({

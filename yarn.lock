@@ -9003,11 +9003,20 @@ vue-loader@^15.4.2:
     vue-hot-reload-api "^2.3.0"
     vue-style-loader "^4.1.0"
 
+<<<<<<< HEAD
 vue-overlay-host@0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/vue-overlay-host/-/vue-overlay-host-0.1.2.tgz#78f259073af3abe0bfa4a2c53e388f183e703e2d"
+=======
+vue-overlay-host@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/vue-overlay-host/-/vue-overlay-host-0.2.0.tgz#94f8eeb1300ae4cec46de68b65b5e3b10affec7e"
+  integrity sha512-+9DMD6IXZY+mHNPgQBvetRfM99n8j9gEYoQZ32EA4cc4hJtwsrJqmD+C5PrBrcLSIx7OkcIsKJ1s/iR4xr91jw==
+>>>>>>> feature/contextMenu
   dependencies:
     vue "^2.5.17"
+    vue-class-component "^6.0.0"
+    vue-property-decorator "^7.0.0"
     vuex "^3.0.1"
 
 vue-property-decorator@^7.0.0:

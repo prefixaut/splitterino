@@ -9,6 +9,7 @@ import ConfigurationEditor from './components/ConfigurationEditor.vue';
 import NumberInput from './components/NumberInput.vue';
 import TimeInput from './components/TimeInput.vue';
 import router from './router';
+import ctxMenuDirective from './directives/contextMenu';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
@@ -18,6 +19,9 @@ Vue.component('vue-overlay-host', OverlayHost);
 Vue.component('spl-configuiration-editor', ConfigurationEditor);
 Vue.component('spl-number-input', NumberInput);
 Vue.component('spl-time-input', TimeInput);
+
+// Register Directives
+Vue.directive('spl-ctx-menu', ctxMenuDirective);
 
 const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
 Vue.filter('aevum', value => {
