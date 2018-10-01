@@ -3,17 +3,17 @@ import { reloadWindow, closeWindow } from '../../common/contextMenu';
 const state = {
     def: [
         {
-            text: 'Reload',
+            label: 'Reload',
             actions: [reloadWindow]
         },
         {
-            text: 'Exit',
+            label: 'Exit',
             actions: [closeWindow]
         }
     ],
     splitter: [
         {
-            text: 'Edit Splits',
+            label: 'Edit Splits',
             actions: []
         }
     ]
@@ -22,7 +22,6 @@ const state = {
 const getters = {
     ctxMenu(state) {
         return (menus: string[]): Object[] => {
-            console.log(menus);
             const ctxMenu: Object[] = [];
             menus.forEach((el: string) => {
                 if (!(el in state)) {

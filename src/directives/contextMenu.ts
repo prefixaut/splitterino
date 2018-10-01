@@ -1,4 +1,5 @@
 import { VNode } from 'vue';
+import { remote } from 'electron';
 
 export default {
     bind: (el, binding, vNode: VNode) => {
@@ -11,18 +12,27 @@ export default {
             throw new Error('An array with menus has to be supplied as value');
         }
         el.addEventListener('contextmenu', (e: MouseEvent) => {
-            vNode.context.$store.dispatch('overlay-host/show', {
-                component: 'spl-context-menu',
-                props: {
-                    menus: binding.value,
-                    x: e.clientX,
-                    y: e.clientY
-                },
-                overlay: {
-                    show: true,
-                    closeOnClick: true
-                },
-                closeOnEscape: true
+            e.preventDefault();
+            const menus: any[] = vNode.context.$store.getters[
+                'splitterino/contextMenu/ctxMenu'
+            ](binding.value);
+            const menu = new remote.Menu();
+            menus.forEach((el: any) => {
+                if ('actions' in el) {
+                    const actions = el.actions;
+                    delete el.actions;
+                    el.click = function() {
+                        actions.forEach(el => {
+                            if (typeof el === 'function') {
+                                el();
+                            }
+                        });
+                    };
+                }
+                menu.append(new remote.MenuItem(el));
+            });
+            menu.popup({
+                window: remote.getCurrentWindow()
             });
         });
     }
