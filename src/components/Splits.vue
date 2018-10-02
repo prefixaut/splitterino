@@ -51,43 +51,32 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import now from 'performance-now';
-import { mapState } from 'vuex';
 import { remote } from 'electron';
 
 import { Segment } from '../common/segment';
+import { SplitsStatus } from '../common/splits-status';
 
-enum State {
-    /**
-     * When the Splits are in a _clean_ state.
-     * No timer is running and it's currently idle.
-     */
-    STOPPED = 'stopped',
-    /**
-     * When the timer is running
-     */
-    RUNNING = 'running',
-    /**
-     * When the user/script paused the timer
-     */
-    PAUSED = 'paused',
-    /**
-     * When the last segment has been finished.
-     * This state remains in this until the user splits again which _confirms_
-     * the state.
-     * On confirmation the content is getting saved, cleaned up and set to
-     * {@link STOPPED} again to be able to start a new run.
-     */
-    FINISHED = 'finished'
-}
-
-const segmentsModule = namespace('splitterino/segments');
+const splits = namespace('splitterino/splits');
 
 @Component({})
 export default class Splits extends Vue {
-    public state = State.STOPPED;
+    /**
+     * Amount of previous Splits should be visible
+     */
+    @Prop({
+        type: Number,
+        default: 3,
+    })
+    public visibleSegments;
+
+    @splits.State('status')
+    public status: SplitsStatus;
+
+    @segmentsModule.State('segments')
+    public segments: Segment[];
 
     /**
      * Time when the Timer started
@@ -111,25 +100,9 @@ export default class Splits extends Vue {
      * Index of the current Segment
      */
     public currentSegment = 0;
-    /**
-     * Amount of previous Splits should be visible
-     */
-    public visibleSegments = 3;
 
-    /**
-     * Start delay for certain runs in ms
-     */
-    public startDelay = 0;
-    /**
-     * If there's a new personal best
-     */
-    public hasPersonalBest = false;
-    /**
-     * If there's a new overall best
-     */
-    public hasOverallBest = false;
 
-    @segmentsModule.State('elements') public segments: Segment[];
+
 
     child() {
         let child = new remote.BrowserWindow({
@@ -141,102 +114,23 @@ export default class Splits extends Vue {
     }
 
     start() {
-        let promise = Promise.resolve();
-        if (this.state === State.FINISHED) {
-            promise = this.reset();
-        }
-        if (this.state !== State.STOPPED) {
-            return promise.then(() => Promise.reject(new Error()));
-        }
-        const segment = this.segments[this.currentSegment];
-        this.currentSegment = this.totalPauseTime = segment.pauseTime = 0;
-        this.totalStartTime = segment.startTime = now() + this.startDelay;
-        this.state = State.RUNNING;
-        this.startTimer();
-        return promise.then(() => {});
+        this.$store.dispatch('splitterino/segments/start');
     }
 
     split() {
-        switch (this.state) {
-            case State.FINISHED:
-                this.reset();
-                return true;
-            case State.RUNNING:
-                break;
-            default:
-                return false;
-        }
-
-        const segment = this.segments[this.currentSegment];
-        const time = now() - segment.startTime - segment.pauseTime;
-
-        segment.passed = true;
-        segment.time = time;
-
-        if (
-            typeof segment.personalBest === 'undefined' ||
-            segment.personalBest > time
-        ) {
-            // Backup of the previous time to be able to revert it
-            segment.previousPersonalBest = segment.personalBest;
-            segment.personalBest = time;
-            segment.hasNewPersonalBest = true;
-            this.hasPersonalBest = true;
-        } else {
-            segment.hasNewPersonalBest = false;
-        }
-
-        if (
-            typeof segment.overallBest === 'undefined' ||
-            segment.overallBest > time
-        ) {
-            // Backup of the previous time to be able to revert it
-            segment.previousOverallBest = segment.overallBest;
-            segment.overallBest = time;
-            segment.hasNewOverallBest = true;
-            this.hasOverallBest = true;
-        } else {
-            segment.hasNewOverallBest = false;
-        }
-
-        // Check if it is the last split
-        if (this.currentSegment + 1 >= this.segments.length) {
-            this.finish();
-            return true;
-        }
-
-        this.currentSegment++;
-        const n = this.segments[this.currentSegment];
-        n.pauseTime = 0;
-        n.startTime = now();
-        return true;
+        this.$store.dispatch('spllitterino/segments/split');
     }
 
     pause() {
-        if (this.state !== State.RUNNING) {
-            return false;
-        }
-        this.state = State.PAUSED;
-        this.pauseStartTime = now();
-        return true;
+        this.$store.dispatch('spltterino/segments/pause');
     }
 
     unpause() {
-        if (this.state !== State.PAUSED) {
-            return false;
-        }
-        const pause = now() - this.pauseStartTime;
-        const segment = this.segments[this.currentSegment];
-        segment.pauseTime += pause;
-        this.totalPauseTime += pause;
-        this.pauseStartTime = 0;
-        this.state = State.RUNNING;
-        this.startTimer();
-        return true;
+
     }
 
     revertSplit() {
-        if (this.state !== State.RUNNING || this.currentSegment < 1) {
+        if (this.state !== SplitsStatus.RUNNING || this.currentSegment < 1) {
             return false;
         }
 
@@ -266,7 +160,7 @@ export default class Splits extends Vue {
 
     skipSplit() {
         if (
-            this.state !== State.RUNNING ||
+            this.state !== SplitsStatus.RUNNING ||
             this.currentSegment + 1 >= this.segments.length
         ) {
             return false;
@@ -285,26 +179,16 @@ export default class Splits extends Vue {
     }
 
     finish() {
-        if (this.state !== State.RUNNING) {
-            return false;
-        }
 
-        this.state = State.FINISHED;
-        for (let segment of this.segments) {
-            segment.previousPersonalBest = segment.personalBest;
-            segment.previousOverallBest = segment.overallBest;
-        }
-
-        return true;
     }
 
     reset() {
-        if (this.state === State.STOPPED) {
+        if (this.state === SplitsStatus.STOPPED) {
             return Promise.reject(new Error());
         }
         if (
             (!this.hasOverallBest && !this.hasPersonalBest) ||
-            this.state === State.FINISHED
+            this.state === SplitsStatus.FINISHED
         ) {
             this.doApplyingReset();
             return Promise.resolve();
@@ -316,7 +200,7 @@ export default class Splits extends Vue {
 
     doApplyingReset() {
         this.currentSegment = 0;
-        this.state = State.STOPPED;
+        this.state = SplitsStatus.STOPPED;
         this.totalStartTime = 0;
         this.totalTime = 0;
         this.totalPauseTime = 0;
@@ -339,7 +223,7 @@ export default class Splits extends Vue {
 
     doDiscardingReset() {
         this.currentSegment = 0;
-        this.state = State.STOPPED;
+        this.state = SplitsStatus.STOPPED;
         this.totalStartTime = 0;
         this.totalPauseTime = 0;
 
@@ -372,7 +256,7 @@ export default class Splits extends Vue {
     startTimer() {
         const that = this;
         const func = function() {
-            if (that.state !== State.RUNNING) {
+            if (that.state !== SplitsStatus.RUNNING) {
                 return;
             }
 
