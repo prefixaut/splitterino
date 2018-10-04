@@ -44,7 +44,7 @@
             <button @click="reset()">Reset</button>
             <button @click="pause()">{{ state === 'paused' ? 'Unpause' : 'Pause' }}</button>
             <button @click="skipSplit()">Skip Split</button>
-            <button @click="revertSplit()">Revert Button</button>
+            <button @click="undoSplit()">Undo Button</button>
             <button @click="child">Spawn Child</button>
         </div>
     </div>
@@ -59,6 +59,7 @@ import { remote } from 'electron';
 import { Segment } from '../common/segment';
 import { SplitsStatus } from '../common/splits-status';
 
+const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
 @Component({})
@@ -72,11 +73,14 @@ export default class Splits extends Vue {
     })
     public visibleSegments;
 
-    @splits.State('status')
+    @timer.State('status')
     public status: SplitsStatus;
 
-    @segmentsModule.State('segments')
+    @splits.State('segments')
     public segments: Segment[];
+
+    @splits.State('current')
+    public currentSegment: number;
 
     /**
      * Time when the Timer started
@@ -96,14 +100,6 @@ export default class Splits extends Vue {
      */
     public totalPauseTime = 0;
 
-    /**
-     * Index of the current Segment
-     */
-    public currentSegment = 0;
-
-
-
-
     child() {
         let child = new remote.BrowserWindow({
             parent: remote.getCurrentWindow()
@@ -114,143 +110,31 @@ export default class Splits extends Vue {
     }
 
     start() {
-        this.$store.dispatch('splitterino/segments/start');
+        this.$store.dispatch('splitterino/splits/start');
     }
 
     split() {
-        this.$store.dispatch('spllitterino/segments/split');
+        this.$store.dispatch('spllitterino/splits/split');
     }
 
     pause() {
-        this.$store.dispatch('spltterino/segments/pause');
+        this.$store.dispatch('spltterino/splits/pause');
     }
 
     unpause() {
-
-    }
-
-    revertSplit() {
-        if (this.state !== SplitsStatus.RUNNING || this.currentSegment < 1) {
-            return false;
-        }
-
-        const segment = this.segments[this.currentSegment];
-        segment.time = 0;
-
-        // Revert PB
-        if (segment.hasNewPersonalBest) {
-            segment.personalBest = segment.previousPersonalBest;
-            segment.previousPersonalBest = 0;
-            segment.hasNewPersonalBest = false;
-        }
-
-        // Revert OB
-        if (segment.hasNewOverallBest) {
-            segment.overallBest = segment.previousOverallBest;
-            segment.previousOverallBest = 0;
-            segment.hasNewOverallBest = false;
-        }
-
-        this.currentSegment--;
-        const n = this.segments[this.currentSegment];
-        n.pauseTime += segment.pauseTime;
-
-        return true;
+        this.$store.dispatch('splitterino/splits/unpause');
     }
 
     skipSplit() {
-        if (
-            this.state !== SplitsStatus.RUNNING ||
-            this.currentSegment + 1 >= this.segments.length
-        ) {
-            return false;
-        }
-
-        const segment = this.segments[this.currentSegment];
-        segment.time = 0;
-        segment.skipped = true;
-        segment.passed = true;
-
-        this.currentSegment++;
-        const n = this.segments[this.currentSegment];
-        n.startTime = segment.startTime;
-
-        return true;
+        this.$store.dispatch('splitterino/splits/skip');
     }
 
-    finish() {
-
+    undoSplit() {
+        this.$store.dispatch('splitterino/segments/undo');
     }
 
     reset() {
-        if (this.state === SplitsStatus.STOPPED) {
-            return Promise.reject(new Error());
-        }
-        if (
-            (!this.hasOverallBest && !this.hasPersonalBest) ||
-            this.state === SplitsStatus.FINISHED
-        ) {
-            this.doApplyingReset();
-            return Promise.resolve();
-        }
-
-        this.pause();
-        return Promise.resolve();
-    }
-
-    doApplyingReset() {
-        this.currentSegment = 0;
-        this.state = SplitsStatus.STOPPED;
-        this.totalStartTime = 0;
-        this.totalTime = 0;
-        this.totalPauseTime = 0;
-
-        for (let segment of this.segments) {
-            segment.skipped = false;
-            segment.passed = false;
-
-            segment.startTime = 0;
-            segment.time = 0;
-
-            segment.hasNewPersonalBest = false;
-            segment.previousPersonalBest = 0;
-            segment.hasNewOverallBest = false;
-            segment.previousOverallBest = 0;
-
-            segment.pauseTime = 0;
-        }
-    }
-
-    doDiscardingReset() {
-        this.currentSegment = 0;
-        this.state = SplitsStatus.STOPPED;
-        this.totalStartTime = 0;
-        this.totalPauseTime = 0;
-
-        for (let segment of this.segments) {
-            segment.skipped = false;
-            segment.startTime = 0;
-            segment.time = 0;
-            segment.pauseTime = 0;
-
-            if (!segment.passed) {
-                continue;
-            }
-
-            segment.passed = false;
-
-            if (segment.hasNewPersonalBest) {
-                segment.personalBest = segment.previousPersonalBest;
-                segment.previousPersonalBest = 0;
-                segment.hasNewPersonalBest = false;
-            }
-
-            if (segment.hasNewOverallBest) {
-                segment.overallBest = segment.previousOverallBest;
-                segment.previousOverallBest = 0;
-                segment.hasNewOverallBest = false;
-            }
-        }
+        this.$store.dispatch('splitterino/segments/reset');
     }
 
     startTimer() {

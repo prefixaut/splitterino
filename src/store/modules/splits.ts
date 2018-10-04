@@ -181,17 +181,21 @@ const actions: ActionTree<SplitsState, RootState> = {
                     } as Segment
                 });
                 context.commit('setCurrent', 0);
-                context.commit('splitterino/timer/setStatus', SplitsStatus.RUNNING, { root: true });
+                context.commit(
+                    'splitterino/timer/setStatus',
+                    SplitsStatus.RUNNING,
+                    { root: true }
+                );
             });
     },
-    split(context: ActionContext<SplitsState, RootState>, payload) {
+    split(context: ActionContext<SplitsState, RootState>) {
         const currentTime = now();
 
         const status = context.rootState['splitterino/timer'].status;
         switch (status) {
             case SplitsStatus.FINISHED:
-                // Cleanup via reset, but save the new times
-                context.dispatch('reset', { applyNewTimes: true });
+                // Cleanup via reset
+                context.dispatch('reset');
                 return;
             case SplitsStatus.RUNNING:
                 break;
@@ -204,8 +208,11 @@ const actions: ActionTree<SplitsState, RootState> = {
 
         // Get the segment and spread it to create a copy to be able
         // to modify it.
-        const currentSegment: Segment = { ...context.state.segments[currentIndex] };
-        const time = currentTime - currentSegment.startTime - currentSegment.pauseTime;
+        const currentSegment: Segment = {
+            ...context.state.segments[currentIndex]
+        };
+        const time =
+            currentTime - currentSegment.startTime - currentSegment.pauseTime;
 
         currentSegment.passed = true;
         currentSegment.time = time;
@@ -245,50 +252,195 @@ const actions: ActionTree<SplitsState, RootState> = {
 
         // Check if it is the last split
         if (currentIndex + 1 >= context.state.segments.length) {
-            context.commit('splitterino/timer/setStatus', SplitsStatus.FINISHED, { root: true });
+            context.commit(
+                'splitterino/timer/setStatus',
+                SplitsStatus.FINISHED,
+                { root: true }
+            );
             return;
         }
 
         const next: Segment = {
             ...context.state.segments[currentIndex + 1],
             startTime: currentTime,
-            pauseTime: 0,
             passed: false,
-            skipped: false,
+            skipped: false
         };
 
         context.commit('setSegment', {
             index: currentIndex + 1,
-            segment: next,
+            segment: next
         });
         context.commit('setCurrent', currentIndex + 1);
     },
-    skip(context: ActionContext<SplitsState, RootState>, payload) {},
-    undo(context: ActionContext<SplitsState, RootState>, payload) {},
-    pause(context: ActionContext<SplitsState, RootState>, payload) {
-        if (context.state.status !== SplitsStatus.RUNNING) {
+    skip(context: ActionContext<SplitsState, RootState>) {
+        const time = now();
+        const status = context.rootState['splitterino/timer'].status;
+        const index = context.state.current;
+
+        if (
+            status !== SplitsStatus.RUNNING ||
+            index >= context.state.segments.length
+        ) {
             return;
         }
 
-        this.state = SplitsStatus.PAUSED;
-        this.pauseStartTime = now();
+        const segment: Segment = {
+            ...context.state.segments[index],
+            time: 0,
+            skipped: true,
+            passed: false,
+        };
+
+        const next: Segment = {
+            ...context.state.segments[index + 1],
+            startTime: time,
+        };
+
+        context.commit('setSegment', { index, segment });
+        context.commit('setSegment', { index: index + 1, segment: next });
+        context.commit('setCurrent', index + 1);
     },
-    unpause(context: ActionContext<SplitsState, RootState>, payload) {
-        if (this.state !== SplitsStatus.PAUSED) {
-            return false;
+    undo(context: ActionContext<SplitsState, RootState>) {
+        const time = now();
+        const status = context.rootState['splitterino/timer'].status;
+        const index = context.state.current;
+
+        if (status !== SplitsStatus.RUNNING || index < 1) {
+            return;
         }
-        const pause = now() - this.pauseStartTime;
-        const segment = this.segments[this.currentSegment];
-        segment.pauseTime += pause;
-        this.totalPauseTime += pause;
-        this.pauseStartTime = 0;
-        this.state = SplitsStatus.RUNNING;
-        this.startTimer();
-        return true;
+
+        const segment: Segment = {
+            ...context.state.segments[index],
+            time: 0,
+            passed: false,
+            skipped: false,
+        };
+
+        // Revert PB
+        if (segment.hasNewPersonalBest) {
+            segment.personalBest = segment.previousPersonalBest;
+            segment.previousPersonalBest = 0;
+            segment.hasNewPersonalBest = false;
+        }
+
+        // Revert OB
+        if (segment.hasNewOverallBest) {
+            segment.overallBest = segment.previousOverallBest;
+            segment.previousOverallBest = 0;
+            segment.hasNewOverallBest = false;
+        }
+
+        const previous: Segment = { ...context.state.segments[index - 1] };
+        // Add the pause time of the the current segment to the previous
+        previous.pauseTime += segment.pauseTime;
+        // Clear the pause time afterwards
+        segment.pauseTime = 0;
+
+        context.commit('setSegment', { index, segment });
+        context.commit('setSegment', { index: index - 1, segment: previous });
+        context.commit('setCurrent', index - 1);
     },
-    reset(context: ActionContext<SplitsState, RootState>, payload) {
-        const { applyNewTimes } = payload;
-    }
+    pause(context: ActionContext<SplitsState, RootState>) {
+        const time = now();
+        const status = context.rootState['splitterino/timer'].status;
+        if (status !== SplitsStatus.RUNNING) {
+            return;
+        }
+
+        context.commit(
+            'splitterino/timer/setStatus',
+            { time, status: SplitsStatus.PAUSED },
+            { root: true }
+        );
+    },
+    unpause(context: ActionContext<SplitsState, RootState>) {
+        const time = now();
+        const status = context.rootState['splitterino/timer'].status;
+
+        if (status !== SplitsStatus.PAUSED) {
+            return;
+        }
+
+        const pauseAddition = time - context.rootState['splitterino/timer'].pauseTime;
+        const index = context.state.current;
+        const segment: Segment = { ...context.state.segments[index] };
+        segment.pauseTime += pauseAddition;
+
+        context.commit('setSegment', { index, segment });
+        context.commit('splitterino/timer/setStatus', { time, status: SplitsStatus.RUNNING });
+    },
+    reset(context: ActionContext<SplitsState, RootState>) {
+        const time = now();
+        const status = context.rootState['splitterino/timer'].status;
+
+        if (status === SplitsStatus.STOPPED) {
+            return;
+        }
+
+        if (
+            (!this.hasOverallBest && !this.hasPersonalBest) ||
+            this.state === SplitsStatus.FINISHED
+        ) {
+            return context.dispatch('softReset');
+        }
+
+        this.pause();
+        return Promise.resolve();
+    },
+    softReset(context: ActionContext<SplitsState, RootState>) {
+        this.currentSegment = 0;
+        this.state = SplitsStatus.STOPPED;
+        this.totalStartTime = 0;
+        this.totalTime = 0;
+        this.totalPauseTime = 0;
+
+        for (let segment of this.segments) {
+            segment.skipped = false;
+            segment.passed = false;
+
+            segment.startTime = 0;
+            segment.time = 0;
+
+            segment.hasNewPersonalBest = false;
+            segment.previousPersonalBest = 0;
+            segment.hasNewOverallBest = false;
+            segment.previousOverallBest = 0;
+
+            segment.pauseTime = 0;
+        }
+    },
+    hardReset(context: ActionContext<SplitsState, RootState>) {
+        this.currentSegment = 0;
+        this.state = SplitsStatus.STOPPED;
+        this.totalStartTime = 0;
+        this.totalPauseTime = 0;
+
+        for (let segment of this.segments) {
+            segment.skipped = false;
+            segment.startTime = 0;
+            segment.time = 0;
+            segment.pauseTime = 0;
+
+            if (!segment.passed) {
+                continue;
+            }
+
+            segment.passed = false;
+
+            if (segment.hasNewPersonalBest) {
+                segment.personalBest = segment.previousPersonalBest;
+                segment.previousPersonalBest = 0;
+                segment.hasNewPersonalBest = false;
+            }
+
+            if (segment.hasNewOverallBest) {
+                segment.overallBest = segment.previousOverallBest;
+                segment.previousOverallBest = 0;
+                segment.hasNewOverallBest = false;
+            }
+        }
+    },
 };
 
 const module: Module<SplitsState, any> = {
