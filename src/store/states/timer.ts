@@ -16,7 +16,7 @@ export interface TimerState {
     /**
      * Time when the timer was set to paused state
      */
-    pauseStart: number;
+    pauseTime: number;
     /**
      * Total time in ms on how long the timer was paused
      */
