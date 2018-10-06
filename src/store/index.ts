@@ -42,6 +42,7 @@ export function getClientStore(_Vue) {
             type = type.type;
         }
 
+        // FIXME: This is not working in here, needs to be moved to where the mutation is applied
         if (!type.includes('overlay-host')) {
             console.log('[client] dispatching ', type, payload);
             ipcRenderer.send('vuex-mutate', { type, payload });
@@ -50,7 +51,7 @@ export function getClientStore(_Vue) {
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         console.log('[client] vuex-apply-mutation', type);
-        store.commit(type, ...payload);
+        store.commit(type, payload);
     });
 
     return store;
