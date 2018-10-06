@@ -1,10 +1,10 @@
-import { SplitsStatus } from '@/common/splits-status';
+import { TimerStatus } from '@/common/timer-status';
 
 export interface TimerState {
     /**
-     * Status of the timer
+     * State of the timer
      */
-    status: SplitsStatus;
+    status: TimerStatus;
     /**
      * Start delay for certain runs in ms
      */

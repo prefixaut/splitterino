@@ -1,20 +1,20 @@
 import now from 'performance-now';
 
-import { SplitsStatus } from '@/common/splits-status';
-import { TimerState } from '@/store/states/timer';
+import { TimerStatus } from '../../common/timer-status';
+import { TimerState } from '..//states/timer';
 
 const state: TimerState = {
-    status: SplitsStatus.STOPPED,
+    status: TimerStatus.STOPPED,
     startDelay: 0,
     startTime: 0,
     pauseTime: 0,
     pauseTotal: 0,
     finishTime: 0,
-}
+};
 
 const mutations = {
     setStartDelay(state: TimerState, to: number) {
-        if (state.status !== SplitsStatus.STOPPED) {
+        if (state.status !== TimerStatus.STOPPED) {
             return;
         }
         state.startDelay = to;
@@ -22,8 +22,8 @@ const mutations = {
     setStartTime(state: TimerState, to: number) {
         state.startTime = to;
     },
-    setStatus(state: TimerState, to: SplitsStatus | { time: number, status: SplitsStatus }) {
-        let changeTo: SplitsStatus;
+    setStatus(state: TimerState, to: TimerStatus | { time: number, status: TimerStatus }) {
+        let changeTo: TimerStatus;
         let time = now();
 
         if (typeof to === 'string') {
@@ -40,16 +40,16 @@ const mutations = {
         const from = state.status;
         state.status = changeTo;
 
-        if (changeTo === SplitsStatus.FINISHED) {
+        if (changeTo === TimerStatus.FINISHED) {
             state.finishTime = time;
-        } else if (changeTo === SplitsStatus.PAUSED) {
+        } else if (changeTo === TimerStatus.PAUSED) {
             state.pauseTime = time;
-        } else if (from === SplitsStatus.PAUSED) {
-            if (changeTo === SplitsStatus.RUNNING) {
+        } else if (from === TimerStatus.PAUSED) {
+            if (changeTo === TimerStatus.RUNNING) {
                 state.pauseTotal += time - state.pauseTime;
             }
             state.pauseTime = 0;
-        } else if (changeTo === SplitsStatus.STOPPED) {
+        } else if (changeTo === TimerStatus.STOPPED) {
             state.startTime = 0;
             state.pauseTime = 0;
             state.pauseTotal = 0;
@@ -58,13 +58,8 @@ const mutations = {
     },
 };
 
-const actions = {
-
-};
-
 export default {
     namespaced: true,
     state,
     mutations,
-    actions,
 };

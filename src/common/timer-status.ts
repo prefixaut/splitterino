@@ -1,4 +1,4 @@
-export enum SplitsStatus {
+export enum TimerStatus {
     /**
      * When the Splits are in a _clean_ state.
      * No timer is running and it's currently idle.

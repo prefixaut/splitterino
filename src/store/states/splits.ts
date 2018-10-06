@@ -1,11 +1,7 @@
 import { Segment } from '@/common/segment';
-import { SplitsStatus } from '@/common/splits-status';
+import { TimerStatus } from '@/common/timer-status';
 
 export interface SplitsState {
-    /**
-     * Status of the splits/segments
-     */
-    status: SplitsStatus;
     /**
      * Index of the current segment.
      * Is -1 when the splits are not running.

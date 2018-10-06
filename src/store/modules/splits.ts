@@ -1,13 +1,13 @@
-import { SplitsState } from '@/store/states/splits';
 import now from 'performance-now';
 import { ActionContext, ActionTree, Module } from 'vuex';
+import { remote } from 'electron';
 
-import { Segment } from '@/common/segment';
-import { SplitsStatus } from '@/common/splits-status';
-import { RootState } from '@/store/states/root';
+import { Segment } from '../../common/segment';
+import { TimerStatus } from '../../common/timer-status';
+import { SplitsState } from '../states/splits';
+import { RootState } from '../states/root';
 
 const state: SplitsState = {
-    status: SplitsStatus.STOPPED,
     current: -1,
     hasPersonalBest: false,
     hasOverallBest: false,
@@ -46,16 +46,20 @@ const state: SplitsState = {
 
 const mutations = {
     clearSegments(state: SplitsState) {
-        if (state.status !== SplitsStatus.STOPPED) {
+        /*
+        if (state.status !== TimerStatus.STOPPED) {
             return;
         }
+        */
 
         state.segments = [];
     },
     removeSegment(state: SplitsState, index: number) {
-        if (state.status !== SplitsStatus.STOPPED) {
+        /*
+        if (state.status !== TimerStatus.STOPPED) {
             return;
         }
+        */
 
         if (
             typeof index !== 'number' ||
@@ -70,9 +74,11 @@ const mutations = {
         state.segments.splice(index, 1);
     },
     addSegment(state: SplitsState, segment: Segment) {
-        if (state.status !== SplitsStatus.STOPPED) {
+        /*
+        if (state.status !== TimerStatus.STOPPED) {
             return;
         }
+        */
 
         if (segment == null || typeof segment !== 'object') {
             return;
@@ -85,9 +91,11 @@ const mutations = {
         state.segments.push(segment);
     },
     updateAllSegments(state: SplitsState, segments: Segment[]) {
-        if (state.status !== SplitsStatus.STOPPED) {
+        /*
+        if (state.status !== TimerStatus.STOPPED) {
             return;
         }
+        */
 
         if (!Array.isArray(segments)) {
             return;
@@ -150,54 +158,43 @@ const mutations = {
 
 const actions: ActionTree<SplitsState, RootState> = {
     start(context: ActionContext<SplitsState, RootState>) {
-        let promise = Promise.resolve();
+        const time = now();
+        const status = context.rootState.splitterino.timer.status;
 
-        const status = context.rootState['splitterino/timer'].status;
-
-        if (status === SplitsStatus.FINISHED) {
-            promise = context.dispatch('reset');
+        if (status !== TimerStatus.STOPPED) {
+            return;
         }
 
-        if (status !== SplitsStatus.STOPPED) {
-            return promise.then(() => Promise.reject(new Error()));
-        }
+        context.commit(
+            'splitterino/timer/setStatus',
+            { time, status: TimerStatus.RUNNING },
+            { root: true }
+        );
 
-        return promise
-            .then(() =>
-                context.dispatch('splitterino/timer/start', null, {
-                    root: true
-                })
-            )
-            .then(() => {
-                const startTime =
-                    context.rootState['splitterino/timer'].startTime;
-                const firstSegment = context.state.segments[0];
+        const firstSegment = context.state.segments[0];
 
-                context.commit('setSegment', {
-                    index: 0,
-                    segment: {
-                        ...firstSegment,
-                        startTime: startTime
-                    } as Segment
-                });
-                context.commit('setCurrent', 0);
-                context.commit(
-                    'splitterino/timer/setStatus',
-                    SplitsStatus.RUNNING,
-                    { root: true }
-                );
-            });
+        context.commit('setSegment', {
+            index: 0,
+            segment: {
+                ...firstSegment,
+                startTime: time
+            } as Segment
+        });
+        context.commit('setCurrent', 0);
+        context.commit('splitterino/timer/setStatus', TimerStatus.RUNNING, {
+            root: true
+        });
     },
     split(context: ActionContext<SplitsState, RootState>) {
         const currentTime = now();
 
-        const status = context.rootState['splitterino/timer'].status;
+        const status = context.rootState.splitterino.timer.status;
         switch (status) {
-            case SplitsStatus.FINISHED:
+            case TimerStatus.FINISHED:
                 // Cleanup via reset
                 context.dispatch('reset');
                 return;
-            case SplitsStatus.RUNNING:
+            case TimerStatus.RUNNING:
                 break;
             default:
                 // Ignore the split-event when it's not running
@@ -215,7 +212,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentTime - currentSegment.startTime - currentSegment.pauseTime;
 
         currentSegment.passed = true;
-        currentSegment.time = time;
+        currentSegment.time = time - currentSegment.startTime;
 
         if (
             currentSegment.personalBest == null ||
@@ -254,7 +251,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         if (currentIndex + 1 >= context.state.segments.length) {
             context.commit(
                 'splitterino/timer/setStatus',
-                SplitsStatus.FINISHED,
+                TimerStatus.FINISHED,
                 { root: true }
             );
             return;
@@ -263,6 +260,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         const next: Segment = {
             ...context.state.segments[currentIndex + 1],
             startTime: currentTime,
+            time: 0,
             passed: false,
             skipped: false
         };
@@ -275,11 +273,11 @@ const actions: ActionTree<SplitsState, RootState> = {
     },
     skip(context: ActionContext<SplitsState, RootState>) {
         const time = now();
-        const status = context.rootState['splitterino/timer'].status;
+        const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
 
         if (
-            status !== SplitsStatus.RUNNING ||
+            status !== TimerStatus.RUNNING ||
             index >= context.state.segments.length
         ) {
             return;
@@ -288,13 +286,14 @@ const actions: ActionTree<SplitsState, RootState> = {
         const segment: Segment = {
             ...context.state.segments[index],
             time: 0,
+            startTime: 0,
             skipped: true,
-            passed: false,
+            passed: false
         };
 
         const next: Segment = {
             ...context.state.segments[index + 1],
-            startTime: time,
+            startTime: time
         };
 
         context.commit('setSegment', { index, segment });
@@ -303,18 +302,19 @@ const actions: ActionTree<SplitsState, RootState> = {
     },
     undo(context: ActionContext<SplitsState, RootState>) {
         const time = now();
-        const status = context.rootState['splitterino/timer'].status;
+        const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
 
-        if (status !== SplitsStatus.RUNNING || index < 1) {
+        if (status !== TimerStatus.RUNNING || index < 1) {
             return;
         }
 
         const segment: Segment = {
             ...context.state.segments[index],
+            startTime: 0,
             time: 0,
             passed: false,
-            skipped: false,
+            skipped: false
         };
 
         // Revert PB
@@ -343,54 +343,79 @@ const actions: ActionTree<SplitsState, RootState> = {
     },
     pause(context: ActionContext<SplitsState, RootState>) {
         const time = now();
-        const status = context.rootState['splitterino/timer'].status;
-        if (status !== SplitsStatus.RUNNING) {
+        const status = context.rootState.splitterino.timer.status;
+        if (status !== TimerStatus.RUNNING) {
             return;
         }
 
         context.commit(
             'splitterino/timer/setStatus',
-            { time, status: SplitsStatus.PAUSED },
+            { time, status: TimerStatus.PAUSED },
             { root: true }
         );
     },
     unpause(context: ActionContext<SplitsState, RootState>) {
         const time = now();
-        const status = context.rootState['splitterino/timer'].status;
+        const status = context.rootState.splitterino.timer.status;
 
-        if (status !== SplitsStatus.PAUSED) {
+        if (status !== TimerStatus.PAUSED) {
             return;
         }
 
-        const pauseAddition = time - context.rootState['splitterino/timer'].pauseTime;
+        const pauseAddition =
+            time - context.rootState.splitterino.timer.pauseTime;
         const index = context.state.current;
         const segment: Segment = { ...context.state.segments[index] };
         segment.pauseTime += pauseAddition;
 
         context.commit('setSegment', { index, segment });
-        context.commit('splitterino/timer/setStatus', { time, status: SplitsStatus.RUNNING });
+        context.commit('splitterino/timer/setStatus', {
+            time,
+            status: TimerStatus.RUNNING
+        });
     },
     reset(context: ActionContext<SplitsState, RootState>) {
         const time = now();
-        const status = context.rootState['splitterino/timer'].status;
+        const status = context.rootState.splitterino.timer.status;
 
-        if (status === SplitsStatus.STOPPED) {
+        if (status === TimerStatus.STOPPED) {
             return;
         }
 
         if (
-            (!this.hasOverallBest && !this.hasPersonalBest) ||
-            this.state === SplitsStatus.FINISHED
+            (!context.state.hasOverallBest && !context.state.hasPersonalBest) ||
+            status === TimerStatus.FINISHED
         ) {
-            return context.dispatch('softReset');
+            return new Promise<number>((resolve, reject) => {
+                remote.dialog.showMessageBox(
+                    remote.getCurrentWindow(),
+                    {
+                        title: 'Save Splits?',
+                        message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
+                        buttons: ['Abort', 'Discard', 'Save']
+                    },
+                    responseCode => {
+                        resolve(responseCode);
+                    }
+                );
+            }).then(res => {
+                switch (res) {
+                    case 0:
+                        break;
+                    case 1:
+                        return context.dispatch('hardReset');
+                    case 2:
+                        return context.dispatch('softReset');
+                }
+            });
         }
 
-        this.pause();
-        return Promise.resolve();
+        context.dispatch('softReset');
     },
     softReset(context: ActionContext<SplitsState, RootState>) {
+        /*
         this.currentSegment = 0;
-        this.state = SplitsStatus.STOPPED;
+        this.state = TimerStatus.STOPPED;
         this.totalStartTime = 0;
         this.totalTime = 0;
         this.totalPauseTime = 0;
@@ -409,10 +434,12 @@ const actions: ActionTree<SplitsState, RootState> = {
 
             segment.pauseTime = 0;
         }
+        */
     },
     hardReset(context: ActionContext<SplitsState, RootState>) {
+        /*
         this.currentSegment = 0;
-        this.state = SplitsStatus.STOPPED;
+        this.state = TimerStatus.STOPPED;
         this.totalStartTime = 0;
         this.totalPauseTime = 0;
 
@@ -440,7 +467,8 @@ const actions: ActionTree<SplitsState, RootState> = {
                 segment.hasNewOverallBest = false;
             }
         }
-    },
+        */
+    }
 };
 
 const module: Module<SplitsState, any> = {

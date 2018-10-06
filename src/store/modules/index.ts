@@ -1,6 +1,6 @@
-import splits from '@/store/modules/splits';
-import timer from '@/store/modules/timer';
-import contextMenu from '@/store/modules/contextMenu';
+import splits from './splits';
+import timer from './timer';
+import contextMenu from './contextMenu';
 
 export default {
     splits,

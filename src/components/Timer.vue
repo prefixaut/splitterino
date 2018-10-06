@@ -7,12 +7,12 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { TimerStatus } from '@/common/timer-status';
+import { TimerStatus } from '../common/timer-status';
 
-const timerModule = namespace('splitterino/timer');
+const timer = namespace('splitterino/timer');
 
 export default class Timer extends Vue {
-    @timerModule.State('status')
+    @timer.State('status')
     public status: TimerStatus;
 
     public currentTime = 0;

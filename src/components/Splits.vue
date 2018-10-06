@@ -1,5 +1,5 @@
 <template>
-    <div v-if="segments != null && segments.length > 0" class="splits-root" :class="['state-' + state]">
+    <div v-if="segments != null && segments.length > 0" class="splits-root" :class="['state-' + status]">
         <div class="splits" v-spl-ctx-menu="['splitter', 'def']">
             <div
                 v-for="(segment, index) in segments"
@@ -8,7 +8,7 @@
                     'split',
 
                     {'visible':
-                        state !== 'running' && index === 0
+                        status !== 'running' && index === 0
                         ||
                         (currentSegment + visibleSegments) >= segments.length &&
                         index >= segments.length - visibleSegments - 1 && index < currentSegment
@@ -16,7 +16,7 @@
                         index > currentSegment &&
                         index <= currentSegment + visibleSegments
                     },
-                    {'current': index === currentSegment && state === 'running'},
+                    {'current': index === currentSegment && status === 'running'},
 
                     {['previous-' + (currentSegment - index)]: index < currentSegment},
                     {['next-' + (currentSegment - index)]: (currentSegment - index) > 0 && index > currentSegment},
@@ -40,9 +40,10 @@
                 <span class="text">Total Time:</span>
                 <span>{{ totalTime | aevum }}</span>
             </p>
-            <button @click="split()">{{ state !== 'stopped' ? 'Split' : 'Start' }}</button>
+            <button v-if="status !== 'stopped'" @click="split()">Split</button>
+            <button v-else @click="start()">Start</button>
             <button @click="reset()">Reset</button>
-            <button @click="pause()">{{ state === 'paused' ? 'Unpause' : 'Pause' }}</button>
+            <button @click="pause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</button>
             <button @click="skipSplit()">Skip Split</button>
             <button @click="undoSplit()">Undo Button</button>
             <button @click="child">Spawn Child</button>
@@ -57,7 +58,7 @@ import now from 'performance-now';
 import { remote } from 'electron';
 
 import { Segment } from '../common/segment';
-import { SplitsStatus } from '../common/splits-status';
+import { TimerStatus } from '../common/timer-status';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -74,7 +75,7 @@ export default class Splits extends Vue {
     public visibleSegments;
 
     @timer.State('status')
-    public status: SplitsStatus;
+    public status: TimerStatus;
 
     @splits.State('segments')
     public segments: Segment[];
@@ -114,11 +115,11 @@ export default class Splits extends Vue {
     }
 
     split() {
-        this.$store.dispatch('spllitterino/splits/split');
+        this.$store.dispatch('splitterino/splits/split');
     }
 
     pause() {
-        this.$store.dispatch('spltterino/splits/pause');
+        this.$store.dispatch('splitterino/splits/pause');
     }
 
     unpause() {
@@ -130,29 +131,11 @@ export default class Splits extends Vue {
     }
 
     undoSplit() {
-        this.$store.dispatch('splitterino/segments/undo');
+        this.$store.dispatch('splitterino/splits/undo');
     }
 
     reset() {
-        this.$store.dispatch('splitterino/segments/reset');
-    }
-
-    startTimer() {
-        const that = this;
-        const func = function() {
-            if (that.state !== SplitsStatus.RUNNING) {
-                return;
-            }
-
-            that.totalTime = now() - that.totalStartTime - that.totalPauseTime;
-
-            const segment = that.segments[that.currentSegment];
-            const s = now() - segment.startTime - segment.pauseTime;
-            segment.time = s;
-
-            setTimeout(func, 1);
-        };
-        func();
+        this.$store.dispatch('splitterino/splits/reset');
     }
 }
 </script>
