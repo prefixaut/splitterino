@@ -8,14 +8,6 @@ export interface SplitsState {
      */
     current: number;
     /**
-     * If there's a new personal best
-     */
-    hasPersonalBest: boolean;
-    /**
-     * If there's a new overall best
-     */
-    hasOverallBest: boolean;
-    /**
      * All segments
      */
     segments: Segment[];

@@ -1,5 +1,5 @@
 import now from 'performance-now';
-import { ActionContext, ActionTree, Module } from 'vuex';
+import { ActionContext, ActionTree, Module, GetterTree } from 'vuex';
 import { remote } from 'electron';
 
 import { Segment } from '../../common/segment';
@@ -9,8 +9,6 @@ import { RootState } from '../states/root';
 
 const state: SplitsState = {
     current: -1,
-    hasPersonalBest: false,
-    hasOverallBest: false,
     segments: [
         {
             // Name of the Segment
@@ -42,6 +40,45 @@ const state: SplitsState = {
             name: 'final Split'
         }
     ]
+};
+
+const getters: GetterTree<SplitsState, RootState> = {
+    previousSegment(state: SplitsState) {
+        const index = state.current;
+        return index > 0 ? state.segments[index - 1] : null;
+    },
+    currentSegment(state: SplitsState) {
+        const index = state.current;
+        return index > -1 ? state.segments[index] : null;
+    },
+    nextSegment(state: SplitsState) {
+        const index = state.current;
+        return index > -1 && index + 1 <= state.segments.length
+            ? state.segments[index + 1]
+            : null;
+    },
+    /**
+     * If there's a new personal best
+     */
+    hasNewPersonalBest(state: SplitsState) {
+        for (const segment of state.segments) {
+            if (segment.hasNewPersonalBest) {
+                return true;
+            }
+        }
+        return false;
+    },
+    /**
+     * If there's a new overall best
+     */
+    hasNewOverallBest(state: SplitsState) {
+        for (const segment of state.segments) {
+            if (segment.hasNewOverallBest) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 const mutations = {
@@ -90,7 +127,7 @@ const mutations = {
 
         state.segments.push(segment);
     },
-    updateAllSegments(state: SplitsState, segments: Segment[]) {
+    setAllSegments(state: SplitsState, segments: Segment[]) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -147,12 +184,6 @@ const mutations = {
         }
 
         state.current = index;
-    },
-    setHasPersonalBest(state: SplitsState, to: boolean) {
-        state.hasPersonalBest = to;
-    },
-    setHasOverallBest(state: SplitsState, to: boolean) {
-        state.hasOverallBest = to;
     }
 };
 
@@ -181,9 +212,6 @@ const actions: ActionTree<SplitsState, RootState> = {
             } as Segment
         });
         context.commit('setCurrent', 0);
-        context.commit('splitterino/timer/setStatus', TimerStatus.RUNNING, {
-            root: true
-        });
     },
     split(context: ActionContext<SplitsState, RootState>) {
         const currentTime = now();
@@ -192,7 +220,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         switch (status) {
             case TimerStatus.FINISHED:
                 // Cleanup via reset
-                context.dispatch('reset');
+                context.dispatch('softReset');
                 return;
             case TimerStatus.RUNNING:
                 break;
@@ -355,10 +383,12 @@ const actions: ActionTree<SplitsState, RootState> = {
         );
     },
     unpause(context: ActionContext<SplitsState, RootState>) {
+        console.log('doing unpause ... i guess');
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
         if (status !== TimerStatus.PAUSED) {
+            console.log('status not paused, ignore');
             return;
         }
 
@@ -372,7 +402,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         context.commit('splitterino/timer/setStatus', {
             time,
             status: TimerStatus.RUNNING
-        });
+        }, { root: true });
     },
     reset(context: ActionContext<SplitsState, RootState>) {
         const time = now();
@@ -383,8 +413,9 @@ const actions: ActionTree<SplitsState, RootState> = {
         }
 
         if (
-            (!context.state.hasOverallBest && !context.state.hasPersonalBest) ||
-            status === TimerStatus.FINISHED
+            (context.getters.hasNewOverallBest ||
+                context.getters.hasNewPersonalBest) &&
+            status !== TimerStatus.FINISHED
         ) {
             return new Promise<number>((resolve, reject) => {
                 remote.dialog.showMessageBox(
@@ -410,33 +441,50 @@ const actions: ActionTree<SplitsState, RootState> = {
             });
         }
 
-        context.dispatch('softReset');
+        context.dispatch('hardReset');
     },
     softReset(context: ActionContext<SplitsState, RootState>) {
-        /*
-        this.currentSegment = 0;
-        this.state = TimerStatus.STOPPED;
-        this.totalStartTime = 0;
-        this.totalTime = 0;
-        this.totalPauseTime = 0;
-
-        for (let segment of this.segments) {
+        context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
+            root: true
+        });
+        context.commit('setCurrent', -1);
+        // Create a copy of the segments and then map them
+        const segments = context.state.segments.slice(0).map(segment => ({
+            ...segment,
+            hasNewOverallBest: false,
+            hasNewPersonalBest: false,
+            previousOverallBest: -1,
+            previousPersonalBest: -1,
+            startTime: -1,
+            skipped: false,
+            passed: false,
+        }));
+        context.commit('setAllSegments', segments);
+    },
+    hardReset(context: ActionContext<SplitsState, RootState>) {
+        context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
+            root: true
+        });
+        context.commit('setCurrent', -1);
+        // Create a copy of the segments and then map them
+        const segments = context.state.segments.slice(0).map(segment => {
+            if (segment.hasNewPersonalBest) {
+                segment.personalBest = segment.previousPersonalBest;
+            }
+            segment.hasNewPersonalBest = false;
+            if (segment.hasNewOverallBest) {
+                segment.overallBest = segment.previousOverallBest;
+            }
+            segment.hasNewOverallBest = false;
+            segment.previousOverallBest = 0;
+            segment.previousPersonalBest = 0;
+            segment.startTime = 0;
             segment.skipped = false;
             segment.passed = false;
 
-            segment.startTime = 0;
-            segment.time = 0;
-
-            segment.hasNewPersonalBest = false;
-            segment.previousPersonalBest = 0;
-            segment.hasNewOverallBest = false;
-            segment.previousOverallBest = 0;
-
-            segment.pauseTime = 0;
-        }
-        */
-    },
-    hardReset(context: ActionContext<SplitsState, RootState>) {
+            return segment;
+        });
+        context.commit('setAllSegments', segments);
         /*
         this.currentSegment = 0;
         this.state = TimerStatus.STOPPED;
@@ -474,6 +522,7 @@ const actions: ActionTree<SplitsState, RootState> = {
 const module: Module<SplitsState, any> = {
     namespaced: true,
     state,
+    getters,
     mutations,
     actions
 };

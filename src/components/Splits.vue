@@ -43,7 +43,7 @@
             <button v-if="status !== 'stopped'" @click="split()">Split</button>
             <button v-else @click="start()">Start</button>
             <button @click="reset()">Reset</button>
-            <button @click="pause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</button>
+            <button @click="togglePause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</button>
             <button @click="skipSplit()">Skip Split</button>
             <button @click="undoSplit()">Undo Button</button>
             <button @click="child">Spawn Child</button>
@@ -116,6 +116,10 @@ export default class Splits extends Vue {
 
     split() {
         this.$store.dispatch('splitterino/splits/split');
+    }
+
+    togglePause() {
+        this.status === 'paused' ? this.unpause() : this.pause();
     }
 
     pause() {

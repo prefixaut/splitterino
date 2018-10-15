@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <router-view/>
+    <spl-splits />
+    <spl-timer />
   </div>
 </template>
 

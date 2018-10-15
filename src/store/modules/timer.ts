@@ -38,23 +38,29 @@ const mutations = {
         }
 
         const from = state.status;
-        state.status = changeTo;
-
-        if (changeTo === TimerStatus.FINISHED) {
-            state.finishTime = time;
-        } else if (changeTo === TimerStatus.PAUSED) {
-            state.pauseTime = time;
-        } else if (from === TimerStatus.PAUSED) {
-            if (changeTo === TimerStatus.RUNNING) {
-                state.pauseTotal += time - state.pauseTime;
-            }
-            state.pauseTime = 0;
-        } else if (changeTo === TimerStatus.STOPPED) {
-            state.startTime = 0;
-            state.pauseTime = 0;
-            state.pauseTotal = 0;
-            state.finishTime = 0;
+        switch (changeTo) {
+            case TimerStatus.RUNNING:
+                if (from === TimerStatus.STOPPED) {
+                    state.startTime = time;
+                } else if (from === TimerStatus.PAUSED) {
+                    state.pauseTotal += time - state.pauseTime;
+                    state.pauseTime = 0;
+                }
+                break;
+            case TimerStatus.PAUSED:
+                state.pauseTime = time;
+                break;
+            case TimerStatus.FINISHED:
+                state.finishTime = time;
+                break;
+            case TimerStatus.STOPPED:
+                state.startTime = 0;
+                state.pauseTime = 0;
+                state.pauseTotal = 0;
+                state.finishTime = 0;
+                break;
         }
+        state.status = changeTo;
     },
 };
 

@@ -1,34 +1,64 @@
 <template>
-    <div class="timer" :class="'status-' + status">
-        <span class="content">{{ currentTime | aevum }}</span>
+    <div class="timer">
+        Timer: <span class="content">{{ currentTime | aevum }}</span>
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { TimerStatus } from '../common/timer-status';
+import now from 'performance-now';
+
+import { TimerStatus } from '@/common/timer-status';
+import { RootState } from '@/store/states/root';
 
 const timer = namespace('splitterino/timer');
 
+@Component({
+    created() {
+        this.statusWatcher = this.$store.watch(
+            (state: RootState) => state.splitterino.timer.status,
+            this.statusChange
+        );
+    }
+})
 export default class Timer extends Vue {
     @timer.State('status')
     public status: TimerStatus;
 
+    @timer.State('startDelay')
+    public startDelay: number;
+
+    @timer.State('startTime')
+    public startTime: number;
+
+    @timer.State('pauseTotal')
+    public pauseTotal: number;
+
     public currentTime = 0;
+    private intervalId = -1;
 
-    private statusWatcher() {};
-
-    created() {
-        this.statusWatcher = this.$store.watch(state => state['spltitterino/timer'].status, this.statusChange);
-    }
+    private statusWatcher() {}
 
     destroy() {
         this.statusWatcher();
     }
 
     statusChange() {
-        console.log('status changed');
+        console.log('status changed to:', this.status);
+        if (this.status === TimerStatus.RUNNING) {
+            this.intervalId = window.setInterval(() => {
+                this.currentTime = now() - this.startTime - this.startDelay - this.pauseTotal;
+                console.log('timer is running');
+            }, 1);
+            return;
+        }
+        if (this.intervalId > -1) {
+            window.clearInterval(this.intervalId);
+        }
+        if (this.status === TimerStatus.STOPPED) {
+            this.currentTime = 0;
+        }
     }
 }
 </script>
