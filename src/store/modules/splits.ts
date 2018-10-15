@@ -237,10 +237,10 @@ const actions: ActionTree<SplitsState, RootState> = {
             ...context.state.segments[currentIndex]
         };
         const time =
-            currentTime - currentSegment.startTime - currentSegment.pauseTime;
+            currentTime - currentSegment.startTime - (currentSegment.pauseTime || 0);
 
         currentSegment.passed = true;
-        currentSegment.time = time - currentSegment.startTime;
+        currentSegment.time = time;
 
         if (
             currentSegment.personalBest == null ||
@@ -383,12 +383,10 @@ const actions: ActionTree<SplitsState, RootState> = {
         );
     },
     unpause(context: ActionContext<SplitsState, RootState>) {
-        console.log('doing unpause ... i guess');
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
         if (status !== TimerStatus.PAUSED) {
-            console.log('status not paused, ignore');
             return;
         }
 
@@ -423,7 +421,7 @@ const actions: ActionTree<SplitsState, RootState> = {
                     {
                         title: 'Save Splits?',
                         message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
-                        buttons: ['Abort', 'Discard', 'Save']
+                        buttons: ['Cancel', 'Discard', 'Save']
                     },
                     responseCode => {
                         resolve(responseCode);

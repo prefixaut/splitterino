@@ -45,11 +45,9 @@ export default class Timer extends Vue {
     }
 
     statusChange() {
-        console.log('status changed to:', this.status);
         if (this.status === TimerStatus.RUNNING) {
             this.intervalId = window.setInterval(() => {
                 this.currentTime = now() - this.startTime - this.startDelay - this.pauseTotal;
-                console.log('timer is running');
             }, 1);
             return;
         }
