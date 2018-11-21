@@ -36,6 +36,14 @@ export function getClientStore(_Vue) {
 
     // Override the dispatch function to delegate it to the main process instead
     store._dispatch = store.dispatch = function(type, ...payload) {
+        if (Array.isArray(payload)) {
+            if (payload.length === 0) {
+                payload = undefined;
+            } else if (payload.length === 1) {
+                payload = payload[0];
+            }
+        }
+
         // Stolen from vuejs/vuex
         if (typeof type === 'object' && type.type && arguments.length === 1) {
             payload = [type.payload];
@@ -51,7 +59,14 @@ export function getClientStore(_Vue) {
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         console.log('[client] vuex-apply-mutation', type);
-        store.commit(type, payload);
+        if (payload != null && typeof payload === 'object' && !Array.isArray(payload)) {
+            store.commit({
+                type,
+                ...payload
+            });
+        } else {
+            store.commit(type, payload);
+        }
     });
 
     return store;
