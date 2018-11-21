@@ -1,21 +1,27 @@
 # splitterino
 
-## Project setup
+## Installation
+
+Install all packages via `yarn` (or via `npm`) and then serve the Application via Electron.
+
 ```
-yarn install
+yarn
+yarn serve:electron
 ```
 
-### Compiles and hot-reloads for development
-```
-yarn run serve
-```
+Beware of possible zombie threads when the Application is killed via `Ctrl+C`.
 
-### Compiles and minifies for production
-```
-yarn run build
-```
+## Contribution
 
-### Lints and fixes files
-```
-yarn run lint
-```
+- All changes may only be merged to master. Do your features/fixes in dedicated branches.
+- Format your code (via Prettier)
+- Organize the Imports (via TypeScript Hero)
+
+## VSCode Plugins
+
+You may use:
+
+- TSLint
+- Vetur
+- Prettier
+- TypeScript Hero
