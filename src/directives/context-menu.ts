@@ -1,5 +1,6 @@
 import { remote } from 'electron';
 import { VNode } from 'vue';
+import { ContextMenuItem } from '@/common/context-menu-item';
 
 export default {
     bind: (el, binding, vNode: VNode) => {
@@ -13,7 +14,7 @@ export default {
         }
         el.addEventListener('contextmenu', (e: MouseEvent) => {
             e.preventDefault();
-            const menus: any[] = vNode.context.$store.getters[
+            const menus: ContextMenuItem[] = vNode.context.$store.getters[
                 'splitterino/contextMenu/ctxMenu'
             ](binding.value);
             const menu = new remote.Menu();
