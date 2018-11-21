@@ -1,6 +1,6 @@
-import Vuex, { Store } from 'vuex';
 import { ipcRenderer } from 'electron';
 import { OverlayHostPlugin } from 'vue-overlay-host';
+import Vuex from 'vuex';
 
 import modules from './modules';
 

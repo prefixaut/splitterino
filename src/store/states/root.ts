@@ -1,5 +1,5 @@
-import { TimerState } from './timer';
 import { SplitsState } from './splits';
+import { TimerState } from './timer';
 
 export interface RootState {
     splitterino: {
