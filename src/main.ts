@@ -1,21 +1,19 @@
-import Vue from 'vue';
 import { Aevum } from 'aevum';
+import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 
-import { getClientStore } from './store';
-import router from './router';
-
-// Components
 import App from './App.vue';
 import ConfigurationEditor from './components/ConfigurationEditor.vue';
 import NumberInput from './components/NumberInput.vue';
-import TimeInput from './components/TimeInput.vue';
 import Splits from './components/Splits.vue';
+import TimeInput from './components/TimeInput.vue';
 import Timer from './components/Timer.vue';
-
-// Directives
 import ctxMenuDirective from './directives/context-menu';
+import router from './router';
+import { getClientStore } from './store';
 
+// Components
+// Directives
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
 

@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Router from 'vue-router';
+
 import Splits from './components/Splits.vue';
 import SplitsEditor from './views/SplitsEditor.vue';
 

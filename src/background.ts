@@ -1,16 +1,11 @@
 'use strict';
-
-import Vue from 'vue';
-import Vuex from 'vuex';
-
-import { app, protocol, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
-import {
-    createProtocol,
-    installVueDevtools
-} from 'vue-cli-plugin-electron-builder/lib';
+import Vue from 'vue';
+import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import { OverlayHostPlugin } from 'vue-overlay-host';
+import Vuex from 'vuex';
 
 import { config as storeConfig } from './store';
 

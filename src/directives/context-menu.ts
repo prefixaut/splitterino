@@ -1,5 +1,5 @@
-import { VNode } from 'vue';
 import { remote } from 'electron';
+import { VNode } from 'vue';
 
 export default {
     bind: (el, binding, vNode: VNode) => {
