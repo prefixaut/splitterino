@@ -70,7 +70,7 @@ export default class Splits extends Vue {
      */
     @Prop({
         type: Number,
-        default: 3,
+        default: 3
     })
     public visibleSegments;
 
@@ -139,7 +139,9 @@ export default class Splits extends Vue {
     }
 
     reset() {
-        this.$store.dispatch('splitterino/splits/reset');
+        this.$store.dispatch('splitterino/splits/reset', {
+            windowId: remote.getCurrentWindow().id
+        });
     }
 }
 </script>

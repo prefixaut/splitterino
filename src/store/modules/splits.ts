@@ -1,6 +1,6 @@
 import now from 'performance-now';
 import { ActionContext, ActionTree, Module, GetterTree } from 'vuex';
-import { remote } from 'electron';
+import { dialog, BrowserWindow } from 'electron';
 
 import { Segment } from '../../common/segment';
 import { TimerStatus } from '../../common/timer-status';
@@ -237,7 +237,9 @@ const actions: ActionTree<SplitsState, RootState> = {
             ...context.state.segments[currentIndex]
         };
         const time =
-            currentTime - currentSegment.startTime - (currentSegment.pauseTime || 0);
+            currentTime -
+            currentSegment.startTime -
+            (currentSegment.pauseTime || 0);
 
         currentSegment.passed = true;
         currentSegment.time = time;
@@ -397,14 +399,19 @@ const actions: ActionTree<SplitsState, RootState> = {
         segment.pauseTime += pauseAddition;
 
         context.commit('setSegment', { index, segment });
-        context.commit('splitterino/timer/setStatus', {
-            time,
-            status: TimerStatus.RUNNING
-        }, { root: true });
+        context.commit(
+            'splitterino/timer/setStatus',
+            {
+                time,
+                status: TimerStatus.RUNNING
+            },
+            { root: true }
+        );
     },
-    reset(context: ActionContext<SplitsState, RootState>) {
+    reset(context: ActionContext<SplitsState, RootState>, payload) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
+        console.log(payload);
 
         if (status === TimerStatus.STOPPED) {
             return;
@@ -416,8 +423,8 @@ const actions: ActionTree<SplitsState, RootState> = {
             status !== TimerStatus.FINISHED
         ) {
             return new Promise<number>((resolve, reject) => {
-                remote.dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                dialog.showMessageBox(
+                    BrowserWindow.fromId(payload.windowId),
                     {
                         title: 'Save Splits?',
                         message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
@@ -455,7 +462,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             previousPersonalBest: -1,
             startTime: -1,
             skipped: false,
-            passed: false,
+            passed: false
         }));
         context.commit('setAllSegments', segments);
     },
