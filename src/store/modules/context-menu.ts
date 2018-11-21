@@ -1,6 +1,7 @@
 import { closeWindow, reloadWindow } from '../../common/context-menu';
+import { ContextMenu } from '../states/context-menu';
 
-const state = {
+const state: ContextMenu = {
     def: [
         {
             label: 'Reload',
