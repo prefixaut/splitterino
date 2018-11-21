@@ -14,7 +14,7 @@ import Splits from './components/Splits.vue';
 import Timer from './components/Timer.vue';
 
 // Directives
-import ctxMenuDirective from './directives/contextMenu';
+import ctxMenuDirective from './directives/context-menu';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();

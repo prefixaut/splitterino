@@ -1,4 +1,4 @@
-import { reloadWindow, closeWindow } from '../../common/contextMenu';
+import { reloadWindow, closeWindow } from '../../common/context-menu';
 
 const state = {
     def: [
