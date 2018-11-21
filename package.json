@@ -13,7 +13,6 @@
   "dependencies": {
     "aevum": "^2.0.0",
     "mz": "^2.7.0",
-    "performance-now": "^2.1.0",
     "vue": "^2.5.17",
     "vue-class-component": "^6.0.0",
     "vue-overlay-host": "0.2.0",

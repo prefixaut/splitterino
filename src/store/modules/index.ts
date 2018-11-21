@@ -1,7 +1,9 @@
-import segments from './segments';
+import splits from './splits';
+import timer from './timer';
 import contextMenu from './contextMenu';
 
 export default {
-    segments,
-    contextMenu
+    splits,
+    timer,
+    contextMenu,
 };
