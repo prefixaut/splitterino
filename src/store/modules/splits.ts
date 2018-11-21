@@ -1,11 +1,12 @@
-import now from 'performance-now';
-import { ActionContext, ActionTree, Module, GetterTree } from 'vuex';
-import { dialog, BrowserWindow } from 'electron';
+import { BrowserWindow, dialog } from 'electron';
+import { ActionContext, ActionTree, GetterTree, Module } from 'vuex';
 
 import { Segment } from '../../common/segment';
 import { TimerStatus } from '../../common/timer-status';
-import { SplitsState } from '../states/splits';
+import { now } from '../../utils/now';
 import { RootState } from '../states/root';
+import { SplitsState } from '../states/splits';
+
 
 const state: SplitsState = {
     current: -1,
@@ -184,6 +185,37 @@ const mutations = {
         }
 
         state.current = index;
+    },
+    softReset(state: SplitsState) {
+        state.segments = state.segments.map(segment => ({
+            ...segment,
+            hasNewOverallBest: false,
+            hasNewPersonalBest: false,
+            previousOverallBest: -1,
+            previousPersonalBest: -1,
+            startTime: -1,
+            skipped: false,
+            passed: false
+        }));
+    },
+    hardReset(state: SplitsState) {
+        state.segments = state.segments.map(segment => {
+            if (segment.hasNewPersonalBest) {
+                segment.personalBest = segment.previousPersonalBest;
+            }
+            segment.hasNewPersonalBest = false;
+            if (segment.hasNewOverallBest) {
+                segment.overallBest = segment.previousOverallBest;
+            }
+            segment.hasNewOverallBest = false;
+            segment.previousOverallBest = 0;
+            segment.previousPersonalBest = 0;
+            segment.startTime = 0;
+            segment.skipped = false;
+            segment.passed = false;
+
+            return segment;
+        });
     }
 };
 
@@ -350,14 +382,14 @@ const actions: ActionTree<SplitsState, RootState> = {
         // Revert PB
         if (segment.hasNewPersonalBest) {
             segment.personalBest = segment.previousPersonalBest;
-            segment.previousPersonalBest = 0;
+            segment.previousPersonalBest = -1;
             segment.hasNewPersonalBest = false;
         }
 
         // Revert OB
         if (segment.hasNewOverallBest) {
             segment.overallBest = segment.previousOverallBest;
-            segment.previousOverallBest = 0;
+            segment.previousOverallBest = -1;
             segment.hasNewOverallBest = false;
         }
 
@@ -408,10 +440,12 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    reset(context: ActionContext<SplitsState, RootState>, payload) {
+    reset(
+        context: ActionContext<SplitsState, RootState>,
+        payload: { [key: string]: any }
+    ) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
-        console.log(payload);
 
         if (status === TimerStatus.STOPPED) {
             return;
@@ -422,9 +456,15 @@ const actions: ActionTree<SplitsState, RootState> = {
                 context.getters.hasNewPersonalBest) &&
             status !== TimerStatus.FINISHED
         ) {
+            let win = null;
+            const id: number = (payload || {}).windowId;
+            if (typeof id === 'number' && !isNaN(id) && isFinite(id)) {
+                win = BrowserWindow.fromId(id);
+            }
+
             return new Promise<number>((resolve, reject) => {
                 dialog.showMessageBox(
-                    BrowserWindow.fromId(payload.windowId),
+                    win,
                     {
                         title: 'Save Splits?',
                         message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
@@ -453,74 +493,14 @@ const actions: ActionTree<SplitsState, RootState> = {
             root: true
         });
         context.commit('setCurrent', -1);
-        // Create a copy of the segments and then map them
-        const segments = context.state.segments.slice(0).map(segment => ({
-            ...segment,
-            hasNewOverallBest: false,
-            hasNewPersonalBest: false,
-            previousOverallBest: -1,
-            previousPersonalBest: -1,
-            startTime: -1,
-            skipped: false,
-            passed: false
-        }));
-        context.commit('setAllSegments', segments);
+        context.commit('softReset');
     },
     hardReset(context: ActionContext<SplitsState, RootState>) {
         context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
             root: true
         });
         context.commit('setCurrent', -1);
-        // Create a copy of the segments and then map them
-        const segments = context.state.segments.slice(0).map(segment => {
-            if (segment.hasNewPersonalBest) {
-                segment.personalBest = segment.previousPersonalBest;
-            }
-            segment.hasNewPersonalBest = false;
-            if (segment.hasNewOverallBest) {
-                segment.overallBest = segment.previousOverallBest;
-            }
-            segment.hasNewOverallBest = false;
-            segment.previousOverallBest = 0;
-            segment.previousPersonalBest = 0;
-            segment.startTime = 0;
-            segment.skipped = false;
-            segment.passed = false;
-
-            return segment;
-        });
-        context.commit('setAllSegments', segments);
-        /*
-        this.currentSegment = 0;
-        this.state = TimerStatus.STOPPED;
-        this.totalStartTime = 0;
-        this.totalPauseTime = 0;
-
-        for (let segment of this.segments) {
-            segment.skipped = false;
-            segment.startTime = 0;
-            segment.time = 0;
-            segment.pauseTime = 0;
-
-            if (!segment.passed) {
-                continue;
-            }
-
-            segment.passed = false;
-
-            if (segment.hasNewPersonalBest) {
-                segment.personalBest = segment.previousPersonalBest;
-                segment.previousPersonalBest = 0;
-                segment.hasNewPersonalBest = false;
-            }
-
-            if (segment.hasNewOverallBest) {
-                segment.overallBest = segment.previousOverallBest;
-                segment.previousOverallBest = 0;
-                segment.hasNewOverallBest = false;
-            }
-        }
-        */
+        context.commit('hardReset');
     }
 };
 

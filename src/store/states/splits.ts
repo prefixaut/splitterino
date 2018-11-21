@@ -1,5 +1,4 @@
-import { Segment } from '@/common/segment';
-import { TimerStatus } from '@/common/timer-status';
+import { Segment } from '../../common/segment';
 
 export interface SplitsState {
     /**

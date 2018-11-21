@@ -1,4 +1,4 @@
-import { TimerStatus } from '@/common/timer-status';
+import { TimerStatus } from '../../common/timer-status';
 
 export interface TimerState {
     /**

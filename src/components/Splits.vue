@@ -54,11 +54,11 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import now from 'performance-now';
 import { remote } from 'electron';
 
 import { Segment } from '../common/segment';
 import { TimerStatus } from '../common/timer-status';
+import { now } from '../utils/now';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');

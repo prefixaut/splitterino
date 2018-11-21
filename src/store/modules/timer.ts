@@ -1,7 +1,6 @@
-import now from 'performance-now';
-
 import { TimerStatus } from '../../common/timer-status';
-import { TimerState } from '..//states/timer';
+import { now } from '../../utils/now';
+import { TimerState } from '../states/timer';
 
 const state: TimerState = {
     status: TimerStatus.STOPPED,

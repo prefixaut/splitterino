@@ -7,10 +7,10 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import now from 'performance-now';
 
-import { TimerStatus } from '@/common/timer-status';
-import { RootState } from '@/store/states/root';
+import { TimerStatus } from '../common/timer-status';
+import { RootState } from '../store/states/root';
+import { now } from '../utils/now';
 
 const timer = namespace('splitterino/timer');
 
