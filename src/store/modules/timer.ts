@@ -12,16 +12,16 @@ const state: TimerState = {
 };
 
 const mutations = {
-    setStartDelay (state: TimerState, to: number) {
+    setStartDelay(state: TimerState, to: number) {
         if (state.status !== TimerStatus.STOPPED) {
             return;
         }
         state.startDelay = to;
     },
-    setStartTime (state: TimerState, to: number) {
+    setStartTime(state: TimerState, to: number) {
         state.startTime = to;
     },
-    setStatus (state: TimerState, to: TimerStatus | { time: number, status: TimerStatus }) {
+    setStatus(state: TimerState, to: TimerStatus | { time: number, status: TimerStatus }) {
         let changeTo: TimerStatus;
         let time = now();
 
@@ -57,6 +57,7 @@ const mutations = {
                 state.pauseTime = 0;
                 state.pauseTotal = 0;
                 state.finishTime = 0;
+                break;
         }
         state.status = changeTo;
     },

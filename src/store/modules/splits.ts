@@ -44,15 +44,15 @@ const state: SplitsState = {
 };
 
 const getters: GetterTree<SplitsState, RootState> = {
-    previousSegment (state: SplitsState) {
+    previousSegment(state: SplitsState) {
         const index = state.current;
         return index > 0 ? state.segments[index - 1] : null;
     },
-    currentSegment (state: SplitsState) {
+    currentSegment(state: SplitsState) {
         const index = state.current;
         return index > -1 ? state.segments[index] : null;
     },
-    nextSegment (state: SplitsState) {
+    nextSegment(state: SplitsState) {
         const index = state.current;
         return index > -1 && index + 1 <= state.segments.length
             ? state.segments[index + 1]
@@ -61,7 +61,7 @@ const getters: GetterTree<SplitsState, RootState> = {
     /**
      * If there's a new personal best
      */
-    hasNewPersonalBest (state: SplitsState) {
+    hasNewPersonalBest(state: SplitsState) {
         for (const segment of state.segments) {
             if (segment.hasNewPersonalBest) {
                 return true;
@@ -72,7 +72,7 @@ const getters: GetterTree<SplitsState, RootState> = {
     /**
      * If there's a new overall best
      */
-    hasNewOverallBest (state: SplitsState) {
+    hasNewOverallBest(state: SplitsState) {
         for (const segment of state.segments) {
             if (segment.hasNewOverallBest) {
                 return true;
@@ -83,7 +83,7 @@ const getters: GetterTree<SplitsState, RootState> = {
 };
 
 const mutations = {
-    clearSegments (state: SplitsState) {
+    clearSegments(state: SplitsState) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -92,7 +92,7 @@ const mutations = {
 
         state.segments = [];
     },
-    removeSegment (state: SplitsState, index: number) {
+    removeSegment(state: SplitsState, index: number) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -111,7 +111,7 @@ const mutations = {
 
         state.segments.splice(index, 1);
     },
-    addSegment (state: SplitsState, segment: Segment) {
+    addSegment(state: SplitsState, segment: Segment) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -128,7 +128,7 @@ const mutations = {
 
         state.segments.push(segment);
     },
-    setAllSegments (state: SplitsState, segments: Segment[]) {
+    setAllSegments(state: SplitsState, segments: Segment[]) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -141,7 +141,7 @@ const mutations = {
 
         state.segments = segments;
     },
-    setSegment (
+    setSegment(
         state: SplitsState,
         payload: { index: number; segment: Segment }
     ) {
@@ -171,9 +171,9 @@ const mutations = {
             return;
         }
 
-        state.segments[index] = {...state.segments[index], ...segment};
+        state.segments[index] = Object.assign(state.segments[index], segment);
     },
-    setCurrent (state: SplitsState, index: number) {
+    setCurrent(state: SplitsState, index: number) {
         if (
             typeof index !== 'number' ||
             isNaN(index) ||
@@ -186,8 +186,8 @@ const mutations = {
 
         state.current = index;
     },
-    softReset (state: SplitsState) {
-        state.segments = state.segments.map((segment) => ({
+    softReset(state: SplitsState) {
+        state.segments = state.segments.map(segment => ({
             ...segment,
             hasNewOverallBest: false,
             hasNewPersonalBest: false,
@@ -198,8 +198,8 @@ const mutations = {
             passed: false
         }));
     },
-    hardReset (state: SplitsState) {
-        state.segments = state.segments.map((segment) => {
+    hardReset(state: SplitsState) {
+        state.segments = state.segments.map(segment => {
             if (segment.hasNewPersonalBest) {
                 segment.personalBest = segment.previousPersonalBest;
             }
@@ -220,7 +220,7 @@ const mutations = {
 };
 
 const actions: ActionTree<SplitsState, RootState> = {
-    start (context: ActionContext<SplitsState, RootState>) {
+    start(context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
@@ -245,7 +245,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         });
         context.commit('setCurrent', 0);
     },
-    split (context: ActionContext<SplitsState, RootState>) {
+    split(context: ActionContext<SplitsState, RootState>) {
         const currentTime = now();
 
         const status = context.rootState.splitterino.timer.status;
@@ -333,7 +333,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         });
         context.commit('setCurrent', currentIndex + 1);
     },
-    skip (context: ActionContext<SplitsState, RootState>) {
+    skip(context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
@@ -362,7 +362,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         context.commit('setSegment', { index: index + 1, segment: next });
         context.commit('setCurrent', index + 1);
     },
-    undo (context: ActionContext<SplitsState, RootState>) {
+    undo(context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
@@ -403,7 +403,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         context.commit('setSegment', { index: index - 1, segment: previous });
         context.commit('setCurrent', index - 1);
     },
-    pause (context: ActionContext<SplitsState, RootState>) {
+    pause(context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         if (status !== TimerStatus.RUNNING) {
@@ -416,7 +416,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    unpause (context: ActionContext<SplitsState, RootState>) {
+    unpause(context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
@@ -440,7 +440,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    reset (
+    reset(
         context: ActionContext<SplitsState, RootState>,
         payload: { [key: string]: any }
     ) {
@@ -467,14 +467,14 @@ const actions: ActionTree<SplitsState, RootState> = {
                     win,
                     {
                         title: 'Save Splits?',
-                        message: "You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?",
+                        message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
                         buttons: ['Cancel', 'Discard', 'Save']
                     },
-                    (responseCode) => {
+                    responseCode => {
                         resolve(responseCode);
                     }
                 );
-            }).then((res) => {
+            }).then(res => {
                 switch (res) {
                     case 0:
                         break;
@@ -488,14 +488,14 @@ const actions: ActionTree<SplitsState, RootState> = {
 
         context.dispatch('hardReset');
     },
-    softReset (context: ActionContext<SplitsState, RootState>) {
+    softReset(context: ActionContext<SplitsState, RootState>) {
         context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
             root: true
         });
         context.commit('setCurrent', -1);
         context.commit('softReset');
     },
-    hardReset (context: ActionContext<SplitsState, RootState>) {
+    hardReset(context: ActionContext<SplitsState, RootState>) {
         context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
             root: true
         });

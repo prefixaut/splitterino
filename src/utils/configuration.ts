@@ -1,20 +1,20 @@
 import { isType } from './is-type';
 
-interface Content { [name: string]: any }
+type Content = { [name: string]: any };
 
 export class Configuration {
     private data: Content = {};
 
-    constructor (content?: Content) {
+    constructor(content?: Content) {
         if (content) {
             this.setAll(content);
         }
     }
 
-    public has (path: string | string[], type?: string): boolean {
+    has(path: string | string[], type?: string): boolean {
         const split = this.toPath(path);
 
-        for (const splitPart in split) {
+        for (let splitPart in split) {
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] !== 'undefined' &&
@@ -33,10 +33,10 @@ export class Configuration {
         }
     }
 
-    public get (path: string | string[], defaultValue: any = null, type?: string) {
+    get(path: string | string[], defaultValue: any = null, type?: string) {
         const split = this.toPath(path);
 
-        for (const splitPart in split) {
+        for (let splitPart in split) {
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] == null
@@ -54,24 +54,24 @@ export class Configuration {
         }
     }
 
-    public getAll (): Content {
+    getAll(): Content {
         return this.data;
     }
 
-    public clear (): void {
+    clear(): void {
         this.data = {};
     }
 
-    public set (path, content): void {
+    set(path, content): void {
         this.apply(this.data, path, content);
     }
 
-    public setAll (content): void {
+    setAll(content): void {
         this.data =
             typeof content === 'object' && content !== null ? content : {};
     }
 
-    private toPath (path: string | string[]): string[] {
+    private toPath(path: string | string[]): string[] {
         if (typeof path === 'string') {
             return path.includes('.') ? path.split('.') : [path];
         }
@@ -79,7 +79,7 @@ export class Configuration {
         return path;
     }
 
-    private apply (object, path, content): void {
+    private apply(object, path, content): void {
         if (typeof path === 'string') {
             path = path.split('.');
         }

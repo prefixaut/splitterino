@@ -1,6 +1,6 @@
 export interface ContextMenuItem {
     label: string;
-    actions?: Function[];
+    actions?: Array<Function>;
     enabled?: boolean;
     visible?: boolean;
 }
