@@ -8,7 +8,7 @@ const defSettings: BrowserWindowConstructorOptions = {
 
 const url = 'http://localhost:8080#';
 
-export function newWindow (
+export function newWindow(
     settings: BrowserWindowConstructorOptions,
     route: string = ''
 ) {

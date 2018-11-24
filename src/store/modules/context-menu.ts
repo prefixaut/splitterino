@@ -21,7 +21,7 @@ const state: ContextMenu = {
 };
 
 const getters = {
-    ctxMenu (state) {
+    ctxMenu(state) {
         return (menus: string[]): Object[] => {
             const ctxMenu: Object[] = [];
             menus.forEach((el: string) => {

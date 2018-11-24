@@ -52,81 +52,97 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { namespace } from 'vuex-class'
-import { remote } from 'electron'
-import { Segment } from '../common/segment'
-import { TimerStatus } from '../common/timer-status'
-import { now } from '../utils/now'
-const timer = namespace('splitterino/timer')
-const splits = namespace('splitterino/splits')
-@Componen
-export default class Splits extends Vue 
-    /*
-     * Amount of previous Splits should be visibl
-     *
-    @Prop(
-        type: Number
-        default: 
+import { Component, Vue, Prop } from 'vue-property-decorator';
+import { namespace } from 'vuex-class';
+import { remote } from 'electron';
+
+import { Segment } from '../common/segment';
+import { TimerStatus } from '../common/timer-status';
+import { now } from '../utils/now';
+
+const timer = namespace('splitterino/timer');
+const splits = namespace('splitterino/splits');
+
+@Component
+export default class Splits extends Vue {
+    /**
+     * Amount of previous Splits should be visible
+     */
+    @Prop({
+        type: Number,
+        default: 3,
+    })
+    public visibleSegments;
+
+    @timer.State('status')
+    public status: TimerStatus;
+
+    @splits.State('segments')
+    public segments: Segment[];
+
+    @splits.State('current')
+    public currentSegment: number;
+
+    /**
+     * Time when the Timer started
+     * Only used for internal calculations
+     */
+    public totalStartTime = 0;
+    /**
+     * Total amount of time in the timer
+     */
+    public totalTime = 0;
+    /**
+     * When the pause was initiated
+     */
+    public pauseStartTime = 0;
+    /**
+     * Total amount of STATE_PAUSED time
+     */
+    public totalPauseTime = 0;
+
+    child() {
+        let child = new remote.BrowserWindow({
+            parent: remote.getCurrentWindow(),
+        });
+        child.loadURL('http://localhost:8080');
+        if (!remote.process.env.IS_TEST) child.webContents.openDevTools();
+        child.show();
     }
-    public visibleSegments
-    @timer.State('status'
-    public status: TimerStatus
-    @splits.State('segments'
-    public segments: Segment[]
-    @splits.State('current'
-    public currentSegment: number
-    /*
-     * Time when the Timer starte
-     * Only used for internal calculation
-     *
-    public totalStartTime = 0
-    /*
-     * Total amount of time in the time
-     *
-    public totalTime = 0
-    /*
-     * When the pause was initiate
-     *
-    public pauseStartTime = 0
-    /*
-     * Total amount of STATE_PAUSED tim
-     *
-    public totalPauseTime = 0
-   public  chil d() 
-       constt child = new remote.BrowserWindow(
-            parent: remote.getCurrentWindow(
-        })
-        child.loadURL('http://localhost:8080')
-        if (!remote.process.env.IS_TEST) { child.webContents.openDevTools(); 
-        child.show()
-    
-   public  star t() 
-        this.$store.dispatch('splitterino/splits/start')
-    
-   public  spli t() 
-        this.$store.dispatch('splitterino/splits/split')
-    
-   public  togglePaus e() 
-        this.status === 'paused' ? this.unpause() : this.pause()
-    
-   public  paus e() 
-        this.$store.dispatch('splitterino/splits/pause')
-    
-   public  unpaus e() 
-        this.$store.dispatch('splitterino/splits/unpause')
-    
-   public  skipSpli t() 
-        this.$store.dispatch('splitterino/splits/skip')
-    
-   public  undoSpli t() 
-        this.$store.dispatch('splitterino/splits/undo')
-    
-   public  rese t() 
-        this.$store.dispatch('splitterino/splits/reset', 
-            windowId: remote.getCurrentWindow().i
-        })
-    
+
+    start() {
+        this.$store.dispatch('splitterino/splits/start');
+    }
+
+    split() {
+        this.$store.dispatch('splitterino/splits/split');
+    }
+
+    togglePause() {
+        this.status === 'paused' ? this.unpause() : this.pause();
+    }
+
+    pause() {
+        this.$store.dispatch('splitterino/splits/pause');
+    }
+
+    unpause() {
+        this.$store.dispatch('splitterino/splits/unpause');
+    }
+
+    skipSplit() {
+        this.$store.dispatch('splitterino/splits/skip');
+    }
+
+    undoSplit() {
+        this.$store.dispatch('splitterino/splits/undo');
+    }
+
+    reset() {
+        this.$store.dispatch('splitterino/splits/reset', {
+            windowId: remote.getCurrentWindow().id,
+        });
+    }
 }
 </script>
 

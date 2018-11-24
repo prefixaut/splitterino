@@ -5,13 +5,13 @@ interface Content { [name: string]: any; }
 export class Configuration {
     private data: Content = {};
 
-    constructor (content?: Content) {
+    constructor(content?: Content) {
         if (content) {
             this.setAll(content);
         }
     }
 
-    public has (path: string | string[], type?: string): boolean {
+    public has(path: string | string[], type?: string): boolean {
         const split = this.toPath(path);
 
         for (const splitPart in split) {
@@ -33,7 +33,7 @@ export class Configuration {
         }
     }
 
-    public get (path: string | string[], defaultValue: any = null, type?: string) {
+    public get(path: string | string[], defaultValue: any = null, type?: string) {
         const split = this.toPath(path);
 
         for (const splitPart in split) {
@@ -54,24 +54,24 @@ export class Configuration {
         }
     }
 
-    public getAll (): Content {
+    public getAll(): Content {
         return this.data;
     }
 
-    public clear (): void {
+    public clear(): void {
         this.data = {};
     }
 
-    public set (path, content): void {
+    public set(path, content): void {
         this.apply(this.data, path, content);
     }
 
-    public setAll (content): void {
+    public setAll(content): void {
         this.data =
             typeof content === 'object' && content !== null ? content : {};
     }
 
-    private toPath (path: string | string[]): string[] {
+    private toPath(path: string | string[]): string[] {
         if (typeof path === 'string') {
             return path.includes('.') ? path.split('.') : [path];
         }
@@ -79,7 +79,7 @@ export class Configuration {
         return path;
     }
 
-    private apply (object, path, content): void {
+    private apply(object, path, content): void {
         if (typeof path === 'string') {
             path = path.split('.');
         }

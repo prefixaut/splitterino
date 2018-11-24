@@ -9,7 +9,7 @@ export default {
             binding.value = [binding.value];
         } else if (
             !Array.isArray(binding.value) ||
-            !binding.value.every((el) => typeof el === 'string')
+            !binding.value.every(el => typeof el === 'string')
         ) {
             throw new Error('An array with menus has to be supplied as value');
         }
@@ -23,8 +23,8 @@ export default {
                 if ('actions' in el) {
                     const actions = el.actions;
                     delete el.actions;
-                    el.click = function () {
-                        actions.forEach((el) => {
+                    el.click = function() {
+                        actions.forEach(el => {
                             if (typeof el === 'function') {
                                 el();
                             }

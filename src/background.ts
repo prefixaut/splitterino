@@ -25,10 +25,9 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     ...storeConfig,
     plugins: [
-        OverlayHostPlugin,
-        (store) => {
+        OverlayHostPlugin, store => {
             store.subscribe((mutation, state) => {
-                Object.keys(clients).forEach((id) => {
+                Object.keys(clients).forEach(id => {
                     clients[id].send('vuex-apply-mutation', mutation);
                 });
             });
@@ -37,7 +36,7 @@ const store = new Vuex.Store({
 });
 
 // Listener to transfer the current state of the store
-ipcMain.on('vuex-connect', (event) => {
+ipcMain.on('vuex-connect',event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
     console.log('[background] vuex-connect', windowId);
 
@@ -53,7 +52,7 @@ ipcMain.on('vuex-mutate', (event, { type, payload }) => {
 
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true });
-function createMainWindow () {
+function createMainWindow() {
     const window = new BrowserWindow();
 
     if (isDevelopment) {
@@ -104,7 +103,7 @@ app.on('activate', () => {
 });
 
 // create main BrowserWindow when electron is ready
-app.on('ready', async () => {
+app.on('ready', async() => {
     if (isDevelopment && !process.env.IS_TEST) {
         // Install Vue Devtools
         await installVueDevtools();

@@ -14,14 +14,13 @@ export const config = {
     }
 };
 
-export function getClientStore (_Vue) {
+export function getClientStore(_Vue) {
     _Vue.use(Vuex);
 
     const store: any = new Vuex.Store({
         state: ipcRenderer.sendSync('vuex-connect'),
         plugins: [
-            OverlayHostPlugin,
-            (events) => {
+            OverlayHostPlugin,events => {
                 events.subscribe((mutation, state) => {
                     if (!mutation.type.includes('overlay-host')) {
                         _Vue.prototype.$eventHub.$emit(
@@ -35,7 +34,7 @@ export function getClientStore (_Vue) {
     });
 
     // Override the dispatch function to delegate it to the main process instead
-    store._dispatch = store.dispatch = function (type, ...payload) {
+    store._dispatch = store.dispatch = function(type, ...payload) {
         if (Array.isArray(payload)) {
             if (payload.length === 0) {
                 payload = undefined;

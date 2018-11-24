@@ -1,9 +1,9 @@
-export function isType (item, type) {
+export function isType(item, type) {
     if (typeof type !== 'undefined' && type !== null) {
         if (typeof type === 'string') {
             return type.toLowerCase() === 'any' ? true : typeof item === type;
         } else if (Array.isArray(type)) {
-            type.forEach((i) => {
+            type.forEach(i => {
                 if (isType(item, i)) {
                     return true;
                 }

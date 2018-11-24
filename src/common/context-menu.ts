@@ -1,9 +1,9 @@
 import { remote } from 'electron';
 
-export function reloadWindow () {
+export function reloadWindow() {
     location.reload();
 }
 
-export function closeWindow () {
+export function closeWindow() {
     remote.getCurrentWindow().close();
 }
