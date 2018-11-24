@@ -1,6 +1,6 @@
 import { isType } from './is-type';
 
-type Content = { [name: string]: any };
+interface Content { [name: string]: any; }
 
 export class Configuration {
     private data: Content = {};
@@ -11,10 +11,10 @@ export class Configuration {
         }
     }
 
-    has(path: string | string[], type?: string): boolean {
+    public has(path: string | string[], type?: string): boolean {
         const split = this.toPath(path);
 
-        for (let splitPart in split) {
+        for (const splitPart in split) {
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] !== 'undefined' &&
@@ -33,10 +33,10 @@ export class Configuration {
         }
     }
 
-    get(path: string | string[], defaultValue: any = null, type?: string) {
+    public get(path: string | string[], defaultValue: any = null, type?: string) {
         const split = this.toPath(path);
 
-        for (let splitPart in split) {
+        for (const splitPart in split) {
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] == null
@@ -54,19 +54,19 @@ export class Configuration {
         }
     }
 
-    getAll(): Content {
+    public getAll(): Content {
         return this.data;
     }
 
-    clear(): void {
+    public clear(): void {
         this.data = {};
     }
 
-    set(path, content): void {
+    public set(path, content): void {
         this.apply(this.data, path, content);
     }
 
-    setAll(content): void {
+    public setAll(content): void {
         this.data =
             typeof content === 'object' && content !== null ? content : {};
     }

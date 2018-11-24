@@ -6,4 +6,5 @@ declare module 'vue/types/vue' {
     }
 }
 
+// tslint:disable-next-line no-default-export
 export default Vue;

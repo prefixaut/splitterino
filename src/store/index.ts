@@ -20,8 +20,7 @@ export function getClientStore(_Vue) {
     const store: any = new Vuex.Store({
         state: ipcRenderer.sendSync('vuex-connect'),
         plugins: [
-            OverlayHostPlugin,
-            events => {
+            OverlayHostPlugin,events => {
                 events.subscribe((mutation, state) => {
                     if (!mutation.type.includes('overlay-host')) {
                         _Vue.prototype.$eventHub.$emit(

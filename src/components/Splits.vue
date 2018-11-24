@@ -63,14 +63,14 @@ import { now } from '../utils/now';
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
-@Component({})
+@Component
 export default class Splits extends Vue {
     /**
      * Amount of previous Splits should be visible
      */
     @Prop({
         type: Number,
-        default: 3
+        default: 3,
     })
     public visibleSegments;
 
@@ -103,7 +103,7 @@ export default class Splits extends Vue {
 
     child() {
         let child = new remote.BrowserWindow({
-            parent: remote.getCurrentWindow()
+            parent: remote.getCurrentWindow(),
         });
         child.loadURL('http://localhost:8080');
         if (!remote.process.env.IS_TEST) child.webContents.openDevTools();
@@ -140,7 +140,7 @@ export default class Splits extends Vue {
 
     reset() {
         this.$store.dispatch('splitterino/splits/reset', {
-            windowId: remote.getCurrentWindow().id
+            windowId: remote.getCurrentWindow().id,
         });
     }
 }

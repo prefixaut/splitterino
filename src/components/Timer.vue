@@ -59,4 +59,5 @@ export default class Timer extends Vue {
         }
     }
 }
+
 </script>

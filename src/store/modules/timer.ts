@@ -57,7 +57,6 @@ const mutations = {
                 state.pauseTime = 0;
                 state.pauseTotal = 0;
                 state.finishTime = 0;
-                break;
         }
         state.status = changeTo;
     },

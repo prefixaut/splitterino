@@ -25,8 +25,7 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
     ...storeConfig,
     plugins: [
-        OverlayHostPlugin,
-        store => {
+        OverlayHostPlugin, store => {
             store.subscribe((mutation, state) => {
                 Object.keys(clients).forEach(id => {
                     clients[id].send('vuex-apply-mutation', mutation);
@@ -37,7 +36,7 @@ const store = new Vuex.Store({
 });
 
 // Listener to transfer the current state of the store
-ipcMain.on('vuex-connect', event => {
+ipcMain.on('vuex-connect',event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
     console.log('[background] vuex-connect', windowId);
 
@@ -59,8 +58,9 @@ function createMainWindow() {
     if (isDevelopment) {
         // Load the url of the dev server if in development mode
         window.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-        if (!process.env.IS_TEST)
+        if (!process.env.IS_TEST) {
             window.webContents.openDevTools({ mode: 'detach' });
+        }
     } else {
         createProtocol('app');
         //   Load the index.html when not in development
@@ -103,7 +103,7 @@ app.on('activate', () => {
 });
 
 // create main BrowserWindow when electron is ready
-app.on('ready', async () => {
+app.on('ready', async() => {
     if (isDevelopment && !process.env.IS_TEST) {
         // Install Vue Devtools
         await installVueDevtools();

@@ -10,7 +10,7 @@ export class FileConfiguration extends Configuration {
         super(content);
     }
 
-    load(file, defaultValue, applyDefaultValue) {
+    public load(file, defaultValue, applyDefaultValue) {
         if (typeof file !== 'string') {
             return Promise.reject(
                 new TypeError(
@@ -48,7 +48,7 @@ export class FileConfiguration extends Configuration {
             });
     }
 
-    save(file?: string) {
+    public save(file?: string) {
         if (!file) {
             file = this.latestLoad;
         }

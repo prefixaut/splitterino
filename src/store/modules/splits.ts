@@ -7,7 +7,6 @@ import { now } from '../../utils/now';
 import { RootState } from '../states/root';
 import { SplitsState } from '../states/splits';
 
-
 const state: SplitsState = {
     current: -1,
     segments: [
@@ -171,7 +170,7 @@ const mutations = {
             return;
         }
 
-        state.segments[index] = Object.assign(state.segments[index], segment);
+        state.segments[index] = {...state.segments[index], ...segment};
     },
     setCurrent(state: SplitsState, index: number) {
         if (
@@ -467,10 +466,9 @@ const actions: ActionTree<SplitsState, RootState> = {
                     win,
                     {
                         title: 'Save Splits?',
-                        message: `You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?`,
+                        message: "You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?",
                         buttons: ['Cancel', 'Discard', 'Save']
-                    },
-                    responseCode => {
+                    },responseCode => {
                         resolve(responseCode);
                     }
                 );
