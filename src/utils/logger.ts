@@ -6,8 +6,8 @@ export enum LogLevel {
     INFO = 0b00110,
     DEBUG = 0b01000,
     TRACE = 0b01010,
-    ERROR_USER = 0b111111,
-    WARN_USER = 0b011111
+    ERROR_USER = 0b00011,
+    WARN_USER = 0b00101
 }
 // tslint:disable:no-console
 export class Logger {
