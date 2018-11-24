@@ -208,7 +208,6 @@
             "allow-null-check"
         ],
         "typedef": false,
-        "typeof-compare": true,
         "unified-signatures": true,
         "use-default-type-parameter": false,
         "use-isnan": true,
@@ -218,10 +217,7 @@
             "spaces",
             4
         ],
-        "linebreak-style": [
-            true,
-            "LF"
-        ],
+        "linebreak-style": false,
         "max-classes-per-file": false,
         "max-file-line-count": false,
         "max-line-length": [
