@@ -29,7 +29,7 @@ Vue.directive('spl-ctx-menu', ctxMenuDirective);
 
 // Register Filters
 const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
-Vue.filter('aevum', value => {
+Vue.filter('aevum', (value) => {
     if (value == null) {
         return '';
     }
@@ -41,7 +41,7 @@ Vue.component('vue-overlay-host', OverlayHost);
 Vue.config.productionTip = false;
 
 new Vue({
-    render: h => h(App),
+    render: (h) => h(App),
     store: getClientStore(Vue),
     router
 }).$mount('#app');
