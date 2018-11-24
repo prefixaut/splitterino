@@ -1,6 +1,6 @@
 {
     "defaultSeverity": "warning",
-    "extends": ["tslint:recommended", "tslint-config-prettier"],
+    "extends": ["tslint:recommended"],
     "linterOptions": {
         "exclude": ["node_modules/**"]
     },
@@ -8,7 +8,7 @@
         "adjacent-overload-signatures": true,
         "align": false,
         "array-type": [true, "array"],
-        "arrow-parens": true,
+        "arrow-parens": [true, "ban-single-arg-parens"],
         "arrow-return-shorthand": true,
         "await-promise": true,
         "ban-comma-operator": true,
@@ -135,7 +135,7 @@
         "restrict-plus-operands": true,
         "return-undefined": true,
         "semicolon": [true, "always"],
-        "space-before-function-paren": true,
+        "space-before-function-paren": [true, "never"],
         "strict-boolean-expressions": false,
         "strict-type-predicates": true,
         "switch-default": false,
