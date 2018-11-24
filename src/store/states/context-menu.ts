@@ -1,5 +1,5 @@
 import { ContextMenuItem } from '@/common/context-menu-item';
 
 export interface ContextMenu {
-    [key: string]: Array<ContextMenuItem>;
+    [key: string]: ContextMenuItem[];
 }

@@ -6,11 +6,11 @@ import { Configuration } from './configuration';
 export class FileConfiguration extends Configuration {
     private latestLoad: string;
 
-    constructor(content) {
+    constructor (content) {
         super(content);
     }
 
-    load(file, defaultValue, applyDefaultValue) {
+    public load (file, defaultValue, applyDefaultValue) {
         if (typeof file !== 'string') {
             return Promise.reject(
                 new TypeError(
@@ -23,7 +23,7 @@ export class FileConfiguration extends Configuration {
 
         return fs
             .readFile(file)
-            .then(read => {
+            .then((read) => {
                 const data = JSON.parse(read);
                 this.setAll(
                     applyDefaultValue
@@ -34,7 +34,7 @@ export class FileConfiguration extends Configuration {
                         : data
                 );
             })
-            .catch(async err => {
+            .catch(async (err) => {
                 const parent = path.dirname(file);
                 if (await !fs.exists(parent)) {
                     await fs.mkdir(parent);
@@ -48,7 +48,7 @@ export class FileConfiguration extends Configuration {
             });
     }
 
-    save(file?: string) {
+    public save (file?: string) {
         if (!file) {
             file = this.latestLoad;
         }

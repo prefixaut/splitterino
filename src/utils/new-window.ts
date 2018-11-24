@@ -8,7 +8,7 @@ const defSettings: BrowserWindowConstructorOptions = {
 
 const url = 'http://localhost:8080#';
 
-export function newWindow(
+export function newWindow (
     settings: BrowserWindowConstructorOptions,
     route: string = ''
 ) {
@@ -16,7 +16,7 @@ export function newWindow(
         ...defSettings,
         ...settings
     });
-    if (!process.env.IS_TEST) win.webContents.openDevTools({ mode: 'detach' });
+    if (!process.env.IS_TEST) { win.webContents.openDevTools({ mode: 'detach' }); }
     win.loadURL(url + route);
     win.show();
 }
