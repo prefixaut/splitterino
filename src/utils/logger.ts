@@ -9,13 +9,15 @@ export enum LogLevel {
     ERROR_USER = 0b111111,
     WARN_USER = 0b011111
 }
-
+// tslint:disable:no-console
 export class Logger {
     public static log(level: LogLevel = LogLevel.INFO, message: string) {
+        // tslint:disable-next-line:no-bitwise
         const isUserWarning: number = level & 0b1;
         let prefix: string;
         let logFunction: (message?: any, ...optionalParams: any[]) => void;
         let messageBoxType;
+        // tslint:disable-next-line:no-bitwise no-magic-numbers
         level &= 0b1110;
         switch (level) {
             case LogLevel.ERROR: {
@@ -43,11 +45,10 @@ export class Logger {
             case LogLevel.TRACE: {
                 prefix = 'Trace';
                 logFunction = console.trace;
-                break;
             }
         }
         logFunction(`[${prefix}] ${message}`);
-        if (isUserWarning) {
+        if (isUserWarning > 0) {
             remote.dialog.showMessageBox(remote.getCurrentWindow(), {
                 title: prefix,
                 message: message,
