@@ -1,6 +1,9 @@
 {
-    "defaultSeverity": "error",
-    "extends": ["tslint:latest", "tslint-config-prettier"],
+    "defaultSeverity": "warning",
+    "extends": ["tslint:recommended", "tslint-config-prettier"],
+    "linterOptions": {
+        "exclude": ["node_modules/**"]
+    },
     "rules": {
         "adjacent-overload-signatures": true,
         "align": false,
@@ -33,7 +36,7 @@
         "member-ordering": false,
         "new-parens": true,
         "newline-before-return": true,
-        "newline-per-chained-call": true,
+        "newline-per-chained-call": false,
         "no-angle-bracket-type-assertion": true,
         "no-any": false,
         "no-arg": true,
@@ -54,7 +57,7 @@
         "no-eval": true,
         "no-floating-promises": false,
         "no-for-in-array": true,
-        "no-implicit-dependencies": true,
+        "no-implicit-dependencies": [true, "dev", ["@/"]],
         "no-import-side-effect": true,
         "no-inferrable-types": [true, "ignore-params", "ignore-properties"],
         "no-inferred-empty-object-type": true,
