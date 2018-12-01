@@ -11,6 +11,12 @@ export enum LogLevel {
 }
 // tslint:disable:no-console
 export class Logger {
+    /**
+     * Log a message with given log level
+     * @param level Level at which to log the message.
+     * Use {@link LogLevel}
+     * @param message Message to log
+     */
     public static log(level: LogLevel = LogLevel.INFO, message: string) {
         // tslint:disable-next-line:no-bitwise
         const isUserWarning: number = level & 0b1;
