@@ -55,6 +55,8 @@ export default class ButtonComponent extends Vue {
 </script>
 
 <style lang="scss" scoped>
+@import '../styles/core';
+
 .spl-button {
     width: auto;
     display: inline-block;

@@ -1,4 +1,4 @@
-$spl-sets: ();
+$spl-sets: () !default;
 
 @function spl-add-set($name, $color, $map: null) {
     $name: expect-string($name);

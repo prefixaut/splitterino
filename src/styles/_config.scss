@@ -6,8 +6,8 @@ $spl-color-very-dark-primary: #E67C1E;
 
 $_spl-void: spl-add-set('primary', (
     base: $spl-color-primary,
-    light: $spl-color-lightest-primary,
-    dark: $spl-color-darkest-primary,
+    light: $spl-color-very-light-primary,
+    dark: $spl-color-very-dark-primary,
 ));
 
 $spl-color-off-white: #FEFEFE;
