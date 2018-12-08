@@ -40,13 +40,13 @@
                 <span class="text">Total Time:</span>
                 <span>{{ totalTime | aevum }}</span>
             </p>
-            <button v-if="status !== 'stopped'" @click="split()">Split</button>
-            <button v-else @click="start()">Start</button>
-            <button @click="reset()">Reset</button>
-            <button @click="togglePause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</button>
-            <button @click="skipSplit()">Skip Split</button>
-            <button @click="undoSplit()">Undo Button</button>
-            <button @click="child">Spawn Child</button>
+            <spl-button v-if="status !== 'stopped'" @click="split()">Split</spl-button>
+            <spl-button v-else @click="start()">Start</spl-button>
+            <spl-button @click="reset()">Reset</spl-button>
+            <spl-button @click="togglePause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</spl-button>
+            <spl-button @click="skipSplit()">Skip Split</spl-button>
+            <spl-button @click="undoSplit()">Undo Button</spl-button>
+            <spl-button @click="child">Spawn Child</spl-button>
         </div>
     </div>
 </template>

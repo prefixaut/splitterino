@@ -6,7 +6,7 @@ import SplitsEditor from './views/SplitsEditor.vue';
 
 Vue.use(Router);
 
-export default new Router({
+export const router = new Router({
     routes: [
         {
             path: '/',

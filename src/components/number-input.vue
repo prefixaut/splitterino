@@ -22,43 +22,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 @Component({
   created() {
     this.content = this.value | 0;
     this.updateContent();
-  },
-  watch: {
-    value: function(val, old) {
-      if (val === old) {
-        return;
-      }
-      this.content = val;
-      this.updateContent();
-    },
-    min: function(val, old) {
-      if (typeof this.max === "number" && val > this.max) {
-        throw new RangeError(
-          "The minimal amount cannot be higher than the maximal!"
-        );
-      }
-      if (val === old) {
-        return;
-      }
-      this.updateContent();
-    },
-    max: function(val, old) {
-      if (typeof this.min === "number" && val < this.min) {
-        throw new RangeError(
-          "The maximal amount cannot be lower than the minimal!"
-        );
-      }
-      if (val === old) {
-        return;
-      }
-      this.updateContent();
-    }
   }
 })
 export default class NumberInputComponent extends Vue {
@@ -81,6 +50,41 @@ export default class NumberInputComponent extends Vue {
   public enableUp = true;
   public enableDown = true;
   public active = false;
+
+  @Watch("value")
+  onValueChanged(val, old) {
+    if (val === old) {
+      return;
+    }
+    this.content = val;
+    this.updateContent();
+  }
+
+  @Watch("min")
+  onMinChanged(val, old) {
+    if (typeof this.max === "number" && val > this.max) {
+      throw new RangeError(
+        "The minimal amount cannot be higher than the maximal!"
+      );
+    }
+    if (val === old) {
+      return;
+    }
+    this.updateContent();
+  }
+
+  @Watch("max")
+  onMaxChanged(val, old) {
+    if (typeof this.min === "number" && val < this.min) {
+      throw new RangeError(
+        "The maximal amount cannot be lower than the minimal!"
+      );
+    }
+    if (val === old) {
+      return;
+    }
+    this.updateContent();
+  }
 
   activate(doFocus) {
     if (this.active) {

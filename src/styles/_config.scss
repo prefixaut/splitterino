@@ -1,3 +1,63 @@
+$spl-color-very-light-primary: #FCCA26;
+$spl-color-light-primary: #F7B31F;
+$spl-color-primary: #DF8E03;
+$spl-color-dark-primary: #EA8525;
+$spl-color-very-dark-primary: #E67C1E;
+
+$_spl-void: spl-add-set('primary', (
+    base: $spl-color-primary,
+    light: $spl-color-lightest-primary,
+    dark: $spl-color-darkest-primary,
+));
+
+$spl-color-off-white: #FEFEFE;
+$spl-color-very-light-gray: #CCCCCC;
+$spl-color-light-gray: #BBBBBB;
+$spl-color-gray: #A0A0A0;
+$spl-color-dark-gray: #797979;
+$spl-color-very-dark-gray: #494949;
+$spl-color-off-black: #333333;
+
+$spl-color-light-danger: #F05A5A;
+$spl-color-danger: #DF3E27;
+$spl-color-dark-danger: #BF2812;
+
+$_spl-void: spl-add-set('danger', (
+    base: $spl-color-danger,
+    light: $spl-color-light-danger,
+    dark: $spl-color-dark-danger,
+));
+
+$spl-color-light-warning: #FAFA4F;
+$spl-color-warning: #F2DD13;
+$spl-color-dark-warning: #F3CC1F;
+
+$_spl-void: spl-add-set('warning', (
+    base: $spl-color-warning,
+    light: $spl-color-light-warning,
+    dark: $spl-color-dark-warning,
+));
+
+$spl-color-light-info: #42D6F3;
+$spl-color-info: #0BB1EF;
+$spl-color-dark-info: #0FA0E5;
+
+$_spl-void: spl-add-set('info', (
+    base: $spl-color-info,
+    light: $spl-color-light-info,
+    dark: $spl-color-dark-info,
+));
+
+$spl-color-light-flamingo: #F394D9;
+$spl-color-flamingo: #EC67C7;
+$spl-color-dark-flamingo: #C542A1;
+
+$_spl-void: spl-add-set('flamingo', (
+    base: $spl-color-flamingo,
+    light: $spl-color-light-flamingo,
+    dark: $spl-color-dark-flamingo,
+));
+
 $color-black: #222222;
 $color-dark-gray: #3d3d3d;
 $color-mid-gray: #424242;

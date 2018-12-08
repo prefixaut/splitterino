@@ -39,7 +39,8 @@ export function getClientStore(vueRef) {
     });
 
     // Override the dispatch function to delegate it to the main process instead
-    store._dispatch = store.dispatch = (type, ...payload) => {
+    // tslint:disable-next-line only-arrow-functions
+    store._dispatch = store.dispatch = function(type, ...payload) {
         if (Array.isArray(payload)) {
             if (payload.length === 0) {
                 payload = undefined;

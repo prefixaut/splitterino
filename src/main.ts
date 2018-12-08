@@ -3,19 +3,22 @@ import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 
 import App from './App.vue';
-import ConfigurationEditorComponent from './components/ConfigurationEditor.vue';
-import NumberInputComponent from './components/NumberInput.vue';
-import SplitsComponents from './components/Splits.vue';
-import TimeInputComponent from './components/TimeInput.vue';
-import TimerComponent from './components/Timer.vue';
+
+import ButtonComponent from './components/button.vue';
+import ConfigurationEditorComponent from './components/configuration-editor.vue';
+import NumberInputComponent from './components/number-input.vue';
+import SplitsComponents from './components/splits.vue';
+import TimeInputComponent from './components/time-input.vue';
+import TimerComponent from './components/timer.vue';
 import { contextMenuDirective } from './directives/context-menu';
-import router from './router';
+import { router } from './router';
 import { getClientStore } from './store';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
 
 // Register Components
+Vue.component('spl-button', ButtonComponent);
 Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);
 Vue.component('spl-number-input', NumberInputComponent);
 Vue.component('spl-splits', SplitsComponents);
