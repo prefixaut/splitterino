@@ -8,10 +8,12 @@ export function isType(item, type) {
                     return true;
                 }
             });
+
             return false;
         } else if (typeof type === 'object') {
             return Object.getPrototypeOf(item) === Object.getPrototypeOf(type);
         }
     }
+
     return false;
 }

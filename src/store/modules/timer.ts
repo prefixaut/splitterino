@@ -1,8 +1,10 @@
+import { Module } from 'vuex';
+
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/now';
 import { TimerState } from '../states/timer';
 
-const state: TimerState = {
+const moduleState: TimerState = {
     status: TimerStatus.STOPPED,
     startDelay: 0,
     startTime: 0,
@@ -21,7 +23,10 @@ const mutations = {
     setStartTime(state: TimerState, to: number) {
         state.startTime = to;
     },
-    setStatus(state: TimerState, to: TimerStatus | { time: number, status: TimerStatus }) {
+    setStatus(
+        state: TimerState,
+        to: TimerStatus | { time: number; status: TimerStatus }
+    ) {
         let changeTo: TimerStatus;
         let time = now();
 
@@ -62,8 +67,8 @@ const mutations = {
     },
 };
 
-export default {
+export const timerStoreModule: Module<TimerState, any> = {
     namespaced: true,
-    state,
+    state: moduleState,
     mutations,
 };

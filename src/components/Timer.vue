@@ -22,7 +22,7 @@ const timer = namespace('splitterino/timer');
         );
     }
 })
-export default class Timer extends Vue {
+export default class TimerComponent extends Vue {
     @timer.State('status')
     public status: TimerStatus;
 
