@@ -2,7 +2,7 @@ import { Aevum } from 'aevum';
 import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 
-import App from './App.vue';
+import App from './app.vue';
 
 import ButtonComponent from './components/button.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
