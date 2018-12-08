@@ -1,9 +1,9 @@
-import contextMenu from './context-menu';
-import splits from './splits';
-import timer from './timer';
+import { contextMenuStoreModule } from './context-menu';
+import { splitsStoreModule } from './splits';
+import { timerStoreModule } from './timer';
 
-export default {
-    splits,
-    timer,
-    contextMenu,
+export const splitterinoStoreModules = {
+    contextMenu: contextMenuStoreModule,
+    splits: splitsStoreModule,
+    timer: timerStoreModule,
 };

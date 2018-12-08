@@ -12,12 +12,9 @@ export class FileConfiguration extends Configuration {
 
     public load(file, defaultValue, applyDefaultValue) {
         if (typeof file !== 'string') {
-            return Promise.reject(
-                new TypeError(
-                    `file is not a string, it was: ${typeof file} (${JSON.stringify(
-                        file
-                    )})`
-                )
+            return Promise.reject(new TypeError(`
+file is not a string, it was: ${typeof file} (${JSON.stringify(file)})
+`)
             );
         }
 
@@ -28,9 +25,9 @@ export class FileConfiguration extends Configuration {
                 this.setAll(
                     applyDefaultValue
                         ? {
-                              ...defaultValue,
-                              ...data
-                          }
+                            ...defaultValue,
+                            ...data
+                        }
                         : data
                 );
             })
@@ -44,6 +41,7 @@ export class FileConfiguration extends Configuration {
             })
             .then(() => {
                 this.latestLoad = file;
+
                 return this.getAll();
             });
     }

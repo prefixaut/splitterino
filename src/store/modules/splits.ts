@@ -7,7 +7,7 @@ import { now } from '../../utils/now';
 import { RootState } from '../states/root';
 import { SplitsState } from '../states/splits';
 
-const state: SplitsState = {
+const moduleState: SplitsState = {
     current: -1,
     segments: [
         {
@@ -45,14 +45,17 @@ const state: SplitsState = {
 const getters: GetterTree<SplitsState, RootState> = {
     previousSegment(state: SplitsState) {
         const index = state.current;
+
         return index > 0 ? state.segments[index - 1] : null;
     },
     currentSegment(state: SplitsState) {
         const index = state.current;
+
         return index > -1 ? state.segments[index] : null;
     },
     nextSegment(state: SplitsState) {
         const index = state.current;
+
         return index > -1 && index + 1 <= state.segments.length
             ? state.segments[index + 1]
             : null;
@@ -66,6 +69,7 @@ const getters: GetterTree<SplitsState, RootState> = {
                 return true;
             }
         }
+
         return false;
     },
     /**
@@ -77,6 +81,7 @@ const getters: GetterTree<SplitsState, RootState> = {
                 return true;
             }
         }
+
         return false;
     }
 };
@@ -170,7 +175,7 @@ const mutations = {
             return;
         }
 
-        state.segments[index] = {...state.segments[index], ...segment};
+        state.segments[index] = { ...state.segments[index], ...segment };
     },
     setCurrent(state: SplitsState, index: number) {
         if (
@@ -240,7 +245,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             segment: {
                 ...firstSegment,
                 startTime: time
-            } as Segment
+            }
         });
         context.commit('setCurrent', 0);
     },
@@ -252,6 +257,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             case TimerStatus.FINISHED:
                 // Cleanup via reset
                 context.dispatch('softReset');
+
                 return;
             case TimerStatus.RUNNING:
                 break;
@@ -284,7 +290,6 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentSegment.previousPersonalBest = currentSegment.personalBest;
             currentSegment.personalBest = time;
             currentSegment.hasNewPersonalBest = true;
-            this.hasPersonalBest = true;
         } else {
             currentSegment.hasNewPersonalBest = false;
         }
@@ -298,7 +303,6 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentSegment.previousOverallBest = currentSegment.overallBest;
             currentSegment.overallBest = time;
             currentSegment.hasNewOverallBest = true;
-            this.hasOverallBest = true;
         } else {
             currentSegment.hasNewOverallBest = false;
         }
@@ -315,6 +319,7 @@ const actions: ActionTree<SplitsState, RootState> = {
                 TimerStatus.FINISHED,
                 { root: true }
             );
+
             return;
         }
 
@@ -461,14 +466,17 @@ const actions: ActionTree<SplitsState, RootState> = {
                 win = BrowserWindow.fromId(id);
             }
 
-            return new Promise<number>((resolve, reject) => {
+            return new Promise<number>(resolve => {
                 dialog.showMessageBox(
                     win,
                     {
                         title: 'Save Splits?',
-                        message: "You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?",
+                        message: `
+You're about to reset the timer, but you got some new best times!\n
+Do you wish to save or discard the times?
+`,
                         buttons: ['Cancel', 'Discard', 'Save']
-                    },responseCode => {
+                    }, responseCode => {
                         resolve(responseCode);
                     }
                 );
@@ -502,12 +510,10 @@ const actions: ActionTree<SplitsState, RootState> = {
     }
 };
 
-const module: Module<SplitsState, any> = {
+export const splitsStoreModule: Module<SplitsState, any> = {
     namespaced: true,
-    state,
+    state: moduleState,
     getters,
     mutations,
     actions
 };
-
-export default module;

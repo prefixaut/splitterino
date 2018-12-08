@@ -1,29 +1,29 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
-import modules from './modules';
+import { splitterinoStoreModules } from './modules';
 
 export const config = {
     strict: true,
     modules: {
         splitterino: {
             namespaced: true,
-            modules: { ...modules }
+            modules: splitterinoStoreModules
         }
     }
 };
 
-export function getClientStore(_Vue) {
-    _Vue.use(Vuex);
+export function getClientStore(vueRef) {
+    vueRef.use(Vuex);
 
     const store: any = new Vuex.Store({
         state: ipcRenderer.sendSync('vuex-connect'),
         plugins: [
-            OverlayHostPlugin,events => {
-                events.subscribe((mutation, state) => {
+            OverlayHostPlugin, events => {
+                events.subscribe(mutation => {
                     if (!mutation.type.includes('overlay-host')) {
-                        _Vue.prototype.$eventHub.$emit(
+                        vueRef.prototype.$eventHub.$emit(
                             `commit:${mutation.type}`
                         );
                     }
@@ -33,8 +33,13 @@ export function getClientStore(_Vue) {
         ...config
     });
 
+    const windowRef = remote.getCurrentWindow();
+    windowRef.on('closed', () => {
+        ipcRenderer.send('vuex-disconnect');
+    });
+
     // Override the dispatch function to delegate it to the main process instead
-    store._dispatch = store.dispatch = function(type, ...payload) {
+    store._dispatch = store.dispatch = (type, ...payload) => {
         if (Array.isArray(payload)) {
             if (payload.length === 0) {
                 payload = undefined;
@@ -49,7 +54,8 @@ export function getClientStore(_Vue) {
             type = type.type;
         }
 
-        // FIXME: This is not working in here, needs to be moved to where the mutation is applied
+        // FIXME: This is not working in here, needs to be moved
+        // to where the mutation is applied
         if (!type.includes('overlay-host')) {
             console.log('[client] dispatching ', type, payload);
             ipcRenderer.send('vuex-mutate', { type, payload });
@@ -58,7 +64,11 @@ export function getClientStore(_Vue) {
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         console.log('[client] vuex-apply-mutation', type);
-        if (payload != null && typeof payload === 'object' && !Array.isArray(payload)) {
+        if (
+            payload != null &&
+            typeof payload === 'object' &&
+            !Array.isArray(payload)
+        ) {
             store.commit({
                 type,
                 ...payload

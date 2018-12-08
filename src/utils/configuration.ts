@@ -33,7 +33,11 @@ export class Configuration {
         }
     }
 
-    public get(path: string | string[], defaultValue: any = null, type?: string) {
+    public get(
+        path: string | string[],
+        defaultValue: any = null,
+        type?: string
+    ) {
         const split = this.toPath(path);
 
         for (const splitPart in split) {

@@ -64,7 +64,7 @@ const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
 @Component
-export default class Splits extends Vue {
+export default class SplitsComponent extends Vue {
     /**
      * Amount of previous Splits should be visible
      */
@@ -72,7 +72,7 @@ export default class Splits extends Vue {
         type: Number,
         default: 3,
     })
-    public visibleSegments;
+    public visibleSegments: number;
 
     @timer.State('status')
     public status: TimerStatus;

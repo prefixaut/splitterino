@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vue-cli-service build:electron",
-    "serve": "vue-cli-service serve:electron",
+    "serve": "vue-cli-service electron:serve",
     "lint": "tslint --fix -p tsconfig.json -c tslint.json src/**/*.ts src/**/*.vue",
     "postinstall": "electron-builder install-app-deps"
   },

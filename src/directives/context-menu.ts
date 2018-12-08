@@ -3,8 +3,8 @@ import { VNode } from 'vue';
 
 import { ContextMenuItem } from '../common/context-menu-item';
 
-export default {
-    bind: (el, binding, vNode: VNode) => {
+export const contextMenuDirective = {
+    bind(value, binding, vNode: VNode) {
         if (typeof binding.value === 'string') {
             binding.value = [binding.value];
         } else if (
@@ -13,27 +13,31 @@ export default {
         ) {
             throw new Error('An array with menus has to be supplied as value');
         }
-        el.addEventListener('contextmenu', (e: MouseEvent) => {
+
+        value.addEventListener('contextmenu', (e: MouseEvent) => {
             e.preventDefault();
+
             const menus: ContextMenuItem[] = vNode.context.$store.getters[
                 'splitterino/contextMenu/ctxMenu'
             ](binding.value);
-            const menu = new remote.Menu();
-            menus.forEach((el: any) => {
-                if ('actions' in el) {
-                    const actions = el.actions;
-                    delete el.actions;
-                    el.click = function() {
-                        actions.forEach(el => {
-                            if (typeof el === 'function') {
-                                el();
+            const contextMenu = new remote.Menu();
+
+            menus.forEach((menu: any) => {
+                if ('actions' in menu) {
+                    const actions = menu.actions;
+                    delete menu.actions;
+                    menu.click = () => {
+                        actions.forEach(action => {
+                            if (typeof action === 'function') {
+                                action();
                             }
                         });
                     };
                 }
-                menu.append(new remote.MenuItem(el));
+                menu.append(new remote.MenuItem(menu));
             });
-            menu.popup({
+
+            contextMenu.popup({
                 window: remote.getCurrentWindow()
             });
         });
