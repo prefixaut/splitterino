@@ -1,18 +1,19 @@
 <template>
   <button
+    role="button"
+    tabindex="1"
     :autofocus="autofocus"
     :disabled="disabled"
     :type="type"
-    :class="[ { outline: outline, 'spl-button': true }, 'set-' + color]"
-    role="button"
-    tabindex="1"
+    :class="[ { outline: outline }, 'spl-button', 'theme-' + internalTheme]"
+    v-on="$listeners"
   >
     <slot/>
   </button>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
 @Component
 export default class ButtonComponent extends Vue {
@@ -23,7 +24,7 @@ export default class ButtonComponent extends Vue {
   public autofocus: boolean;
 
   @Prop(String)
-  public color: string;
+  public theme: string;
 
   @Prop({
     type: Boolean,
@@ -34,8 +35,8 @@ export default class ButtonComponent extends Vue {
   @Prop({
     type: String,
     validator: val =>
-      val == null || ["button", "reset", "submit"].includes(val),
-    default: () => "button"
+      val == null || ['button', 'reset', 'submit'].includes(val),
+    default: () => 'button'
   })
   public type: string;
 
@@ -45,11 +46,14 @@ export default class ButtonComponent extends Vue {
   })
   public outline: boolean;
 
-  @Watch("color")
+  public internalTheme: string;
+
+  @Watch('theme', { immediate: true })
   onColorChanged(val: string) {
     if (val == null) {
-      this.color = "primary";
+      val = 'primary';
     }
+    this.internalTheme = val;
   }
 }
 </script>
@@ -66,23 +70,25 @@ export default class ButtonComponent extends Vue {
     background: none;
     margin: 10px;
     text-decoration: none;
-    transition: 200ms;
+    transition: 400ms;
     cursor: pointer;
 
-    @each $set in map-keys($spl-sets) {
-        &.color-#{$set} {
-            color: spl-set-get($set, 'text');
-            background-color: spl-set-get($set, 'base');
-            border-color: spl-set-get($set, 'base');
-
-            &.outline {
-                background-color: $spl-color-very-dark-gray;
-            }
-
-            &:hover,
-            &:focus {
+    @if (is-type($spl-themes, 'map')) {
+        @each $theme in map-keys($spl-themes) {
+            &.theme-#{$theme} {
+                color: spl-get-theme($theme, 'text');
+                background-color: spl-get-theme($theme, 'base');
+                border-color: spl-get-theme($theme, 'base');
                 text-shadow: 1px 2px 4px rgba($spl-color-off-black, 50%);
-                box-shadow:  0 0 6px 3px rgba(spl-set-get($set, 'base'), 50%);
+
+                &.outline {
+                    background-color: $spl-color-very-dark-gray;
+                }
+
+                &:hover,
+                &:focus {
+                    box-shadow:  0 0 2px 3px rgba(spl-get-theme($theme, 'base'), 50%);
+                }
             }
         }
     }

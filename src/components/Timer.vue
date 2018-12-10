@@ -6,14 +6,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Component, Vue } from 'vue-property-decorator';
+import { namespace } from 'vuex-class';
 
-import { TimerStatus } from "../common/timer-status";
-import { RootState } from "../store/states/root";
-import { now } from "../utils/now";
+import { TimerStatus } from '../common/timer-status';
+import { RootState } from '../store/states/root';
+import { now } from '../utils/now';
 
-const timer = namespace("splitterino/timer");
+const timer = namespace('splitterino/timer');
 
 @Component({
   created() {
@@ -24,22 +24,24 @@ const timer = namespace("splitterino/timer");
   }
 })
 export default class TimerComponent extends Vue {
-  @timer.State("status")
+  @timer.State('status')
   public status: TimerStatus;
 
-  @timer.State("startDelay")
+  @timer.State('startDelay')
   public startDelay: number;
 
-  @timer.State("startTime")
+  @timer.State('startTime')
   public startTime: number;
 
-  @timer.State("pauseTotal")
+  @timer.State('pauseTotal')
   public pauseTotal: number;
 
   public currentTime = 0;
   private intervalId = -1;
 
-  private statusWatcher = () => {};
+  private statusWatcher = () => {
+      // noop
+  }
 
   public destroy() {
     this.statusWatcher();

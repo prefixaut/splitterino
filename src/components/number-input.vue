@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
 @Component({
   created() {
@@ -51,7 +51,7 @@ export default class NumberInputComponent extends Vue {
   public enableDown = true;
   public active = false;
 
-  @Watch("value")
+  @Watch('value')
   onValueChanged(val, old) {
     if (val === old) {
       return;
@@ -60,11 +60,11 @@ export default class NumberInputComponent extends Vue {
     this.updateContent();
   }
 
-  @Watch("min")
+  @Watch('min')
   onMinChanged(val, old) {
-    if (typeof this.max === "number" && val > this.max) {
+    if (typeof this.max === 'number' && val > this.max) {
       throw new RangeError(
-        "The minimal amount cannot be higher than the maximal!"
+        'The minimal amount cannot be higher than the maximal!'
       );
     }
     if (val === old) {
@@ -73,11 +73,11 @@ export default class NumberInputComponent extends Vue {
     this.updateContent();
   }
 
-  @Watch("max")
+  @Watch('max')
   onMaxChanged(val, old) {
-    if (typeof this.min === "number" && val < this.min) {
+    if (typeof this.min === 'number' && val < this.min) {
       throw new RangeError(
-        "The maximal amount cannot be lower than the minimal!"
+        'The maximal amount cannot be lower than the minimal!'
       );
     }
     if (val === old) {
@@ -96,12 +96,12 @@ export default class NumberInputComponent extends Vue {
         (this.$refs.input as any).focus();
       });
     }
-    this.$emit("focus", null);
+    this.$emit('focus', null);
   }
 
   deactivate() {
     this.active = false;
-    this.$emit("blur", null);
+    this.$emit('blur', null);
     this.updateContent();
   }
 
@@ -153,7 +153,7 @@ export default class NumberInputComponent extends Vue {
     }
     this.content = this.content | 0;
 
-    this.$emit("change", this.content);
+    this.$emit('change', this.content);
   }
 }
 </script>

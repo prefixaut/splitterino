@@ -43,10 +43,10 @@
             <spl-button v-if="status !== 'stopped'" @click="split()">Split</spl-button>
             <spl-button v-else @click="start()">Start</spl-button>
             <spl-button @click="reset()">Reset</spl-button>
-            <spl-button @click="togglePause()">{{ status === 'paused' ? 'Unpause' : 'Pause' }}</spl-button>
-            <spl-button @click="skipSplit()">Skip Split</spl-button>
-            <spl-button @click="undoSplit()">Undo Button</spl-button>
-            <spl-button @click="child">Spawn Child</spl-button>
+            <spl-button v-if="status === 'paused'" @click="unpause()">Unpause</spl-button>
+            <spl-button @click="pause()">Pause</spl-button>
+            <spl-button @click="skipSplit()">Skip</spl-button>
+            <spl-button @click="undoSplit()">Undo</spl-button>
         </div>
     </div>
 </template>
@@ -97,18 +97,9 @@ export default class SplitsComponent extends Vue {
      */
     public pauseStartTime = 0;
     /**
-     * Total amount of STATE_PAUSED time
+     * Total amount of time that the timer was paused
      */
     public totalPauseTime = 0;
-
-    child() {
-        let child = new remote.BrowserWindow({
-            parent: remote.getCurrentWindow(),
-        });
-        child.loadURL('http://localhost:8080');
-        if (!remote.process.env.IS_TEST) child.webContents.openDevTools();
-        child.show();
-    }
 
     start() {
         this.$store.dispatch('splitterino/splits/start');
@@ -116,10 +107,6 @@ export default class SplitsComponent extends Vue {
 
     split() {
         this.$store.dispatch('splitterino/splits/split');
-    }
-
-    togglePause() {
-        this.status === 'paused' ? this.unpause() : this.pause();
     }
 
     pause() {
@@ -146,8 +133,8 @@ export default class SplitsComponent extends Vue {
 }
 </script>
 
-<style lang="scss">
-@import '../styles/config.scss';
+<style lang="scss" scoped>
+@import '../styles/core.scss';
 
 .splits-root {
     &.state-stopped {
