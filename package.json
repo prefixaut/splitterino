@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vue-cli-service build:electron",
     "serve": "vue-cli-service electron:serve",
-    "lint": "tslint --fix -p tsconfig.json -c tslint.json src/**/*.ts src/**/*.vue",
+    "lint": "vue-cli-service lint ./src/**/*.vue ./src/**/*.ts",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
