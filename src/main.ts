@@ -35,7 +35,7 @@ Vue.filter('aevum', value => {
         return '';
     }
 
-    return formatter.format(value);
+    return formatter.format(value, { padding: true });
 });
 
 Vue.component('vue-overlay-host', OverlayHost);

@@ -1,10 +1,12 @@
 <template>
-  <div id="app">
-    <spl-splits />
-    <spl-timer />
-  </div>
+    <div id="app">
+        <div class="container">
+            <spl-splits/>
+            <spl-timer/>
+        </div>
+    </div>
 </template>
 
 <style lang="scss">
-@import './styles/styles';
+@import "./styles/styles";
 </style>

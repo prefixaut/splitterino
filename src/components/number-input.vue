@@ -188,7 +188,7 @@ export default class NumberInputComponent extends Vue {
 
     input {
       width: 100%;
-      font: normal normal 300 1rem/1 "Roboto", sans-serif;
+      font: normal normal 300 1rem/1 'Noto Sans', sans-serif;
       text-align: left;
       background: none;
       border: 0;
@@ -198,7 +198,7 @@ export default class NumberInputComponent extends Vue {
 
       &:hover,
       &:focus {
-        background: $color-dark-gray;
+        background: $spl-color-dark-gray;
       }
 
       &::-webkit-outer-spin-button,
@@ -208,7 +208,7 @@ export default class NumberInputComponent extends Vue {
       }
 
       &:focus {
-        // outline: none;
+        outline: none;
       }
     }
   }
@@ -228,7 +228,7 @@ export default class NumberInputComponent extends Vue {
       right: 0;
 
       &.disabled {
-        color: $color-light-gray;
+        color: $spl-color-light-gray;
       }
 
       .icon {

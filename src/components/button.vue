@@ -1,7 +1,7 @@
 <template>
   <button
     role="button"
-    tabindex="1"
+    tabindex="0"
     :autofocus="autofocus"
     :disabled="disabled"
     :type="type"
@@ -68,7 +68,6 @@ export default class ButtonComponent extends Vue {
     padding: 8px 10px;
     border: 2px solid transparent;
     background: none;
-    margin: 10px;
     text-decoration: none;
     transition: 400ms;
     cursor: pointer;
@@ -87,7 +86,8 @@ export default class ButtonComponent extends Vue {
 
                 &:hover,
                 &:focus {
-                    box-shadow:  0 0 2px 3px rgba(spl-get-theme($theme, 'base'), 50%);
+                    outline: none;
+                    box-shadow:  0 0 10px 1px rgba(spl-get-theme($theme, 'base'), 50%);
                 }
             }
         }
