@@ -231,7 +231,6 @@ export default class SplitsComponent extends Vue {
                 }
             }
 
-            &.current,
             &.visible,
             &.scroll {
                 display: flex;
@@ -247,6 +246,12 @@ export default class SplitsComponent extends Vue {
     &.scrolling {
         .split.scroll {
             background: #444;
+        }
+    }
+
+    &:not(.scrolling) {
+        .split.current {
+            display: flex;
         }
     }
 
