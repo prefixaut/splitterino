@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <spl-title-bar />
         <div class="container">
             <spl-splits/>
             <spl-timer/>
