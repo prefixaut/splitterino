@@ -1,0 +1,72 @@
+@function spl-add-theme($name, $color, $map: null) {
+    $name: expect-string($name);
+
+    @if (map-has-key($spl-themes, $name)) {
+        @error "The name '#{$name}' is already used for a theme!";
+    }
+
+    @if (is-type($color, 'map')) {
+        $map: $color;
+        $color: map-get($color, 'base');
+    }
+
+    @if ($color == null) {
+        @if (is-type($color, 'map')) {
+            $map: $color;    
+        }
+        @if (not map-has-key($map, 'base')) {
+            @error "NULL is not a valid color!";
+        }
+        $color: map-get($map, 'base');
+    }
+
+    $color: expect-color($color);
+
+    $map: () !default;
+    $map: map-merge($map, (base: $color));
+    $map: spl-set-map-default($map, 'light', lighten($color, 10%));
+    $map: spl-set-map-default($map, 'dark', darken($color, 10%));
+    $map: spl-set-map-default($map, 'text', spl-contrast($color, 50%, $spl-color-off-white, $spl-color-off-black));
+
+    $spl-themes: map-merge($spl-themes, (unquote($name): $map)) !global;
+
+    @return $map;
+}
+
+@function spl-remove-theme($name) {
+    $name: expect-string($name);
+
+    @if (map-has-key($spl-themes, $name) == false) {
+        @return false;
+    }
+
+    $mod: map-remove($spl-themes, $name);
+
+    @if ($mod != $spl-themes) {
+        $spl-themes: $mod !global;
+
+        @return true;
+    }
+
+    @return false;
+}
+
+@function spl-get-theme($name, $variant: 'base') {
+    $name: expect-string($name);
+    $variant: expect-string($variant);
+
+    @if (not map-has-key($spl-themes, $name)) {
+        @return false;
+    }
+
+    $color: map-get($spl-themes, $name);
+    @if ($color == null) {
+        @return false;
+    }
+
+    @if ($variant == null or not map-has-key($color, $variant)) {
+        @return $color;
+    }
+
+    @return map-get($color, $variant);
+}

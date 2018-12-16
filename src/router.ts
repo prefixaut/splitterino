@@ -1,12 +1,11 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import Splits from './components/Splits.vue';
-import SplitsEditor from './views/SplitsEditor.vue';
+import Splits from './components/splits.vue';
 
 Vue.use(Router);
 
-export default new Router({
+export const router = new Router({
     routes: [
         {
             path: '/',
@@ -20,11 +19,6 @@ export default new Router({
         {
             path: '/settings',
             name: 'settings'
-        },
-        {
-            path: '/splits/edit',
-            name: 'splits-edit',
-            component: SplitsEditor
         }
     ]
 });

@@ -34,7 +34,7 @@ export const contextMenuDirective = {
                         });
                     };
                 }
-                menu.append(new remote.MenuItem(menu));
+                contextMenu.append(new remote.MenuItem(menu));
             });
 
             contextMenu.popup({

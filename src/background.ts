@@ -3,14 +3,12 @@ import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
-import {
-    createProtocol,
-    installVueDevtools
-} from 'vue-cli-plugin-electron-builder/lib';
+import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { config as storeConfig } from './store';
+import { RootState } from './store/states/root';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 if (isDevelopment) {
@@ -27,7 +25,7 @@ const clients: any[] = [];
 
 // Main instance of the Vuex-Store
 Vue.use(Vuex);
-const store = new Vuex.Store({
+const store = new Vuex.Store<RootState>({
     ...storeConfig,
     plugins: [
         OverlayHostPlugin,
@@ -66,7 +64,12 @@ ipcMain.on('vuex-mutate', (event, { type, payload }) => {
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true });
 function createMainWindow() {
-    const window = new BrowserWindow();
+    const window = new BrowserWindow({
+        useContentSize: true,
+        title: 'Splitterino',
+        frame: false,
+        titleBarStyle: 'hidden',
+    });
 
     if (isDevelopment) {
         // Load the url of the dev server if in development mode

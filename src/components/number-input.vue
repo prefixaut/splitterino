@@ -22,43 +22,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
 @Component({
   created() {
     this.content = this.value | 0;
     this.updateContent();
-  },
-  watch: {
-    value: function(val, old) {
-      if (val === old) {
-        return;
-      }
-      this.content = val;
-      this.updateContent();
-    },
-    min: function(val, old) {
-      if (typeof this.max === "number" && val > this.max) {
-        throw new RangeError(
-          "The minimal amount cannot be higher than the maximal!"
-        );
-      }
-      if (val === old) {
-        return;
-      }
-      this.updateContent();
-    },
-    max: function(val, old) {
-      if (typeof this.min === "number" && val < this.min) {
-        throw new RangeError(
-          "The maximal amount cannot be lower than the minimal!"
-        );
-      }
-      if (val === old) {
-        return;
-      }
-      this.updateContent();
-    }
   }
 })
 export default class NumberInputComponent extends Vue {
@@ -82,6 +51,41 @@ export default class NumberInputComponent extends Vue {
   public enableDown = true;
   public active = false;
 
+  @Watch('value')
+  onValueChanged(val, old) {
+    if (val === old) {
+      return;
+    }
+    this.content = val;
+    this.updateContent();
+  }
+
+  @Watch('min')
+  onMinChanged(val, old) {
+    if (typeof this.max === 'number' && val > this.max) {
+      throw new RangeError(
+        'The minimal amount cannot be higher than the maximal!'
+      );
+    }
+    if (val === old) {
+      return;
+    }
+    this.updateContent();
+  }
+
+  @Watch('max')
+  onMaxChanged(val, old) {
+    if (typeof this.min === 'number' && val < this.min) {
+      throw new RangeError(
+        'The maximal amount cannot be lower than the minimal!'
+      );
+    }
+    if (val === old) {
+      return;
+    }
+    this.updateContent();
+  }
+
   activate(doFocus) {
     if (this.active) {
       return;
@@ -92,12 +96,12 @@ export default class NumberInputComponent extends Vue {
         (this.$refs.input as any).focus();
       });
     }
-    this.$emit("focus", null);
+    this.$emit('focus', null);
   }
 
   deactivate() {
     this.active = false;
-    this.$emit("blur", null);
+    this.$emit('blur', null);
     this.updateContent();
   }
 
@@ -149,7 +153,7 @@ export default class NumberInputComponent extends Vue {
     }
     this.content = this.content | 0;
 
-    this.$emit("change", this.content);
+    this.$emit('change', this.content);
   }
 }
 </script>
@@ -184,7 +188,7 @@ export default class NumberInputComponent extends Vue {
 
     input {
       width: 100%;
-      font: normal normal 300 1rem/1 "Roboto", sans-serif;
+      font: normal normal 300 1rem/1 'Noto Sans', sans-serif;
       text-align: left;
       background: none;
       border: 0;
@@ -194,7 +198,7 @@ export default class NumberInputComponent extends Vue {
 
       &:hover,
       &:focus {
-        background: $color-dark-gray;
+        background: $spl-color-dark-gray;
       }
 
       &::-webkit-outer-spin-button,
@@ -204,7 +208,7 @@ export default class NumberInputComponent extends Vue {
       }
 
       &:focus {
-        // outline: none;
+        outline: none;
       }
     }
   }
@@ -224,7 +228,7 @@ export default class NumberInputComponent extends Vue {
       right: 0;
 
       &.disabled {
-        color: $color-light-gray;
+        color: $spl-color-light-gray;
       }
 
       .icon {

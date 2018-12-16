@@ -1,4 +1,5 @@
-@import 'config';
+@import './core';
+@import './fonts';
 
 *,
 *::before,
@@ -7,15 +8,22 @@
 }
 
 html {
-    font-size: 16px; // Set REM
-    margin: 0; // Remove margin
-    user-select: none; // Make disable text-selection
-    font-family: 'Roboto', sans-serif;
-    color: $color-white;
+     // Set REM
+    font-size: 16px;
+
+    // Remove margin
+    margin: 0;
+
+    // Make disable text-selection
+    user-select: none;
+
+    // Set default typography settings
+    font-family: 'Noto Sans', sans-serif;
+    color: $spl-color-off-white;
 }
 
 body {
-    background: $color-black;
+    background: $spl-color-very-dark-gray;
     margin: 0;
 }
 

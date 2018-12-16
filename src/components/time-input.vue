@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator';
 
 @Component({
   created() {
@@ -84,12 +84,12 @@ export default class TimeInputComponent extends Vue {
 
   activate() {
     this.active = true;
-    this.$emit("focus");
+    this.$emit('focus');
   }
 
   deactivate() {
     this.active = false;
-    this.$emit("blur");
+    this.$emit('blur');
   }
 
   onChange(value, part) {
@@ -99,9 +99,9 @@ export default class TimeInputComponent extends Vue {
     n += this.minute * 60000;
     n += this.hour * 3600000;
 
-    this.$emit("change", n);
+    this.$emit('change', n);
   }
-  
+
   applyValue(value) {
     // Parse an timing object from the number
     this.hour = (value / 3600000) | 0;

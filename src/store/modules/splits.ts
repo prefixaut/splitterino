@@ -444,7 +444,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    reset(
+    async reset(
         context: ActionContext<SplitsState, RootState>,
         payload: { [key: string]: any }
     ) {
@@ -452,7 +452,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         const status = context.rootState.splitterino.timer.status;
 
         if (status === TimerStatus.STOPPED) {
-            return;
+            return Promise.resolve();
         }
 
         if (
@@ -480,10 +480,10 @@ Do you wish to save or discard the times?
                         resolve(responseCode);
                     }
                 );
-            }).then(res => {
+            }).then(async res => {
                 switch (res) {
                     case 0:
-                        break;
+                        return Promise.resolve();
                     case 1:
                         return context.dispatch('hardReset');
                     case 2:

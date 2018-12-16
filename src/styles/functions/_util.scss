@@ -1,0 +1,23 @@
+@function spl-set-map-default($map, $key, $value) {
+    $map: expect-map($map);
+    $key: expect-string($key);
+  
+    @if (not map-has-key($map, $key)) {
+      $map: map-merge($map, (#{$key}: $value));
+    }
+  
+    @return $map;
+}
+
+@function spl-contrast($color, $ratio: 50%, $light: #FFF, $dark: #000) {
+  $color: expect-color($color);
+  $ratio: expect-unit($ratio, '%');
+  $light: expect-color($light);
+  $dark: expect-color($dark);
+
+  @if (unitless($ratio)) {
+    $unit: 100% * $ratio;
+  }
+
+  @return if(lightness($color) > $ratio, $dark, $light);
+}
