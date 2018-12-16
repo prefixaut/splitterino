@@ -9,6 +9,7 @@ import Vuex from 'vuex';
 
 import { config as storeConfig } from './store';
 import { RootState } from './store/states/root';
+import { Logger } from './utils/logger';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 if (isDevelopment) {
@@ -42,7 +43,7 @@ const store = new Vuex.Store<RootState>({
 // Listener to transfer the current state of the store
 ipcMain.on('vuex-connect', event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
-    console.log('[background] vuex-connect', windowId);
+    Logger.trace('[background] vuex-connect', windowId);
 
     clients[windowId] = event.sender;
     event.returnValue = store.state;
@@ -50,14 +51,14 @@ ipcMain.on('vuex-connect', event => {
 
 ipcMain.on('vuex-disconnect', event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
-    console.log('[background] vuex-disconnect', windowId);
+    Logger.trace('[background] vuex-disconnect', windowId);
 
     delete clients[windowId];
 });
 
 // Listener to perform a delegate mutation on the main store
 ipcMain.on('vuex-mutate', (event, { type, payload }) => {
-    console.log('[background] vuex-mutate', type, payload);
+    Logger.trace('[background] vuex-mutate', type, payload);
     store.dispatch(type, ...payload);
 });
 

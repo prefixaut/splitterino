@@ -11,7 +11,7 @@ export enum LogLevel {
 }
 // tslint:disable:no-console
 export class Logger {
-    public static log(level: LogLevel = LogLevel.INFO, message: string) {
+    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]) {
         // tslint:disable-next-line:no-bitwise
         const isUserWarning: number = level & 0b1;
         let prefix: string;
@@ -47,13 +47,36 @@ export class Logger {
                 logFunction = console.trace;
             }
         }
-        logFunction(`[${prefix}] ${message}`);
+
+        logFunction(`[${prefix}]`, ...messages);
+        const messageStr = messages.map(elm => String(elm)).join('\n');
+
         if (isUserWarning > 0) {
             remote.dialog.showMessageBox(remote.getCurrentWindow(), {
                 title: prefix,
-                message: message,
+                message: messageStr,
                 type: messageBoxType
             });
         }
+    }
+
+    public static trace(...messages: any[]) {
+        Logger.log(LogLevel.TRACE, ...messages);
+    }
+
+    public static debug(...messages: any[]) {
+        Logger.log(LogLevel.DEBUG, ...messages);
+    }
+
+    public static info(...messages: any[]) {
+        Logger.log(LogLevel.INFO, ...messages);
+    }
+
+    public static warn(...messages: any[]) {
+        Logger.log(LogLevel.WARN, ...messages);
+    }
+
+    public static error(...messages: any[]) {
+        Logger.log(LogLevel.ERROR, ...messages);
     }
 }
