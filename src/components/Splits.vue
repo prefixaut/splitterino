@@ -16,7 +16,7 @@
                 :class="[
                     'split',
 
-                    {'visible': isVisible(index)},
+                    {'visible': visibleIndicies.includes(index)},
                     {'current': index === currentSegment && status === 'running'},
                     {'scroll': index === scrollIndex},
 
@@ -53,6 +53,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import { remote } from 'electron';
+import { clamp } from 'lodash';
 
 import { Segment } from '../common/segment';
 import { TimerStatus } from '../common/timer-status';
@@ -91,23 +92,6 @@ export default class SplitsComponent extends Vue {
     public currentSegment: number;
 
     /**
-     * Time when the Timer started
-     * Only used for internal calculations
-     */
-    public totalStartTime = 0;
-    /**
-     * Total amount of time in the timer
-     */
-    public totalTime = 0;
-    /**
-     * When the pause was initiated
-     */
-    public pauseStartTime = 0;
-    /**
-     * Total amount of time that the timer was paused
-     */
-    public totalPauseTime = 0;
-    /**
      * Scroll index. Used to scroll over the splits with
      * the mouse-wheel. When bigger than -1, it indicates
      * the currently viewed index.
@@ -116,6 +100,43 @@ export default class SplitsComponent extends Vue {
      */
     public scrollIndex = -1;
 
+    public get visibleIndicies(): number[] {
+        const current = this.scrollIndex < 0
+            ? this.currentSegment < 0 ? 0 : this.currentSegment
+            : this.scrollIndex;
+
+        const max = this.segments.length;
+        const displayCount = Math.min(
+            this.visiblePreviousSegments + this.visibleUpcomingSegments + 1,
+            this.segments.length
+        );
+
+        const start = clamp(
+            current - clamp(
+                current,
+                0,
+                displayCount - clamp(
+                    max - current,
+                    1,
+                    this.visibleUpcomingSegments + 1
+                )
+            ),
+            0,
+            max + this.visibleUpcomingSegments
+        );
+
+        const arr = [];
+        for (
+            let i = start;
+            i < start + displayCount && i < this.segments.length;
+            i++
+        ) {
+            arr.push(i);
+        }
+
+        return arr;
+    }
+
     scrollSplits(event: MouseWheelEvent) {
         if (event.deltaY > 0) {
             this.scrollIndex++;
@@ -123,32 +144,10 @@ export default class SplitsComponent extends Vue {
             this.scrollIndex--;
         }
 
-        this.scrollIndex = Math.max(0,
-            Math.min(this.scrollIndex, this.segments.length - 1));
-    }
-
-    isVisible(index: number): boolean {
-        const current = this.scrollIndex < 0
-            ? this.currentSegment < 0 ? 0 : this.currentSegment
-            : this.scrollIndex;
-
-        const max = this.segments.length;
-        let next = this.visibleUpcomingSegments;
-        let prev = this.visiblePreviousSegments;
-        if (current - prev < 0) {
-            next += ((current - this.visibleUpcomingSegments) + 1) * -1;
-        }
-        if (current + 1 + this.visibleUpcomingSegments > max) {
-            prev += (
-                max - this.visibleUpcomingSegments
-                - current - this.visiblePreviousSegments
-            ) * -1;
-        }
-
-        return (
-            (index < current && index + prev >= current) ||
-            (index > current && index <= current + next)
-        );
+        this.scrollIndex = Math.max(0, Math.min(
+            this.scrollIndex,
+            this.segments.length - 1
+        ));
     }
 
     start() {
