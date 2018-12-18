@@ -1,4 +1,5 @@
-import { isType } from './is-type';
+import { isType, Typeguard } from './is-type';
+import { merge } from 'lodash';
 
 interface Content { [name: string]: any; }
 
@@ -6,60 +7,22 @@ export class Configuration {
     private data: Content = {};
 
     constructor(content?: Content) {
-        if (content) {
-            this.setAll(content);
-        }
+        this.setAll(content);
     }
 
-    public has(path: string | string[], type?: string): boolean {
-        const split = this.toPath(path);
-
-        // tslint:disable-next-line prefer-for-of
-        for (let index = 0; index < split.length; index ++) {
-            const splitPart = split[index];
-            if (
-                this.data.hasOwnProperty(splitPart) &&
-                typeof this.data[splitPart] !== 'undefined' &&
-                this.data[splitPart] !== null
-            ) {
-                this.data = this.data[splitPart];
-            } else {
-                return false;
-            }
-        }
-
-        if (type != null) {
-            return isType(this.data, type);
-        } else {
-            return true;
-        }
+    public has(path: string | string[], typeguards: Typeguard[] = []): boolean {
+        return isType(this.getValue(path), typeguards);
     }
 
     public get(
         path: string | string[],
         defaultValue: any = null,
-        type?: string
+        typeguards: Typeguard[]
     ) {
-        const split = this.toPath(path);
+        const value = this.getValue(path);
 
-        // tslint:disable-next-line prefer-for-of
-        for (let index = 0; index < split.length; index++) {
-            const splitPart = split[index];
-            if (
-                this.data.hasOwnProperty(splitPart) &&
-                typeof this.data[splitPart] == null
-            ) {
-                this.data = this.data[splitPart];
-            } else {
-                return defaultValue;
-            }
-        }
-
-        if (type == null) {
-            return isType(this.data, type) ? this.data : defaultValue;
-        } else {
-            return this.data;
-        }
+        return value == null ?
+            defaultValue : (isType(value, typeguards) ? value : defaultValue);
     }
 
     public getAll(): Content {
@@ -70,36 +33,35 @@ export class Configuration {
         this.data = {};
     }
 
-    public set(path, content): void {
-        this.apply(this.data, path, content);
+    public set(path: string | string[], item: any): void {
+        this.apply(path, item);
     }
 
-    public setAll(content): void {
-        this.data =
-            typeof content === 'object' && content !== null ? content : {};
+    public setAll(content: Content): void {
+        this.data = content != null ? content : {};
     }
 
-    private toPath(path: string | string[]): string[] {
-        if (typeof path === 'string') {
-            return path.includes('.') ? path.split('.') : [path];
+    private getValue(path: string | string[]): any {
+        if (!Array.isArray(path)) {
+            path = path.split('.');
         }
 
-        return path;
+        return path.reduce(
+            (obj: object, i: string) => obj.hasOwnProperty(i) ? obj[i] : null,
+            this.data
+        );
     }
 
-    private apply(object, path, content): void {
+    private apply(path: string | string[], item: any): void {
         if (typeof path === 'string') {
             path = path.split('.');
         }
 
-        if (path.length > 1) {
-            const first = path.shift();
-            if (object[first] === null || typeof object[first] !== 'object') {
-                object[first] = {};
-            }
-            this.apply(object[first], path, content);
-        } else {
-            object[path[0]] = content;
+        let obj = {};
+        for (let i = 0; i < path.length - 1; i++) {
+            obj = obj[path[i]] = {};
         }
+        obj[path[path.length - 1]] = item;
+        merge(this.data, obj);
     }
 }
