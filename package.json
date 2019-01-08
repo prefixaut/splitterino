@@ -22,6 +22,7 @@
     "vue-overlay-host": "0.2.0",
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.1",
+    "vuedraggable": "^2.17.0",
     "vuex": "^3.0.1",
     "vuex-class": "^0.3.1"
   },
