@@ -1,5 +1,5 @@
 import { isType, Typeguard } from './is-type';
-import { merge } from 'lodash';
+import { set } from 'lodash';
 
 interface Content { [name: string]: any; }
 
@@ -11,13 +11,15 @@ export class Configuration {
     }
 
     public has(path: string | string[], typeguards: Typeguard[] = []): boolean {
-        return isType(this.getValue(path), typeguards);
+        const value = this.getValue(path);
+
+        return value == null ? false : isType(this.getValue(path), typeguards);
     }
 
     public get(
         path: string | string[],
         defaultValue: any = null,
-        typeguards: Typeguard[]
+        typeguards: Typeguard[] = []
     ) {
         const value = this.getValue(path);
 
@@ -34,7 +36,10 @@ export class Configuration {
     }
 
     public set(path: string | string[], item: any): void {
-        this.apply(path, item);
+        if (Array.isArray(path)) {
+            path = path.join('.');
+        }
+        set(this.data, path, item);
     }
 
     public setAll(content: Content): void {
@@ -47,21 +52,9 @@ export class Configuration {
         }
 
         return path.reduce(
-            (obj: object, i: string) => obj.hasOwnProperty(i) ? obj[i] : null,
+            (obj: object, i: string) =>
+                obj != null && obj.hasOwnProperty(i) ? obj[i] : null,
             this.data
         );
-    }
-
-    private apply(path: string | string[], item: any): void {
-        if (typeof path === 'string') {
-            path = path.split('.');
-        }
-
-        let obj = {};
-        for (let i = 0; i < path.length - 1; i++) {
-            obj = obj[path[i]] = {};
-        }
-        obj[path[path.length - 1]] = item;
-        merge(this.data, obj);
     }
 }
