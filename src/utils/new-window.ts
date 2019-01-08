@@ -3,7 +3,11 @@ import { remote, BrowserWindowConstructorOptions } from 'electron';
 const defSettings: BrowserWindowConstructorOptions = {
     webPreferences: {
         webSecurity: false
-    }
+    },
+    useContentSize: true,
+    title: 'Splitterino',
+    frame: false,
+    titleBarStyle: 'hidden',
 };
 
 const url = 'http://localhost:8080#';
