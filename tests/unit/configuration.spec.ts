@@ -30,6 +30,11 @@ describe('utils/configuration.ts', () => {
             expect(conf.get('foo.bar.baz')).to.equal('foobar');
         });
 
+        it('should get a deeply nested value with array as param', () => {
+            const conf = new Configuration({ foo: { bar: { baz: 'foobar' } } });
+            expect(conf.get(['foo', 'bar', 'baz'])).to.equal('foobar');
+        });
+
         it(`should return null if the path is invalid
             and no default value was given`, () => {
             const conf = new Configuration({ foo: { bar: { baz: 'foobar' } } });
@@ -42,10 +47,17 @@ describe('utils/configuration.ts', () => {
             expect(conf.get('baz.bar.foo', 'whatever')).to.equal('whatever');
         });
 
-        it('should set an existing value', () => {
+        it('should set a value', () => {
             const conf = new Configuration({ foo: { bar: { baz: 'foobar' } } });
             expect(conf.get('foo.bar.baz')).to.equal('foobar');
             conf.set('foo.bar.baz', 'test');
+            expect(conf.get('foo.bar.baz')).to.equal('test');
+        });
+
+        it('should set a value with array as param', () => {
+            const conf = new Configuration({ foo: { bar: { baz: 'foobar' } } });
+            expect(conf.get('foo.bar.baz')).to.equal('foobar');
+            conf.set(['foo', 'bar', 'baz'], 'test');
             expect(conf.get('foo.bar.baz')).to.equal('test');
         });
 
