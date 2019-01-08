@@ -43,7 +43,7 @@ const store = new Vuex.Store<RootState>({
 // Listener to transfer the current state of the store
 ipcMain.on('vuex-connect', event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
-    Logger.trace('[background] vuex-connect', windowId);
+    Logger.debug('[background] vuex-connect', windowId);
 
     clients[windowId] = event.sender;
     event.returnValue = store.state;
@@ -51,14 +51,14 @@ ipcMain.on('vuex-connect', event => {
 
 ipcMain.on('vuex-disconnect', event => {
     const windowId = BrowserWindow.fromWebContents(event.sender).id;
-    Logger.trace('[background] vuex-disconnect', windowId);
+    Logger.debug('[background] vuex-disconnect', windowId);
 
     delete clients[windowId];
 });
 
 // Listener to perform a delegate mutation on the main store
 ipcMain.on('vuex-mutate', (event, { type, payload }) => {
-    Logger.trace('[background] vuex-mutate', type, payload);
+    Logger.debug('[background] vuex-mutate', type, payload);
     store.dispatch(type, ...payload);
 });
 
@@ -70,6 +70,9 @@ function createMainWindow() {
         title: 'Splitterino',
         frame: false,
         titleBarStyle: 'hidden',
+        maximizable: false,
+        minWidth: 240,
+        minHeight: 60,
     });
 
     if (isDevelopment) {
