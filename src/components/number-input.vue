@@ -10,11 +10,12 @@
           tabindex="0"
           v-show="active"
           v-model="content"
+          :disabled="internalDisabled"
           @focus="activate()"
           @blur="deactivate()"
           @keydown.down.prevent.stop="down"
           @keydown.up.prevent.stop="up"
-        >
+        />
         <span class="visible-content" @click="activate(true)" v-show="!active">{{ content }}</span>
       </div>
     </div>
@@ -22,7 +23,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
+import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
+import { convertToBoolean } from '../utils/convert-to-boolean';
 
 @Component({
   created() {
@@ -31,7 +33,7 @@ import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
   }
 })
 export default class NumberInputComponent extends Vue {
-  @Prop({ type: Number, default: 0 })
+  @Model('change', { type: Number, default: 0 })
   public value: string | number;
 
   @Prop({ type: Number })
@@ -39,6 +41,13 @@ export default class NumberInputComponent extends Vue {
 
   @Prop({ type: Number })
   public max: number;
+
+  @Prop({
+    type: [Boolean, String],
+    default: false
+  })
+  public disabled: boolean;
+  public internalDisabled: boolean = false;
 
   @Prop({ type: String })
   public label: string;
@@ -51,8 +60,8 @@ export default class NumberInputComponent extends Vue {
   public enableDown = true;
   public active = false;
 
-  @Watch('value')
-  onValueChanged(val, old) {
+  @Watch('value', { immediate: true })
+  onValuePropChange(val, old) {
     if (val === old) {
       return;
     }
@@ -60,8 +69,13 @@ export default class NumberInputComponent extends Vue {
     this.updateContent();
   }
 
-  @Watch('min')
-  onMinChanged(val, old) {
+  @Watch('disabled', { immediate: true })
+  onDisabledPropChange(value) {
+      this.internalDisabled = convertToBoolean(value);
+  }
+
+  @Watch('min', { immediate: true })
+  onMinPropChange(val, old) {
     if (typeof this.max === 'number' && val > this.max) {
       throw new RangeError(
         'The minimal amount cannot be higher than the maximal!'
@@ -73,8 +87,8 @@ export default class NumberInputComponent extends Vue {
     this.updateContent();
   }
 
-  @Watch('max')
-  onMaxChanged(val, old) {
+  @Watch('max', { immediate: true })
+  onMaxPropChange(val, old) {
     if (typeof this.min === 'number' && val < this.min) {
       throw new RangeError(
         'The maximal amount cannot be lower than the minimal!'
