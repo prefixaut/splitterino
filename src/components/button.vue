@@ -92,6 +92,17 @@ export default class ButtonComponent extends Vue {
             }
         }
     }
+
+    &[disabled="disabled"] {
+        color: $spl-color-gray;
+        background: $spl-color-light-gray;
+        border-color: $spl-color-light-gray;
+        text-shadow: none;
+
+        &:hover {
+            box-shadow: none;
+        }
+    }
 }
 </style>
 
