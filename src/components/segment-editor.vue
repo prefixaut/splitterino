@@ -1,6 +1,6 @@
 <template>
     <div class="segment-editor">
-        {{ segment.name }}
+        <spl-text-input v-model="segment.name" outline="false" />
     </div>
 </template>
 

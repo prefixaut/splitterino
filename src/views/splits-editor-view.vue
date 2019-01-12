@@ -10,3 +10,9 @@ import { Vue, Component } from 'vue-property-decorator';
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {}
 </script>
+
+<style lang="scss" scoped>
+.splits-editor-view {
+    height: 100%;
+}
+</style>
