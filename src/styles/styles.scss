@@ -20,11 +20,18 @@ html {
     // Set default typography settings
     font-family: 'Noto Sans', sans-serif;
     color: $spl-color-off-white;
+
+    // Prevent overflow
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 body {
     background: $spl-color-very-dark-gray;
     margin: 0;
+    height: 100%;
+    width: 100%;
 }
 
 // [ TYPOGRAPHY ]

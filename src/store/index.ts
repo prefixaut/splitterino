@@ -35,7 +35,7 @@ export function getClientStore(vueRef) {
     });
 
     const windowRef = remote.getCurrentWindow();
-    windowRef.on('closed', () => {
+    windowRef.on('close', () => {
         ipcRenderer.send('vuex-disconnect');
     });
 
@@ -59,13 +59,13 @@ export function getClientStore(vueRef) {
         // FIXME: This is not working in here, needs to be moved
         // to where the mutation is applied
         if (!type.includes('overlay-host')) {
-            Logger.trace('[client] dispatching ', type, payload);
+            Logger.debug('[client] dispatching ', type, payload);
             ipcRenderer.send('vuex-mutate', { type, payload });
         }
     };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
-        Logger.trace('[client] vuex-apply-mutation', type);
+        Logger.debug('[client] vuex-apply-mutation', type);
         if (
             payload != null &&
             typeof payload === 'object' &&

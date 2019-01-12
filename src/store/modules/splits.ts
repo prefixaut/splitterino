@@ -507,7 +507,24 @@ Do you wish to save or discard the times?
         });
         context.commit('setCurrent', -1);
         context.commit('hardReset');
-    }
+    },
+    setSegments(
+        context: ActionContext<SplitsState, RootState>,
+        payload: Segment[]
+    ) {
+        if (!Array.isArray(payload)) {
+            throw new Error('Payload has to be an array!');
+        }
+
+        const status = context.rootState.splitterino.timer.status;
+        if (status !== TimerStatus.STOPPED) {
+            return false;
+        }
+
+        context.commit('setAllSegments', payload);
+
+        return true;
+    },
 };
 
 export const splitsStoreModule: Module<SplitsState, any> = {

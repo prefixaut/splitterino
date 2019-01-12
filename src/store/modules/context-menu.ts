@@ -14,7 +14,7 @@ const moduleState: ContextMenuState = {
         {
             label: 'Exit',
             actions: [closeWindow]
-        }
+        },
     ],
     splitter: [
         {
@@ -24,9 +24,9 @@ const moduleState: ContextMenuState = {
                     newWindow(
                         {
                             title: 'Splits Editor',
-                            parent: remote.getCurrentWindow()
+                            parent: remote.getCurrentWindow(),
                         },
-                        '/splits/edit'
+                        '/splits-editor'
                     );
                 }
             ]
