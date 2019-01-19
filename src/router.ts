@@ -3,10 +3,12 @@ import Router from 'vue-router';
 
 import DefaultView from './views/default-view.vue';
 import SplitsEditorView from './views/splits-editor-view.vue';
+import SettingsEditor from './components/settings-editor.vue';
 
 Vue.use(Router);
 
 export const router = new Router({
+    mode: 'hash',
     routes: [
         {
             path: '/',
@@ -24,7 +26,8 @@ export const router = new Router({
         },
         {
             path: '/settings',
-            name: 'settings'
+            name: 'settings',
+            component: SettingsEditor
         }
     ]
 });

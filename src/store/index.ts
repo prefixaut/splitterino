@@ -19,7 +19,6 @@ export function getClientStore(vueRef) {
     vueRef.use(Vuex);
 
     const store: any = new Vuex.Store({
-        state: ipcRenderer.sendSync('vuex-connect'),
         plugins: [
             OverlayHostPlugin, events => {
                 events.subscribe(mutation => {
@@ -33,6 +32,11 @@ export function getClientStore(vueRef) {
         ],
         ...config
     });
+
+    // ! FIXME: Just a workaround for store instantiation
+    // ! Try to not instantiate store first and then replace state
+    // ! Problem: Modules in config overwrite store if given in options
+    store.replaceState(ipcRenderer.sendSync('vuex-connect'));
 
     const windowRef = remote.getCurrentWindow();
     windowRef.on('close', () => {

@@ -16,6 +16,10 @@ import SplitsComponent from './components/splits.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
+import SettingsEditorComponent from './components/settings-editor.vue';
+import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
+import SettingsEditorMainComponent from './components/settings-editor-main.vue';
+
 import { contextMenuDirective } from './directives/context-menu';
 import { router } from './router';
 import { getClientStore } from './store';
@@ -40,6 +44,9 @@ Vue.component('spl-splits', SplitsComponent);
 Vue.component('spl-time-input', TimeInputComponent);
 Vue.component('spl-timer', TimerComponent);
 Vue.component('spl-title-bar', TitleBarComponent);
+Vue.component('spl-settings-editor', SettingsEditorComponent);
+Vue.component('spl-settings-editor-group', SettingsEditorGroupComponent);
+Vue.component('spl-settings-editor-main', SettingsEditorMainComponent);
 
 // Register Directives
 Vue.directive('spl-ctx-menu', contextMenuDirective);
