@@ -1,18 +1,15 @@
-import { Module, ActionContext } from 'vuex';
-
-import { SettingsState } from '../states/settings';
-import { getValueFromObject } from '../../utils/get-from-object';
-import { Typeguard } from '../../common/typeguard';
-import { RootState } from '../states/root';
 import { set } from 'lodash';
+import { ActionContext, Module } from 'vuex';
+import { Typeguard } from '../../common/typeguard';
+import { getValueFromObject } from '../../utils/get-from-object';
+import { RootState } from '../states/root';
+import { SettingsState, Settings } from '../states/settings';
+import { saveJSONToFile } from '../../utils/file-save-load';
 
 const moduleState: SettingsState = {
     settings: {
         splitterino: {
             core: {
-                testGroup: {
-                    testSetting: 'hello'
-                }
             }
         },
         plugins: {}
@@ -104,16 +101,30 @@ const getters = {
 const mutations = {
     setSetting(
         state: SettingsState,
-        { key, value }: { key: string; value: any }
+        { payload: { key, value } }: { payload: { key: string; value: any} }
     ) {
         set(state.settings, key, value);
-        console.log(state.settings);
+    },
+    saveSettingsToFile(state: SettingsState) {
+        saveJSONToFile('settings.json', state.settings);
+    },
+    setAllSettings(
+        state: SettingsState,
+        settings: Settings
+    ) {
+        state.settings = settings;
     }
 };
 
 const actions = {
     setSetting(context: ActionContext<SettingsState, RootState>, payload: any) {
         context.commit('setSetting', payload);
+    },
+    setAllSettings(
+        context: ActionContext<SettingsState, RootState>,
+        { settings }: { settings: Settings }
+    ) {
+        context.commit('setAllSettings', settings);
     }
 };
 

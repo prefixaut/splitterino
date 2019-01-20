@@ -76,9 +76,13 @@ export default class SettingsEditorComponent extends Vue {
      * Store handles file saving
      */
     saveSettings() {
-        const loopOverGroup = (group: object, path: string = '') => {
+        let lastSetting: string;
+        // TODO: Check if setting has actually changed before updating it
+        const loopOverGroup = (group: object, path: string) => {
             for (const [key, value] of Object.entries(group)) {
+                const k = lastSetting = `${path}.${key}`;
                 if (typeof value === 'object') {
+                    // Check if object is settings object
                     if (
                         value != null &&
                         value.hasOwnProperty('value')
@@ -86,8 +90,11 @@ export default class SettingsEditorComponent extends Vue {
                         this.$store.dispatch(
                             'splitterino/settings/setSetting',
                             {
-                                key: `${path}.${key}`,
-                                value
+                                id: k,
+                                payload: {
+                                    key: k,
+                                    value
+                                }
                             }
                         );
                     } else {
@@ -97,16 +104,26 @@ export default class SettingsEditorComponent extends Vue {
                     this.$store.dispatch(
                         'splitterino/settings/setSetting',
                         {
-                            key: `${path}.${key}`,
-                            value
+                            id: k,
+                            payload: {
+                                key: k,
+                                value
+                            }
                         }
                     );
                 }
             }
         }
+
+        // Loop over first groups
         for (const [key, value] of Object.entries(this.changedSettings)) {
             loopOverGroup(value, key);
         }
+
+        // Wait for last setting to be commited to store then save to file
+        this.$eventHub.$on(`commit:splitterino/settings/setSetting:${lastSetting}`, ({ key }) => {
+            this.$store.commit('splitterino/settings/saveSettingsToFile');
+        });
     }
 }
 </script>

@@ -28,13 +28,15 @@ export default class SettingsEditorMainComponent extends Vue {
 
     /** Change event for currently loaded components */
     onValueChanged(key: string, event: any) {
+        const value = typeof event === 'object' && 'target' in event ?
+                        event.target.value : event;
         // Pass value to parent
         this.$emit(
             'settingChanged',
             {
                 key: key,
                 // TODO: Check if this works for custom form elements
-                setting: event.target.value
+                setting: value
             }
         )
     }
