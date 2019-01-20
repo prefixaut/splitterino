@@ -23,8 +23,21 @@ export function getClientStore(vueRef) {
             OverlayHostPlugin, events => {
                 events.subscribe(mutation => {
                     if (!mutation.type.includes('overlay-host')) {
+                        let payload: any;
+                        let id = '';
+                        if (
+                            typeof mutation.payload === 'object' &&
+                            'id' in mutation.payload &&
+                            'payload' in mutation.payload
+                        ) {
+                            payload = mutation.payload.payload;
+                            id = ':' + mutation.payload.id;
+                        } else {
+                            payload = mutation.payload;
+                        }
                         vueRef.prototype.$eventHub.$emit(
-                            `commit:${mutation.type}`
+                            `commit:${mutation.type}${id}`,
+                            payload
                         );
                     }
                 });
