@@ -9,7 +9,7 @@
 
 html {
      // Set REM
-    font-size: 16px;
+    font-size: 14px;
 
     // Remove margin
     margin: 0;
@@ -47,33 +47,49 @@ p, div, span  {
 h1 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.8rem;
-    font-size: 2.2rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 2rem;
+
+    .sub {
+        font-size: 1.5rem;
+    }
 }
 
 h2 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-    font-size: 1.8rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+    
+    .sub {
+        font-size: 1.125rem;
+    }
 }
 
 h3 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.8rem;
-    font-size: 1.6rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1875rem;
+
+    .sub {
+        font-size: 0.937rem;
+    }
 }
 
 h4 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.6rem;
-    font-size: 1.4rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+
+    .sub {
+        font-size: 0.8125rem;
+    }
 }
 
 // [ LAYOUT ]
