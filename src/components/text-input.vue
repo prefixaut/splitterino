@@ -75,11 +75,15 @@ export default class TextInputComponent extends Vue {
 
 .text-input {
     > input {
-        border: 1px solid $spl-color-dark-gray;
+        border: 1px solid $spl-color-very-dark-gray;
         background: $spl-color-very-dark-gray;
         color: $spl-color-off-white;
         padding: 3px 8px;
         transition: 200ms;
+
+        &.outline {
+            border-color: $spl-color-dark-gray;
+        }
 
         &:focus {
             outline: none;

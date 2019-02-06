@@ -25,6 +25,8 @@ const moduleState: ContextMenuState = {
                         {
                             title: 'Splits Editor',
                             parent: remote.getCurrentWindow(),
+                            minWidth: 440,
+                            minHeight: 220,
                         },
                         '/splits-editor'
                     );

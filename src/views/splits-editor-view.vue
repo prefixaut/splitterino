@@ -1,5 +1,5 @@
 <template>
-    <div class="splits-editor-view container">
+    <div class="splits-editor-view">
         <spl-splits-editor />
     </div>
 </template>

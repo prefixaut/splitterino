@@ -7,23 +7,44 @@
         <div class="content">
             <h2>Game Information</h2>
 
+            <spl-game-info-editor />
+
             <h2>Segments</h2>
-            <div class="segments">
-                <draggable v-model="segments" :options="{handle: '.handle'}">
-                    <transition-group>
-                        <div
-                            class="segment-wrapper"
-                            v-for="(segment, index) of segments"
-                            :key="index"
-                        >
-                            <div class="handle">
-                                <fa-icon icon="grip-lines" />
-                            </div>
-                            <spl-segment-editor v-model="segments[index]" />
-                        </div>
-                    </transition-group>
-                </draggable>
-            </div>
+            <draggable element="table" class="segments" v-model="segments" :options="{handle: '.handle'}">
+                <thead slot="header">
+                    <tr>
+                        <th class="handle"><!-- Drag-Handle --></th>
+                        <th class="name">Name</th>
+                        <th class="time">Time</th>
+                        <th class="personal-best">Personal Best</th>
+                        <th class="overall-best">Overall Best</th>
+                    </tr>
+                </thead>
+
+                <transition-group tag="tbody">
+                    <tr
+                        class="segment-row"
+                        v-for="(segment, index) of segments"
+                        :key="index"
+                    >
+                        <td class="handle">
+                            <fa-icon icon="grip-lines" />
+                        </td>
+                        <td class="name">
+                            <spl-text-input v-model="segment.name" outline="false" />
+                        </td>
+                        <td class="time">
+                            <spl-time-input v-model="segment.time"/>
+                        </td>
+                        <td class="personal-best">
+                            <spl-time-input v-model="segment.personalBest" />
+                        </td>
+                        <td class="overall-best">
+                            <spl-time-input v-model="segment.overallBest" />
+                        </td>
+                    </tr>
+                </transition-group>
+            </draggable>
         </div>
 
         <div class="footer">
@@ -83,20 +104,28 @@ export default class SplitsEditorComponent extends Vue {
     flex-direction: column;
 
     > .content {
-        flex: 1 0 auto;
+        flex-shrink: 2;
+        @media (min-height: 300px) {
+            overflow: auto;
+        }
     }
 
-    > .header,
-    > .footer {
-        flex-shrink: 0;
+    h1,
+    h2 {
+        margin-left: 1.5rem;
+        margin-right: 1.5rem;
+    }
+
+    .footer {
+        padding: 0.5rem 1.5rem;
     }
 }
 
-.segment-wrapper {
-    > * {
-        display: inline-block;
-    }
+.segments {
+    width: 100%;
+}
 
+.segment-row {
     .handle {
         padding: 5px 10px;
         margin-right: 5px;
@@ -105,6 +134,11 @@ export default class SplitsEditorComponent extends Vue {
 
     &.sortable-ghost {
         background: $spl-color-light-primary;
+
+        & >>> .text-input > input {
+            background: $spl-color-light-primary;
+            border-color: $spl-color-light-primary;
+        }
     }
 }
 </style>
