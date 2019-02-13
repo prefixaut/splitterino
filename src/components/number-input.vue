@@ -1,183 +1,193 @@
 <template>
-  <div class="number-input" :class="{active: active}">
-    <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
+    <div class="number-input" :class="{'is-focused': isFocused}">
+        <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
-    <div class="content-wrapper" @mousewheel="wheelUpdate">
-      <div class="input-wrapper">
         <input
-          type="number"
-          ref="input"
-          tabindex="0"
-          v-show="active"
-          v-model="content"
-          :disabled="internalDisabled"
-          @focus="activate()"
-          @blur="deactivate()"
-          @keydown.down.prevent.stop="down"
-          @keydown.up.prevent.stop="up"
+            type="number"
+            ref="input"
+            tabindex="0"
+            :disabled="internalDisabled"
+            :min="min"
+            :max="max"
+            v-model="internalValue"
+            @focus="activate()"
+            @blur="deactivate()"
+            @keydown.down.prevent.stop="down"
+            @keydown.up.prevent.stop="up"
         />
-        <span class="visible-content" @click="activate(true)" v-show="!active">{{ content }}</span>
-      </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 import { convertToBoolean } from '../utils/convert-to-boolean';
 
-@Component({
-  created() {
-    this.content = this.value | 0;
-    this.updateContent();
-  }
-})
+@Component
 export default class NumberInputComponent extends Vue {
-  @Model('change', { type: Number, default: 0 })
-  public value: string | number;
+    @Model('change', { type: Number, default: 0 })
+    public value: string | number;
 
-  @Prop({ type: Number })
-  public min: number;
+    @Prop({ type: Number })
+    public min: number;
 
-  @Prop({ type: Number })
-  public max: number;
+    @Prop({ type: Number })
+    public max: number;
 
-  @Prop({
-    type: [Boolean, String],
-    default: false
-  })
-  public disabled: boolean;
-  public internalDisabled: boolean = false;
+    @Prop({ type: Boolean })
+    public decimals: boolean;
 
-  @Prop({ type: String })
-  public label: string;
+    @Prop({
+        type: [Boolean, String],
+        default: false
+    })
+    public disabled: boolean;
 
-  // Internal value to prevent Mutation
-  public content = 0;
+    @Prop({ type: String })
+    public label: string;
 
-  // Flags for css-classes
-  public enableUp = true;
-  public enableDown = true;
-  public active = false;
+    /**
+     * Internal value to prevent Prop-Mutations
+     */
+    public internalValue = 0;
 
-  @Watch('value', { immediate: true })
-  onValuePropChange(val, old) {
-    if (val === old) {
-      return;
+    /**
+     * Internal Disabled-State to prevent Prop-Mutations
+     */
+    public internalDisabled: boolean = false;
+
+    /**
+     * If the user should be able to enter decimal values
+     */
+    public internalDecimal: boolean = false;
+
+    /**
+     * If increasing the value is currently allowed/possible
+     */
+    public enableUp = true;
+
+    /**
+     * If decreasing the value is currently allowed/possible
+     */
+    public enableDown = true;
+
+    /**
+     * If the input is focused
+     */
+    public isFocused = false;
+
+    public readonly flatRegex = /^[+-]?([\d])*$/;
+    public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
+
+    @Watch('value', { immediate: true })
+    onValuePropChange(val, old) {
+        if (val === old) {
+            return;
+        }
+        this.internalValue = val;
+        this.updateContent();
     }
-    this.content = val;
-    this.updateContent();
-  }
 
-  @Watch('disabled', { immediate: true })
-  onDisabledPropChange(value) {
-      this.internalDisabled = convertToBoolean(value);
-  }
+    @Watch('disabled', { immediate: true })
+    onDisabledPropChange(value) {
+        this.internalDisabled = convertToBoolean(value);
+    }
 
-  @Watch('min', { immediate: true })
-  onMinPropChange(val, old) {
-    if (typeof this.max === 'number' && val > this.max) {
-      throw new RangeError(
-        'The minimal amount cannot be higher than the maximal!'
-      );
+    @Watch('min', { immediate: true })
+    onMinPropChange(val, old) {
+        if (typeof this.max === 'number' && val > this.max) {
+            throw new RangeError(
+                'The minimal amount cannot be higher than the maximal!'
+            );
+        }
+        if (val === old) {
+            return;
+        }
+        this.updateContent();
     }
-    if (val === old) {
-      return;
-    }
-    this.updateContent();
-  }
 
-  @Watch('max', { immediate: true })
-  onMaxPropChange(val, old) {
-    if (typeof this.min === 'number' && val < this.min) {
-      throw new RangeError(
-        'The maximal amount cannot be lower than the minimal!'
-      );
+    @Watch('max', { immediate: true })
+    onMaxPropChange(val, old) {
+        if (typeof this.min === 'number' && val < this.min) {
+            throw new RangeError(
+                'The maximal amount cannot be lower than the minimal!'
+            );
+        }
+        if (val === old) {
+            return;
+        }
+        this.updateContent();
     }
-    if (val === old) {
-      return;
-    }
-    this.updateContent();
-  }
 
-  activate(doFocus) {
-    if (this.active) {
-      return;
+    activate() {
+        if (this.isFocused) {
+            return;
+        }
+        this.isFocused = true;
+        this.$emit('focus', null);
     }
-    this.active = true;
-    if (doFocus) {
-      this.$nextTick(function() {
+
+    deactivate() {
+        this.isFocused = false;
+        this.$emit('blur', null);
+        this.updateContent();
+    }
+
+    up() {
+        if (!this.enableUp) {
+            return;
+        }
         (this.$refs.input as any).focus();
-      });
-    }
-    this.$emit('focus', null);
-  }
-
-  deactivate() {
-    this.active = false;
-    this.$emit('blur', null);
-    this.updateContent();
-  }
-
-  up() {
-    if (!this.enableUp) {
-      return;
-    }
-    (this.$refs.input as any).focus();
-    this.content++;
-    this.updateContent();
-  }
-
-  down() {
-    if (!this.enableDown) {
-      return;
-    }
-    (this.$refs.input as any).focus();
-    this.content--;
-    this.updateContent();
-  }
-
-  wheelUpdate(event) {
-    if (!this.active) {
-      return;
+        this.internalValue++;
+        this.updateContent();
     }
 
-    if (event.deltaY > 0) {
-      this.up();
-    } else if (event.deltaY < 0) {
-      this.down();
+    down() {
+        if (!this.enableDown) {
+            return;
+        }
+        (this.$refs.input as any).focus();
+        this.internalValue--;
+        this.updateContent();
     }
 
-    event.preventDefault();
-  }
+    updateContent() {
+        if (this.max != null && this.internalValue >= this.max) {
+            this.internalValue = this.max;
+            this.enableUp = false;
+        } else {
+            this.enableUp = true;
+        }
 
-  updateContent() {
-    if (this.max != null && this.content >= this.max) {
-      this.content = this.max;
-      this.enableUp = false;
-    } else {
-      this.enableUp = true;
+        if (this.min != null && this.internalValue <= this.min) {
+            this.internalValue = this.min;
+            this.enableDown = false;
+        } else {
+            this.enableDown = true;
+        }
+
+        const str = `${this.internalValue}`;
+        if (this.decimals && (
+            !this.decimalRegex.test(str) ||
+            typeof this.internalValue === 'string'
+        )) {
+            this.internalValue = parseFloat(str);
+        } else if (!this.decimals && (
+            !this.flatRegex.test(str) ||
+            typeof this.internalValue === 'string'
+        )) {
+            this.internalValue = parseInt(str, 10);
+        }
+
+        this.$emit('change', this.internalValue);
     }
-
-    if (this.min != null && this.content <= this.min) {
-      this.content = this.min;
-      this.enableDown = false;
-    } else {
-      this.enableDown = true;
-    }
-    this.content = this.content | 0;
-
-    this.$emit('change', this.content);
-  }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../styles/config";
 
 .number-input {
   width: 100%;
-  padding: 5px 10px;
   box-sizing: content-box;
 
   label {
@@ -186,82 +196,29 @@ export default class NumberInputComponent extends Vue {
     font-size: 10px;
   }
 
-  .content-wrapper {
+  input {
     width: 100%;
-    height: auto;
-    display: flex;
-    flex-wrap: nowrap;
-    flex-direction: row;
-  }
+    border: 1px solid $spl-color-very-dark-gray;
+    background: $spl-color-very-dark-gray;
+    color: $spl-color-off-white;
+    padding: 3px 3px;
+    transition: 200ms;
 
-  .input-wrapper {
-    width: auto;
-    flex: 1 1 auto;
-    height: 100%;
-    padding: 0 5px;
-
-    input {
-      width: 100%;
-      font: normal normal 300 1rem/1 'Noto Sans', sans-serif;
-      text-align: left;
-      background: none;
-      border: 0;
-      height: 100%;
-      color: #efefef;
-      padding: 5px;
-
-      &:hover,
-      &:focus {
-        background: $spl-color-dark-gray;
-      }
-
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
-
-      &:focus {
-        outline: none;
-      }
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+      margin: 0;
     }
-  }
 
-  .spinner-wrapper {
-    display: block;
-    width: 20px;
-    flex: 0 0 auto;
-    height: 100%;
-    position: relative;
-
-    .spinner {
-      width: 100%;
-      height: 50%;
-      position: absolute;
-      cursor: pointer;
-      right: 0;
-
-      &.disabled {
-        color: $spl-color-light-gray;
-      }
-
-      .icon {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        margin-top: -1px;
-        margin-left: 1px;
-        font-size: 18px;
-      }
-
-      &.up {
-        top: 0;
-      }
-
-      &.down {
-        bottom: 0;
-      }
+    &.outline {
+      border-color: $spl-color-dark-gray;
     }
+
+    &:focus {
+      outline: none;
+      border-color: $spl-color-primary;
+    }
+
   }
 }
 </style>
