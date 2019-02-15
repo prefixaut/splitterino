@@ -1,30 +1,30 @@
 <template>
-    <div class="number-input" :class="{'is-focused': isFocused}">
+    <div class="number-input">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
         <input
             type="number"
             ref="input"
             tabindex="0"
+            :value="internalValue"
             :disabled="internalDisabled"
             :min="min"
             :max="max"
-            v-model="internalValue"
-            @focus="activate()"
-            @blur="deactivate()"
-            @keydown.down.prevent.stop="down"
-            @keydown.up.prevent.stop="up"
+            @input="onValueInputChange($event)"
+            @keydown.down.prevent.stop="down()"
+            @keydown.up.prevent.stop="up()"
         />
     </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
+
 import { convertToBoolean } from '../utils/convert-to-boolean';
 
 @Component
 export default class NumberInputComponent extends Vue {
-    @Model('change', { type: Number, default: 0 })
+    @Model('change', { type: [Number, String] })
     public value: string | number;
 
     @Prop({ type: Number })
@@ -70,13 +70,71 @@ export default class NumberInputComponent extends Vue {
      */
     public enableDown = true;
 
-    /**
-     * If the input is focused
-     */
-    public isFocused = false;
-
     public readonly flatRegex = /^[+-]?([\d])*$/;
     public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
+
+    onValueInputChange(event: any) {
+        const value = event.target.value;
+        if (value !== this.internalValue) {
+            this.internalValue = value;
+            this.$emit('change', this.internalValue);
+        }
+    }
+
+    up() {
+        if (!this.enableUp) {
+            return;
+        }
+        (this.$refs.input as any).focus();
+        this.internalValue++;
+        this.updateContent();
+    }
+
+    down() {
+        if (!this.enableDown) {
+            return;
+        }
+        (this.$refs.input as any).focus();
+        this.internalValue--;
+        this.updateContent();
+    }
+
+    updateContent() {
+        let changed = false;
+
+        const str = `${this.internalValue}`;
+        if (typeof this.internalValue === 'string') {
+            if (this.decimals && !this.decimalRegex.test(str)) {
+                this.internalValue = parseFloat(str);
+                changed = true;
+            } else if (!this.decimals && !this.flatRegex.test(str)) {
+                this.internalValue = parseInt(str, 10);
+                changed = true;
+            } else {
+                this.internalValue = 0;
+            }
+        }
+
+        if (this.max != null && this.internalValue > this.max) {
+            this.internalValue = this.max;
+            this.enableUp = false;
+            changed = true;
+        } else {
+            this.enableUp = true;
+        }
+
+        if (this.min != null && this.internalValue < this.min) {
+            this.internalValue = this.min;
+            this.enableDown = false;
+            changed = true;
+        } else {
+            this.enableDown = true;
+        }
+
+        if (changed) {
+            this.$emit('change', this.internalValue);
+        }
+    }
 
     @Watch('value', { immediate: true })
     onValuePropChange(val, old) {
@@ -116,69 +174,6 @@ export default class NumberInputComponent extends Vue {
             return;
         }
         this.updateContent();
-    }
-
-    activate() {
-        if (this.isFocused) {
-            return;
-        }
-        this.isFocused = true;
-        this.$emit('focus', null);
-    }
-
-    deactivate() {
-        this.isFocused = false;
-        this.$emit('blur', null);
-        this.updateContent();
-    }
-
-    up() {
-        if (!this.enableUp) {
-            return;
-        }
-        (this.$refs.input as any).focus();
-        this.internalValue++;
-        this.updateContent();
-    }
-
-    down() {
-        if (!this.enableDown) {
-            return;
-        }
-        (this.$refs.input as any).focus();
-        this.internalValue--;
-        this.updateContent();
-    }
-
-    updateContent() {
-        if (this.max != null && this.internalValue >= this.max) {
-            this.internalValue = this.max;
-            this.enableUp = false;
-        } else {
-            this.enableUp = true;
-        }
-
-        if (this.min != null && this.internalValue <= this.min) {
-            this.internalValue = this.min;
-            this.enableDown = false;
-        } else {
-            this.enableDown = true;
-        }
-
-        const str = `${this.internalValue}`;
-        if (this.decimals && (
-            !this.decimalRegex.test(str) ||
-            typeof this.internalValue === 'string'
-        )) {
-            this.internalValue = parseFloat(str);
-        } else if (!this.decimals && (
-            !this.flatRegex.test(str) ||
-            typeof this.internalValue === 'string'
-        )) {
-            this.internalValue = parseInt(str, 10);
-        }
-
-        this.$emit('change', this.internalValue);
     }
 }
 </script>

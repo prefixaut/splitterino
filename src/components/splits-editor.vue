@@ -31,7 +31,12 @@
                             <fa-icon icon="grip-lines" />
                         </td>
                         <td class="name">
-                            <spl-text-input v-model="segment.name" outline="false" />
+                            <spl-text-input
+                                v-model="segment.name"
+                                outline="false"
+                                required="false"
+                                minlength="1"
+                            />
                         </td>
                         <td class="time">
                             <spl-time-input v-model="segment.time"/>
@@ -83,7 +88,7 @@ export default class SplitsEditorComponent extends Vue {
     }
 
     get haveSegmentsChanged() {
-        return isEqual(
+        return !isEqual(
             this.$store.state.splitterino.splits.segments,
             this.segments
         );
@@ -123,6 +128,7 @@ export default class SplitsEditorComponent extends Vue {
 
 .segments {
     width: 100%;
+    min-height: 0;
 }
 
 .segment-row {
@@ -130,6 +136,12 @@ export default class SplitsEditorComponent extends Vue {
         padding: 5px 10px;
         margin-right: 5px;
         cursor: -webkit-grab;
+    }
+
+    .time,
+    .personal-best,
+    .overall-best {
+        padding: 0 10px;
     }
 
     &.sortable-ghost {

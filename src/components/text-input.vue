@@ -6,6 +6,9 @@
             tabindex="0"
             :value="internalValue"
             :placeholder="placeholder"
+            :minlength="internalMinlength"
+            :maxlength="internalMaxlength"
+            :required="internalRequired"
             :disabled="internalDisabled"
             :class="{ outline: internalOutline }"
             @input="onValueInputChange($event)"
@@ -17,11 +20,13 @@
 import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
 
 import { convertToBoolean } from '../utils/convert-to-boolean';
+import { convertToNumber } from '../utils/convert-to-number';
 
 @Component
 export default class TextInputComponent extends Vue {
     @Model('change', String)
     public value: string;
+    public internalValue: string = '';
 
     @Prop(String)
     public placeholder: string;
@@ -40,10 +45,23 @@ export default class TextInputComponent extends Vue {
     public outline: boolean;
     public internalOutline: boolean = true;
 
+    @Prop([Number, String])
+    public minlength: number;
+    public internalMinlength: number;
+
+    @Prop([Number, String])
+    public maxlength: number;
+    public internalMaxlength: number;
+
+    @Prop({
+        type: [Boolean, String],
+        default: false
+    })
+    public required: boolean;
+    public internalRequired: boolean = false;
+
     @Prop(String)
     public label: string;
-
-    public internalValue: string = '';
 
     onValueInputChange(event: any) {
         const value = event.target.value;
@@ -66,6 +84,21 @@ export default class TextInputComponent extends Vue {
     @Watch('outline', { immediate: true })
     onOutlinePropChange(value) {
         this.internalOutline = convertToBoolean(value);
+    }
+
+    @Watch('required', { immediate: true })
+    onRequiredPropChange(value) {
+        this.internalRequired = convertToBoolean(value);
+    }
+
+    @Watch('minlength', { immediate: true })
+    onMinlengthPropChange(value) {
+        this.internalMinlength = convertToNumber(value);
+    }
+
+    @Watch('maxlength', { immediate: true })
+    onMaxlengthPropChange(value) {
+        this.internalMaxlength = convertToNumber(value);
     }
 }
 </script>

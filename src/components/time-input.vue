@@ -53,62 +53,64 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
+import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
 
-@Component({
-  created() {
-    this.applyValue(this.value | 0);
-  },
-  watch: {
-    value: function(value, old) {
-      value = value | 0;
-      if (value === (old | 0)) {
-        return;
-      }
-      this.applyValue(value);
-    }
-  }
-})
+@Component
 export default class TimeInputComponent extends Vue {
-  @Prop({ type: Number })
-  public value: number;
+    @Model('change', { type: Number })
+    public value: number;
 
-  @Prop({ type: String })
-  public label: string;
+    @Prop({ type: String })
+    public label: string;
 
-  public active = false;
-  public hour = 0;
-  public minute = 0;
-  public second = 0;
-  public milli = 0;
+    public active = false;
+    public hour = 0;
+    public minute = 0;
+    public second = 0;
+    public milli = 0;
 
-  activate() {
-    this.active = true;
-    this.$emit('focus');
-  }
+    created() {
+        this.applyValue(this.value | 0);
+    }
 
-  deactivate() {
-    this.active = false;
-    this.$emit('blur');
-  }
+    activate() {
+        this.active = true;
+        this.$emit('focus');
+    }
 
-  onChange(value, part) {
-    this[part] = value;
-    let n = this.milli;
-    n += this.second * 1000;
-    n += this.minute * 60000;
-    n += this.hour * 3600000;
+    deactivate() {
+        this.active = false;
+        this.$emit('blur');
+    }
 
-    this.$emit('change', n);
-  }
+    onChange(value, part) {
+        if (this[part] !== value) {
+            this[part] = value;
+            let n = this.milli;
+            n += this.second * 1000;
+            n += this.minute * 60000;
+            n += this.hour * 3600000;
 
-  applyValue(value) {
-    // Parse an timing object from the number
-    this.hour = (value / 3600000) | 0;
-    this.minute = ((value / 60000) | 0) % 60;
-    this.second = ((value / 1000) | 0) % 60;
-    this.milli = value % 1000;
-  }
+            this.$emit('change', n);
+        }
+    }
+
+    applyValue(value) {
+        // Parse an timing object from the number
+        this.hour = (value / 3600000) | 0;
+        this.minute = ((value / 60000) | 0) % 60;
+        this.second = ((value / 1000) | 0) % 60;
+        this.milli = value % 1000;
+    }
+
+    @Watch('value')
+    onValuePropChange(value, old) {
+        value = value | 0;
+        if (value === (old | 0)) {
+            return;
+        }
+        this.applyValue(value);
+    }
 }
 </script>
 
@@ -137,7 +139,6 @@ export default class TimeInputComponent extends Vue {
         }
 
         input {
-          padding: 0;
           text-align: center;
         }
       }
