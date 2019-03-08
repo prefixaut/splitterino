@@ -6,11 +6,11 @@
             tabindex="0"
             :value="internalValue"
             :placeholder="placeholder"
-            :minlength="internalMinlength"
-            :maxlength="internalMaxlength"
-            :required="internalRequired"
-            :disabled="internalDisabled"
-            :class="{ outline: internalOutline }"
+            :minlength="minlength"
+            :maxlength="maxlength"
+            :required="required"
+            :disabled="disabled"
+            :class="{ outline: outline }"
             @input="onValueInputChange($event)"
         />
     </div>
@@ -31,34 +31,20 @@ export default class TextInputComponent extends Vue {
     @Prop(String)
     public placeholder: string;
 
-    @Prop({
-        type: [Boolean, String],
-        default: false,
-    })
+    @Prop({ type: Boolean, default: false })
     public disabled: boolean;
-    public internalDisabled: boolean = false;
 
-    @Prop({
-        type: [Boolean, String],
-        default: true,
-    })
+    @Prop({ type: Boolean, default: true })
     public outline: boolean;
-    public internalOutline: boolean = true;
 
-    @Prop([Number, String])
+    @Prop({ type: Number, default: null })
     public minlength: number;
-    public internalMinlength: number;
 
-    @Prop([Number, String])
+    @Prop({ type: Number, default: null })
     public maxlength: number;
-    public internalMaxlength: number;
 
-    @Prop({
-        type: [Boolean, String],
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public required: boolean;
-    public internalRequired: boolean = false;
 
     @Prop(String)
     public label: string;
@@ -75,31 +61,6 @@ export default class TextInputComponent extends Vue {
     onValuePropChange(value) {
         this.internalValue = value;
     }
-
-    @Watch('disabled', { immediate: true })
-    onDisabledPropChange(value) {
-        this.internalDisabled = convertToBoolean(value);
-    }
-
-    @Watch('outline', { immediate: true })
-    onOutlinePropChange(value) {
-        this.internalOutline = convertToBoolean(value);
-    }
-
-    @Watch('required', { immediate: true })
-    onRequiredPropChange(value) {
-        this.internalRequired = convertToBoolean(value);
-    }
-
-    @Watch('minlength', { immediate: true })
-    onMinlengthPropChange(value) {
-        this.internalMinlength = convertToNumber(value);
-    }
-
-    @Watch('maxlength', { immediate: true })
-    onMaxlengthPropChange(value) {
-        this.internalMaxlength = convertToNumber(value);
-    }
 }
 </script>
 
@@ -109,7 +70,7 @@ export default class TextInputComponent extends Vue {
 .text-input {
     > input {
         border: 1px solid $spl-color-very-dark-gray;
-        background: $spl-color-very-dark-gray;
+        background: $spl-color-off-black;
         color: $spl-color-off-white;
         padding: 3px 8px;
         transition: 200ms;

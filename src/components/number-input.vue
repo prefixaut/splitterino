@@ -7,7 +7,7 @@
             ref="input"
             tabindex="0"
             :value="internalValue"
-            :disabled="internalDisabled"
+            :disabled="disabled"
             :min="min"
             :max="max"
             @input="onValueInputChange($event)"
@@ -36,10 +36,7 @@ export default class NumberInputComponent extends Vue {
     @Prop({ type: Boolean })
     public decimals: boolean;
 
-    @Prop({
-        type: [Boolean, String],
-        default: false
-    })
+    @Prop({ type: Boolean })
     public disabled: boolean;
 
     @Prop({ type: String })
@@ -193,8 +190,8 @@ export default class NumberInputComponent extends Vue {
 
   input {
     width: 100%;
-    border: 1px solid $spl-color-very-dark-gray;
-    background: $spl-color-very-dark-gray;
+    border: 1px solid $spl-color-off-black;
+    background: $spl-color-off-black;
     color: $spl-color-off-white;
     padding: 3px 3px;
     transition: 200ms;
