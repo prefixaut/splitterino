@@ -17,6 +17,7 @@
     "electron": "^3.0.10",
     "lodash": "^4.17.11",
     "mz": "^2.7.0",
+    "uuid": "^3.3.2",
     "vue": "^2.5.17",
     "vue-class-component": "^6.0.0",
     "vue-overlay-host": "0.2.0",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@types/mz": "^0.0.32",
+    "@types/uuid": "^3.4.4",
     "@vue/cli-plugin-babel": "^3.0.3",
     "@vue/cli-plugin-typescript": "^3.1.1",
     "@vue/cli-service": "^3.0.3",
