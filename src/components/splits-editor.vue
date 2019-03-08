@@ -5,51 +5,78 @@
         </div>
 
         <div class="content">
-            <h2>Game Information</h2>
+            <!--section id="game-info">
+                <h2>Game Information</h2>
 
-            <spl-game-info-editor />
+                <spl-game-info-editor />
+            </section-->
 
-            <h2>Segments</h2>
-            <draggable element="table" class="segments" v-model="segments" :options="{handle: '.handle'}">
-                <thead slot="header">
-                    <tr>
-                        <th class="handle"><!-- Drag-Handle --></th>
-                        <th class="name">Name</th>
-                        <th class="time">Time</th>
-                        <th class="personal-best">Personal Best</th>
-                        <th class="overall-best">Overall Best</th>
-                    </tr>
-                </thead>
+            <section id="segments">
+                <h2>Segments</h2>
+                <draggable element="table" class="segments" v-model="segments" :options="{handle: '.handle'}">
+                    <thead slot="header">
+                        <tr>
+                            <th class="handle"><!-- Drag-Handle --></th>
+                            <th class="name">Name</th>
+                            <th class="time">Time</th>
+                            <th class="personal-best">Personal Best</th>
+                            <th class="overall-best">Overall Best</th>
+                            <th class="manage"><!-- Management --></th>
+                        </tr>
+                    </thead>
 
-                <transition-group tag="tbody">
-                    <tr
-                        class="segment-row"
-                        v-for="(segment, index) of segments"
-                        :key="index"
-                    >
-                        <td class="handle">
-                            <fa-icon icon="grip-lines" />
-                        </td>
-                        <td class="name">
-                            <spl-text-input
-                                v-model="segment.name"
-                                outline="false"
-                                required="false"
-                                minlength="1"
-                            />
-                        </td>
-                        <td class="time">
-                            <spl-time-input v-model="segment.time"/>
-                        </td>
-                        <td class="personal-best">
-                            <spl-time-input v-model="segment.personalBest" />
-                        </td>
-                        <td class="overall-best">
-                            <spl-time-input v-model="segment.overallBest" />
-                        </td>
-                    </tr>
-                </transition-group>
-            </draggable>
+                    <transition-group tag="tbody">
+                        <tr
+                            class="segment-row"
+                            v-for="(segment, index) of segments"
+                            :key="index"
+                        >
+                            <td class="handle">
+                                <fa-icon icon="grip-lines" />
+                            </td>
+                            <td class="name">
+                                <spl-text-input
+                                    v-model="segment.name"
+                                    :outline="false"
+                                    :required="false"
+                                    :minlength="1"
+                                />
+                            </td>
+                            <td class="time">
+                                <spl-time-input v-model="segment.time"/>
+                            </td>
+                            <td class="personal-best">
+                                <spl-time-input v-model="segment.personalBest" />
+                            </td>
+                            <td class="overall-best">
+                                <spl-time-input v-model="segment.overallBest" />
+                            </td>
+                            <td class="manage">
+                                <spl-button
+                                    class="remove-segment"
+                                    theme="danger"
+                                    outline
+                                    title="Remove Segment"
+                                    @click="removeSegment(index)"
+                                >
+                                    <fa-icon icon="trash-alt" />
+                                </spl-button>
+                            </td>
+                        </tr>
+                    </transition-group>
+
+                    <tfoot slot="footer">
+                        <tr class="add-new">
+                            <td colspan="9999">
+                                <spl-button class="add-new-segment" theme="primary" outline @click="addSegment()">
+                                    <fa-icon icon="plus" />
+                                    <span>&nbsp;Add new Segment</span>
+                                </spl-button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </draggable>
+            </section>
         </div>
 
         <div class="footer">
@@ -67,6 +94,7 @@
 import { Vue, Component } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import { isEqual, cloneDeep } from 'lodash';
+import { v4 as uuid } from 'uuid';
 
 import { Segment } from '../common/segment';
 
@@ -94,8 +122,19 @@ export default class SplitsEditorComponent extends Vue {
         );
     }
 
+    addSegment() {
+        this.segments.push({
+            id: uuid(),
+            name: '',
+        });
+    }
+
+    removeSegment(index: number) {
+        this.segments.splice(index, 1);
+    }
+
     saveSplits() {
-        this.$store.dispatch('setSegments', this.segments);
+        this.$store.dispatch('splitterino/splits/setSegments', [this.segments]);
     }
 }
 </script>
@@ -144,6 +183,14 @@ export default class SplitsEditorComponent extends Vue {
         padding: 0 10px;
     }
 
+    .manage {
+        padding: 5px 5px 5px 0;
+
+        .remove-segment {
+            color: $spl-color-dark-danger;
+        }
+    }
+
     &.sortable-ghost {
         background: $spl-color-light-primary;
 
@@ -152,5 +199,10 @@ export default class SplitsEditorComponent extends Vue {
             border-color: $spl-color-light-primary;
         }
     }
+}
+
+.add-new-segment {
+    display: block;
+    margin: 10px auto;
 }
 </style>
