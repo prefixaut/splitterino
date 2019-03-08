@@ -13,6 +13,7 @@
             @input="onValueInputChange($event)"
             @keydown.down.prevent.stop="down()"
             @keydown.up.prevent.stop="up()"
+            @blur="defaultValueOnBlur($event)"
         />
     </div>
 </template>
@@ -73,8 +74,18 @@ export default class NumberInputComponent extends Vue {
     onValueInputChange(event: any) {
         const value = event.target.value;
         if (value !== this.internalValue) {
-            this.internalValue = value;
-            this.$emit('change', this.internalValue);
+            if (value === '' && this.internalValue === 0) {
+                return;
+            }
+
+            this.updateContent(value);
+        }
+    }
+
+    defaultValueOnBlur(event: any) {
+        const value = event.target.value;
+        if (value === '') {
+            event.target.value = 0;
         }
     }
 
@@ -96,39 +107,34 @@ export default class NumberInputComponent extends Vue {
         this.updateContent();
     }
 
-    updateContent() {
-        let changed = false;
-
-        const str = `${this.internalValue}`;
-        if (typeof this.internalValue === 'string') {
-            if (this.decimals && !this.decimalRegex.test(str)) {
-                this.internalValue = parseFloat(str);
-                changed = true;
-            } else if (!this.decimals && !this.flatRegex.test(str)) {
-                this.internalValue = parseInt(str, 10);
-                changed = true;
-            } else {
-                this.internalValue = 0;
-            }
+    updateContent(str?: string) {
+        if (str == null) {
+            str = `${this.internalValue}`;
         }
 
-        if (this.max != null && this.internalValue > this.max) {
-            this.internalValue = this.max;
+        let newValue = 0;
+        if (this.decimals) {
+            newValue = parseFloat(str);
+        } else if (!this.decimals) {
+            newValue = parseInt(str, 10);
+        }
+
+        if (typeof this.max === 'number' && this.internalValue > this.max) {
+            newValue = this.max;
             this.enableUp = false;
-            changed = true;
         } else {
             this.enableUp = true;
         }
 
-        if (this.min != null && this.internalValue < this.min) {
-            this.internalValue = this.min;
+        if (typeof this.min === 'number' && this.internalValue < this.min) {
+            newValue = this.min;
             this.enableDown = false;
-            changed = true;
         } else {
             this.enableDown = true;
         }
 
-        if (changed) {
+        if (this.internalValue !== newValue) {
+            this.internalValue = newValue;
             this.$emit('change', this.internalValue);
         }
     }
