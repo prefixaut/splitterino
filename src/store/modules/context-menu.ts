@@ -21,15 +21,27 @@ const moduleState: ContextMenuState = {
             label: 'Edit Splits ...',
             actions: [
                 () => {
-                    newWindow(
-                        {
-                            title: 'Splits Editor',
-                            parent: remote.getCurrentWindow(),
-                            minWidth: 440,
-                            minHeight: 220,
-                        },
-                        '/splits-editor'
-                    );
+                    newWindow({
+                        title: 'Splits Editor',
+                        parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
+                    }, '/splits-editor');
+                }
+            ]
+        }
+    ],
+    settings: [
+        {
+            label: 'Settings ...',
+            actions: [
+                () => {
+                    newWindow({
+                        title: 'Settings',
+                        parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
+                    }, '/settings');
                 }
             ]
         }
@@ -42,7 +54,7 @@ const getters = {
             const ctxMenu: Object[] = [];
             menus.forEach((el: string) => {
                 if (!(el in state)) {
-                    throw new Error(`Menu '${el} does not exist in state'`);
+                    throw new Error(`Menu '${el}' does not exist in state`);
                 }
                 ctxMenu.push(...state[el]);
             });

@@ -17,9 +17,15 @@ import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
+import SettingsEditorComponent from './components/settings-editor.vue';
+import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
+import SettingsEditorMainComponent from './components/settings-editor-main.vue';
+
 import { contextMenuDirective } from './directives/context-menu';
 import { router } from './router';
 import { getClientStore } from './store';
+import { remote } from 'electron';
+import { loadSettings } from './common/load-settings';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
@@ -42,6 +48,9 @@ Vue.component('spl-text-input', TextInputComponent);
 Vue.component('spl-time-input', TimeInputComponent);
 Vue.component('spl-timer', TimerComponent);
 Vue.component('spl-title-bar', TitleBarComponent);
+Vue.component('spl-settings-editor', SettingsEditorComponent);
+Vue.component('spl-settings-editor-group', SettingsEditorGroupComponent);
+Vue.component('spl-settings-editor-main', SettingsEditorMainComponent);
 
 // Register Directives
 Vue.directive('spl-ctx-menu', contextMenuDirective);
@@ -60,8 +69,13 @@ Vue.component('vue-overlay-host', OverlayHost);
 
 Vue.config.productionTip = false;
 
-new Vue({
+const vue = new Vue({
     render: h => h(App),
     store: getClientStore(Vue),
     router
 }).$mount('#app');
+
+// Only execute certain functionality if window is main window
+if (remote.getCurrentWindow().id === 1) {
+    loadSettings(vue);
+}
