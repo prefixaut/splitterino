@@ -9,7 +9,7 @@
         type="main"
       />
     </div>
-    <div>
+    <div class="settings-content">
         <spl-settings-editor-main
             :activeSettingsConfig="activeSettingsConfig"
             :activeSettingsPath="activeSettingsPath"
@@ -25,28 +25,39 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { SettingsConfigurationObject, SettingsNamespace, Settings } from '../store/states/settings';
 import { set, isEqual } from 'lodash';
+
+import { SettingsConfigurationObject, SettingsNamespace, Settings } from '../store/states/settings';
 import { getValueFromObject } from '../utils/get-from-object';
 
 const settingsModule = namespace('splitterino/settings');
 
 @Component
 export default class SettingsEditorComponent extends Vue {
-    @settingsModule.Getter configuration;
-    @settingsModule.Getter getSettingByPath;
+    @settingsModule.Getter
+    public configuration;
 
-    /** Temporary settings object */
+    @settingsModule.Getter
+    public getSettingByPath;
+
+    /**
+     * Temporary settings object
+     */
     private changedSettings: Settings = {
         splitterino: {
             core: {}
         },
         plugins: {}
-    }
+    };
 
-    /** Current settings config active in main section */
+    /**
+     * Current settings config active in main section
+     */
     public activeSettingsConfig: SettingsConfigurationObject[] = [];
-    /** Path to settings for currently active settings config */
+
+    /**
+     * Path to settings for currently active settings config
+     */
     public activeSettingsPath: any = null;
 
     created() {
@@ -66,8 +77,8 @@ export default class SettingsEditorComponent extends Vue {
      *
      * Sets changed setting in temp settings object
      */
-    onSettingChanged({ key, setting }: { key: string, setting: any }) {
-        set(this.changedSettings, this.activeSettingsPath + '.' + key, setting);
+    onSettingChanged({ key, setting }: { key: string; setting: any }) {
+        set(this.changedSettings, `${this.activeSettingsPath}.${key}`, setting);
     }
 
     /**
@@ -113,7 +124,7 @@ export default class SettingsEditorComponent extends Vue {
                     );
                 }
             }
-        }
+        };
 
         // Loop over first groups
         for (const [key, value] of Object.entries(this.changedSettings)) {
@@ -121,15 +132,17 @@ export default class SettingsEditorComponent extends Vue {
         }
 
         // Wait for last setting to be commited to store then save to file
-        this.$eventHub.$on(`commit:splitterino/settings/setSetting:${lastSetting}`, ({ key }) => {
-            this.$store.commit('splitterino/settings/saveSettingsToFile');
-        });
+        this.$eventHub.$on(
+            `commit:splitterino/settings/setSetting:${lastSetting}`,
+            ({ key }) => {
+                this.$store.commit('splitterino/settings/saveSettingsToFile');
+            });
     }
 }
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/core.scss";
+@import "../styles/core";
 
 .settings-editor {
     display: flex;

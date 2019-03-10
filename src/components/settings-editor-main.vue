@@ -21,15 +21,21 @@ const settingsModule = namespace('splitterino/settings');
 
 @Component
 export default class SettingsEditorMainComponent extends Vue {
-    @Prop() activeSettingsConfig: SettingsConfigurationObject[];
-    @Prop(String) activeSettingsPath: String;
+    @Prop()
+    public activeSettingsConfig: SettingsConfigurationObject[];
 
-    @settingsModule.Getter getSettingByPath;
+    @Prop(String)
+    public activeSettingsPath: string;
 
-    /** Change event for currently loaded components */
+    @settingsModule.Getter
+    public getSettingByPath;
+
+    /**
+     * Change event for currently loaded components
+     */
     onValueChanged(key: string, event: any) {
         const value = typeof event === 'object' && 'target' in event ?
-                        event.target.value : event;
+            event.target.value : event;
         // Pass value to parent
         this.$emit(
             'settingChanged',
@@ -38,7 +44,7 @@ export default class SettingsEditorMainComponent extends Vue {
                 // TODO: Check if this works for custom form elements
                 setting: value
             }
-        )
+        );
     }
 }
 </script>

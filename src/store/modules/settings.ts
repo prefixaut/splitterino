@@ -4,7 +4,7 @@ import { Typeguard } from '../../common/typeguard';
 import { getValueFromObject } from '../../utils/get-from-object';
 import { RootState } from '../states/root';
 import { SettingsState, Settings } from '../states/settings';
-import { saveJSONToFile } from '../../utils/file-save-load';
+import { saveJSONToFile } from '../../utils/io';
 
 const moduleState: SettingsState = {
     settings: {

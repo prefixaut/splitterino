@@ -149,7 +149,7 @@ export default class SplitsComponent extends Vue {
                 modal: true
             },
             '/settings'
-        )
+        );
     }
 
     scrollSplits(event: MouseWheelEvent) {

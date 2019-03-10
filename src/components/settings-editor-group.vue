@@ -19,24 +19,33 @@ import { RootState } from '../store/states/root';
 
 @Component
 export default class SettingsEditorGroupComponent extends Vue {
+    /**
+     * Group object of configuration
+     */
     @Prop({
         type: Object,
         required: true
     })
-    /** Group object of configuration */
     group: SettingsGroupConfigurationObject;
+
+    /**
+     * Type for different style rendering
+     */
     @Prop({
         type: String,
         default: 'group'
     })
-    /** Type for different style rendering */
-    type: 'main' | 'group'
+    type: 'main' | 'group';
+
+    /**
+     * Recursively concatenated parent key string
+     */
     @Prop({
         type: String,
         default: ''
     })
-    /** Recursively concatenated parent key string */
     parentKey: string;
+
     /**
      * Type of every child in children array
      *
