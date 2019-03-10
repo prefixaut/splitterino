@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 
-@Component({ name: 'spl-splits-editor-view' })
+@Component
 export default class SplitsEditorView extends Vue {}
 </script>
 

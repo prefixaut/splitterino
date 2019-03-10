@@ -6,7 +6,7 @@
     >
         <div
             class="splits"
-            v-spl-ctx-menu="['splitter', 'def']"
+            v-spl-ctx-menu="['def', 'splitter', 'settings']"
             @mousewheel="scrollSplits"
             @mouseleave="scrollIndex = -1"
         >
