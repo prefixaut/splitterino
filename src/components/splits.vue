@@ -45,6 +45,7 @@
             <spl-button outline v-else @click="pause()">Pause</spl-button>
             <spl-button outline @click="skipSplit()">Skip</spl-button>
             <spl-button outline @click="undoSplit()">Undo</spl-button>
+            <spl-button outline @click="openSettings()">Settings</spl-button>
         </div>
     </div>
 </template>
@@ -58,6 +59,7 @@ import { clamp } from 'lodash';
 import { Segment } from '../common/segment';
 import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/now';
+import { newWindow } from '../utils/new-window';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -135,6 +137,19 @@ export default class SplitsComponent extends Vue {
         }
 
         return arr;
+    }
+
+    openSettings() {
+        newWindow(
+            {
+                width: 800,
+                height: 600,
+                parent: remote.getCurrentWindow(),
+                frame: false,
+                modal: true
+            },
+            '/settings'
+        );
     }
 
     scrollSplits(event: MouseWheelEvent) {
