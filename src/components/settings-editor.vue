@@ -1,25 +1,26 @@
 <template>
-  <div class="settings-editor">
-    <div class="settings-sidebar">
-      <spl-settings-editor-group
-        v-for="(item, index) in configuration"
-        :key="index"
-        :group="item"
-        :parentKey="item.key"
-        type="main"
-      />
-    </div>
-    <div class="settings-content">
-        <spl-settings-editor-main
-            :activeSettingsConfig="activeSettingsConfig"
-            :activeSettingsPath="activeSettingsPath"
-            @settingChanged="onSettingChanged"
-        />
-        <div class="settings-footer">
-            <spl-button outline @click="saveSettings">Save</spl-button>
+    <div class="settings-editor">
+        <div class="settings-sidebar">
+            <spl-settings-editor-group
+                v-for="(item, index) in configuration"
+                type="main"
+                :key="index"
+                :group="item"
+                :parentKey="item.key"
+            />
+        </div>
+
+        <div class="settings-content">
+            <spl-settings-editor-main
+                :activeSettingsConfig="activeSettingsConfig"
+                :activeSettingsPath="activeSettingsPath"
+                @settingChanged="onSettingChanged"
+            />
+            <div class="settings-footer">
+                <spl-button outline @click="saveSettings">Save</spl-button>
+            </div>
         </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -146,15 +147,19 @@ export default class SettingsEditorComponent extends Vue {
 
 .settings-editor {
     display: flex;
-    & .settings-sidebar {
-        height: calc(100vh - #{$spl-title-bar-height});
-        width: 200px;
-        background-color: black;
+    height: 100%;
+
+    .settings-sidebar {
+        flex: 0 0 200px;
+        height: 100%;
+        padding: 10px 10px 20px 0;
+        background-color: $spl-color-off-black;
     }
-    & .settings-footer {
-        width: 100%;
-        background-color: $spl-color-very-dark-gray;
-        height: 50px;
+
+    .settings-content {
+        flex: 1 1 auto;
+        height: 100%;
+        padding: 20px;
     }
 }
 </style>
