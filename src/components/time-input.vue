@@ -1,55 +1,55 @@
 <template>
-  <div class="time-input" :class="{ active: active }">
-    <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
+    <div class="time-input" :class="{ active: active }">
+        <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
-    <div class="content-wrapper">
-      <spl-number-input
-        class="part hour"
-        :value="hour"
-        :min="0"
-        :max="99999"
-        @change="onChange($event, 'hour')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+        <div class="content-wrapper">
+            <spl-number-input
+                class="part hour"
+                :value="hour"
+                :min="0"
+                :max="99999"
+                @change="onChange($event, 'hour')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="colon">:</span>
+            <span class="colon">:</span>
 
-      <spl-number-input
-        class="part"
-        :value="minute"
-        :min="0"
-        :max="59"
-        @change="onChange($event, 'minute')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="minute"
+                :min="0"
+                :max="59"
+                @change="onChange($event, 'minute')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="colon">:</span>
+            <span class="colon">:</span>
 
-      <spl-number-input
-        class="part"
-        :value="second"
-        :min="0"
-        :max="59"
-        @change="onChange($event, 'second')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="second"
+                :min="0"
+                :max="59"
+                @change="onChange($event, 'second')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="dot">.</span>
+            <span class="dot">.</span>
 
-      <spl-number-input
-        class="part"
-        :value="milli"
-        :min="0"
-        :max="999"
-        @change="onChange($event, 'milli')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="milli"
+                :min="0"
+                :max="999"
+                @change="onChange($event, 'milli')"
+                @focus="activate"
+                @blur="deactivate"
+            />
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
@@ -115,42 +115,42 @@ export default class TimeInputComponent extends Vue {
 </script>
 
 <style lang="scss">
-@import "../styles/config";
+@import '../styles/config';
 
 .time-input {
-  background: $spl-color-off-black;
+    background: $spl-color-off-black;
 
-  label {
-    display: block;
-    font-size: 12px;
-  }
-
-  > .content-wrapper {
-    width: 100%;
-    display: flex;
-
-    .part {
-      padding: 0;
-      width: auto;
-      max-width: 40px;
-      position: relative;
-
-      &.number-input {
-        .input-wrapper {
-          padding: 0;
-        }
-
-        input {
-          text-align: center;
-        }
-      }
+    label {
+        display: block;
+        font-size: 12px;
     }
 
-    .colon {
-      padding: 0 3px;
-      flex: 0 0 auto;
-      align-self: center;
+    > .content-wrapper {
+        width: 100%;
+        display: flex;
+
+        .part {
+            padding: 0;
+            width: auto;
+            max-width: 40px;
+            position: relative;
+
+            &.number-input {
+                .input-wrapper {
+                    padding: 0;
+                }
+
+                input {
+                    text-align: center;
+                }
+            }
+        }
+
+        .colon {
+            padding: 0 3px;
+            flex: 0 0 auto;
+            align-self: center;
+        }
     }
-  }
 }
 </style>

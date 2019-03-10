@@ -8,10 +8,9 @@
 import { Vue, Component } from 'vue-property-decorator';
 
 @Component
-export default class GameInfoEditorComponent extends Vue {}
+export default class GameInfoEditorComponent extends Vue { }
 </script>
 
 <style lang="scss" scoped>
-
 </style>
 

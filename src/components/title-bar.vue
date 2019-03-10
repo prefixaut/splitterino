@@ -9,7 +9,7 @@
                 <fa-icon :icon="maximized ? 'window-restore' : 'window-maximize'" />
             </div>
             <div v-if="closeable" class="control close" @click="close()">
-                <fa-icon icon="times"/>
+                <fa-icon icon="times" />
             </div>
         </div>
     </div>
@@ -110,5 +110,4 @@ export default class TitleBarComponent extends Vue {
         }
     }
 }
-
 </style>

@@ -16,18 +16,18 @@
                 :class="[
                     'split',
 
-                    {'visible': visibleIndicies.includes(index)},
-                    {'current': index === currentSegment && status === 'running'},
-                    {'scroll': index === scrollIndex},
+                    { visible: visibleIndicies.includes(index) },
+                    { current: index === currentSegment && status === 'running' },
+                    { scroll: index === scrollIndex },
 
-                    {['previous-' + (currentSegment - index)]: index < currentSegment},
-                    {['next-' + (index - currentSegment)]: (index - currentSegment) > 0},
+                    { ['previous-' + (currentSegment - index)]: index < currentSegment },
+                    { ['next-' + (index - currentSegment)]: index - currentSegment > 0 },
 
-                    {'skipped': segment.skipped},
-                    {'first': index === 0},
-                    {'final': index === segments.length - 1},
-                    {'is-personal-best': segment.hasNewPersonalBest},
-                    {'is-overall-best': segment.hasNewOverallBest}
+                    { skipped: segment.skipped },
+                    { first: index === 0 },
+                    { final: index === segments.length - 1 },
+                    { 'is-personal-best': segment.hasNewPersonalBest },
+                    { 'is-overall-best': segment.hasNewOverallBest },
                 ]"
             >
                 <div class="name">{{ segment.name }}</div>

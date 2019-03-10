@@ -13,7 +13,7 @@
 
             <section id="segments">
                 <h2>Segments</h2>
-                <draggable element="table" class="segments" v-model="segments" :options="{handle: '.handle'}">
+                <draggable element="table" class="segments" v-model="segments" :options="{ handle: '.handle' }">
                     <thead slot="header">
                         <tr>
                             <th class="handle"><!-- Drag-Handle --></th>
@@ -26,11 +26,7 @@
                     </thead>
 
                     <transition-group tag="tbody">
-                        <tr
-                            class="segment-row"
-                            v-for="(segment, index) of segments"
-                            :key="index"
-                        >
+                        <tr class="segment-row" v-for="(segment, index) of segments" :key="index">
                             <td class="handle">
                                 <fa-icon icon="grip-lines" />
                             </td>
@@ -43,7 +39,7 @@
                                 />
                             </td>
                             <td class="time">
-                                <spl-time-input v-model="segment.time"/>
+                                <spl-time-input v-model="segment.time" />
                             </td>
                             <td class="personal-best">
                                 <spl-time-input v-model="segment.personalBest" />
@@ -80,12 +76,9 @@
         </div>
 
         <div class="footer">
-            <spl-button
-                theme="info"
-                outline
-                :disabled="!haveSegmentsChanged"
-                @click="saveSplits()"
-            >Save Splits</spl-button>
+            <spl-button theme="info" outline :disabled="!haveSegmentsChanged" @click="saveSplits()"
+                >Save Splits</spl-button
+            >
         </div>
     </div>
 </template>

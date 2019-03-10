@@ -182,41 +182,40 @@ export default class NumberInputComponent extends Vue {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/config";
+@import '../styles/config';
 
 .number-input {
-  width: 100%;
-  box-sizing: content-box;
-
-  label {
-    display: block;
-    flex: none;
-    font-size: 10px;
-  }
-
-  input {
     width: 100%;
-    border: 1px solid $spl-color-off-black;
-    background: $spl-color-off-black;
-    color: $spl-color-off-white;
-    padding: 3px 3px;
-    transition: 200ms;
+    box-sizing: content-box;
 
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-      margin: 0;
+    label {
+        display: block;
+        flex: none;
+        font-size: 10px;
     }
 
-    &.outline {
-      border-color: $spl-color-dark-gray;
-    }
+    input {
+        width: 100%;
+        border: 1px solid $spl-color-off-black;
+        background: $spl-color-off-black;
+        color: $spl-color-off-white;
+        padding: 3px 3px;
+        transition: 200ms;
 
-    &:focus {
-      outline: none;
-      border-color: $spl-color-primary;
-    }
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
-  }
+        &.outline {
+            border-color: $spl-color-dark-gray;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: $spl-color-primary;
+        }
+    }
 }
 </style>

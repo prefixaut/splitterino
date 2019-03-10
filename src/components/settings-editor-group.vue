@@ -133,7 +133,7 @@ export default class SettingsEditorGroupComponent extends Vue {
         }
     }
 
-/* TODO: Fix the transition styles
+    /* TODO: Fix the transition styles
     .settings-children {
         &.v-enter,
         &.v-leave-to {

@@ -1,15 +1,15 @@
 <template>
-  <button
-    role="button"
-    tabindex="0"
-    :autofocus="autofocus"
-    :disabled="disabled"
-    :type="type"
-    :class="[ { outline: outline }, 'spl-button', 'theme-' + internalTheme]"
-    v-on="$listeners"
-  >
-    <slot/>
-  </button>
+    <button
+        role="button"
+        tabindex="0"
+        :autofocus="autofocus"
+        :disabled="disabled"
+        :type="type"
+        :class="[{ outline: outline }, 'spl-button', 'theme-' + internalTheme]"
+        v-on="$listeners"
+    >
+        <slot />
+    </button>
 </template>
 
 <script lang="ts">
@@ -17,44 +17,44 @@ import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
 @Component
 export default class ButtonComponent extends Vue {
-  @Prop({
-    type: Boolean,
-    default: false
-  })
-  public autofocus: boolean;
+    @Prop({
+        type: Boolean,
+        default: false
+    })
+    public autofocus: boolean;
 
-  @Prop(String)
-  public theme: string;
+    @Prop(String)
+    public theme: string;
 
-  @Prop({
-    type: Boolean,
-    default: false
-  })
-  public disabled: boolean;
+    @Prop({
+        type: Boolean,
+        default: false
+    })
+    public disabled: boolean;
 
-  @Prop({
-    type: String,
-    validator: val =>
-      val == null || ['button', 'reset', 'submit'].includes(val),
-    default: () => 'button'
-  })
-  public type: string;
+    @Prop({
+        type: String,
+        validator: val =>
+            val == null || ['button', 'reset', 'submit'].includes(val),
+        default: () => 'button'
+    })
+    public type: string;
 
-  @Prop({
-    type: Boolean,
-    default: false
-  })
-  public outline: boolean;
+    @Prop({
+        type: Boolean,
+        default: false
+    })
+    public outline: boolean;
 
-  public internalTheme: string;
+    public internalTheme: string;
 
-  @Watch('theme', { immediate: true })
-  onColorChanged(val: string) {
-    if (val == null) {
-      val = 'primary';
+    @Watch('theme', { immediate: true })
+    onColorChanged(val: string) {
+        if (val == null) {
+            val = 'primary';
+        }
+        this.internalTheme = val;
     }
-    this.internalTheme = val;
-  }
 }
 </script>
 
@@ -87,13 +87,13 @@ export default class ButtonComponent extends Vue {
                 &:hover,
                 &:focus {
                     outline: none;
-                    box-shadow:  0 0 10px 1px rgba(spl-get-theme($theme, 'base'), 50%);
+                    box-shadow: 0 0 10px 1px rgba(spl-get-theme($theme, 'base'), 50%);
                 }
             }
         }
     }
 
-    &[disabled="disabled"] {
+    &[disabled='disabled'] {
         color: $spl-color-gray;
         background: $spl-color-light-gray;
         border-color: $spl-color-light-gray;
