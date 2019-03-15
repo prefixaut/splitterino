@@ -2,19 +2,18 @@
     <div class="number-input">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
-        <input
-            type="number"
+        <div
+            class="content"
             ref="input"
             tabindex="0"
-            :value="internalValue"
+            contenteditable="true"
+            v-html="internalValue"
             :disabled="disabled"
             :min="min"
             :max="max"
-            @input="onValueInputChange($event)"
-            @keydown.down.prevent.stop="down()"
-            @keydown.up.prevent.stop="up()"
+            @keydown="onKeydownEvent($event)"
             @blur="defaultValueOnBlur($event)"
-        />
+        ></div>
     </div>
 </template>
 
@@ -71,15 +70,124 @@ export default class NumberInputComponent extends Vue {
     public readonly flatRegex = /^[+-]?([\d])*$/;
     public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
 
-    onValueInputChange(event: any) {
-        const value = event.target.value;
-        if (value !== this.internalValue) {
-            if (value === '' && this.internalValue === 0) {
+    onKeydownEvent(event: KeyboardEvent) {
+        if (event.type !== 'keydown' || event.metaKey) {
+            return;
+        }
+
+        let str = `${this.internalValue}`;
+        const selection = window.getSelection();
+        let from: number;
+        let to: number;
+        if (selection.baseOffset <= selection.focusOffset) {
+            from = selection.baseOffset;
+            to = selection.focusOffset;
+        } else {
+            from = selection.focusOffset;
+            to = selection.baseOffset;
+        }
+
+        switch (event.keyCode) {
+            case 16: // Shift
+            case 17: // Ctrl
+            case 18: // Alt
+                // Ignore these keys
+                break;
+
+            case 38: {
+                event.preventDefault();
+                event.stopPropagation();
+                this.up();
+
                 return;
             }
 
-            this.updateContent(value);
+            case 40: {
+                event.preventDefault();
+                event.stopPropagation();
+                this.down();
+
+                return;
+            }
+
+            // Delete left
+            case 8: {
+                if (from !== to) {
+                    str = str.substring(0, from) + str.substring(to);
+                } else {
+                    str = (event.shiftKey) ?
+                        str.substring(from) :
+                        str.substring(0, from) + str.substring(from);
+                }
+                break;
+            }
+
+            // Delete right
+            case 46: {
+                if (from !== to) {
+                    str = str.substring(0, from) + str.substring(to);
+                } else {
+                    str = (event.shiftKey) ?
+                        str.substring(0, from) :
+                        str.substring(0, from) + str.substring(from + 1);
+                }
+
+                // Fix the range
+                const newRange = document.createRange();
+                newRange.setStart(event.srcElement, to + 1);
+                newRange.setEnd(event.srcElement, to + 1);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                break;
+            }
+
+            // Move cursor left
+            case 37: {
+                // Using experimental feature
+                (selection as any).modify(
+                    event.shiftKey ? 'extend' : 'move',
+                    'left',
+                    'character'
+                );
+
+                break;
+            }
+
+            // Move cursor right
+            case 39: {
+                // Using experimental feature
+                (selection as any).modify(
+                    event.shiftKey ? 'extend' : 'move',
+                    'right',
+                    'character'
+                );
+
+                break;
+            }
+
+            default: {
+                str = str.substring(0, from) + event.key + str.substring(to);
+                selection.collapseToEnd();
+
+                if (this.decimals) {
+                    if (!this.decimalRegex.test(str)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        return;
+                    }
+                } else {
+                    if (!this.flatRegex.test(str)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        return;
+                    }
+                }
+            }
         }
+
+        this.updateContent(str);
     }
 
     defaultValueOnBlur(event: any) {
@@ -194,12 +302,12 @@ export default class NumberInputComponent extends Vue {
         font-size: 10px;
     }
 
-    input {
+    .content {
         width: 100%;
         border: 1px solid $spl-color-off-black;
         background: $spl-color-off-black;
         color: $spl-color-off-white;
-        padding: 3px 3px;
+        padding: 6px 13px;
         transition: 200ms;
 
         &::-webkit-outer-spin-button,

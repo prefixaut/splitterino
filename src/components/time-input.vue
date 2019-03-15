@@ -130,23 +130,22 @@ export default class TimeInputComponent extends Vue {
         display: flex;
 
         .part {
-            padding: 0;
             width: auto;
-            max-width: 40px;
+            flex: 1 1 25%;
             position: relative;
+        }
 
-            &.number-input {
-                .input-wrapper {
-                    padding: 0;
-                }
-
-                input {
-                    text-align: center;
-                }
-            }
+        >>> .part > input {
+            padding: 8px 8px;
         }
 
         .colon {
+            padding: 0 3px;
+            flex: 0 0 auto;
+            align-self: center;
+        }
+
+        .dot {
             padding: 0 3px;
             flex: 0 0 auto;
             align-self: center;

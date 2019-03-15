@@ -13,7 +13,7 @@
 
             <section id="segments">
                 <h2>Segments</h2>
-                <draggable element="table" class="segments" v-model="segments" :options="{ handle: '.handle' }">
+                <table class="segments">
                     <thead slot="header">
                         <tr>
                             <th class="handle"><!-- Drag-Handle --></th>
@@ -25,8 +25,14 @@
                         </tr>
                     </thead>
 
-                    <transition-group tag="tbody">
-                        <tr class="segment-row" v-for="(segment, index) of segments" :key="index">
+                    <draggable
+                        element="tbody"
+                        draggable=".segment-row"
+                        handle=".handle"
+                        direction="horizontal"
+                        v-model="segments"
+                    >
+                        <tr class="segment-row" v-for="(segment, index) of segments" :key="segment.id">
                             <td class="handle">
                                 <fa-icon icon="grip-lines" />
                             </td>
@@ -48,18 +54,16 @@
                                 <spl-time-input v-model="segment.overallBest" />
                             </td>
                             <td class="manage">
-                                <spl-button
+                                <button
                                     class="remove-segment"
-                                    theme="danger"
-                                    outline
                                     title="Remove Segment"
                                     @click="removeSegment(index)"
                                 >
                                     <fa-icon icon="trash-alt" />
-                                </spl-button>
+                                </button>
                             </td>
                         </tr>
-                    </transition-group>
+                    </draggable>
 
                     <tfoot slot="footer">
                         <tr class="add-new">
@@ -71,7 +75,7 @@
                             </td>
                         </tr>
                     </tfoot>
-                </draggable>
+                </table>
             </section>
         </div>
 
@@ -164,28 +168,42 @@ export default class SplitsEditorComponent extends Vue {
 }
 
 .segment-row {
+    > td {
+        border-left: 5px solid transparent;
+    }
+
     .handle {
         padding: 5px 10px;
         margin-right: 5px;
         cursor: -webkit-grab;
-    }
-
-    .time,
-    .personal-best,
-    .overall-best {
-        padding: 0 10px;
+        border: none;
     }
 
     .manage {
         padding: 5px 5px 5px 0;
 
         .remove-segment {
+            border: 1px solid $spl-color-off-black;
+            background: $spl-color-off-black;
             color: $spl-color-dark-danger;
+            padding: 8px 13px;
+            outline: none;
+            transition: 200ms;
+
+            &:active {
+                border-color: $spl-color-danger;
+                background: $spl-color-danger;
+                color: $spl-color-off-black;
+            }
         }
     }
 
     &.sortable-ghost {
         background: $spl-color-light-primary;
+
+        > td {
+            border-color: $spl-color-light-primary;
+        }
 
         & >>> .text-input > input {
             background: $spl-color-light-primary;
