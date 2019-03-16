@@ -1,153 +1,155 @@
 <template>
-  <div class="time-input" :class="{ active: active }">
-    <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
+    <div class="time-input" :class="{ active: active }">
+        <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
-    <div class="content-wrapper">
-      <spl-number-input
-        class="part hour"
-        :value="hour"
-        :min="0"
-        :max="99999"
-        @change="onChange($event, 'hour')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+        <div class="content-wrapper">
+            <spl-number-input
+                class="part hour"
+                :value="hour"
+                :min="0"
+                :max="99999"
+                @change="onChange($event, 'hour')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="colon">:</span>
+            <span class="colon">:</span>
 
-      <spl-number-input
-        class="part"
-        :value="minute"
-        :min="0"
-        :max="59"
-        @change="onChange($event, 'minute')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="minute"
+                :min="0"
+                :max="59"
+                @change="onChange($event, 'minute')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="colon">:</span>
+            <span class="colon">:</span>
 
-      <spl-number-input
-        class="part"
-        :value="second"
-        :min="0"
-        :max="59"
-        @change="onChange($event, 'second')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="second"
+                :min="0"
+                :max="59"
+                @change="onChange($event, 'second')"
+                @focus="activate"
+                @blur="deactivate"
+            />
 
-      <span class="dot">.</span>
+            <span class="dot">.</span>
 
-      <spl-number-input
-        class="part"
-        :value="milli"
-        :min="0"
-        :max="999"
-        @change="onChange($event, 'milli')"
-        @focus="activate"
-        @blur="deactivate"
-      />
+            <spl-number-input
+                class="part"
+                :value="milli"
+                :min="0"
+                :max="999"
+                @change="onChange($event, 'milli')"
+                @focus="activate"
+                @blur="deactivate"
+            />
+        </div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
+import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
 
-@Component({
-  created() {
-    this.applyValue(this.value | 0);
-  },
-  watch: {
-    value: function(value, old) {
-      value = value | 0;
-      if (value === (old | 0)) {
-        return;
-      }
-      this.applyValue(value);
-    }
-  }
-})
+@Component
 export default class TimeInputComponent extends Vue {
-  @Prop({ type: Number })
-  public value: number;
+    @Model('change', { type: Number })
+    public value: number;
 
-  @Prop({ type: String })
-  public label: string;
+    @Prop({ type: String })
+    public label: string;
 
-  public active = false;
-  public hour = 0;
-  public minute = 0;
-  public second = 0;
-  public milli = 0;
+    public active = false;
+    public hour = 0;
+    public minute = 0;
+    public second = 0;
+    public milli = 0;
 
-  activate() {
-    this.active = true;
-    this.$emit('focus');
-  }
+    created() {
+        this.applyValue(this.value | 0);
+    }
 
-  deactivate() {
-    this.active = false;
-    this.$emit('blur');
-  }
+    activate() {
+        this.active = true;
+        this.$emit('focus');
+    }
 
-  onChange(value, part) {
-    this[part] = value;
-    let n = this.milli;
-    n += this.second * 1000;
-    n += this.minute * 60000;
-    n += this.hour * 3600000;
+    deactivate() {
+        this.active = false;
+        this.$emit('blur');
+    }
 
-    this.$emit('change', n);
-  }
+    onChange(value, part) {
+        if (this[part] !== value) {
+            this[part] = value;
+            let n = this.milli;
+            n += this.second * 1000;
+            n += this.minute * 60000;
+            n += this.hour * 3600000;
 
-  applyValue(value) {
-    // Parse an timing object from the number
-    this.hour = (value / 3600000) | 0;
-    this.minute = ((value / 60000) | 0) % 60;
-    this.second = ((value / 1000) | 0) % 60;
-    this.milli = value % 1000;
-  }
+            this.$emit('change', n);
+        }
+    }
+
+    applyValue(value) {
+        // Parse an timing object from the number
+        this.hour = (value / 3600000) | 0;
+        this.minute = ((value / 60000) | 0) % 60;
+        this.second = ((value / 1000) | 0) % 60;
+        this.milli = value % 1000;
+    }
+
+    @Watch('value')
+    onValuePropChange(value, old) {
+        value = value | 0;
+        if (value === (old | 0)) {
+            return;
+        }
+        this.applyValue(value);
+    }
 }
 </script>
 
 <style lang="scss">
-@import "../styles/config";
+@import '../styles/config';
 
 .time-input {
-  label {
-    display: block;
-    font-size: 12px;
-  }
+    background: $spl-color-off-black;
 
-  > .content-wrapper {
-    width: 100%;
-    display: flex;
-
-    .part {
-      padding: 0;
-      width: auto;
-      max-width: 40px;
-      position: relative;
-
-      &.number-input {
-        .input-wrapper {
-          padding: 0;
-        }
-
-        input {
-          padding: 0;
-          text-align: center;
-        }
-      }
+    label {
+        display: block;
+        font-size: 12px;
     }
 
-    .colon {
-      padding: 0 3px;
-      flex: 0 0 auto;
-      align-self: center;
+    > .content-wrapper {
+        width: 100%;
+        display: flex;
+
+        .part {
+            width: auto;
+            flex: 1 1 25%;
+            position: relative;
+        }
+
+        >>> .part > input {
+            padding: 8px 8px;
+        }
+
+        .colon {
+            padding: 0 3px;
+            flex: 0 0 auto;
+            align-self: center;
+        }
+
+        .dot {
+            padding: 0 3px;
+            flex: 0 0 auto;
+            align-self: center;
+        }
     }
-  }
 }
 </style>

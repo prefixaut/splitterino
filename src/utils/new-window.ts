@@ -8,6 +8,8 @@ const defSettings: BrowserWindowConstructorOptions = {
     title: 'Splitterino',
     frame: false,
     titleBarStyle: 'hidden',
+    minWidth: 440,
+    minHeight: 220,
 };
 
 const url = 'http://localhost:8080#';

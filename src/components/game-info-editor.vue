@@ -1,6 +1,6 @@
 <template>
-    <div class="splits-editor-view">
-        <spl-splits-editor />
+    <div class="game-info-editor">
+        todo
     </div>
 </template>
 
@@ -8,11 +8,9 @@
 import { Vue, Component } from 'vue-property-decorator';
 
 @Component
-export default class SplitsEditorView extends Vue {}
+export default class GameInfoEditorComponent extends Vue { }
 </script>
 
 <style lang="scss" scoped>
-.splits-editor-view {
-    height: 100%;
-}
 </style>
+

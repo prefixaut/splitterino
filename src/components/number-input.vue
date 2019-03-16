@@ -1,253 +1,329 @@
 <template>
-  <div class="number-input" :class="{active: active}">
-    <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
+    <div class="number-input">
+        <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
-    <div class="content-wrapper" @mousewheel="wheelUpdate">
-      <div class="input-wrapper">
-        <input
-          type="number"
-          ref="input"
-          tabindex="0"
-          v-show="active"
-          v-model="content"
-          @focus="activate()"
-          @blur="deactivate()"
-          @keydown.down.prevent.stop="down"
-          @keydown.up.prevent.stop="up"
-        >
-        <span class="visible-content" @click="activate(true)" v-show="!active">{{ content }}</span>
-      </div>
+        <div
+            class="content"
+            ref="input"
+            tabindex="0"
+            contenteditable="true"
+            v-html="internalValue"
+            :disabled="disabled"
+            :min="min"
+            :max="max"
+            @keydown="onKeydownEvent($event)"
+            @blur="defaultValueOnBlur($event)"
+        ></div>
     </div>
-  </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
+import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 
-@Component({
-  created() {
-    this.content = this.value | 0;
-    this.updateContent();
-  }
-})
+import { convertToBoolean } from '../utils/convert-to-boolean';
+
+@Component
 export default class NumberInputComponent extends Vue {
-  @Prop({ type: Number, default: 0 })
-  public value: string | number;
+    @Model('change', { type: [Number, String] })
+    public value: string | number;
 
-  @Prop({ type: Number })
-  public min: number;
+    @Prop({ type: Number })
+    public min: number;
 
-  @Prop({ type: Number })
-  public max: number;
+    @Prop({ type: Number })
+    public max: number;
 
-  @Prop({ type: String })
-  public label: string;
+    @Prop({ type: Boolean })
+    public decimals: boolean;
 
-  // Internal value to prevent Mutation
-  public content = 0;
+    @Prop({ type: Boolean })
+    public disabled: boolean;
 
-  // Flags for css-classes
-  public enableUp = true;
-  public enableDown = true;
-  public active = false;
+    @Prop({ type: String })
+    public label: string;
 
-  @Watch('value')
-  onValueChanged(val, old) {
-    if (val === old) {
-      return;
+    /**
+     * Internal value to prevent Prop-Mutations
+     */
+    public internalValue = 0;
+
+    /**
+     * Internal Disabled-State to prevent Prop-Mutations
+     */
+    public internalDisabled: boolean = false;
+
+    /**
+     * If the user should be able to enter decimal values
+     */
+    public internalDecimal: boolean = false;
+
+    /**
+     * If increasing the value is currently allowed/possible
+     */
+    public enableUp = true;
+
+    /**
+     * If decreasing the value is currently allowed/possible
+     */
+    public enableDown = true;
+
+    public readonly flatRegex = /^[+-]?([\d])*$/;
+    public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
+
+    onKeydownEvent(event: KeyboardEvent) {
+        if (event.type !== 'keydown' || event.metaKey) {
+            return;
+        }
+
+        let str = `${this.internalValue}`;
+        const selection = window.getSelection();
+        let from: number;
+        let to: number;
+        if (selection.baseOffset <= selection.focusOffset) {
+            from = selection.baseOffset;
+            to = selection.focusOffset;
+        } else {
+            from = selection.focusOffset;
+            to = selection.baseOffset;
+        }
+
+        switch (event.keyCode) {
+            case 16: // Shift
+            case 17: // Ctrl
+            case 18: // Alt
+                // Ignore these keys
+                break;
+
+            case 38: {
+                event.preventDefault();
+                event.stopPropagation();
+                this.up();
+
+                return;
+            }
+
+            case 40: {
+                event.preventDefault();
+                event.stopPropagation();
+                this.down();
+
+                return;
+            }
+
+            // Delete left
+            case 8: {
+                if (from !== to) {
+                    str = str.substring(0, from) + str.substring(to);
+                } else {
+                    str = (event.shiftKey) ?
+                        str.substring(from) :
+                        str.substring(0, from) + str.substring(from);
+                }
+                break;
+            }
+
+            // Delete right
+            case 46: {
+                if (from !== to) {
+                    str = str.substring(0, from) + str.substring(to);
+                } else {
+                    str = (event.shiftKey) ?
+                        str.substring(0, from) :
+                        str.substring(0, from) + str.substring(from + 1);
+                }
+
+                // Fix the range
+                const newRange = document.createRange();
+                newRange.setStart(event.srcElement, to + 1);
+                newRange.setEnd(event.srcElement, to + 1);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+                break;
+            }
+
+            // Move cursor left
+            case 37: {
+                // Using experimental feature
+                (selection as any).modify(
+                    event.shiftKey ? 'extend' : 'move',
+                    'left',
+                    'character'
+                );
+
+                break;
+            }
+
+            // Move cursor right
+            case 39: {
+                // Using experimental feature
+                (selection as any).modify(
+                    event.shiftKey ? 'extend' : 'move',
+                    'right',
+                    'character'
+                );
+
+                break;
+            }
+
+            default: {
+                str = str.substring(0, from) + event.key + str.substring(to);
+                selection.collapseToEnd();
+
+                if (this.decimals) {
+                    if (!this.decimalRegex.test(str)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        return;
+                    }
+                } else {
+                    if (!this.flatRegex.test(str)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        this.updateContent(str);
     }
-    this.content = val;
-    this.updateContent();
-  }
 
-  @Watch('min')
-  onMinChanged(val, old) {
-    if (typeof this.max === 'number' && val > this.max) {
-      throw new RangeError(
-        'The minimal amount cannot be higher than the maximal!'
-      );
+    defaultValueOnBlur(event: any) {
+        const value = event.target.value;
+        if (value === '') {
+            event.target.value = 0;
+        }
     }
-    if (val === old) {
-      return;
-    }
-    this.updateContent();
-  }
 
-  @Watch('max')
-  onMaxChanged(val, old) {
-    if (typeof this.min === 'number' && val < this.min) {
-      throw new RangeError(
-        'The maximal amount cannot be lower than the minimal!'
-      );
-    }
-    if (val === old) {
-      return;
-    }
-    this.updateContent();
-  }
-
-  activate(doFocus) {
-    if (this.active) {
-      return;
-    }
-    this.active = true;
-    if (doFocus) {
-      this.$nextTick(function() {
+    up() {
+        if (!this.enableUp) {
+            return;
+        }
         (this.$refs.input as any).focus();
-      });
-    }
-    this.$emit('focus', null);
-  }
-
-  deactivate() {
-    this.active = false;
-    this.$emit('blur', null);
-    this.updateContent();
-  }
-
-  up() {
-    if (!this.enableUp) {
-      return;
-    }
-    (this.$refs.input as any).focus();
-    this.content++;
-    this.updateContent();
-  }
-
-  down() {
-    if (!this.enableDown) {
-      return;
-    }
-    (this.$refs.input as any).focus();
-    this.content--;
-    this.updateContent();
-  }
-
-  wheelUpdate(event) {
-    if (!this.active) {
-      return;
+        this.internalValue++;
+        this.updateContent();
     }
 
-    if (event.deltaY > 0) {
-      this.up();
-    } else if (event.deltaY < 0) {
-      this.down();
+    down() {
+        if (!this.enableDown) {
+            return;
+        }
+        (this.$refs.input as any).focus();
+        this.internalValue--;
+        this.updateContent();
     }
 
-    event.preventDefault();
-  }
+    updateContent(str?: string) {
+        if (str == null) {
+            str = `${this.internalValue}`;
+        }
 
-  updateContent() {
-    if (this.max != null && this.content >= this.max) {
-      this.content = this.max;
-      this.enableUp = false;
-    } else {
-      this.enableUp = true;
+        let newValue = 0;
+        if (this.decimals) {
+            newValue = parseFloat(str);
+        } else if (!this.decimals) {
+            newValue = parseInt(str, 10);
+        }
+
+        if (typeof this.max === 'number' && this.internalValue > this.max) {
+            newValue = this.max;
+            this.enableUp = false;
+        } else {
+            this.enableUp = true;
+        }
+
+        if (typeof this.min === 'number' && this.internalValue < this.min) {
+            newValue = this.min;
+            this.enableDown = false;
+        } else {
+            this.enableDown = true;
+        }
+
+        if (this.internalValue !== newValue) {
+            this.internalValue = newValue;
+            this.$emit('change', this.internalValue);
+        }
     }
 
-    if (this.min != null && this.content <= this.min) {
-      this.content = this.min;
-      this.enableDown = false;
-    } else {
-      this.enableDown = true;
+    @Watch('value', { immediate: true })
+    onValuePropChange(val, old) {
+        if (val === old) {
+            return;
+        }
+        this.internalValue = val;
+        this.updateContent();
     }
-    this.content = this.content | 0;
 
-    this.$emit('change', this.content);
-  }
+    @Watch('disabled', { immediate: true })
+    onDisabledPropChange(value) {
+        this.internalDisabled = convertToBoolean(value);
+    }
+
+    @Watch('min', { immediate: true })
+    onMinPropChange(val, old) {
+        if (typeof this.max === 'number' && val > this.max) {
+            throw new RangeError(
+                'The minimal amount cannot be higher than the maximal!'
+            );
+        }
+        if (val === old) {
+            return;
+        }
+        this.updateContent();
+    }
+
+    @Watch('max', { immediate: true })
+    onMaxPropChange(val, old) {
+        if (typeof this.min === 'number' && val < this.min) {
+            throw new RangeError(
+                'The maximal amount cannot be lower than the minimal!'
+            );
+        }
+        if (val === old) {
+            return;
+        }
+        this.updateContent();
+    }
 }
 </script>
 
-<style lang="scss">
-@import "../styles/config";
+<style lang="scss" scoped>
+@import '../styles/config';
 
 .number-input {
-  width: 100%;
-  padding: 5px 10px;
-  box-sizing: content-box;
-
-  label {
-    display: block;
-    flex: none;
-    font-size: 10px;
-  }
-
-  .content-wrapper {
     width: 100%;
-    height: auto;
-    display: flex;
-    flex-wrap: nowrap;
-    flex-direction: row;
-  }
+    box-sizing: content-box;
 
-  .input-wrapper {
-    width: auto;
-    flex: 1 1 auto;
-    height: 100%;
-    padding: 0 5px;
-
-    input {
-      width: 100%;
-      font: normal normal 300 1rem/1 'Noto Sans', sans-serif;
-      text-align: left;
-      background: none;
-      border: 0;
-      height: 100%;
-      color: #efefef;
-      padding: 5px;
-
-      &:hover,
-      &:focus {
-        background: $spl-color-dark-gray;
-      }
-
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
-
-      &:focus {
-        outline: none;
-      }
+    label {
+        display: block;
+        flex: none;
+        font-size: 10px;
     }
-  }
 
-  .spinner-wrapper {
-    display: block;
-    width: 20px;
-    flex: 0 0 auto;
-    height: 100%;
-    position: relative;
-
-    .spinner {
-      width: 100%;
-      height: 50%;
-      position: absolute;
-      cursor: pointer;
-      right: 0;
-
-      &.disabled {
-        color: $spl-color-light-gray;
-      }
-
-      .icon {
-        position: absolute;
+    .content {
         width: 100%;
-        height: 100%;
-        margin-top: -1px;
-        margin-left: 1px;
-        font-size: 18px;
-      }
+        border: 1px solid $spl-color-off-black;
+        background: $spl-color-off-black;
+        color: $spl-color-off-white;
+        padding: 6px 13px;
+        transition: 200ms;
 
-      &.up {
-        top: 0;
-      }
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
 
-      &.down {
-        bottom: 0;
-      }
+        &.outline {
+            border-color: $spl-color-dark-gray;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: $spl-color-primary;
+        }
     }
-  }
 }
 </style>

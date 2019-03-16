@@ -24,6 +24,8 @@ const moduleState: ContextMenuState = {
                     newWindow({
                         title: 'Splits Editor',
                         parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
                     }, '/splits-editor');
                 }
             ]
@@ -37,6 +39,8 @@ const moduleState: ContextMenuState = {
                     newWindow({
                         title: 'Settings',
                         parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
                     }, '/settings');
                 }
             ]

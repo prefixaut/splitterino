@@ -1,15 +1,15 @@
 <template>
-  <div class="settings-editor-main">
-      <div v-for="(item, index) in activeSettingsConfig" :key="index">
-          <div>{{ item.label }}</div>
-          <component
-            :is="item.component"
-            :value="getSettingByPath(activeSettingsPath + '.' + item.key, item.defaultValue)"
-            @change="onValueChanged(item.key, $event)"
-            v-bind="item.props"
-        />
-      </div>
-  </div>
+    <div class="settings-editor-main">
+        <div v-for="(item, index) in activeSettingsConfig" :key="index">
+            <div>{{ item.label }}</div>
+            <component
+                :is="item.component"
+                :value="getSettingByPath(activeSettingsPath + '.' + item.key, item.defaultValue)"
+                @change="onValueChanged(item.key, $event)"
+                v-bind="item.props"
+            />
+        </div>
+    </div>
 </template>
 
 <script lang="ts">

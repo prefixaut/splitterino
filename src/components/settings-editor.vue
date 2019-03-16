@@ -143,7 +143,7 @@ export default class SettingsEditorComponent extends Vue {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/core";
+@import '../styles/core';
 
 .settings-editor {
     display: flex;

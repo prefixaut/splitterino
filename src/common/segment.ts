@@ -1,4 +1,6 @@
 export interface Segment {
+    /** ID of the segment to identify it. Format is a UUID */
+    id: string;
     /**
      * Display-Name of the Segment
      */
@@ -35,7 +37,6 @@ export interface Segment {
 
     /**
      * Internal timestamp when the segment started.
-     * Not a unix timestamp!
      */
     startTime?: number;
     /**
