@@ -1,20 +1,38 @@
 import Ajv from 'ajv';
-import { Logger, LogLevel } from './logger';
+
+const ajv = new Ajv();
+
+// tslint:disable:no-empty-interface
+/**
+ * Interface which extends the Ajv Validator-Function with an generic
+ * which is used to determine the Type the validator is checking for.
+ */
+export interface ValidatorFunction<T> extends Ajv.ValidateFunction {}
+// tslint:enable:no-empty-interface
 
 /**
- * Validates object through given schema
- * @param schema Schema object for validation
- * @param toValidate Object to validate
+ * Utility function to create a validator-function out of a json-schema.
+ *
+ * @param schema The loaded json-schema
+ *
+ * @returns The created validator function
+ */
+export function createValidator<T>(schema: object): ValidatorFunction<T> {
+    return ajv.compile(schema);
+}
+
+/**
+ * Validates the data with a validator-function and acts
+ * as type-guard for the type of the validator-function.
+ *
+ * @param data The data that shall get validated
+ * @param validator A validator function which determines if the data is valid
  *
  * @returns Validation result
- * @author SirChronus
  */
-export function validateSchema(schema: object, toValidate: object): boolean {
-    const ajv = new Ajv();
-    const valid = ajv.validate(schema, toValidate) as boolean;
-    if (!valid) {
-        Logger.log(LogLevel.ERROR, ajv.errorsText());
-    }
-
-    return valid;
+export function validate<T>(
+    data: any,
+    validator: ValidatorFunction<T>
+): data is T {
+    return validator(data) === true;
 }
