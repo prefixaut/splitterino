@@ -4,6 +4,7 @@
         "module": "esnext",
         "strict": false,
         "jsx": "preserve",
+        "resolveJsonModule": true,
         "importHelpers": true,
         "moduleResolution": "node",
         "experimentalDecorators": true,
