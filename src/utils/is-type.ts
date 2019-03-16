@@ -1,19 +1,11 @@
-export function isType(item, type) {
-    if (typeof type !== 'undefined' && type !== null) {
-        if (typeof type === 'string') {
-            return type.toLowerCase() === 'any' ? true : typeof item === type;
-        } else if (Array.isArray(type)) {
-            type.forEach(i => {
-                if (isType(item, i)) {
-                    return true;
-                }
-            });
+export declare type Typeguard = (obj: any) => boolean;
 
+export function isType(item: any, typeguards: Typeguard[]): boolean {
+    for (const guard of typeguards) {
+        if (!guard(item)) {
             return false;
-        } else if (typeof type === 'object') {
-            return Object.getPrototypeOf(item) === Object.getPrototypeOf(type);
         }
     }
 
-    return false;
+    return true;
 }
