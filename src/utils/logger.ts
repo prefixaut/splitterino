@@ -7,11 +7,17 @@ export enum LogLevel {
     DEBUG = 0b01000,
     TRACE = 0b01010,
     ERROR_USER = 0b00011,
-    WARN_USER = 0b00101
+    WARN_USER = 0b00101,
 }
 // tslint:disable:no-console
 export class Logger {
-    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]) {
+    /**
+     * Log a message with given log level
+     *
+     * @param level Level at which to log the message. Use {@link LogLevel}
+     * @param messages Messages to log
+     */
+    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]): void {
         // tslint:disable-next-line:no-bitwise
         const isUserWarning: number = level & 0b1;
         let prefix: string;
@@ -55,7 +61,7 @@ export class Logger {
             remote.dialog.showMessageBox(remote.getCurrentWindow(), {
                 title: prefix,
                 message: messageStr,
-                type: messageBoxType
+                type: messageBoxType,
             });
         }
     }

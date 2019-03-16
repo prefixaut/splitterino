@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "id": "http://splitterino.prefix.moe/segment.schema.json",
+    "title": "Segment",
+    "description": "Describes a single Segment",
+    "type": "object",
+    "properties": {
+        "id": {
+            "description": "The ID which identifies the Segment",
+            "type": "string",
+            "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+        },
+        "name": {
+            "description": "The name of the Segment",
+            "type": "string"
+        },
+        "time": {
+            "description": "The time of the Segment in milliseconds",
+            "type": "integer",
+            "minimum": 0
+        },
+        "pauseTime": {
+            "description": "The time of how long the timer was paused in this segment",
+            "type": "integer",
+            "minimum": 0
+        },
+        "personalBest": {
+            "description": "The time of the personal best in milliseconds",
+            "type": "integer",
+            "minimum": 0
+        },
+        "overallBest": {
+            "description": "The time of the overall best in milliseconds",
+            "type": "integer",
+            "minimum": 0
+        },
+        "passed": {
+            "description": "If the Segment has been passed successfully",
+            "type": "boolean"
+        },
+        "skipped": {
+            "description": "If the Segment has been skipped",
+            "type": "boolean"
+        }
+    },
+    "required": ["id", "name"]
+}

@@ -1,3 +1,15 @@
+import * as SegmentSchema from '../schemas/segment.schema.json';
+import { createValidator, validate } from '../utils/validate-schema.js';
+
+const validatorFunction = createValidator(SegmentSchema);
+
+export function isSegment(data: any): data is Segment {
+    return validate(data, validatorFunction);
+}
+
+export { SegmentSchema };
+export { validatorFunction as SegmentValidator };
+
 export interface Segment {
     /** ID of the segment to identify it. Format is a UUID */
     id: string;

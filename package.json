@@ -15,6 +15,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.3",
     "@types/lodash": "^4.14.119",
     "aevum": "^2.0.0",
+    "ajv": "^6.6.1",
     "electron": "^3.0.10",
     "lodash": "^4.17.11",
     "mz": "^2.7.0",
