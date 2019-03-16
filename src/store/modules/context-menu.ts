@@ -1,7 +1,11 @@
-import { closeWindow, reloadWindow } from '../../common/context-menu';
-import { ContextMenu } from '../states/context-menu';
+import { remote } from 'electron';
+import { Module } from 'vuex';
 
-const state: ContextMenu = {
+import { closeWindow, reloadWindow } from '../../common/context-menu';
+import { newWindow } from '../../utils/new-window';
+import { ContextMenuState } from '../states/context-menu';
+
+const moduleState: ContextMenuState = {
     def: [
         {
             label: 'Reload',
@@ -10,12 +14,36 @@ const state: ContextMenu = {
         {
             label: 'Exit',
             actions: [closeWindow]
-        }
+        },
     ],
     splitter: [
         {
-            label: 'Edit Splits',
-            actions: []
+            label: 'Edit Splits ...',
+            actions: [
+                () => {
+                    newWindow({
+                        title: 'Splits Editor',
+                        parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
+                    }, '/splits-editor');
+                }
+            ]
+        }
+    ],
+    settings: [
+        {
+            label: 'Settings ...',
+            actions: [
+                () => {
+                    newWindow({
+                        title: 'Settings',
+                        parent: remote.getCurrentWindow(),
+                        minWidth: 440,
+                        minHeight: 220,
+                    }, '/settings');
+                }
+            ]
         }
     ]
 };
@@ -26,10 +54,11 @@ const getters = {
             const ctxMenu: Object[] = [];
             menus.forEach((el: string) => {
                 if (!(el in state)) {
-                    throw new Error(`Menu '${el} does not exist in state'`);
+                    throw new Error(`Menu '${el}' does not exist in state`);
                 }
                 ctxMenu.push(...state[el]);
             });
+
             return ctxMenu;
         };
     }
@@ -39,9 +68,9 @@ const mutations = {};
 
 const actions = {};
 
-export default {
+export const contextMenuStoreModule: Module<ContextMenuState, any> = {
     namespaced: true,
-    state,
+    state: moduleState,
     getters,
     mutations,
     actions

@@ -1,30 +1,33 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import Splits from './components/Splits.vue';
-import SplitsEditor from './views/SplitsEditor.vue';
+import DefaultView from './views/default-view.vue';
+import SplitsEditorView from './views/splits-editor-view.vue';
+import SettingsEditor from './components/settings-editor.vue';
 
 Vue.use(Router);
 
-export default new Router({
+export const router = new Router({
+    mode: 'hash',
     routes: [
         {
             path: '/',
-            redirect: '/splits'
+            redirect: '/default'
         },
         {
-            path: '/splits',
-            name: 'splits',
-            component: Splits
+            path: '/default',
+            name: 'default',
+            component: DefaultView,
+        },
+        {
+            path: '/splits-editor',
+            name: 'editor',
+            component: SplitsEditorView,
         },
         {
             path: '/settings',
-            name: 'settings'
-        },
-        {
-            path: '/splits/edit',
-            name: 'splits-edit',
-            component: SplitsEditor
+            name: 'settings',
+            component: SettingsEditor
         }
     ]
 });

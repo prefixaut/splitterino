@@ -14,7 +14,9 @@ export class Configuration {
     public has(path: string | string[], type?: string): boolean {
         const split = this.toPath(path);
 
-        for (const splitPart in split) {
+        // tslint:disable-next-line prefer-for-of
+        for (let index = 0; index < split.length; index ++) {
+            const splitPart = split[index];
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] !== 'undefined' &&
@@ -33,10 +35,16 @@ export class Configuration {
         }
     }
 
-    public get(path: string | string[], defaultValue: any = null, type?: string) {
+    public get(
+        path: string | string[],
+        defaultValue: any = null,
+        type?: string
+    ) {
         const split = this.toPath(path);
 
-        for (const splitPart in split) {
+        // tslint:disable-next-line prefer-for-of
+        for (let index = 0; index < split.length; index++) {
+            const splitPart = split[index];
             if (
                 this.data.hasOwnProperty(splitPart) &&
                 typeof this.data[splitPart] == null

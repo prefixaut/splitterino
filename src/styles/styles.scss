@@ -1,4 +1,5 @@
-@import 'config';
+@import './core';
+@import './fonts';
 
 *,
 *::before,
@@ -7,16 +8,30 @@
 }
 
 html {
-    font-size: 16px; // Set REM
-    margin: 0; // Remove margin
-    user-select: none; // Make disable text-selection
-    font-family: 'Roboto', sans-serif;
-    color: $color-white;
+     // Set REM
+    font-size: 14px;
+
+    // Remove margin
+    margin: 0;
+
+    // Make disable text-selection
+    user-select: none;
+
+    // Set default typography settings
+    font-family: 'Noto Sans', sans-serif;
+    color: $spl-color-off-white;
+
+    // Prevent overflow
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 body {
-    background: $color-black;
+    background: $spl-color-very-dark-gray;
     margin: 0;
+    height: 100%;
+    width: 100%;
 }
 
 // [ TYPOGRAPHY ]
@@ -32,33 +47,49 @@ p, div, span  {
 h1 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.8rem;
-    font-size: 2.2rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 2rem;
+
+    .sub {
+        font-size: 1.5rem;
+    }
 }
 
 h2 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-    font-size: 1.8rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 1.5rem;
+    
+    .sub {
+        font-size: 1.125rem;
+    }
 }
 
 h3 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.8rem;
-    font-size: 1.6rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1875rem;
+
+    .sub {
+        font-size: 0.937rem;
+    }
 }
 
 h4 {
     font-family: inherit;
     color: inherit;
-    margin-top: 1rem;
-    margin-bottom: 1.6rem;
-    font-size: 1.4rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+
+    .sub {
+        font-size: 0.8125rem;
+    }
 }
 
 // [ LAYOUT ]
@@ -68,4 +99,39 @@ h4 {
     width: 100%;
     padding: 0 1.5rem;
     box-sizing: border-box;
+}
+
+// [ SCROLLBARS ]
+// -----------------------
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: $spl-color-dark-gray;
+}
+
+::-webkit-scrollbar-button {
+    display: none;
+}
+
+::-webkit-scrollbar-track {
+    background: none;
+
+    &:horizontal {
+        height: 6px;
+    }
+    
+    &:vertical {
+        width: 6px;
+    }
+}
+
+::-webkit-scrollbar-thumb {
+    opacity: 0;
+    transition: 200ms;
+    background: $spl-color-off-black;
+
+    &:not(:window-inactive):hover {
+        opacity: 1;
+    }
 }

@@ -52,34 +52,39 @@
     </div>
 </template>
 
-<script>
-export default {
-    props: {
-        value: Number,
-        label: String,
-    },
+<script lang="ts">
+import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
+
+@Component
+export default class TimeInputComponent extends Vue {
+    @Model('change', { type: Number })
+    public value: number;
+
+    @Prop({ type: String })
+    public label: string;
+
+    public active = false;
+    public hour = 0;
+    public minute = 0;
+    public second = 0;
+    public milli = 0;
+
     created() {
         this.applyValue(this.value | 0);
-    },
-    data() {
-        return {
-            active: false,
-            hour: 0,
-            minute: 0,
-            second: 0,
-            milli: 0
-        };
-    },
-    methods: {
-        activate() {
-            this.activate = true;
-            this.$emit('focus');
-        },
-        deactivate() {
-            this.activate = false;
-            this.$emit('blur');
-        },
-        onChange(value, part) {
+    }
+
+    activate() {
+        this.active = true;
+        this.$emit('focus');
+    }
+
+    deactivate() {
+        this.active = false;
+        this.$emit('blur');
+    }
+
+    onChange(value, part) {
+        if (this[part] !== value) {
             this[part] = value;
             let n = this.milli;
             n += this.second * 1000;
@@ -87,31 +92,34 @@ export default {
             n += this.hour * 3600000;
 
             this.$emit('change', n);
-        },
-        applyValue(value) {
-            // Parse an timing object from the number
-            this.hour = (value / 3600000) | 0;
-            this.minute = ((value / 60000) | 0) % 60;
-            this.second = ((value / 1000) | 0) % 60;
-            this.milli = value % 1000;
-        }
-    },
-    watch: {
-        value: function(value, old) {
-            value = value | 0;
-            if ((value === old) | 0) {
-                return;
-            }
-            this.applyValue(value);
         }
     }
-};
+
+    applyValue(value) {
+        // Parse an timing object from the number
+        this.hour = (value / 3600000) | 0;
+        this.minute = ((value / 60000) | 0) % 60;
+        this.second = ((value / 1000) | 0) % 60;
+        this.milli = value % 1000;
+    }
+
+    @Watch('value')
+    onValuePropChange(value, old) {
+        value = value | 0;
+        if (value === (old | 0)) {
+            return;
+        }
+        this.applyValue(value);
+    }
+}
 </script>
 
 <style lang="scss">
 @import '../styles/config';
 
 .time-input {
+    background: $spl-color-off-black;
+
     label {
         display: block;
         font-size: 12px;
@@ -122,21 +130,13 @@ export default {
         display: flex;
 
         .part {
-            padding: 0;
             width: auto;
-            max-width: 40px;
+            flex: 1 1 25%;
             position: relative;
+        }
 
-            &.number-input {
-                .input-wrapper {
-                    padding: 0;
-                }
-
-                input {
-                    padding: 0;
-                    text-align: center;
-                }
-            }
+        >>> .part > input {
+            padding: 8px 8px;
         }
 
         .colon {
@@ -144,7 +144,12 @@ export default {
             flex: 0 0 auto;
             align-self: center;
         }
+
+        .dot {
+            padding: 0 3px;
+            flex: 0 0 auto;
+            align-self: center;
+        }
     }
 }
-
 </style>

@@ -1,5 +1,5 @@
 import { ContextMenuItem } from '../../common/context-menu-item';
 
-export interface ContextMenu {
+export interface ContextMenuState {
     [key: string]: ContextMenuItem[];
 }

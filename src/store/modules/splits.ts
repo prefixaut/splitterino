@@ -6,11 +6,13 @@ import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/now';
 import { RootState } from '../states/root';
 import { SplitsState } from '../states/splits';
+import { v4 as uuid } from 'uuid';
 
-const state: SplitsState = {
+const moduleState: SplitsState = {
     current: -1,
     segments: [
         {
+            id: uuid(),
             // Name of the Segment
             name: '1st Split',
             // Personal Best time in ms
@@ -19,24 +21,31 @@ const state: SplitsState = {
             overallBest: 750
         },
         {
+            id: uuid(),
             name: '2nd Split'
         },
         {
+            id: uuid(),
             name: '3rd Split'
         },
         {
+            id: uuid(),
             name: '4th Split'
         },
         {
+            id: uuid(),
             name: '5th Split'
         },
         {
+            id: uuid(),
             name: '6th Split'
         },
         {
+            id: uuid(),
             name: '7h Split'
         },
         {
+            id: uuid(),
             name: 'final Split'
         }
     ]
@@ -45,14 +54,17 @@ const state: SplitsState = {
 const getters: GetterTree<SplitsState, RootState> = {
     previousSegment(state: SplitsState) {
         const index = state.current;
+
         return index > 0 ? state.segments[index - 1] : null;
     },
     currentSegment(state: SplitsState) {
         const index = state.current;
+
         return index > -1 ? state.segments[index] : null;
     },
     nextSegment(state: SplitsState) {
         const index = state.current;
+
         return index > -1 && index + 1 <= state.segments.length
             ? state.segments[index + 1]
             : null;
@@ -66,6 +78,7 @@ const getters: GetterTree<SplitsState, RootState> = {
                 return true;
             }
         }
+
         return false;
     },
     /**
@@ -77,6 +90,7 @@ const getters: GetterTree<SplitsState, RootState> = {
                 return true;
             }
         }
+
         return false;
     }
 };
@@ -170,7 +184,7 @@ const mutations = {
             return;
         }
 
-        state.segments[index] = {...state.segments[index], ...segment};
+        state.segments[index] = { ...state.segments[index], ...segment };
     },
     setCurrent(state: SplitsState, index: number) {
         if (
@@ -240,7 +254,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             segment: {
                 ...firstSegment,
                 startTime: time
-            } as Segment
+            }
         });
         context.commit('setCurrent', 0);
     },
@@ -252,6 +266,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             case TimerStatus.FINISHED:
                 // Cleanup via reset
                 context.dispatch('softReset');
+
                 return;
             case TimerStatus.RUNNING:
                 break;
@@ -284,7 +299,6 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentSegment.previousPersonalBest = currentSegment.personalBest;
             currentSegment.personalBest = time;
             currentSegment.hasNewPersonalBest = true;
-            this.hasPersonalBest = true;
         } else {
             currentSegment.hasNewPersonalBest = false;
         }
@@ -298,7 +312,6 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentSegment.previousOverallBest = currentSegment.overallBest;
             currentSegment.overallBest = time;
             currentSegment.hasNewOverallBest = true;
-            this.hasOverallBest = true;
         } else {
             currentSegment.hasNewOverallBest = false;
         }
@@ -315,6 +328,7 @@ const actions: ActionTree<SplitsState, RootState> = {
                 TimerStatus.FINISHED,
                 { root: true }
             );
+
             return;
         }
 
@@ -439,7 +453,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    reset(
+    async reset(
         context: ActionContext<SplitsState, RootState>,
         payload: { [key: string]: any }
     ) {
@@ -447,7 +461,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         const status = context.rootState.splitterino.timer.status;
 
         if (status === TimerStatus.STOPPED) {
-            return;
+            return Promise.resolve();
         }
 
         if (
@@ -461,21 +475,24 @@ const actions: ActionTree<SplitsState, RootState> = {
                 win = BrowserWindow.fromId(id);
             }
 
-            return new Promise<number>((resolve, reject) => {
+            return new Promise<number>(resolve => {
                 dialog.showMessageBox(
                     win,
                     {
                         title: 'Save Splits?',
-                        message: "You're about to reset the timer, but you got some new best times!\nDo you wish to save or discard the times?",
+                        message: `
+You're about to reset the timer, but you got some new best times!\n
+Do you wish to save or discard the times?
+`,
                         buttons: ['Cancel', 'Discard', 'Save']
-                    },responseCode => {
+                    }, responseCode => {
                         resolve(responseCode);
                     }
                 );
-            }).then(res => {
+            }).then(async res => {
                 switch (res) {
                     case 0:
-                        break;
+                        return Promise.resolve();
                     case 1:
                         return context.dispatch('hardReset');
                     case 2:
@@ -499,15 +516,30 @@ const actions: ActionTree<SplitsState, RootState> = {
         });
         context.commit('setCurrent', -1);
         context.commit('hardReset');
-    }
+    },
+    setSegments(
+        context: ActionContext<SplitsState, RootState>,
+        payload: Segment[]
+    ) {
+        if (!Array.isArray(payload)) {
+            throw new Error('Payload has to be an array!');
+        }
+
+        const status = context.rootState.splitterino.timer.status;
+        if (status !== TimerStatus.STOPPED) {
+            return false;
+        }
+
+        context.commit('setAllSegments', payload);
+
+        return true;
+    },
 };
 
-const module: Module<SplitsState, any> = {
+export const splitsStoreModule: Module<SplitsState, any> = {
     namespaced: true,
-    state,
+    state: moduleState,
     getters,
     mutations,
     actions
 };
-
-export default module;

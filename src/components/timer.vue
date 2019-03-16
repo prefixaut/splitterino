@@ -1,6 +1,7 @@
 <template>
     <div class="timer">
-        Timer: <span class="content">{{ currentTime | aevum }}</span>
+        Timer:
+        <span class="content">{{ currentTime | aevum }}</span>
     </div>
 </template>
 
@@ -14,15 +15,8 @@ import { now } from '../utils/now';
 
 const timer = namespace('splitterino/timer');
 
-@Component({
-    created() {
-        this.statusWatcher = this.$store.watch(
-            (state: RootState) => state.splitterino.timer.status,
-            this.statusChange
-        );
-    }
-})
-export default class Timer extends Vue {
+@Component
+export default class TimerComponent extends Vue {
     @timer.State('status')
     public status: TimerStatus;
 
@@ -38,26 +32,38 @@ export default class Timer extends Vue {
     public currentTime = 0;
     private intervalId = -1;
 
-    private statusWatcher() {}
+    private statusWatcher = () => {
+        // noop
+    }
 
-    destroy() {
+    created() {
+        this.statusWatcher = this.$store.watch(
+            (state: RootState) => state.splitterino.timer.status,
+            () => this.statusChange()
+        );
+    }
+
+    public destroy() {
         this.statusWatcher();
     }
 
-    statusChange() {
+    public statusChange() {
         if (this.status === TimerStatus.RUNNING) {
             this.intervalId = window.setInterval(() => {
-                this.currentTime = now() - this.startTime - this.startDelay - this.pauseTotal;
+                this.currentTime =
+                    now() - this.startTime - this.startDelay - this.pauseTotal;
             }, 1);
+
             return;
         }
+
         if (this.intervalId > -1) {
             window.clearInterval(this.intervalId);
         }
+
         if (this.status === TimerStatus.STOPPED) {
             this.currentTime = 0;
         }
     }
 }
-
 </script>

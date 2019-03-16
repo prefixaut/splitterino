@@ -7,17 +7,17 @@ export enum LogLevel {
     DEBUG = 0b01000,
     TRACE = 0b01010,
     ERROR_USER = 0b00011,
-    WARN_USER = 0b00101
+    WARN_USER = 0b00101,
 }
 // tslint:disable:no-console
 export class Logger {
     /**
      * Log a message with given log level
-     * @param level Level at which to log the message.
-     * Use {@link LogLevel}
-     * @param message Message to log
+     *
+     * @param level Level at which to log the message. Use {@link LogLevel}
+     * @param messages Messages to log
      */
-    public static log(level: LogLevel = LogLevel.INFO, message: string) {
+    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]): void {
         // tslint:disable-next-line:no-bitwise
         const isUserWarning: number = level & 0b1;
         let prefix: string;
@@ -53,13 +53,36 @@ export class Logger {
                 logFunction = console.trace;
             }
         }
-        logFunction(`[${prefix}] ${message}`);
+
+        logFunction(`[${prefix}]`, ...messages);
+        const messageStr = messages.map(elm => String(elm)).join('\n');
+
         if (isUserWarning > 0) {
             remote.dialog.showMessageBox(remote.getCurrentWindow(), {
                 title: prefix,
-                message: message,
-                type: messageBoxType
+                message: messageStr,
+                type: messageBoxType,
             });
         }
+    }
+
+    public static trace(...messages: any[]) {
+        Logger.log(LogLevel.TRACE, ...messages);
+    }
+
+    public static debug(...messages: any[]) {
+        Logger.log(LogLevel.DEBUG, ...messages);
+    }
+
+    public static info(...messages: any[]) {
+        Logger.log(LogLevel.INFO, ...messages);
+    }
+
+    public static warn(...messages: any[]) {
+        Logger.log(LogLevel.WARN, ...messages);
+    }
+
+    public static error(...messages: any[]) {
+        Logger.log(LogLevel.ERROR, ...messages);
     }
 }

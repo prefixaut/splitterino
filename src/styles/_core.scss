@@ -1,0 +1,37 @@
+// Libraries
+@import '../../node_modules/sasspect/sasspect.scss';
+
+// Basic modules
+@import './config';
+@import './functions';
+
+// Default themes
+$_spl-void: spl-add-theme('primary', (
+    base: $spl-color-primary,
+    light: $spl-color-very-light-primary,
+    dark: $spl-color-very-dark-primary,
+));
+
+$_spl-void: spl-add-theme('danger', (
+    base: $spl-color-danger,
+    light: $spl-color-light-danger,
+    dark: $spl-color-dark-danger,
+));
+
+$_spl-void: spl-add-theme('warning', (
+    base: $spl-color-warning,
+    light: $spl-color-light-warning,
+    dark: $spl-color-dark-warning,
+));
+
+$_spl-void: spl-add-theme('info', (
+    base: $spl-color-info,
+    light: $spl-color-light-info,
+    dark: $spl-color-dark-info,
+));
+
+$_spl-void: spl-add-theme('flamingo', (
+    base: $spl-color-flamingo,
+    light: $spl-color-light-flamingo,
+    dark: $spl-color-dark-flamingo,
+));

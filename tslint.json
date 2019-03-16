@@ -56,7 +56,7 @@
         ],
         "label-position": true,
         "match-default-export-name": false,
-        "member-access": true,
+        "member-access": false,
         "member-ordering": false,
         "new-parens": true,
         "newline-before-return": true,
@@ -64,13 +64,13 @@
         "no-angle-bracket-type-assertion": true,
         "no-any": false,
         "no-arg": true,
-        "no-bitwise": true,
+        "no-bitwise": false,
         "no-boolean-literal-compare": true,
         "no-conditional-assignment": true,
         "no-consecutive-blank-lines": true,
         "no-console": true,
         "no-construct": true,
-        "no-default-export": true,
+        "no-default-export": false,
         "no-duplicate-imports": true,
         "no-duplicate-super": true,
         "no-duplicate-switch-case": true,
@@ -99,7 +99,7 @@
         "no-invalid-template-strings": true,
         "no-invalid-this": true,
         "no-irregular-whitespace": true,
-        "no-magic-numbers": true,
+        "no-magic-numbers": false,
         "no-mergeable-namespace": true,
         "no-misused-new": true,
         "no-namespace": true,
@@ -127,7 +127,7 @@
         "no-unnecessary-initializer": true,
         "no-unnecessary-qualifier": true,
         "no-unnecessary-type-assertion": true,
-        "no-unsafe-any": true,
+        "no-unsafe-any": false,
         "no-unsafe-finally": true,
         "no-unused-expression": true,
         "no-unused-variable": false,
@@ -188,10 +188,14 @@
         ],
         "space-before-function-paren": [
             true,
-            "never"
+            {
+                "anonymous": "never",
+                "named": "never",
+                "asyncArrow": "always"
+            }
         ],
         "strict-boolean-expressions": false,
-        "strict-type-predicates": true,
+        "strict-type-predicates": false,
         "switch-default": false,
         "trailing-comma": [
             true,
@@ -222,7 +226,7 @@
         "max-file-line-count": false,
         "max-line-length": [
             true,
-            80
+            { "limit": 80, "ignore-pattern": "^import |^export {(.*?)}" }
         ],
         "no-debugger": false,
         "prefer-conditional-expression": true,
