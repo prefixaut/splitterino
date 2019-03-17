@@ -1,20 +1,19 @@
 import { remote } from 'electron';
 import { Module } from 'vuex';
 
-import { closeWindow, reloadWindow } from '../../common/context-menu';
-import { ContextMenuState } from '../states/context-menu';
+import { closeWindow, newWindow, reloadWindow } from '../../utils/electron';
 import { askUserToLoadSplits } from '../../utils/splits';
-import { newWindow } from '../../utils/electron';
+import { ContextMenuState } from '../states/context-menu';
 
 const moduleState: ContextMenuState = {
     def: [
         {
             label: 'Reload',
-            actions: [reloadWindow],
+            actions: [() => reloadWindow()],
         },
         {
             label: 'Exit',
-            actions: [closeWindow],
+            actions: [() => closeWindow()],
         },
     ],
     splitter: [

@@ -16,6 +16,14 @@ const defSettings: BrowserWindowConstructorOptions = {
 
 const url = 'http://localhost:8080#';
 
+export function reloadWindow() {
+    location.reload();
+}
+
+export function closeWindow() {
+    remote.getCurrentWindow().close();
+}
+
 export function showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
     return new Promise(resolve => {
         Logger.debug('Opening File-Browser dialog');
