@@ -1,5 +1,5 @@
-import * as SegmentSchema from '../schemas/segment.schema.json';
-import { createValidator, validate } from '../utils/validate-schema.js';
+import * as SegmentSchema from '../../schemas/segment.schema.json';
+import { createValidator, validate } from '../../utils/schemas.js';
 
 const validatorFunction = createValidator(SegmentSchema);
 

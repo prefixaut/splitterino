@@ -1,7 +1,7 @@
 import { BrowserWindow, dialog } from 'electron';
 import { ActionContext, ActionTree, GetterTree, Module } from 'vuex';
 
-import { Segment } from '../../common/segment';
+import { Segment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/now';
 import { RootState } from '../states/root';

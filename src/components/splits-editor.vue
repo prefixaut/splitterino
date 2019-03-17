@@ -93,7 +93,7 @@ import { namespace } from 'vuex-class';
 import { isEqual, cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
-import { Segment } from '../common/segment';
+import { Segment } from '../common/interfaces/segment';
 
 const splits = namespace('splitterino/splits');
 

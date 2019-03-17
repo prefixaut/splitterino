@@ -2,18 +2,19 @@ import { remote } from 'electron';
 import { Module } from 'vuex';
 
 import { closeWindow, reloadWindow } from '../../common/context-menu';
-import { newWindow } from '../../utils/new-window';
 import { ContextMenuState } from '../states/context-menu';
+import { askUserToLoadSplits } from '../../utils/splits';
+import { newWindow } from '../../utils/electron';
 
 const moduleState: ContextMenuState = {
     def: [
         {
             label: 'Reload',
-            actions: [reloadWindow]
+            actions: [reloadWindow],
         },
         {
             label: 'Exit',
-            actions: [closeWindow]
+            actions: [closeWindow],
         },
     ],
     splitter: [
@@ -21,11 +22,18 @@ const moduleState: ContextMenuState = {
             label: 'Edit Splits ...',
             actions: [
                 () => {
-                    newWindow({
-                        title: 'Splits Editor',
-                        parent: remote.getCurrentWindow(),
-                        minWidth: 440,
-                        minHeight: 220,
+                    newWindow(
+                        {
+                            title: 'Splits Editor',
+                            parent: remote.getCurrentWindow(),
+                            minWidth: 440,
+                            minHeight: 220,
+                        },
+                        '/splits-editor'
+                    );
+                },
+            ],
+        },
                     }, '/splits-editor');
                 }
             ]
@@ -36,16 +44,19 @@ const moduleState: ContextMenuState = {
             label: 'Settings ...',
             actions: [
                 () => {
-                    newWindow({
-                        title: 'Settings',
-                        parent: remote.getCurrentWindow(),
-                        minWidth: 440,
-                        minHeight: 220,
-                    }, '/settings');
-                }
-            ]
-        }
-    ]
+                    newWindow(
+                        {
+                            title: 'Settings',
+                            parent: remote.getCurrentWindow(),
+                            minWidth: 440,
+                            minHeight: 220,
+                        },
+                        '/settings'
+                    );
+                },
+            ],
+        },
+    ],
 };
 
 const getters = {
@@ -61,7 +72,7 @@ const getters = {
 
             return ctxMenu;
         };
-    }
+    },
 };
 
 const mutations = {};
@@ -73,5 +84,5 @@ export const contextMenuStoreModule: Module<ContextMenuState, any> = {
     state: moduleState,
     getters,
     mutations,
-    actions
+    actions,
 };

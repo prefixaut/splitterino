@@ -1,4 +1,5 @@
 import { MenuItem, BrowserWindow } from 'electron';
+import { VNode } from 'vue';
 
 export interface ContextMenuItem {
     label: string;
@@ -8,6 +9,7 @@ export interface ContextMenuItem {
 }
 
 export type ContextMenuItemActionFunction = (
+    vNode?: VNode,
     menuItem?: MenuItem,
     browserWindow?: BrowserWindow,
     event?: Event

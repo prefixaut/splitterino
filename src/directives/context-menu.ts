@@ -1,7 +1,7 @@
 import { MenuItemConstructorOptions, remote } from 'electron';
 import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
-import { ContextMenuItem } from '../common/context-menu-item';
+import { ContextMenuItem } from '../common/interfaces/context-menu-item';
 
 export const contextMenuDirective: DirectiveOptions = {
     bind(element: HTMLElement, binding: VNodeDirective, vNode: VNode) {
@@ -52,7 +52,7 @@ function openContextMenu(value: string[], vNode: VNode) {
     const contextMenu = new remote.Menu();
 
     menus.forEach(menu => {
-        const options = prepareMenuItemOptions(menu);
+        const options = prepareMenuItemOptions(menu, vNode);
         contextMenu.append(new remote.MenuItem(options));
     });
 
@@ -61,7 +61,7 @@ function openContextMenu(value: string[], vNode: VNode) {
     });
 }
 
-function prepareMenuItemOptions(menuItem: ContextMenuItem):
+function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode):
     MenuItemConstructorOptions {
     const options: MenuItemConstructorOptions = {
         label: menuItem.label,
@@ -78,7 +78,7 @@ function prepareMenuItemOptions(menuItem: ContextMenuItem):
             menuItem.actions
                 .filter(action => typeof action === 'function')
                 .forEach(action => action(
-                    electronMenuItem, browserWindow, event
+                    vNode, electronMenuItem, browserWindow, event
                 ));
         };
     }
