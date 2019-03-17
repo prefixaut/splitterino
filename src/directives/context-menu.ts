@@ -83,5 +83,5 @@ function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode):
         };
     }
 
-    return menuItem;
+    return options;
 }

@@ -1,6 +1,7 @@
 import { ipcRenderer, remote } from 'electron';
 import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex, { Dispatch } from 'vuex';
+import { merge, cloneDeep } from 'lodash';
 
 import { splitterinoStoreModules } from './modules';
 import { Logger } from '../utils/logger';
@@ -56,7 +57,7 @@ export function getClientStore(vueRef) {
     // ! FIXME: Just a workaround for store instantiation
     // ! Try to not instantiate store first and then replace state
     // ! Problem: Modules in config overwrite store if given in options
-    store.replaceState(ipcRenderer.sendSync('vuex-connect'));
+    store.replaceState(merge({}, ipcRenderer.sendSync('vuex-connect'), cloneDeep(store.state)));
 
     const windowRef = remote.getCurrentWindow();
     windowRef.on('close', () => {
