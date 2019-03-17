@@ -2,7 +2,7 @@ import { remote } from 'electron';
 import { Module } from 'vuex';
 
 import { closeWindow, newWindow, reloadWindow } from '../../utils/electron';
-import { loadSplitsFromFileToStore } from '../../utils/io';
+import { loadSplitsFromFileToStore, saveSplitsFromStoreToFile } from '../../utils/io';
 import { ContextMenuState } from '../states/context-menu';
 
 const moduleState: ContextMenuState = {
@@ -37,6 +37,10 @@ const moduleState: ContextMenuState = {
             label: 'Load Splits ...',
             actions: [() => loadSplitsFromFileToStore()],
         },
+        {
+            label: 'Save Splits ...',
+            actions: [() => saveSplitsFromStoreToFile()],
+        }
     ],
     settings: [
         {

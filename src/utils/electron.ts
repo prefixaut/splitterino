@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserWindowConstructorOptions, dialog, OpenDialogOptions, remote } from 'electron';
+import { BrowserWindow, BrowserWindowConstructorOptions, dialog, OpenDialogOptions, remote, SaveDialogOptions } from 'electron';
 
 import { Logger } from './logger';
 
@@ -26,9 +26,18 @@ export function closeWindow() {
 
 export function showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
     return new Promise(resolve => {
-        Logger.debug('Opening File-Browser dialog');
+        Logger.debug('Showing Open-File dialog');
         dialog.showOpenDialog(browserWindow, options, paths => {
             resolve(paths);
+        });
+    });
+}
+
+export function showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
+    return new Promise(resolve => {
+        Logger.debug('Showing Save-File dialog');
+        dialog.showSaveDialog(browserWindow, options, path => {
+            resolve(path);
         });
     });
 }

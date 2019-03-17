@@ -4,7 +4,7 @@ import { dirname, join } from 'path';
 import Vue from 'vue';
 
 import { isSplits } from '../common/interfaces/splits';
-import { showOpenDialog } from './electron';
+import { showOpenDialog, showSaveDialog } from './electron';
 import { Logger } from './logger';
 
 const assetDir = remote ? join(remote.app.getAppPath(), 'resources') : join(app.getAppPath(), 'resources');
@@ -81,7 +81,7 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
         Logger.debug(`Loading splits from provided File "${file}"`);
         fileSelect = Promise.resolve(file);
     } else {
-        fileSelect = askUserToSelectSplitsFile();
+        fileSelect = askUserToOpenSplitsFile();
     }
 
     return fileSelect
@@ -100,7 +100,7 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
 
             Logger.debug('Loaded splits are valid, applying to store');
 
-            return (Vue as any).$store.dispatch('/splitterino/splits/setAllSegments', loaded.segments).then(() => true);
+            return (Vue as any).$store.dispatch('/splitterino/splits/setSegments', loaded.segments).then(() => true);
         })
         .catch(error => {
             Logger.error('Error while loading splits', error);
@@ -110,13 +110,30 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
         });
 }
 
+export function saveSplitsFromStoreToFile(file?: string): Promise<boolean> {
+    let fileSelect: Promise<string>;
+    if (file != null) {
+        fileSelect = Promise.resolve(file);
+    } else {
+        fileSelect = askUserToSaveSplitsFile();
+    }
+
+    return fileSelect.then(fileToSave => {
+        if (fileToSave == null) {
+            return false;
+        }
+
+        return saveJSONToFile(fileToSave, (Vue as any).$store.state.splitterino.splits);
+    });
+}
+
 /**
  * Opens a File-Browser to select a single splits-file.
  *
  * @returns A Promise which resolves to the path of the splits-file.
  */
-export function askUserToSelectSplitsFile(): Promise<string> {
-    Logger.debug('ASking user to select a Splits-File');
+export function askUserToOpenSplitsFile(): Promise<string> {
+    Logger.debug('Asking user to select a Splits-File');
 
     return showOpenDialog(remote.getCurrentWindow(), {
         title: 'Load Splits',
@@ -133,5 +150,12 @@ export function askUserToSelectSplitsFile(): Promise<string> {
         }
 
         return singlePath;
+    });
+}
+
+export function askUserToSaveSplitsFile(): Promise<string> {
+    return showSaveDialog(remote.getCurrentWindow(), {
+        title: 'Save Splits',
+        filters: [SPLITS_FILE_FILTER],
     });
 }
