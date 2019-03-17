@@ -1,8 +1,8 @@
 import { get, set } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
-import { Typeguard } from '../../common/typeguard';
 import { saveJSONToFile } from '../../utils/io';
+import { Typeguard } from '../../utils/is-type';
 import { RootState } from '../states/root';
 import { Settings, SettingsState } from '../states/settings';
 
