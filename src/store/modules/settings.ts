@@ -1,18 +1,17 @@
-import { set } from 'lodash';
+import { get, set } from 'lodash';
 import { ActionContext, Module } from 'vuex';
+
 import { Typeguard } from '../../common/typeguard';
-import { getValueFromObject } from '../../utils/get-from-object';
-import { RootState } from '../states/root';
-import { SettingsState, Settings } from '../states/settings';
 import { saveJSONToFile } from '../../utils/io';
+import { RootState } from '../states/root';
+import { Settings, SettingsState } from '../states/settings';
 
 const moduleState: SettingsState = {
     settings: {
         splitterino: {
-            core: {
-            }
+            core: {},
         },
-        plugins: {}
+        plugins: {},
     },
     configuration: [
         {
@@ -37,14 +36,14 @@ const moduleState: SettingsState = {
                                     defaultValue: 'test value',
                                     label: 'Test Setting',
                                     props: {
-                                        placeholder: 'Whatever'
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+                                        placeholder: 'Whatever',
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
         {
             key: 'plugins',
@@ -64,14 +63,14 @@ const moduleState: SettingsState = {
                             label: 'Plugin Setting',
                             props: {
                                 min: 3,
-                                max: 8
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-    ]
+                                max: 8,
+                            },
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
 };
 
 const getters = {
@@ -82,12 +81,8 @@ const getters = {
         return state.configuration;
     },
     getSettingByPath(state: SettingsState) {
-        return (
-            path: string | string[],
-            defaultValue: any = null,
-            typeguard: Typeguard = null
-        ) => {
-            const value = getValueFromObject(state.settings, path);
+        return (path: string | string[], defaultValue: any = null, typeguard: Typeguard = null) => {
+            const value = get(state.settings, path, null);
 
             if (value == null || (typeguard && !typeguard(value))) {
                 return defaultValue;
@@ -95,37 +90,28 @@ const getters = {
                 return value;
             }
         };
-    }
+    },
 };
 
 const mutations = {
-    setSetting(
-        state: SettingsState,
-        { payload: { key, value } }: { payload: { key: string; value: any} }
-    ) {
+    setSetting(state: SettingsState, { payload: { key, value } }: { payload: { key: string; value: any } }) {
         set(state.settings, key, value);
     },
     saveSettingsToFile(state: SettingsState) {
         saveJSONToFile('settings.json', state.settings);
     },
-    setAllSettings(
-        state: SettingsState,
-        settings: Settings
-    ) {
+    setAllSettings(state: SettingsState, settings: Settings) {
         state.settings = settings;
-    }
+    },
 };
 
 const actions = {
     setSetting(context: ActionContext<SettingsState, RootState>, payload: any) {
         context.commit('setSetting', payload);
     },
-    setAllSettings(
-        context: ActionContext<SettingsState, RootState>,
-        { settings }: { settings: Settings }
-    ) {
+    setAllSettings(context: ActionContext<SettingsState, RootState>, { settings }: { settings: Settings }) {
         context.commit('setAllSettings', settings);
-    }
+    },
 };
 
 export const settingsStoreModule: Module<SettingsState, any> = {
@@ -133,5 +119,5 @@ export const settingsStoreModule: Module<SettingsState, any> = {
     state: moduleState,
     getters,
     mutations,
-    actions
+    actions,
 };
