@@ -5,7 +5,8 @@
     ],
     "linterOptions": {
         "exclude": [
-            "node_modules/**"
+            "node_modules/**",
+            "src/schemas/**"
         ]
     },
     "rules": {
@@ -172,7 +173,7 @@
             "allow-single-concat"
         ],
         "prefer-while": true,
-        "promise-function-async": true,
+        "promise-function-async": false,
         "quotemark": [
             true,
             "single",
@@ -226,10 +227,10 @@
         "max-file-line-count": false,
         "max-line-length": [
             true,
-            { "limit": 80, "ignore-pattern": "^import |^export {(.*?)}" }
+            { "limit": 120, "ignore-pattern": "^import |^export {(.*?)}" }
         ],
         "no-debugger": false,
-        "prefer-conditional-expression": true,
+        "prefer-conditional-expression": false,
         "space-within-parens": true,
         "switch-final-break": true,
         "type-literal-delimiter": true,
