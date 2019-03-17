@@ -20,7 +20,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 
-import { convertToBoolean } from '../utils/convert-to-boolean';
+import { convertToBoolean } from '../utils/converters';
 
 @Component
 export default class NumberInputComponent extends Vue {
