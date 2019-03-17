@@ -34,10 +34,10 @@ const moduleState: ContextMenuState = {
                 },
             ],
         },
-                    }, '/splits-editor');
-                }
-            ]
-        }
+        {
+            label: 'Load Splits ...',
+            actions: [() => askUserToLoadSplits()],
+        },
     ],
     settings: [
         {
