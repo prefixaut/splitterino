@@ -2,7 +2,7 @@ import { Module } from 'vuex';
 
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/now';
-import { TimerState } from '../states/timer';
+import { TimerState } from '../states/timer.state';
 
 const moduleState: TimerState = {
     status: TimerStatus.STOPPED,

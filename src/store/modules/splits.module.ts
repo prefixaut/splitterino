@@ -4,8 +4,8 @@ import { ActionContext, ActionTree, GetterTree, Module } from 'vuex';
 import { Segment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/now';
-import { RootState } from '../states/root';
-import { SplitsState } from '../states/splits';
+import { RootState } from '../states/root.state';
+import { SplitsState } from '../states/splits.state';
 
 const moduleState: SplitsState = {
     current: -1,

@@ -21,7 +21,7 @@ import SettingsEditorComponent from './components/settings-editor.vue';
 import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
 import SettingsEditorMainComponent from './components/settings-editor-main.vue';
 
-import { contextMenuDirective } from './directives/context-menu';
+import { contextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
 import { remote } from 'electron';

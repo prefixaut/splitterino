@@ -3,7 +3,7 @@ import { VNode } from 'vue';
 
 export interface ContextMenuItem {
     label: string;
-    actions?: ContextMenuItemActionFunction[];
+    actions?: string[];
     enabled?: boolean;
     visible?: boolean;
 }

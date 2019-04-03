@@ -1,8 +1,8 @@
 import { set, get } from 'lodash';
 import Vue from 'vue';
 
-import { RootState } from '../store/states/root';
-import { SettingsConfigurationObject, SettingsGroupConfigurationObject } from '../store/states/settings';
+import { RootState } from '../store/states/root.state';
+import { SettingsConfigurationObject, SettingsGroupConfigurationObject } from '../store/states/settings.state';
 import { loadJSONFromFile } from '../utils/io';
 import { Logger } from '../utils/logger';
 

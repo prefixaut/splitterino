@@ -8,7 +8,7 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { config as storeConfig } from './store';
-import { RootState } from './store/states/root';
+import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';

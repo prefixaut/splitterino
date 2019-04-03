@@ -1,6 +1,7 @@
 import { MenuItemConstructorOptions, remote } from 'electron';
 import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
+import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
 
 export const contextMenuDirective: DirectiveOptions = {
@@ -76,6 +77,8 @@ function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode):
             event
         ) => {
             menuItem.actions
+                .filter(actionName => typeof actionName === 'string' && actionName.length > 0)
+                .map(actionName => FunctionRegistry.getContextMenuAction(actionName))
                 .filter(action => typeof action === 'function')
                 .forEach(action => action(
                     vNode, electronMenuItem, browserWindow, event

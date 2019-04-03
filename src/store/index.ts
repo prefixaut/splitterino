@@ -3,9 +3,9 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex, { Dispatch } from 'vuex';
 import { merge, cloneDeep } from 'lodash';
 
-import { splitterinoStoreModules } from './modules';
+import { splitterinoStoreModules } from './modules/index.module';
 import { Logger } from '../utils/logger';
-import { RootState } from './states/root';
+import { RootState } from './states/root.state';
 
 export const config = {
     strict: true,

@@ -3,8 +3,8 @@ import { ActionContext, Module } from 'vuex';
 
 import { saveJSONToFile } from '../../utils/io';
 import { Typeguard } from '../../utils/is-type';
-import { RootState } from '../states/root';
-import { Settings, SettingsState } from '../states/settings';
+import { RootState } from '../states/root.state';
+import { Settings, SettingsState } from '../states/settings.state';
 
 const moduleState: SettingsState = {
     settings: {
