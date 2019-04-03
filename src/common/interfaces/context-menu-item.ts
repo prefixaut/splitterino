@@ -8,9 +8,11 @@ export interface ContextMenuItem {
     visible?: boolean;
 }
 
-export type ContextMenuItemActionFunction = (
-    vNode?: VNode,
-    menuItem?: MenuItem,
-    browserWindow?: BrowserWindow,
-    event?: Event
-) => void;
+export interface ContextMenuItemActionFunctionParameters {
+    vNode: VNode;
+    menuItem: MenuItem;
+    browserWindow: BrowserWindow;
+    event: Event;
+}
+
+export type ContextMenuItemActionFunction = (params: ContextMenuItemActionFunctionParameters) => void;

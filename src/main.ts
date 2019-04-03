@@ -26,6 +26,7 @@ import { router } from './router';
 import { getClientStore } from './store';
 import { remote } from 'electron';
 import { loadSettings } from './common/load-settings';
+import { registerDefaultFunctions } from './common/function-registry';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
@@ -68,6 +69,7 @@ Vue.filter('aevum', value => {
 Vue.component('vue-overlay-host', OverlayHost);
 
 Vue.config.productionTip = false;
+registerDefaultFunctions();
 
 const vue = new Vue({
     render: h => h(App),

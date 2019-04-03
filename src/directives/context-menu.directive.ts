@@ -8,48 +8,33 @@ export const contextMenuDirective: DirectiveOptions = {
     bind(element: HTMLElement, binding: VNodeDirective, vNode: VNode) {
         const value = getBindingValue(binding);
 
-        element.addEventListener(
-            'contextmenu',
-            event => handleContextMenuEvent(event, value, vNode)
-        );
+        element.addEventListener('contextmenu', event => handleContextMenuEvent(event, value, vNode));
     },
     unbind(element: HTMLElement, binding: VNodeDirective, vNode: VNode) {
         const value = getBindingValue(binding);
 
-        element.removeEventListener(
-            'contextmenu',
-            event => handleContextMenuEvent(event, value, vNode)
-        );
-    }
+        element.removeEventListener('contextmenu', event => handleContextMenuEvent(event, value, vNode));
+    },
 };
 
 function getBindingValue(binding: VNodeDirective): string[] {
     if (typeof binding.value === 'string') {
         return [binding.value];
     }
-    if (
-        !Array.isArray(binding.value) ||
-        !binding.value.every(el => typeof el === 'string')
-    ) {
+    if (!Array.isArray(binding.value) || !binding.value.every(el => typeof el === 'string')) {
         throw new Error('An array with menus has to be supplied as value');
     }
 
     return binding.value;
 }
 
-function handleContextMenuEvent(
-    event: MouseEvent,
-    value: string[],
-    vNode: VNode
-) {
+function handleContextMenuEvent(event: MouseEvent, value: string[], vNode: VNode) {
     event.preventDefault();
     openContextMenu(value, vNode);
 }
 
 function openContextMenu(value: string[], vNode: VNode) {
-    const menus: ContextMenuItem[] = vNode.context.$store.getters[
-        'splitterino/contextMenu/ctxMenu'
-    ](value);
+    const menus: ContextMenuItem[] = vNode.context.$store.getters['splitterino/contextMenu/ctxMenu'](value);
     const contextMenu = new remote.Menu();
 
     menus.forEach(menu => {
@@ -58,12 +43,11 @@ function openContextMenu(value: string[], vNode: VNode) {
     });
 
     contextMenu.popup({
-        window: remote.getCurrentWindow()
+        window: remote.getCurrentWindow(),
     });
 }
 
-function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode):
-    MenuItemConstructorOptions {
+function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode): MenuItemConstructorOptions {
     const options: MenuItemConstructorOptions = {
         label: menuItem.label,
         enabled: menuItem.enabled,
@@ -71,18 +55,19 @@ function prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode):
     };
 
     if (Array.isArray(menuItem.actions)) {
-        options.click = (
-            electronMenuItem,
-            browserWindow,
-            event
-        ) => {
+        options.click = (electronMenuItem, browserWindow, event) => {
             menuItem.actions
                 .filter(actionName => typeof actionName === 'string' && actionName.length > 0)
                 .map(actionName => FunctionRegistry.getContextMenuAction(actionName))
                 .filter(action => typeof action === 'function')
-                .forEach(action => action(
-                    vNode, electronMenuItem, browserWindow, event
-                ));
+                .forEach(action =>
+                    action({
+                        vNode,
+                        menuItem: electronMenuItem,
+                        browserWindow,
+                        event,
+                    })
+                );
         };
     }
 
