@@ -57,7 +57,7 @@ export function getClientStore(vueRef) {
     // ! FIXME: Just a workaround for store instantiation
     // ! Try to not instantiate store first and then replace state
     // ! Problem: Modules in config overwrite store if given in options
-    store.replaceState(merge({}, ipcRenderer.sendSync('vuex-connect'), cloneDeep(store.state)));
+    store.replaceState(ipcRenderer.sendSync('vuex-connect'));
 
     const windowRef = remote.getCurrentWindow();
     windowRef.on('close', () => {
