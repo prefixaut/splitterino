@@ -87,14 +87,15 @@ export default class NumberInputComponent extends Vue {
             to = selection.baseOffset;
         }
 
-        switch (event.keyCode) {
-            case 16: // Shift
-            case 17: // Ctrl
-            case 18: // Alt
+        switch (event.key) {
+            case 'Shift':
+            case 'Ctrl':
+            case 'Alt':
                 // Ignore these keys
                 break;
 
-            case 38: {
+            case 'Up':
+            case 'ArrowUp': {
                 event.preventDefault();
                 event.stopPropagation();
                 this.up();
@@ -102,7 +103,8 @@ export default class NumberInputComponent extends Vue {
                 return;
             }
 
-            case 40: {
+            case 'Down':
+            case 'ArrowDown': {
                 event.preventDefault();
                 event.stopPropagation();
                 this.down();
@@ -111,7 +113,7 @@ export default class NumberInputComponent extends Vue {
             }
 
             // Delete left
-            case 8: {
+            case 'Backspace': {
                 if (from !== to) {
                     str = str.substring(0, from) + str.substring(to);
                 } else {
@@ -123,7 +125,7 @@ export default class NumberInputComponent extends Vue {
             }
 
             // Delete right
-            case 46: {
+            case 'Delete': {
                 if (from !== to) {
                     str = str.substring(0, from) + str.substring(to);
                 } else {
@@ -134,15 +136,16 @@ export default class NumberInputComponent extends Vue {
 
                 // Fix the range
                 const newRange = document.createRange();
-                newRange.setStart(event.srcElement, to + 1);
-                newRange.setEnd(event.srcElement, to + 1);
+                newRange.setStart(event.target as Element, to + 1);
+                newRange.setEnd(event.target as Element, to + 1);
                 selection.removeAllRanges();
                 selection.addRange(newRange);
                 break;
             }
 
             // Move cursor left
-            case 37: {
+            case 'Left':
+            case 'ArrowLeft': {
                 // Using experimental feature
                 (selection as any).modify(
                     event.shiftKey ? 'extend' : 'move',
@@ -154,7 +157,8 @@ export default class NumberInputComponent extends Vue {
             }
 
             // Move cursor right
-            case 39: {
+            case 'Right':
+            case 'ArrowRight': {
                 // Using experimental feature
                 (selection as any).modify(
                     event.shiftKey ? 'extend' : 'move',

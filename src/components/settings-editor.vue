@@ -28,7 +28,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import { set, isEqual } from 'lodash';
 
-import { SettingsConfigurationObject, SettingsNamespace, Settings } from '../store/states/settings';
+import { SettingsConfigurationObject, SettingsNamespace, Settings } from '../store/states/settings.state';
 
 const settingsModule = namespace('splitterino/settings');
 

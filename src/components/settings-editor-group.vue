@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { SettingsGroupConfigurationObject } from '../store/states/settings';
-import { RootState } from '../store/states/root';
+import { SettingsGroupConfigurationObject } from '../store/states/settings.state';
+import { RootState } from '../store/states/root.state';
 
 @Component
 export default class SettingsEditorGroupComponent extends Vue {

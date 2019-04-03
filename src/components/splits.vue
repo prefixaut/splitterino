@@ -143,7 +143,7 @@ export default class SplitsComponent extends Vue {
         return arr;
     }
 
-    scrollSplits(event: MouseWheelEvent) {
+    scrollSplits(event: WheelEvent) {
         if (event.deltaY > 0) {
             this.scrollIndex++;
         } else {
