@@ -79,5 +79,5 @@ const vue = new Vue({
 
 // Only execute certain functionality if window is main window
 if (remote.getCurrentWindow().id === 1) {
-    loadSettings(vue);
+    // loadSettings(vue);
 }

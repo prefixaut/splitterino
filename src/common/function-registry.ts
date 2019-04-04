@@ -44,7 +44,9 @@ export function registerDefaultFunctions() {
         );
     });
     FunctionRegistry.registerContextMenuAction('core.splits.load-from-file', () => loadSplitsFromFileToStore());
-    FunctionRegistry.registerContextMenuAction('core.splits.save-to-file', () => saveSplitsFromStoreToFile());
+    FunctionRegistry.registerContextMenuAction('core.splits.save-to-file', params =>
+        saveSplitsFromStoreToFile(null, params.browserWindow)
+    );
 
     /*
      * Setting Actions

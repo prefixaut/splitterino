@@ -1,4 +1,4 @@
-import { app, remote, FileFilter } from 'electron';
+import { app, remote, FileFilter, BrowserWindow } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import Vue from 'vue';
@@ -11,7 +11,7 @@ const assetDir = remote ? join(remote.app.getAppPath(), 'resources') : join(app.
 
 export const SPLITS_FILE_FILTER: FileFilter = {
     name: 'Splitterino-Splits',
-    extensions: ['.spl.splits'],
+    extensions: ['spl.splits'],
 };
 
 export function loadFile(path: string): string | null {
@@ -39,7 +39,7 @@ export function saveFile(path: string, data: string): boolean {
         }
     }
 
-    Logger.debug('Writing file', filePath);
+    Logger.debug('Writing file', filePath, data);
 
     try {
         writeFileSync(filePath, data, { encoding: 'utf8' });
@@ -110,20 +110,25 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
         });
 }
 
-export function saveSplitsFromStoreToFile(file?: string): Promise<boolean> {
+export function saveSplitsFromStoreToFile(file?: string, window?: BrowserWindow): Promise<boolean> {
     let fileSelect: Promise<string>;
     if (file != null) {
         fileSelect = Promise.resolve(file);
     } else {
-        fileSelect = askUserToSaveSplitsFile();
+        fileSelect = askUserToSaveSplitsFile(window);
     }
 
     return fileSelect.then(fileToSave => {
+        Logger.debug(`Saving to the File: ${fileToSave}`);
         if (fileToSave == null) {
             return false;
         }
 
-        return saveJSONToFile(fileToSave, (Vue as any).$store.state.splitterino.splits);
+        const fileContent = {
+            splits: (Vue as any).$store.state.splitterino.splits,
+        };
+
+        return saveJSONToFile(fileToSave, fileContent);
     });
 }
 
@@ -153,8 +158,8 @@ export function askUserToOpenSplitsFile(): Promise<string> {
     });
 }
 
-export function askUserToSaveSplitsFile(): Promise<string> {
-    return showSaveDialog(remote.getCurrentWindow(), {
+export function askUserToSaveSplitsFile(window?: BrowserWindow): Promise<string> {
+    return showSaveDialog(window || remote.getCurrentWindow(), {
         title: 'Save Splits',
         filters: [SPLITS_FILE_FILTER],
     });
