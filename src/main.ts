@@ -38,6 +38,9 @@ Vue.component('fa-icon', FontAwesomeIcon);
 // Draggable
 Vue.component('draggable', draggable);
 
+// Overlay Host
+Vue.component('vue-overlay-host', OverlayHost);
+
 // Register Components
 Vue.component('spl-button', ButtonComponent);
 Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);
@@ -66,11 +69,13 @@ Vue.filter('aevum', value => {
     return formatter.format(value, { padding: true });
 });
 
-Vue.component('vue-overlay-host', OverlayHost);
-
+// Disable tips
 Vue.config.productionTip = false;
+
+// Setup the default/core functions in the Function-Registry
 registerDefaultFunctions();
 
+// Initialize the Application
 const vue = new Vue({
     render: h => h(App),
     store: getClientStore(Vue),

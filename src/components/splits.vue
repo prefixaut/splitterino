@@ -1,6 +1,5 @@
 <template>
     <div
-        v-spl-ctx-menu="['def', 'splitter', 'settings']"
         class="splits-root"
         :class="['state-' + status, { scrolling: scrollIndex > -1 }]"
     >
