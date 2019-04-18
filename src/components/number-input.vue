@@ -88,8 +88,8 @@ export default class NumberInputComponent extends Vue {
         }
 
         switch (event.key) {
-            case 'Shift':
             case 'Ctrl':
+            case 'Shift':
             case 'Alt':
                 // Ignore these keys
                 break;
@@ -115,12 +115,13 @@ export default class NumberInputComponent extends Vue {
             // Delete left
             case 'Backspace': {
                 if (from !== to) {
-                    str = str.substring(0, from) + str.substring(to);
+                    str = str.substring(0, from - 1) + str.substring(to);
                 } else {
                     str = (event.shiftKey) ?
                         str.substring(from) :
                         str.substring(0, from) + str.substring(from);
                 }
+                selection.collapseToEnd();
                 break;
             }
 
@@ -166,6 +167,19 @@ export default class NumberInputComponent extends Vue {
                     'character'
                 );
 
+                break;
+            }
+
+            case 'A':
+            case 'a': {
+                // Select everything when Ctrl+A is used
+                if (event.ctrlKey) {
+                    const newRange = document.createRange();
+                    newRange.setStart(event.target as Element, 0);
+                    newRange.setEnd(event.target as Element, str.length - 1);
+                    selection.removeAllRanges();
+                    selection.addRange(newRange);
+                }
                 break;
             }
 
@@ -231,14 +245,18 @@ export default class NumberInputComponent extends Vue {
             newValue = parseInt(str, 10);
         }
 
-        if (typeof this.max === 'number' && this.internalValue > this.max) {
+        if (isNaN(newValue) ||!isFinite(newValue)) {
+            newValue = 0;
+        }
+
+        if (typeof this.max === 'number' && newValue > this.max) {
             newValue = this.max;
             this.enableUp = false;
         } else {
             this.enableUp = true;
         }
 
-        if (typeof this.min === 'number' && this.internalValue < this.min) {
+        if (typeof this.min === 'number' && newValue < this.min) {
             newValue = this.min;
             this.enableDown = false;
         } else {

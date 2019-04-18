@@ -71,7 +71,7 @@ export default class TimeInputComponent extends Vue {
     public milli = 0;
 
     created() {
-        this.applyValue(this.value | 0);
+        this.applyValue(this.value || 0);
     }
 
     activate() {
