@@ -483,7 +483,7 @@ Do you wish to save or discard the times?
         payload: Segment[]
     ) {
         if (!Array.isArray(payload)) {
-            throw new Error('Payload has to be an array!');
+            throw new Error('Payload has to be an array! ' + JSON.stringify(payload));
         }
 
         const status = context.rootState.splitterino.timer.status;

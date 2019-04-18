@@ -43,9 +43,11 @@ export function registerDefaultFunctions() {
             '/splits-editor'
         );
     });
-    FunctionRegistry.registerContextMenuAction('core.splits.load-from-file', () => loadSplitsFromFileToStore());
+    FunctionRegistry.registerContextMenuAction('core.splits.load-from-file', params =>
+        loadSplitsFromFileToStore(params.vNode.context)
+    );
     FunctionRegistry.registerContextMenuAction('core.splits.save-to-file', params =>
-        saveSplitsFromStoreToFile(null, params.browserWindow)
+        saveSplitsFromStoreToFile(params.vNode.context, null, params.browserWindow)
     );
 
     /*

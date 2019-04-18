@@ -1,4 +1,4 @@
-import { app, remote, FileFilter, BrowserWindow } from 'electron';
+import { app, BrowserWindow, FileFilter, remote } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import Vue from 'vue';
@@ -11,12 +11,12 @@ const assetDir = remote ? join(remote.app.getAppPath(), 'resources') : join(app.
 
 export const SPLITS_FILE_FILTER: FileFilter = {
     name: 'Splitterino-Splits',
-    extensions: ['spl.splits'],
+    extensions: ['splits'],
 };
 
-export function loadFile(path: string): string | null {
+export function loadFile(path: string, basePath: string = assetDir): string | null {
     try {
-        return readFileSync(join(assetDir, path), { encoding: 'utf8' });
+        return readFileSync(join(basePath, path), { encoding: 'utf8' });
     } catch (e) {
         Logger.error('Error reading file:', join(assetDir, path), 'Reason', e);
     }
@@ -24,8 +24,8 @@ export function loadFile(path: string): string | null {
     return null;
 }
 
-export function saveFile(path: string, data: string): boolean {
-    const filePath = join(assetDir, path);
+export function saveFile(path: string, data: string, basePath: string = assetDir): boolean {
+    const filePath = join(basePath, path);
 
     Logger.debug('Creating file directory structure');
 
@@ -52,9 +52,9 @@ export function saveFile(path: string, data: string): boolean {
     return true;
 }
 
-export function loadJSONFromFile(path: string): object | null {
+export function loadJSONFromFile(path: string, basePath: string = assetDir): any {
     try {
-        return JSON.parse(loadFile(path));
+        return JSON.parse(loadFile(path, basePath));
     } catch (e) {
         Logger.error('Error parsing JSON', e);
     }
@@ -62,8 +62,8 @@ export function loadJSONFromFile(path: string): object | null {
     return null;
 }
 
-export function saveJSONToFile(path: string, data: object): boolean {
-    return saveFile(path, JSON.stringify(data, null, 4));
+export function saveJSONToFile(path: string, data: object, basePath: string = assetDir): boolean {
+    return saveFile(path, JSON.stringify(data, null, 4), basePath);
 }
 
 /**
@@ -74,7 +74,7 @@ export function saveJSONToFile(path: string, data: object): boolean {
  *
  * @returns A Promise which resolves to if the file was successfully loaded into store.
  */
-export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
+export function loadSplitsFromFileToStore(instance: Vue, file?: string): Promise<boolean> {
     let fileSelect: Promise<string>;
 
     if (file != null) {
@@ -93,14 +93,15 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
             }
 
             Logger.debug(`Loading splits from File: "${filePath}"`);
-            const loaded = loadJSONFromFile(filePath);
-            if (!isSplits(loaded)) {
+            const loaded = loadJSONFromFile(filePath, '');
+            if (loaded == null || typeof loaded !== 'object' || !isSplits(loaded.splits)) {
                 throw new Error(`The loaded splits from "${filePath}" are not valid Splits!`);
             }
 
             Logger.debug('Loaded splits are valid, applying to store');
 
-            return (Vue as any).$store.dispatch('/splitterino/splits/setSegments', loaded.segments).then(() => true);
+            return instance.$store.dispatch('splitterino/splits/setSegments', [loaded.splits.segments])
+                .then(() => true);
         })
         .catch(error => {
             Logger.error('Error while loading splits', error);
@@ -110,7 +111,7 @@ export function loadSplitsFromFileToStore(file?: string): Promise<boolean> {
         });
 }
 
-export function saveSplitsFromStoreToFile(file?: string, window?: BrowserWindow): Promise<boolean> {
+export function saveSplitsFromStoreToFile(instance: Vue, file?: string, window?: BrowserWindow): Promise<boolean> {
     let fileSelect: Promise<string>;
     if (file != null) {
         fileSelect = Promise.resolve(file);
@@ -125,10 +126,12 @@ export function saveSplitsFromStoreToFile(file?: string, window?: BrowserWindow)
         }
 
         const fileContent = {
-            splits: (Vue as any).$store.state.splitterino.splits,
+            splits: {
+                segments: instance.$store.state.splitterino.splits.segments,
+            }
         };
 
-        return saveJSONToFile(fileToSave, fileContent);
+        return saveJSONToFile(fileToSave, fileContent, '');
     });
 }
 
