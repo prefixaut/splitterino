@@ -54,11 +54,12 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
+import { Time, toTime } from 'aevum';
 
 @Component
 export default class TimeInputComponent extends Vue {
-    @Model('change', { type: Number })
-    public value: number;
+    @Model('change', { type: [Number, Object] })
+    public value: number | Time;
 
     @Prop({ type: String })
     public label: string;
@@ -86,21 +87,34 @@ export default class TimeInputComponent extends Vue {
     onChange(value, part) {
         if (this[part] !== value) {
             this[part] = value;
-            let n = this.milli;
-            n += this.second * 1000;
-            n += this.minute * 60000;
-            n += this.hour * 3600000;
 
-            this.$emit('change', n);
+            const time: Time = {
+                positive: true,
+                hours: this.hour,
+                minutes: this.minute,
+                seconds: this.second,
+                milliseconds: this.milli,
+            };
+            this.$emit('change', time);
         }
     }
 
     applyValue(value) {
+        if (value == null) {
+            value = 0;
+        }
+        let time: Time;
+        if (typeof value === 'object') {
+            time = value;
+        } else if (typeof value === 'number') {
+            time = toTime(value);
+        }
+
         // Parse an timing object from the number
-        this.hour = (value / 3600000) | 0;
-        this.minute = ((value / 60000) | 0) % 60;
-        this.second = ((value / 1000) | 0) % 60;
-        this.milli = value % 1000;
+        this.hour = time.hours;
+        this.minute = time.minutes;
+        this.second = time.seconds;
+        this.milli = time.milliseconds;
     }
 
     @Watch('value')
