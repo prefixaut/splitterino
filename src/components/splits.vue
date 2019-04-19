@@ -44,7 +44,6 @@
                 <spl-button outline v-else @click="pause()">Pause</spl-button>
                 <spl-button outline @click="skipSplit()">Skip</spl-button>
                 <spl-button outline @click="undoSplit()">Undo</spl-button>
-                <spl-button outline @click="openSettings()">Settings</spl-button>
             </div>
         </template>
 

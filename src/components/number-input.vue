@@ -12,6 +12,7 @@
             :min="min"
             :max="max"
             @keydown="onKeydownEvent($event)"
+            @keyup="validateInput($event)"
             @blur="defaultValueOnBlur($event)"
         ></div>
     </div>
@@ -70,142 +71,19 @@ export default class NumberInputComponent extends Vue {
     public readonly flatRegex = /^[+-]?([\d])*$/;
     public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
 
+    private oldRange: Range;
+
+    validateInput(event: KeyboardEvent) {
+        this.updateContent((event.target as HTMLElement).innerHTML);
+    }
+
     onKeydownEvent(event: KeyboardEvent) {
-        if (event.type !== 'keydown' || event.metaKey) {
-            return;
-        }
+        this.oldRange = window.getSelection().getRangeAt(0);
+    }
 
-        let str = `${this.internalValue}`;
-        const selection = window.getSelection();
-        let from: number;
-        let to: number;
-        if (selection.baseOffset <= selection.focusOffset) {
-            from = selection.baseOffset;
-            to = selection.focusOffset;
-        } else {
-            from = selection.focusOffset;
-            to = selection.baseOffset;
-        }
-
-        switch (event.key) {
-            case 'Ctrl':
-            case 'Shift':
-            case 'Alt':
-                // Ignore these keys
-                break;
-
-            case 'Up':
-            case 'ArrowUp': {
-                event.preventDefault();
-                event.stopPropagation();
-                this.up();
-
-                return;
-            }
-
-            case 'Down':
-            case 'ArrowDown': {
-                event.preventDefault();
-                event.stopPropagation();
-                this.down();
-
-                return;
-            }
-
-            // Delete left
-            case 'Backspace': {
-                if (from !== to) {
-                    str = str.substring(0, from - 1) + str.substring(to);
-                } else {
-                    str = (event.shiftKey) ?
-                        str.substring(from) :
-                        str.substring(0, from) + str.substring(from);
-                }
-                selection.collapseToEnd();
-                break;
-            }
-
-            // Delete right
-            case 'Delete': {
-                if (from !== to) {
-                    str = str.substring(0, from) + str.substring(to);
-                } else {
-                    str = (event.shiftKey) ?
-                        str.substring(0, from) :
-                        str.substring(0, from) + str.substring(from + 1);
-                }
-
-                // Fix the range
-                const newRange = document.createRange();
-                newRange.setStart(event.target as Element, to + 1);
-                newRange.setEnd(event.target as Element, to + 1);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-                break;
-            }
-
-            // Move cursor left
-            case 'Left':
-            case 'ArrowLeft': {
-                // Using experimental feature
-                (selection as any).modify(
-                    event.shiftKey ? 'extend' : 'move',
-                    'left',
-                    'character'
-                );
-
-                break;
-            }
-
-            // Move cursor right
-            case 'Right':
-            case 'ArrowRight': {
-                // Using experimental feature
-                (selection as any).modify(
-                    event.shiftKey ? 'extend' : 'move',
-                    'right',
-                    'character'
-                );
-
-                break;
-            }
-
-            case 'A':
-            case 'a': {
-                // Select everything when Ctrl+A is used
-                if (event.ctrlKey) {
-                    const newRange = document.createRange();
-                    newRange.setStart(event.target as Element, 0);
-                    newRange.setEnd(event.target as Element, str.length - 1);
-                    selection.removeAllRanges();
-                    selection.addRange(newRange);
-                }
-                break;
-            }
-
-            default: {
-                str = str.substring(0, from) + event.key + str.substring(to);
-                selection.collapseToEnd();
-
-                if (this.decimals) {
-                    if (!this.decimalRegex.test(str)) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        return;
-                    }
-                } else {
-                    if (!this.flatRegex.test(str)) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        return;
-                    }
-                }
-            }
-        }
-
-        this.updateContent(str);
+    recoverSelection() {
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(this.oldRange);
     }
 
     defaultValueOnBlur(event: any) {
@@ -246,7 +124,10 @@ export default class NumberInputComponent extends Vue {
         }
 
         if (isNaN(newValue) ||!isFinite(newValue)) {
-            newValue = 0;
+            this.recoverSelection();
+            (this.$refs.input as any).innerHTML = this.internalValue;
+
+            return;
         }
 
         if (typeof this.max === 'number' && newValue > this.max) {
@@ -263,9 +144,13 @@ export default class NumberInputComponent extends Vue {
             this.enableDown = true;
         }
 
-        if (this.internalValue !== newValue) {
+        const hasValueChanged = this.internalValue !== newValue;
+        if (hasValueChanged || newValue + '' !== str) {
             this.internalValue = newValue;
-            this.$emit('change', this.internalValue);
+            if (hasValueChanged) {
+                (this.$refs.input as any).innerHTML = newValue;
+            }
+            this.$emit('change', newValue);
         }
     }
 
