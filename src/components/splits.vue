@@ -61,7 +61,7 @@ import { clamp } from 'lodash';
 
 import { Segment } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
-import { now } from '../utils/now';
+import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');

@@ -11,7 +11,7 @@ import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
 import { RootState } from '../store/states/root.state';
-import { now } from '../utils/now';
+import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 

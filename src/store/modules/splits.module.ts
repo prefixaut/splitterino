@@ -3,7 +3,7 @@ import { ActionContext, ActionTree, GetterTree, Module } from 'vuex';
 
 import { Segment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
-import { now } from '../../utils/now';
+import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 

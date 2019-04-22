@@ -56,6 +56,8 @@
 import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
 import { Time, toTime } from 'aevum';
 
+import { timeToTimestamp } from '../utils/time';
+
 @Component
 export default class TimeInputComponent extends Vue {
     @Model('change', { type: [Number, Object] })
@@ -89,19 +91,11 @@ export default class TimeInputComponent extends Vue {
     onChange(value, part) {
         if (this.time[part] !== value) {
             this.$set(this.time, part, value);
-            this.$emit('change', this.timeToTimestamp(this.time));
+            this.$emit('change', timeToTimestamp(this.time));
         }
     }
 
-    timeToTimestamp(time: Time) {
-        let total = 0;
-        total += time.milliseconds % 1000;
-        total += (time.seconds % 59) * 1000;
-        total += (time.minutes % 59) * 60000;
-        total += time.hours * 3600000;
 
-        return total;
-    }
 
     applyValue(value) {
         if (value == null) {
