@@ -19,7 +19,7 @@
 import { remote } from 'electron';
 import { Vue, Component } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {
     public minimizable = true;
     public maximizable = true;

@@ -28,7 +28,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { SettingsGroupConfigurationObject } from '../store/states/settings.state';
 import { RootState } from '../store/states/root.state';
 
-@Component
+@Component({ name: 'spl-settings-editor-group' })
 export default class SettingsEditorGroupComponent extends Vue {
     /**
      * Group object of configuration

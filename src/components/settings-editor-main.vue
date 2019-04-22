@@ -20,7 +20,7 @@ import { SettingsConfigurationObject } from '../store/states/settings.state';
 
 const settingsModule = namespace('splitterino/settings');
 
-@Component
+@Component({ name: 'spl-settings-editor-main' })
 export default class SettingsEditorMainComponent extends Vue {
     @Prop()
     public activeSettingsConfig: SettingsConfigurationObject[];

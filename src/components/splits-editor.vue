@@ -97,7 +97,7 @@ import { Segment } from '../common/interfaces/segment';
 
 const splits = namespace('splitterino/splits');
 
-@Component
+@Component({ name: 'spl-splits-editor' })
 export default class SplitsEditorComponent extends Vue {
     /**
      * Copy of the segments from the store to be able to edit them.

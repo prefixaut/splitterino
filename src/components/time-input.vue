@@ -58,7 +58,7 @@ import { Time, toTime } from 'aevum';
 
 import { timeToTimestamp } from '../utils/time';
 
-@Component
+@Component({ name: 'spl-time-input' })
 export default class TimeInputComponent extends Vue {
     @Model('change', { type: [Number, Object] })
     public value: number | Time;

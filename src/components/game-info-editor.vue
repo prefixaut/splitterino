@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-game-info-editor' })
 export default class GameInfoEditorComponent extends Vue { }
 </script>
 

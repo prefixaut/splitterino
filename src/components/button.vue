@@ -15,7 +15,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-button' })
 export default class ButtonComponent extends Vue {
     @Prop({
         type: Boolean,

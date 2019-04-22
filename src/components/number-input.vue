@@ -23,7 +23,7 @@ import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 
 import { convertToBoolean } from '../utils/converters';
 
-@Component
+@Component({ name: 'spl-number-input' })
 export default class NumberInputComponent extends Vue {
     @Model('change', { type: [Number, String] })
     public value: string | number;
@@ -145,7 +145,7 @@ export default class NumberInputComponent extends Vue {
         }
 
         const hasValueChanged = this.internalValue !== newValue;
-        if (hasValueChanged || newValue + '' !== str) {
+        if (hasValueChanged || `${newValue}` !== str) {
             this.internalValue = newValue;
             if (hasValueChanged) {
                 (this.$refs.input as any).innerHTML = newValue;

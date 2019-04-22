@@ -32,7 +32,7 @@ import { SettingsConfigurationObject, SettingsNamespace, Settings } from '../sto
 
 const settingsModule = namespace('splitterino/settings');
 
-@Component
+@Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
     @settingsModule.Getter
     public configuration;
@@ -164,6 +164,10 @@ export default class SettingsEditorComponent extends Vue {
         flex: 1 1 auto;
         height: 100%;
         padding: 20px;
+    }
+
+    .settings-footer {
+        margin-top: 25px;
     }
 }
 </style>
