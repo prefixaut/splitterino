@@ -8,6 +8,7 @@ import draggable from 'vuedraggable';
 
 import App from './app.vue';
 import ButtonComponent from './components/button.vue';
+import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
 import GameInfoEditorComponent from './components/game-info-editor.vue';
 import NumberInputComponent from './components/number-input.vue';
@@ -43,6 +44,7 @@ Vue.component('vue-overlay-host', OverlayHost);
 
 // Register Components
 Vue.component('spl-button', ButtonComponent);
+Vue.component('spl-checkbox', CheckboxComponent);
 Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);
 Vue.component('spl-game-info-editor', GameInfoEditorComponent);
 Vue.component('spl-number-input', NumberInputComponent);
