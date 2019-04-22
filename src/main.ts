@@ -21,11 +21,12 @@ import SettingsEditorComponent from './components/settings-editor.vue';
 import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
 import SettingsEditorMainComponent from './components/settings-editor-main.vue';
 
-import { contextMenuDirective } from './directives/context-menu';
+import { contextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
 import { remote } from 'electron';
 import { loadSettings } from './common/load-settings';
+import { registerDefaultFunctions } from './common/function-registry';
 
 // Global Event Bus
 Vue.prototype.$eventHub = new Vue();
@@ -36,6 +37,9 @@ Vue.component('fa-icon', FontAwesomeIcon);
 
 // Draggable
 Vue.component('draggable', draggable);
+
+// Overlay Host
+Vue.component('vue-overlay-host', OverlayHost);
 
 // Register Components
 Vue.component('spl-button', ButtonComponent);
@@ -65,10 +69,13 @@ Vue.filter('aevum', value => {
     return formatter.format(value, { padding: true });
 });
 
-Vue.component('vue-overlay-host', OverlayHost);
-
+// Disable tips
 Vue.config.productionTip = false;
 
+// Setup the default/core functions in the Function-Registry
+registerDefaultFunctions();
+
+// Initialize the Application
 const vue = new Vue({
     render: h => h(App),
     store: getClientStore(Vue),
@@ -77,5 +84,5 @@ const vue = new Vue({
 
 // Only execute certain functionality if window is main window
 if (remote.getCurrentWindow().id === 1) {
-    loadSettings(vue);
+    // loadSettings(vue);
 }

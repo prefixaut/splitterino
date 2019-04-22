@@ -12,6 +12,7 @@
             :min="min"
             :max="max"
             @keydown="onKeydownEvent($event)"
+            @keyup="validateInput($event)"
             @blur="defaultValueOnBlur($event)"
         ></div>
     </div>
@@ -20,7 +21,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 
-import { convertToBoolean } from '../utils/convert-to-boolean';
+import { convertToBoolean } from '../utils/converters';
 
 @Component
 export default class NumberInputComponent extends Vue {
@@ -70,124 +71,19 @@ export default class NumberInputComponent extends Vue {
     public readonly flatRegex = /^[+-]?([\d])*$/;
     public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
 
+    private oldRange: Range;
+
+    validateInput(event: KeyboardEvent) {
+        this.updateContent((event.target as HTMLElement).innerHTML);
+    }
+
     onKeydownEvent(event: KeyboardEvent) {
-        if (event.type !== 'keydown' || event.metaKey) {
-            return;
-        }
+        this.oldRange = window.getSelection().getRangeAt(0);
+    }
 
-        let str = `${this.internalValue}`;
-        const selection = window.getSelection();
-        let from: number;
-        let to: number;
-        if (selection.baseOffset <= selection.focusOffset) {
-            from = selection.baseOffset;
-            to = selection.focusOffset;
-        } else {
-            from = selection.focusOffset;
-            to = selection.baseOffset;
-        }
-
-        switch (event.keyCode) {
-            case 16: // Shift
-            case 17: // Ctrl
-            case 18: // Alt
-                // Ignore these keys
-                break;
-
-            case 38: {
-                event.preventDefault();
-                event.stopPropagation();
-                this.up();
-
-                return;
-            }
-
-            case 40: {
-                event.preventDefault();
-                event.stopPropagation();
-                this.down();
-
-                return;
-            }
-
-            // Delete left
-            case 8: {
-                if (from !== to) {
-                    str = str.substring(0, from) + str.substring(to);
-                } else {
-                    str = (event.shiftKey) ?
-                        str.substring(from) :
-                        str.substring(0, from) + str.substring(from);
-                }
-                break;
-            }
-
-            // Delete right
-            case 46: {
-                if (from !== to) {
-                    str = str.substring(0, from) + str.substring(to);
-                } else {
-                    str = (event.shiftKey) ?
-                        str.substring(0, from) :
-                        str.substring(0, from) + str.substring(from + 1);
-                }
-
-                // Fix the range
-                const newRange = document.createRange();
-                newRange.setStart(event.srcElement, to + 1);
-                newRange.setEnd(event.srcElement, to + 1);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-                break;
-            }
-
-            // Move cursor left
-            case 37: {
-                // Using experimental feature
-                (selection as any).modify(
-                    event.shiftKey ? 'extend' : 'move',
-                    'left',
-                    'character'
-                );
-
-                break;
-            }
-
-            // Move cursor right
-            case 39: {
-                // Using experimental feature
-                (selection as any).modify(
-                    event.shiftKey ? 'extend' : 'move',
-                    'right',
-                    'character'
-                );
-
-                break;
-            }
-
-            default: {
-                str = str.substring(0, from) + event.key + str.substring(to);
-                selection.collapseToEnd();
-
-                if (this.decimals) {
-                    if (!this.decimalRegex.test(str)) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        return;
-                    }
-                } else {
-                    if (!this.flatRegex.test(str)) {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        return;
-                    }
-                }
-            }
-        }
-
-        this.updateContent(str);
+    recoverSelection() {
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(this.oldRange);
     }
 
     defaultValueOnBlur(event: any) {
@@ -227,23 +123,34 @@ export default class NumberInputComponent extends Vue {
             newValue = parseInt(str, 10);
         }
 
-        if (typeof this.max === 'number' && this.internalValue > this.max) {
+        if (isNaN(newValue) ||!isFinite(newValue)) {
+            this.recoverSelection();
+            (this.$refs.input as any).innerHTML = this.internalValue;
+
+            return;
+        }
+
+        if (typeof this.max === 'number' && newValue > this.max) {
             newValue = this.max;
             this.enableUp = false;
         } else {
             this.enableUp = true;
         }
 
-        if (typeof this.min === 'number' && this.internalValue < this.min) {
+        if (typeof this.min === 'number' && newValue < this.min) {
             newValue = this.min;
             this.enableDown = false;
         } else {
             this.enableDown = true;
         }
 
-        if (this.internalValue !== newValue) {
+        const hasValueChanged = this.internalValue !== newValue;
+        if (hasValueChanged || newValue + '' !== str) {
             this.internalValue = newValue;
-            this.$emit('change', this.internalValue);
+            if (hasValueChanged) {
+                (this.$refs.input as any).innerHTML = newValue;
+            }
+            this.$emit('change', newValue);
         }
     }
 

@@ -1,54 +1,15 @@
 import { BrowserWindow, dialog } from 'electron';
 import { ActionContext, ActionTree, GetterTree, Module } from 'vuex';
 
-import { Segment } from '../../common/segment';
+import { Segment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
-import { now } from '../../utils/now';
-import { RootState } from '../states/root';
-import { SplitsState } from '../states/splits';
-import { v4 as uuid } from 'uuid';
+import { now } from '../../utils/time';
+import { RootState } from '../states/root.state';
+import { SplitsState } from '../states/splits.state';
 
 const moduleState: SplitsState = {
     current: -1,
-    segments: [
-        {
-            id: uuid(),
-            // Name of the Segment
-            name: '1st Split',
-            // Personal Best time in ms
-            personalBest: 1000,
-            // Best Segment/Overall time in ms
-            overallBest: 750
-        },
-        {
-            id: uuid(),
-            name: '2nd Split'
-        },
-        {
-            id: uuid(),
-            name: '3rd Split'
-        },
-        {
-            id: uuid(),
-            name: '4th Split'
-        },
-        {
-            id: uuid(),
-            name: '5th Split'
-        },
-        {
-            id: uuid(),
-            name: '6th Split'
-        },
-        {
-            id: uuid(),
-            name: '7h Split'
-        },
-        {
-            id: uuid(),
-            name: 'final Split'
-        }
-    ]
+    segments: []
 };
 
 const getters: GetterTree<SplitsState, RootState> = {
@@ -522,7 +483,7 @@ Do you wish to save or discard the times?
         payload: Segment[]
     ) {
         if (!Array.isArray(payload)) {
-            throw new Error('Payload has to be an array!');
+            throw new Error('Payload has to be an array! ' + JSON.stringify(payload));
         }
 
         const status = context.rootState.splitterino.timer.status;

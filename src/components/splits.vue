@@ -1,51 +1,54 @@
 <template>
     <div
-        v-if="segments != null && segments.length > 0"
         class="splits-root"
         :class="['state-' + status, { scrolling: scrollIndex > -1 }]"
     >
-        <div
-            class="splits"
-            v-spl-ctx-menu="['def', 'splitter', 'settings']"
-            @mousewheel="scrollSplits"
-            @mouseleave="scrollIndex = -1"
-        >
+        <template v-if="segments != null && segments.length > 0">
             <div
-                v-for="(segment, index) in segments"
-                :key="index"
-                :class="[
-                    'split',
-
-                    { visible: visibleIndicies.includes(index) },
-                    { current: index === currentSegment && status === 'running' },
-                    { scroll: index === scrollIndex },
-
-                    { ['previous-' + (currentSegment - index)]: index < currentSegment },
-                    { ['next-' + (index - currentSegment)]: index - currentSegment > 0 },
-
-                    { skipped: segment.skipped },
-                    { first: index === 0 },
-                    { final: index === segments.length - 1 },
-                    { 'is-personal-best': segment.hasNewPersonalBest },
-                    { 'is-overall-best': segment.hasNewOverallBest },
-                ]"
+                class="splits"
+                @mousewheel="scrollSplits"
+                @mouseleave="scrollIndex = -1"
             >
-                <div class="name">{{ segment.name }}</div>
-                <div class="time">{{ segment.time | aevum }}</div>
-                <div class="best-time">{{ segment.personalBest | aevum }}</div>
-                <div class="best-segment">{{ segment.overallBest | aevum }}</div>
-            </div>
-        </div>
+                <div
+                    v-for="(segment, index) in segments"
+                    :key="index"
+                    :class="[
+                        'split',
 
-        <div class="controls">
-            <spl-button outline v-if="status !== 'stopped'" @click="split()">Split</spl-button>
-            <spl-button outline v-else @click="start()">Start</spl-button>
-            <spl-button outline @click="reset()">Reset</spl-button>
-            <spl-button outline v-if="status === 'paused'" @click="unpause()">Unpause</spl-button>
-            <spl-button outline v-else @click="pause()">Pause</spl-button>
-            <spl-button outline @click="skipSplit()">Skip</spl-button>
-            <spl-button outline @click="undoSplit()">Undo</spl-button>
-            <spl-button outline @click="openSettings()">Settings</spl-button>
+                        { visible: visibleIndicies.includes(index) },
+                        { current: index === currentSegment && status === 'running' },
+                        { scroll: index === scrollIndex },
+
+                        { ['previous-' + (currentSegment - index)]: index < currentSegment },
+                        { ['next-' + (index - currentSegment)]: index - currentSegment > 0 },
+
+                        { skipped: segment.skipped },
+                        { first: index === 0 },
+                        { final: index === segments.length - 1 },
+                        { 'is-personal-best': segment.hasNewPersonalBest },
+                        { 'is-overall-best': segment.hasNewOverallBest },
+                    ]"
+                >
+                    <div class="name">{{ segment.name }}</div>
+                    <div class="time">{{ segment.time | aevum }}</div>
+                    <div class="best-time">{{ segment.personalBest | aevum }}</div>
+                    <div class="best-segment">{{ segment.overallBest | aevum }}</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <spl-button outline v-if="status !== 'stopped'" @click="split()">Split</spl-button>
+                <spl-button outline v-else @click="start()">Start</spl-button>
+                <spl-button outline @click="reset()">Reset</spl-button>
+                <spl-button outline v-if="status === 'paused'" @click="unpause()">Unpause</spl-button>
+                <spl-button outline v-else @click="pause()">Pause</spl-button>
+                <spl-button outline @click="skipSplit()">Skip</spl-button>
+                <spl-button outline @click="undoSplit()">Undo</spl-button>
+            </div>
+        </template>
+
+        <div v-else class="empty">
+            <p>No splits are currently set! Please load some or create new ones!</p>
         </div>
     </div>
 </template>
@@ -56,10 +59,9 @@ import { namespace } from 'vuex-class';
 import { remote } from 'electron';
 import { clamp } from 'lodash';
 
-import { Segment } from '../common/segment';
+import { Segment } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
-import { now } from '../utils/now';
-import { newWindow } from '../utils/new-window';
+import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -139,20 +141,7 @@ export default class SplitsComponent extends Vue {
         return arr;
     }
 
-    openSettings() {
-        newWindow(
-            {
-                width: 800,
-                height: 600,
-                parent: remote.getCurrentWindow(),
-                frame: false,
-                modal: true
-            },
-            '/settings'
-        );
-    }
-
-    scrollSplits(event: MouseWheelEvent) {
+    scrollSplits(event: WheelEvent) {
         if (event.deltaY > 0) {
             this.scrollIndex++;
         } else {

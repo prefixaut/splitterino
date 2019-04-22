@@ -5,10 +5,10 @@
         <div class="content-wrapper">
             <spl-number-input
                 class="part hour"
-                :value="hour"
+                :value="time.hours"
                 :min="0"
                 :max="99999"
-                @change="onChange($event, 'hour')"
+                @change="onChange($event, 'hours')"
                 @focus="activate"
                 @blur="deactivate"
             />
@@ -17,10 +17,10 @@
 
             <spl-number-input
                 class="part"
-                :value="minute"
+                :value="time.minutes"
                 :min="0"
                 :max="59"
-                @change="onChange($event, 'minute')"
+                @change="onChange($event, 'minutes')"
                 @focus="activate"
                 @blur="deactivate"
             />
@@ -29,10 +29,10 @@
 
             <spl-number-input
                 class="part"
-                :value="second"
+                :value="time.seconds"
                 :min="0"
                 :max="59"
-                @change="onChange($event, 'second')"
+                @change="onChange($event, 'seconds')"
                 @focus="activate"
                 @blur="deactivate"
             />
@@ -41,10 +41,10 @@
 
             <spl-number-input
                 class="part"
-                :value="milli"
+                :value="time.milliseconds"
                 :min="0"
                 :max="999"
-                @change="onChange($event, 'milli')"
+                @change="onChange($event, 'milliseconds')"
                 @focus="activate"
                 @blur="deactivate"
             />
@@ -54,23 +54,28 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
+import { Time, toTime } from 'aevum';
+
+import { timeToTimestamp } from '../utils/time';
 
 @Component
 export default class TimeInputComponent extends Vue {
-    @Model('change', { type: Number })
-    public value: number;
+    @Model('change', { type: [Number, Object] })
+    public value: number | Time;
 
     @Prop({ type: String })
     public label: string;
 
     public active = false;
-    public hour = 0;
-    public minute = 0;
-    public second = 0;
-    public milli = 0;
+    public time: Time = {
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+        milliseconds: 0
+    };
 
     created() {
-        this.applyValue(this.value | 0);
+        this.applyValue(this.value || 0);
     }
 
     activate() {
@@ -84,23 +89,29 @@ export default class TimeInputComponent extends Vue {
     }
 
     onChange(value, part) {
-        if (this[part] !== value) {
-            this[part] = value;
-            let n = this.milli;
-            n += this.second * 1000;
-            n += this.minute * 60000;
-            n += this.hour * 3600000;
-
-            this.$emit('change', n);
+        if (this.time[part] !== value) {
+            this.$set(this.time, part, value);
+            this.$emit('change', timeToTimestamp(this.time));
         }
     }
 
+
+
     applyValue(value) {
+        if (value == null) {
+            value = 0;
+        }
+        let time: Time;
+        if (typeof value === 'object') {
+            time = value;
+        } else if (typeof value === 'number') {
+            time = toTime(value);
+        } else {
+            time = toTime(0);
+        }
+
         // Parse an timing object from the number
-        this.hour = (value / 3600000) | 0;
-        this.minute = ((value / 60000) | 0) % 60;
-        this.second = ((value / 1000) | 0) % 60;
-        this.milli = value % 1000;
+        this.time = time;
     }
 
     @Watch('value')

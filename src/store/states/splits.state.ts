@@ -1,4 +1,4 @@
-import { Segment } from '../../common/segment';
+import { Segment } from '../../common/interfaces/segment';
 
 export interface SplitsState {
     /**

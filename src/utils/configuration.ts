@@ -1,5 +1,6 @@
+import { get, set } from 'lodash';
+
 import { isType, Typeguard } from './is-type';
-import { set } from 'lodash';
 
 interface Content { [name: string]: any; }
 
@@ -47,14 +48,6 @@ export class Configuration {
     }
 
     private getValue(path: string | string[]): any {
-        if (!Array.isArray(path)) {
-            path = path.split('.');
-        }
-
-        return path.reduce(
-            (obj: object, i: string) =>
-                obj != null && obj.hasOwnProperty(i) ? obj[i] : null,
-            this.data
-        );
+        return get(this.data, path);
     }
 }

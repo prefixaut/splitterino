@@ -15,7 +15,8 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { SettingsConfigurationObject } from '../store/states/settings';
+
+import { SettingsConfigurationObject } from '../store/states/settings.state';
 
 const settingsModule = namespace('splitterino/settings');
 
