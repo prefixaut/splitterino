@@ -20,56 +20,35 @@ const moduleState: SettingsState = {
             label: 'Splitterino',
             children: [
                 {
-                    key: 'core',
+                    key: 'splits',
                     type: 'group',
-                    label: 'Core',
+                    label: 'Splits',
                     children: [
                         {
-                            key: 'testGroup',
+                            key: 'controls',
                             type: 'group',
-                            label: 'Test Group',
+                            label: 'Controls',
                             children: [
                                 {
-                                    key: 'testSetting',
+                                    key: 'split',
                                     type: 'setting',
-                                    component: 'input',
-                                    defaultValue: 'test value',
-                                    label: 'Test Setting',
-                                    props: {
-                                        placeholder: 'Whatever',
-                                    },
+                                    component: 'spl-keybinding-input',
+                                    defaultValue: null,
+                                    label: 'Splitting',
+                                },
+                                {
+                                    key: 'pause',
+                                    type: 'setting',
+                                    component: 'spl-keybinding-input',
+                                    defaultValue: null,
+                                    label: 'Pause/Unpause',
                                 },
                             ],
                         },
                     ],
                 },
             ],
-        },
-        {
-            key: 'plugins',
-            type: 'group',
-            label: 'Plugins',
-            children: [
-                {
-                    key: 'testPlugin',
-                    type: 'group',
-                    label: 'Test Plugin',
-                    children: [
-                        {
-                            key: 'pluginSetting',
-                            type: 'setting',
-                            component: 'spl-number-input',
-                            defaultValue: 5,
-                            label: 'Plugin Setting',
-                            props: {
-                                min: 3,
-                                max: 8,
-                            },
-                        },
-                    ],
-                },
-            ],
-        },
+        }
     ],
 };
 

@@ -6,7 +6,7 @@
             :value="internalValue"
             @change="inputChange($event)"
         />
-        <label :for="'spl-checkbox-' + _uid">{{ label }}</label>
+        <label :for="'spl-checkbox-' + _uid" tabindex="0">{{ label }}</label>
     </div>
 </template>
 
