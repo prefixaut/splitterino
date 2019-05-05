@@ -6,7 +6,11 @@
             :value="internalValue"
             @change="inputChange($event)"
         />
-        <label :for="'spl-checkbox-' + _uid" tabindex="0">{{ label }}</label>
+        <label
+            tabindex="0"
+            :for="'spl-checkbox-' + _uid"
+            @keypress="labelKeyPress($event)"
+        >{{ label }}</label>
     </div>
 </template>
 
@@ -26,6 +30,16 @@ export default class CheckboxComponent extends Vue {
     public inputChange(event) {
         this.internalValue = event.target.checked;
         this.$emit('change', this.internalValue);
+    }
+
+    public labelKeyPress(event: KeyboardEvent) {
+        switch (event.key) {
+            case ' ':
+            case 'Enter':
+                this.internalValue = !this.internalValue;
+                event.preventDefault();
+                event.stopPropagation();
+        }
     }
 }
 </script>
@@ -60,6 +74,14 @@ export default class CheckboxComponent extends Vue {
             top: 0;
             left: 50%;
             margin-left: -8px;
+        }
+
+        &:focus {
+            outline: none;
+
+            &::before {
+                border: 1px solid $spl-color-primary;
+            }
         }
     }
 
