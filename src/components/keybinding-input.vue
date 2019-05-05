@@ -7,6 +7,7 @@
             tabindex="0"
             v-html="internalValue.accelerator"
             @keydown="handleKey($event)"
+            @keyup="handleKeyUp($event)"
         ></div>
 
         <spl-checkbox
@@ -29,6 +30,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
+import * as keycode from 'keycode';
 
 import { Keybinding } from '../common/interfaces/keybindings';
 
@@ -39,6 +41,8 @@ export default class KeybingingInputComponent extends Vue {
 
     public internalValue: Keybinding = { accelerator: null };
 
+    public altRightPressed: boolean = false;
+
     handleKey(event: KeyboardEvent) {
         // Ignore the Tab-Key
         if (event.key === 'Tab') {
@@ -48,6 +52,15 @@ export default class KeybingingInputComponent extends Vue {
         event.stopPropagation();
 
         const parts = [];
+
+        if ((
+            event.key === 'Control' ||
+            event.key === 'Alt' ||
+            event.key === 'Shift'
+        )) {
+            return;
+        }
+
         if (event.ctrlKey) {
             parts.push('Ctrl');
         }
@@ -57,6 +70,14 @@ export default class KeybingingInputComponent extends Vue {
         if (event.altKey) {
             parts.push('Alt');
         }
+        if (this.altRightPressed) {
+            parts.push('AltGr');
+        }
+        if (event.code === 'AltRight') {
+            this.altRightPressed = true;
+
+            return;
+        }
 
         switch (event.key) {
             case 'Control':
@@ -64,11 +85,17 @@ export default class KeybingingInputComponent extends Vue {
             case 'Shift':
                 break;
             default:
-                parts.push(event.key.toLocaleUpperCase());
+                parts.push(keycode.names[event.keyCode].toUpperCase());
         }
 
         this.$set(this.internalValue, 'accelerator', parts.join('+'));
         this.$emit('change', this.internalValue);
+    }
+
+    handleKeyUp(event: KeyboardEvent) {
+        if (event.code === 'AltRight') {
+            this.altRightPressed = false;
+        }
     }
 
     globalChange(newValue: boolean) {
