@@ -20,8 +20,8 @@ import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
 import SettingsEditorComponent from './components/settings-editor.vue';
-import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
-import SettingsEditorMainComponent from './components/settings-editor-main.vue';
+import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
+import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
 
 import { contextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
@@ -57,8 +57,8 @@ Vue.component('spl-time-input', TimeInputComponent);
 Vue.component('spl-timer', TimerComponent);
 Vue.component('spl-title-bar', TitleBarComponent);
 Vue.component('spl-settings-editor', SettingsEditorComponent);
-Vue.component('spl-settings-editor-group', SettingsEditorGroupComponent);
-Vue.component('spl-settings-editor-main', SettingsEditorMainComponent);
+Vue.component('spl-settings-editor-setting', SettingsEditorSettingComponent);
+Vue.component('spl-settings-editor-sidebar-entry', SettingsEditorSidebarEntryComponent);
 
 // Register Directives
 Vue.directive('spl-ctx-menu', contextMenuDirective);

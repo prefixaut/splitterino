@@ -1,7 +1,7 @@
 <template>
     <div class="settings-editor">
-        <div class="settings-sidebar">
-            <spl-settings-editor-group
+        <div class="sidebar">
+            <spl-settings-editor-sidebar-entry
                 v-for="(item, index) in configuration"
                 type="main"
                 :key="index"
@@ -10,13 +10,14 @@
             />
         </div>
 
-        <div class="settings-content">
-            <spl-settings-editor-main
+        <div class="content">
+            <spl-settings-editor-setting
                 :activeSettingsConfig="activeSettingsConfig"
                 :activeSettingsPath="activeSettingsPath"
                 @settingChanged="onSettingChanged"
             />
-            <div class="settings-footer">
+
+            <div class="footer">
                 <spl-button outline @click="saveSettings">Save</spl-button>
             </div>
         </div>
@@ -153,20 +154,20 @@ export default class SettingsEditorComponent extends Vue {
     display: flex;
     height: 100%;
 
-    .settings-sidebar {
+    .sidebar {
         flex: 0 0 200px;
         height: 100%;
         padding: 10px 10px 20px 0;
         background-color: $spl-color-off-black;
     }
 
-    .settings-content {
+    .content {
         flex: 1 1 auto;
         height: 100%;
         padding: 20px;
     }
 
-    .settings-footer {
+    .footer {
         margin-top: 25px;
     }
 }

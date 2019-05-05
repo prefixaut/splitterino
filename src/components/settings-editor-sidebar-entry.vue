@@ -10,7 +10,7 @@
         <template v-if="childrenType === 'group'">
             <transition>
                 <div v-show="isOpen" class="settings-children">
-                    <spl-settings-editor-group
+                    <spl-settings-editor-sidebar-entry
                         v-for="(item, index) in group.children"
                         :key="index"
                         :group="item"
@@ -28,8 +28,8 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { SettingsGroupConfigurationObject } from '../store/states/settings.state';
 import { RootState } from '../store/states/root.state';
 
-@Component({ name: 'spl-settings-editor-group' })
-export default class SettingsEditorGroupComponent extends Vue {
+@Component({ name: 'spl-settings-editor-sidebar-entry' })
+export default class SettingsEditorSidebarEntryComponent extends Vue {
     /**
      * Group object of configuration
      */

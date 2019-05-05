@@ -1,5 +1,5 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, globalShortcut } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
