@@ -3,27 +3,48 @@ import { remote } from 'electron';
 import { closeWindow, newWindow, reloadWindow } from '../utils/electron';
 import { loadSplitsFromFileToStore, saveSplitsFromStoreToFile } from '../utils/io';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
+import { KeybindingActionFunction } from './interfaces/keybindings';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
+    private static keybindingsStore: { [key: string]: KeybindingActionFunction } = {};
 
-    public static registerContextMenuAction(name: string, action: ContextMenuItemActionFunction) {
-        this.contextMenuStore[name] = action;
+    public static registerContextMenuAction(id: string, action: ContextMenuItemActionFunction) {
+        this.contextMenuStore[id] = action;
     }
 
-    public static getContextMenuAction(name: string): ContextMenuItemActionFunction {
-        return this.contextMenuStore[name];
+    public static registerKeybindingAction(action: string, fn: KeybindingActionFunction) {
+        this.keybindingsStore[action] = fn;
     }
 
-    public static unregisterConextMenuAction(name: string) {
-        if (typeof this.contextMenuStore[name] === 'function') {
-            delete this.contextMenuStore[name];
+    public static getContextMenuAction(id: string): ContextMenuItemActionFunction {
+        return this.contextMenuStore[id];
+    }
+
+    public static getKeybindingAction(action: string): KeybindingActionFunction {
+        return this.keybindingsStore[action];
+    }
+
+    public static unregisterConextMenuAction(id: string) {
+        if (typeof this.contextMenuStore[id] === 'function') {
+            delete this.contextMenuStore[id];
+        }
+    }
+
+    public static unregisterKeybindingAction(action: string) {
+        if (typeof this.keybindingsStore[action] === 'function') {
+            delete this.keybindingsStore[action];
         }
     }
 }
 
 export function registerDefaultFunctions() {
-    /*
+    registerDefaultContextMenuFunctions();
+    registerDefaultKeybindingFunctions();
+}
+
+function registerDefaultContextMenuFunctions() {
+/*
      * Window Actions
      */
     FunctionRegistry.registerContextMenuAction('core.window.reload', reloadWindow);
@@ -39,6 +60,7 @@ export function registerDefaultFunctions() {
                 parent: remote.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
+                modal: true,
             },
             '/splits-editor'
         );
@@ -60,6 +82,7 @@ export function registerDefaultFunctions() {
                 parent: remote.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
+                modal: true,
             },
             '/settings'
         );
@@ -75,8 +98,11 @@ export function registerDefaultFunctions() {
                 parent: remote.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
+                modal: true,
             },
             '/keybindings'
         );
     });
 }
+
+function registerDefaultKeybindingFunctions() {}

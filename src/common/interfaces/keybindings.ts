@@ -1,3 +1,7 @@
+import { Store } from 'vuex';
+
+import { RootState } from '../../store/states/root.state';
+
 /**
  * Interface to provide an easy and consistent way to store and
  * interact with keybindings.
@@ -20,11 +24,28 @@ export interface Keybinding {
     global: boolean;
 }
 
-export interface KeybindingAction {
+/**
+ * Descriptor for an Action that can be triggered.
+ */
+export interface KeybindingDescriptor {
     id: string;
     label: string;
 }
 
+/**
+ * Extension of the regular Keybinding which binds to an Action.
+ */
 export interface ActionKeybinding extends Keybinding {
+    /**
+     * The ID of the Action the Keybinding is triggering.
+     *
+     * @see KeybindingDescriptor#id
+     */
     action: string;
 }
+
+export interface KeybindingActionFunctionParameters {
+    store: Store<RootState>;
+}
+
+export type KeybindingActionFunction = (params: KeybindingActionFunctionParameters) => void;

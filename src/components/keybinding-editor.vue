@@ -11,18 +11,31 @@
                 </button>
             </div>
         </div>
+
+        <spl-button class="add-button" theme="primary" outline @click="addNew()">
+            <fa-icon icon="plus" />
+            <span>&nbsp;Add new Segment</span>
+        </spl-button>
     </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
+import { cloneDeep } from 'lodash';
 
-import { ActionKeybinding, KeybindingAction } from '../common/interfaces/keybindings';
+import { ActionKeybinding, KeybindingDescriptor } from '../common/interfaces/keybindings';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
-    public actions: KeybindingAction[] = [];
+    public actions: KeybindingDescriptor[] = [];
     public bindings: ActionKeybinding[] = [];
+
+    created() {
+        this.actions = cloneDeep(
+            this.$store.state.splitterino.keybindings.actions || []);
+        this.bindings = cloneDeep(
+            this.$store.state.splitterino.keybindings.bindings || []);
+    }
 
     clearInput(event: MouseEvent, index: number) {
         event.preventDefault();
@@ -31,6 +44,15 @@ export default class KeybindingEditorComponent extends Vue {
         this.$set(this.bindings[index], 'accelerator', null);
         this.$set(this.bindings[index], 'keys', []);
     }
+
+    addNew() {
+        this.bindings.push({
+            action: null,
+            accelerator: '',
+            keys: [],
+            global: true,
+        });
+    }
 }
 </script>
 
@@ -38,6 +60,11 @@ export default class KeybindingEditorComponent extends Vue {
 @import '../styles/core';
 
 .keybinding-editor {
+    .add-button {
+        margin: 0 auto;
+        display: block;
+    }
+
     .clear {
         flex: 0 0 auto;
         margin-left: 10px;

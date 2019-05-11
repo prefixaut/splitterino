@@ -1,18 +1,11 @@
 <template>
     <div class="splits-editor">
         <div class="header">
-            <h1>Splits Editor</h1>
+            <slot></slot>
         </div>
 
         <div class="content">
-            <!--section id="game-info">
-                <h2>Game Information</h2>
-
-                <spl-game-info-editor />
-            </section-->
-
             <section id="segments">
-                <h2>Segments</h2>
                 <table class="segments">
                     <thead slot="header">
                         <tr>
@@ -80,9 +73,12 @@
         </div>
 
         <div class="footer">
-            <spl-button theme="info" outline :disabled="!haveSegmentsChanged" @click="saveSplits()"
-                >Save Splits</spl-button
-            >
+            <spl-button
+                theme="info"
+                outline
+                :disabled="!haveSegmentsChanged"
+                @click="saveSplits()"
+            >Save Splits</spl-button>
         </div>
     </div>
 </template>

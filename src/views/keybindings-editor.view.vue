@@ -14,3 +14,13 @@ export default class KeybindingEditorView extends Vue {
 
 }
 </script>
+
+<style lang="scss" scoped>
+.keybindings-editor-view {
+    h1,
+    h2 {
+        margin-left: 1.5rem;
+        margin-right: 1.5rem;
+    }
+}
+</style>

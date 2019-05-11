@@ -1,6 +1,8 @@
 <template>
     <div class="splits-editor-view" v-spl-ctx-menu="['def']">
-        <spl-splits-editor />
+        <spl-splits-editor>
+            <h1>Splits Editor</h1>
+        </spl-splits-editor>
     </div>
 </template>
 
