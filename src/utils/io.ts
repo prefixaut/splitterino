@@ -118,7 +118,7 @@ export async function loadSplitsFromFileToStore(store: Store<RootState>, file?: 
 
 // TODO: Add documentation
 export async function saveSplitsFromStoreToFile(
-    instance: Vue,
+    store: Store<RootState>,
     file?: string,
     window?: BrowserWindow
 ): Promise<boolean> {
@@ -137,7 +137,7 @@ export async function saveSplitsFromStoreToFile(
 
         const fileContent = {
             splits: {
-                segments: instance.$store.state.splitterino.splits.segments,
+                segments: store.state.splitterino.splits.segments,
             }
         };
 
