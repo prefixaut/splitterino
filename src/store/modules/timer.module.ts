@@ -4,6 +4,16 @@ import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/time';
 import { TimerState } from '../states/timer.state';
 
+const MODULE_PATH = 'splitterino/timer';
+
+const ID_MUTATION_SET_START_DELAY = 'setStartDelay';
+const ID_MUTATION_SET_START_TIME = 'setStartTime';
+const ID_MUTATION_SET_STATUS = 'setStatus';
+
+export const MUTATION_SET_START_DELAY = `${MODULE_PATH}/${ID_MUTATION_SET_START_DELAY}`;
+export const MUTATION_SET_START_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_START_TIME}`;
+export const MUTATION_SET_STATUS = `${MODULE_PATH}/${ID_MUTATION_SET_STATUS}`;
+
 const moduleState: TimerState = {
     status: TimerStatus.STOPPED,
     startDelay: 0,
@@ -14,16 +24,16 @@ const moduleState: TimerState = {
 };
 
 const mutations = {
-    setStartDelay(state: TimerState, to: number) {
+    [ID_MUTATION_SET_START_DELAY](state: TimerState, to: number) {
         if (state.status !== TimerStatus.STOPPED) {
             return;
         }
         state.startDelay = to;
     },
-    setStartTime(state: TimerState, to: number) {
+    [ID_MUTATION_SET_START_TIME](state: TimerState, to: number) {
         state.startTime = to;
     },
-    setStatus(
+    [ID_MUTATION_SET_STATUS](
         state: TimerState,
         to: TimerStatus | { time: number; status: TimerStatus }
     ) {
