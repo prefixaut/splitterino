@@ -10,4 +10,8 @@ export interface SplitsState {
      * All segments
      */
     segments: Segment[];
+    /**
+     * Currently open .splits file
+     */
+    currentOpenFile: string;
 }
