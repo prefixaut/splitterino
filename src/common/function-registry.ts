@@ -64,4 +64,19 @@ export function registerDefaultFunctions() {
             '/settings'
         );
     });
+
+    /*
+     * Keybinding Actions
+     */
+    FunctionRegistry.registerContextMenuAction('core.keybindings.open', () => {
+        newWindow(
+            {
+                title: 'Keybindings',
+                parent: remote.getCurrentWindow(),
+                minWidth: 440,
+                minHeight: 220,
+            },
+            '/keybindings'
+        );
+    });
 }

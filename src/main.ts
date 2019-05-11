@@ -5,12 +5,16 @@ import { Aevum } from 'aevum';
 import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 import draggable from 'vuedraggable';
+import VueSelect from 'vue-select';
 
 import App from './app.vue';
+
+// Components
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
 import GameInfoEditorComponent from './components/game-info-editor.vue';
+import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
 import SplitsEditorComponent from './components/splits-editor.vue';
@@ -23,7 +27,10 @@ import SettingsEditorComponent from './components/settings-editor.vue';
 import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
 import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
 
+// Directives
 import { contextMenuDirective } from './directives/context-menu.directive';
+
+// Misc
 import { router } from './router';
 import { getClientStore } from './store';
 import { remote } from 'electron';
@@ -43,11 +50,15 @@ Vue.component('draggable', draggable);
 // Overlay Host
 Vue.component('vue-overlay-host', OverlayHost);
 
+// Select
+Vue.component('vue-select', VueSelect);
+
 // Register Components
 Vue.component('spl-button', ButtonComponent);
 Vue.component('spl-checkbox', CheckboxComponent);
 Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);
 Vue.component('spl-game-info-editor', GameInfoEditorComponent);
+Vue.component('spl-keybinding-editor', KeybindingEditorComponent);
 Vue.component('spl-keybinding-input', KeybindingInputComponent);
 Vue.component('spl-number-input', NumberInputComponent);
 Vue.component('spl-splits-editor', SplitsEditorComponent);

@@ -1,9 +1,10 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
-import DefaultView from './views/default-view.vue';
-import SplitsEditorView from './views/splits-editor-view.vue';
-import SettingsEditor from './components/settings-editor.vue';
+import DefaultView from './views/default.view.vue';
+import KeybindingsEditorView from './views/keybindings-editor.view.vue';
+import SettingsEditorView from './views/settings-editor.view.vue';
+import SplitsEditorView from './views/splits-editor.view.vue';
 
 Vue.use(Router);
 
@@ -20,14 +21,19 @@ export const router = new Router({
             component: DefaultView,
         },
         {
-            path: '/splits-editor',
-            name: 'editor',
-            component: SplitsEditorView,
+            path: '/keybindings',
+            name: 'keybindings',
+            component: KeybindingsEditorView,
         },
         {
             path: '/settings',
             name: 'settings',
-            component: SettingsEditor
-        }
+            component: SettingsEditorView,
+        },
+        {
+            path: '/splits-editor',
+            name: 'editor',
+            component: SplitsEditorView,
+        },
     ]
 });

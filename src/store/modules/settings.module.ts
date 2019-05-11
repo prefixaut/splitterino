@@ -18,36 +18,7 @@ const moduleState: SettingsState = {
             key: 'splitterino',
             type: 'group',
             label: 'Splitterino',
-            children: [
-                {
-                    key: 'splits',
-                    type: 'group',
-                    label: 'Splits',
-                    children: [
-                        {
-                            key: 'controls',
-                            type: 'group',
-                            label: 'Controls',
-                            children: [
-                                {
-                                    key: 'split',
-                                    type: 'setting',
-                                    component: 'spl-keybinding-input',
-                                    defaultValue: null,
-                                    label: 'Splitting',
-                                },
-                                {
-                                    key: 'pause',
-                                    type: 'setting',
-                                    component: 'spl-keybinding-input',
-                                    defaultValue: null,
-                                    label: 'Pause/Unpause',
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
+            children: [],
         }
     ],
 };

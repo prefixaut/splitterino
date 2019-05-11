@@ -33,6 +33,12 @@ const moduleState: ContextMenuState = {
             actions: ['core.settings.open'],
         },
     ],
+    keybindings: [
+        {
+            label: 'Keybindings ...',
+            actions: ['core.keybindings.open'],
+        },
+    ],
 };
 
 const getters = {

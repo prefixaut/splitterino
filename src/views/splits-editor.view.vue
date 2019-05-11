@@ -1,5 +1,5 @@
 <template>
-    <div class="splits-editor-view">
+    <div class="splits-editor-view" v-spl-ctx-menu="['def']">
         <spl-splits-editor />
     </div>
 </template>
@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {}
 </script>
 

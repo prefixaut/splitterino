@@ -5,7 +5,7 @@
             ref="content"
             class="content"
             tabindex="0"
-            v-html="internalValue.accelerator"
+            v-html="displayString"
             @keydown="handleKey($event)"
             @keyup="handleKeyUp($event)"
         ></div>
@@ -16,32 +16,36 @@
             :value="internalValue.global"
             @change="globalChange($event)"
         />
-
-        <button
-            class="clear"
-            tabindex="0"
-            title="clear combination"
-            @click="clearInput($event)"
-        >
-            <fa-icon icon="times" />
-        </button>
     </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import * as keycode from 'keycode';
 
 import { Keybinding } from '../common/interfaces/keybindings';
+import { keyToDisplayString, keyToAcceleratorString } from '../utils/keys';
 
 @Component({ name: 'spl-keybinding-input' })
 export default class KeybingingInputComponent extends Vue {
     @Prop()
     public value: Keybinding;
 
-    public internalValue: Keybinding = { accelerator: null };
+    public internalValue: Keybinding = {
+        accelerator: null,
+        global: true,
+        keys: [],
+    };
 
     public altRightPressed: boolean = false;
+    public acceleratorString: string = '';
+
+    public get displayString(): string {
+        const mapped = this.internalValue.keys
+            .map(keyToDisplayString)
+            .filter(str => str != null && str.trim().length > 0);
+
+        return mapped.join('+');
+    }
 
     handleKey(event: KeyboardEvent) {
         // Ignore the Tab-Key
@@ -51,7 +55,7 @@ export default class KeybingingInputComponent extends Vue {
         event.preventDefault();
         event.stopPropagation();
 
-        const parts = [];
+        const keys = [];
 
         if ((
             event.key === 'Control' ||
@@ -62,33 +66,33 @@ export default class KeybingingInputComponent extends Vue {
         }
 
         if (event.ctrlKey) {
-            parts.push('Ctrl');
+            keys.push('Ctrl');
         }
+
         if (event.shiftKey) {
-            parts.push('Shift');
+            keys.push('Shift');
         }
+
         if (event.altKey) {
-            parts.push('Alt');
+            keys.push('Alt');
         }
+
+        if (event.metaKey) {
+            keys.push('Super');
+        }
+
         if (this.altRightPressed) {
-            parts.push('AltGr');
+            keys.push('AltGr');
         }
+
         if (event.code === 'AltRight') {
             this.altRightPressed = true;
 
             return;
         }
 
-        switch (event.key) {
-            case 'Control':
-            case 'Alt':
-            case 'Shift':
-                break;
-            default:
-                parts.push(keycode.names[event.keyCode].toUpperCase());
-        }
-
-        this.$set(this.internalValue, 'accelerator', parts.join('+'));
+        this.$set(this.internalValue, 'keys', keys);
+        this.$set(this.internalValue, 'accelerator', keys.map(keyToAcceleratorString).join('+'));
         this.$emit('change', this.internalValue);
     }
 
@@ -100,14 +104,6 @@ export default class KeybingingInputComponent extends Vue {
 
     globalChange(newValue: boolean) {
         this.$set(this.internalValue, 'global', newValue);
-        this.$emit('change', this.internalValue);
-    }
-
-    clearInput(event: MouseEvent) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        this.$set(this.internalValue, 'accelerator', null);
         this.$emit('change', this.internalValue);
     }
 }
@@ -143,26 +139,7 @@ export default class KeybingingInputComponent extends Vue {
         flex: 0 0 auto;
     }
 
-    .clear {
-        flex: 0 0 auto;
-        margin-left: 10px;
-        cursor: pointer;
 
-        border: 1px solid $spl-color-off-black;
-        background: $spl-color-light-danger;
-        color: $spl-color-off-white;
-        padding: 8px 13px;
-        transition: 200ms;
-
-        &.outline {
-            border-color: $spl-color-primary;
-        }
-
-        &:focus {
-            outline: none;
-            border-color: $spl-color-primary;
-        }
-    }
 }
 </style>
 

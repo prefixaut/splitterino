@@ -1,5 +1,5 @@
 <template>
-    <div class="default-view container" v-spl-ctx-menu="['settings', 'splitter', 'def']">
+    <div class="default-view container" v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']">
         <spl-splits/>
         <spl-timer/>
     </div>
@@ -8,7 +8,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {}
 </script>
 

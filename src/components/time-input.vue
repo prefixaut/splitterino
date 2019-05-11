@@ -95,8 +95,6 @@ export default class TimeInputComponent extends Vue {
         }
     }
 
-
-
     applyValue(value) {
         if (value == null) {
             value = 0;
