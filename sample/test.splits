@@ -1,0 +1,18 @@
+{
+    "splits": {
+        "current": -1,
+        "segments": [
+            {
+                "id": "33fbd84c-9ab9-43d2-a0bc-b63eac437cba",
+                "name": "oi",
+                "time": {
+                    "hours": 0,
+                    "milliseconds": 0,
+                    "minutes": 59,
+                    "positive": true,
+                    "seconds": 0
+                }
+            }
+        ]
+    }
+}

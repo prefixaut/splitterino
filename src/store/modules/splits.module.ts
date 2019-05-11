@@ -9,7 +9,8 @@ import { SplitsState } from '../states/splits.state';
 
 const moduleState: SplitsState = {
     current: -1,
-    segments: []
+    segments: [],
+    currentOpenFile: null
 };
 
 const getters: GetterTree<SplitsState, RootState> = {
@@ -190,6 +191,9 @@ const mutations = {
 
             return segment;
         });
+    },
+    setCurrentOpenFile(state: SplitsState, filePath: string) {
+        state.currentOpenFile = filePath;
     }
 };
 
@@ -494,6 +498,12 @@ Do you wish to save or discard the times?
         context.commit('setAllSegments', payload);
 
         return true;
+    },
+    setCurrentOpenFile(
+        context: ActionContext<SplitsState, RootState>,
+        filePath: string
+    ) {
+        context.commit('setCurrentOpenFile', filePath);
     },
 };
 

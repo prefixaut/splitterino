@@ -4,4 +4,15 @@
     "vetur.format.options.tabSize": 4,
     "prettier.tslintIntegration": true,
     "prettier.tabWidth": 4,
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "*.splits"
+            ],
+            "url": "http://splitterino.prefix.moe/splits.schema.json"
+        }
+    ],
+    "files.associations": {
+        "*.splits": "json"
+    }
 }
