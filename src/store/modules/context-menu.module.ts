@@ -2,6 +2,12 @@ import { Module } from 'vuex';
 
 import { ContextMenuState } from '../states/context-menu.state';
 
+const MODULE_PATH = 'splitterino/contextMenu';
+
+const ID_GETTER_MENUES = 'ctxMenu';
+
+export const GETTER_MENUES = `${MODULE_PATH}/${ID_GETTER_MENUES}`;
+
 const moduleState: ContextMenuState = {
     def: [
         {
@@ -42,7 +48,7 @@ const moduleState: ContextMenuState = {
 };
 
 const getters = {
-    ctxMenu(state) {
+    [ID_GETTER_MENUES](state) {
         return (menus: string[]): Object[] => {
             const ctxMenu: Object[] = [];
             menus.forEach((el: string) => {

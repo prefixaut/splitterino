@@ -6,24 +6,80 @@ import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
+import { MUTATION_SET_STATUS } from './timer.module';
+
+const MODULE_PATH = 'splitterino/splits';
+
+const ID_GETTER_PREVIOUS_SEGMENT = 'previousSegment';
+const ID_GETTER_CURRENT_SEGMENT = 'currentSegment';
+const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
+const ID_GETTER_HAS_NEW_PERSONAL_BEST = 'hasNewPersonalBest';
+const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
+
+const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
+const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
+const ID_MUTATION_ADD_SEGMENT = 'addSegment';
+const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
+const ID_MUTATION_SET_SEGMENT = 'setSegment';
+const ID_MUTATION_SET_CURRENT = 'setCurrent';
+const ID_MUTATION_SOFT_RESET = 'softReset';
+const ID_MUTATION_HARD_RESET = 'hardReset';
+
+const ID_ACTION_START = 'start';
+const ID_ACTION_SPLIT = 'split';
+const ID_ACTION_SKIP = 'skip';
+const ID_ACTION_UNDO = 'undo';
+const ID_ACTION_PAUSE = 'pause';
+const ID_ACTION_UNPAUSE = 'unpause';
+const ID_ACTION_RESET = 'reset';
+const ID_ACTION_SOFT_RESET = 'softReset';
+const ID_ACTION_HARD_RESET = 'hardReset';
+const ID_ACTION_SET_SEGMENTS = 'setSegments';
+
+export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
+export const GETTER_CURRENT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_CURRENT_SEGMENT}`;
+export const GETTER_NEXT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_NEXT_SEGMENT}`;
+export const GETTER_HAS_NEW_PERSONAL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_PERSONAL_BEST}`;
+export const GETTER_HAS_NEW_OVERALL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_OVERALL_BEST}`;
+
+export const MUTATION_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_CLEAR_SEGMENTS}`;
+export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGMENT}`;
+export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
+export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SEGMENTS}`;
+export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
+export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
+export const MUTATION_SOFT_RESET = `${MODULE_PATH}/${ID_MUTATION_SOFT_RESET}`;
+export const MUTATION_HARD_RESET = `${MODULE_PATH}/${ID_MUTATION_HARD_RESET}`;
+
+export const ACTION_START = `${MODULE_PATH}/${ID_ACTION_START}`;
+export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
+export const ACTION_SKIP = `${MODULE_PATH}/${ID_ACTION_SKIP}`;
+export const ACTION_UNDO = `${MODULE_PATH}/${ID_ACTION_UNDO}`;
+export const ACTION_PAUSE = `${MODULE_PATH}/${ID_ACTION_PAUSE}`;
+export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
+export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
+export const ACTION_SOFT_RESET = `${MODULE_PATH}/${ID_ACTION_SOFT_RESET}`;
+export const ACTION_HARD_RESET = `${MODULE_PATH}/${ID_ACTION_HARD_RESET}`;
+export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
 
 const moduleState: SplitsState = {
     current: -1,
-    segments: []
+    segments: [],
+    currentOpenFile: null
 };
 
 const getters: GetterTree<SplitsState, RootState> = {
-    previousSegment(state: SplitsState) {
+    [ID_GETTER_PREVIOUS_SEGMENT](state: SplitsState) {
         const index = state.current;
 
         return index > 0 ? state.segments[index - 1] : null;
     },
-    currentSegment(state: SplitsState) {
+    [ID_GETTER_CURRENT_SEGMENT](state: SplitsState) {
         const index = state.current;
 
         return index > -1 ? state.segments[index] : null;
     },
-    nextSegment(state: SplitsState) {
+    [ID_GETTER_NEXT_SEGMENT](state: SplitsState) {
         const index = state.current;
 
         return index > -1 && index + 1 <= state.segments.length
@@ -33,7 +89,7 @@ const getters: GetterTree<SplitsState, RootState> = {
     /**
      * If there's a new personal best
      */
-    hasNewPersonalBest(state: SplitsState) {
+    [ID_GETTER_HAS_NEW_PERSONAL_BEST](state: SplitsState) {
         for (const segment of state.segments) {
             if (segment.hasNewPersonalBest) {
                 return true;
@@ -45,7 +101,7 @@ const getters: GetterTree<SplitsState, RootState> = {
     /**
      * If there's a new overall best
      */
-    hasNewOverallBest(state: SplitsState) {
+    [ID_GETTER_HAS_NEW_OVERALL_BEST](state: SplitsState) {
         for (const segment of state.segments) {
             if (segment.hasNewOverallBest) {
                 return true;
@@ -57,7 +113,7 @@ const getters: GetterTree<SplitsState, RootState> = {
 };
 
 const mutations = {
-    clearSegments(state: SplitsState) {
+    [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -66,7 +122,7 @@ const mutations = {
 
         state.segments = [];
     },
-    removeSegment(state: SplitsState, index: number) {
+    [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -85,7 +141,7 @@ const mutations = {
 
         state.segments.splice(index, 1);
     },
-    addSegment(state: SplitsState, segment: Segment) {
+    [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -102,7 +158,7 @@ const mutations = {
 
         state.segments.push(segment);
     },
-    setAllSegments(state: SplitsState, segments: Segment[]) {
+    [ID_MUTATION_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
         /*
         if (state.status !== TimerStatus.STOPPED) {
             return;
@@ -115,7 +171,7 @@ const mutations = {
 
         state.segments = segments;
     },
-    setSegment(
+    [ID_MUTATION_SET_SEGMENT](
         state: SplitsState,
         payload: { index: number; segment: Segment }
     ) {
@@ -147,7 +203,7 @@ const mutations = {
 
         state.segments[index] = { ...state.segments[index], ...segment };
     },
-    setCurrent(state: SplitsState, index: number) {
+    [ID_MUTATION_SET_CURRENT](state: SplitsState, index: number) {
         if (
             typeof index !== 'number' ||
             isNaN(index) ||
@@ -160,7 +216,7 @@ const mutations = {
 
         state.current = index;
     },
-    softReset(state: SplitsState) {
+    [ID_MUTATION_SOFT_RESET](state: SplitsState) {
         state.segments = state.segments.map(segment => ({
             ...segment,
             hasNewOverallBest: false,
@@ -172,7 +228,7 @@ const mutations = {
             passed: false
         }));
     },
-    hardReset(state: SplitsState) {
+    [ID_MUTATION_HARD_RESET](state: SplitsState) {
         state.segments = state.segments.map(segment => {
             if (segment.hasNewPersonalBest) {
                 segment.personalBest = segment.previousPersonalBest;
@@ -190,11 +246,14 @@ const mutations = {
 
             return segment;
         });
+    },
+    setCurrentOpenFile(state: SplitsState, filePath: string) {
+        state.currentOpenFile = filePath;
     }
 };
 
 const actions: ActionTree<SplitsState, RootState> = {
-    start(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_START](context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
@@ -203,30 +262,30 @@ const actions: ActionTree<SplitsState, RootState> = {
         }
 
         context.commit(
-            'splitterino/timer/setStatus',
+            MUTATION_SET_STATUS,
             { time, status: TimerStatus.RUNNING },
             { root: true }
         );
 
         const firstSegment = context.state.segments[0];
 
-        context.commit('setSegment', {
+        context.commit(ID_MUTATION_SET_SEGMENT, {
             index: 0,
             segment: {
                 ...firstSegment,
                 startTime: time
             }
         });
-        context.commit('setCurrent', 0);
+        context.commit(ID_MUTATION_SET_CURRENT, 0);
     },
-    split(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>) {
         const currentTime = now();
 
         const status = context.rootState.splitterino.timer.status;
         switch (status) {
             case TimerStatus.FINISHED:
                 // Cleanup via reset
-                context.dispatch('softReset');
+                context.dispatch(ID_ACTION_SOFT_RESET);
 
                 return;
             case TimerStatus.RUNNING:
@@ -277,7 +336,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             currentSegment.hasNewOverallBest = false;
         }
 
-        context.commit('setSegment', {
+        context.commit(ID_MUTATION_SET_SEGMENT, {
             index: currentIndex,
             segment: currentSegment
         });
@@ -285,7 +344,7 @@ const actions: ActionTree<SplitsState, RootState> = {
         // Check if it is the last split
         if (currentIndex + 1 >= context.state.segments.length) {
             context.commit(
-                'splitterino/timer/setStatus',
+                MUTATION_SET_STATUS,
                 TimerStatus.FINISHED,
                 { root: true }
             );
@@ -301,13 +360,13 @@ const actions: ActionTree<SplitsState, RootState> = {
             skipped: false
         };
 
-        context.commit('setSegment', {
+        context.commit(ID_MUTATION_SET_SEGMENT, {
             index: currentIndex + 1,
             segment: next
         });
-        context.commit('setCurrent', currentIndex + 1);
+        context.commit(ID_MUTATION_SET_CURRENT, currentIndex + 1);
     },
-    skip(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
@@ -332,11 +391,11 @@ const actions: ActionTree<SplitsState, RootState> = {
             startTime: time
         };
 
-        context.commit('setSegment', { index, segment });
-        context.commit('setSegment', { index: index + 1, segment: next });
-        context.commit('setCurrent', index + 1);
+        context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
+        context.commit(ID_MUTATION_SET_SEGMENT, { index: index + 1, segment: next });
+        context.commit(ID_MUTATION_SET_CURRENT, index + 1);
     },
-    undo(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         const index = context.state.current;
@@ -373,11 +432,11 @@ const actions: ActionTree<SplitsState, RootState> = {
         // Clear the pause time afterwards
         segment.pauseTime = 0;
 
-        context.commit('setSegment', { index, segment });
-        context.commit('setSegment', { index: index - 1, segment: previous });
-        context.commit('setCurrent', index - 1);
+        context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
+        context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
+        context.commit(ID_MUTATION_SET_CURRENT, index - 1);
     },
-    pause(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
         if (status !== TimerStatus.RUNNING) {
@@ -385,12 +444,12 @@ const actions: ActionTree<SplitsState, RootState> = {
         }
 
         context.commit(
-            'splitterino/timer/setStatus',
+            MUTATION_SET_STATUS,
             { time, status: TimerStatus.PAUSED },
             { root: true }
         );
     },
-    unpause(context: ActionContext<SplitsState, RootState>) {
+    [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>) {
         const time = now();
         const status = context.rootState.splitterino.timer.status;
 
@@ -404,9 +463,9 @@ const actions: ActionTree<SplitsState, RootState> = {
         const segment: Segment = { ...context.state.segments[index] };
         segment.pauseTime += pauseAddition;
 
-        context.commit('setSegment', { index, segment });
+        context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
         context.commit(
-            'splitterino/timer/setStatus',
+            MUTATION_SET_STATUS,
             {
                 time,
                 status: TimerStatus.RUNNING
@@ -414,7 +473,7 @@ const actions: ActionTree<SplitsState, RootState> = {
             { root: true }
         );
     },
-    async reset(
+    async [ID_ACTION_RESET](
         context: ActionContext<SplitsState, RootState>,
         payload: { [key: string]: any }
     ) {
@@ -455,30 +514,30 @@ Do you wish to save or discard the times?
                     case 0:
                         return Promise.resolve();
                     case 1:
-                        return context.dispatch('hardReset');
+                        return context.dispatch(ID_ACTION_HARD_RESET);
                     case 2:
-                        return context.dispatch('softReset');
+                        return context.dispatch(ID_ACTION_SOFT_RESET);
                 }
             });
         }
 
-        context.dispatch('hardReset');
+        context.dispatch(ID_ACTION_HARD_RESET);
     },
-    softReset(context: ActionContext<SplitsState, RootState>) {
-        context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
+    [ID_ACTION_SOFT_RESET](context: ActionContext<SplitsState, RootState>) {
+        context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
             root: true
         });
-        context.commit('setCurrent', -1);
-        context.commit('softReset');
+        context.commit(ID_MUTATION_SET_CURRENT, -1);
+        context.commit(ID_MUTATION_SOFT_RESET);
     },
-    hardReset(context: ActionContext<SplitsState, RootState>) {
-        context.commit('splitterino/timer/setStatus', TimerStatus.STOPPED, {
+    [ID_ACTION_HARD_RESET](context: ActionContext<SplitsState, RootState>) {
+        context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
             root: true
         });
-        context.commit('setCurrent', -1);
-        context.commit('hardReset');
+        context.commit(ID_MUTATION_SET_CURRENT, -1);
+        context.commit(ID_MUTATION_HARD_RESET);
     },
-    setSegments(
+    [ID_ACTION_SET_SEGMENTS](
         context: ActionContext<SplitsState, RootState>,
         payload: Segment[]
     ) {
@@ -491,9 +550,15 @@ Do you wish to save or discard the times?
             return false;
         }
 
-        context.commit('setAllSegments', payload);
+        context.commit(ID_MUTATION_SET_ALL_SEGMENTS, payload);
 
         return true;
+    },
+    setCurrentOpenFile(
+        context: ActionContext<SplitsState, RootState>,
+        filePath: string
+    ) {
+        context.commit('setCurrentOpenFile', filePath);
     },
 };
 

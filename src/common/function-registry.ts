@@ -66,10 +66,10 @@ function registerDefaultContextMenuFunctions() {
         );
     });
     FunctionRegistry.registerContextMenuAction('core.splits.load-from-file', params =>
-        loadSplitsFromFileToStore(params.vNode.context)
+        loadSplitsFromFileToStore(params.vNode.context.$store)
     );
     FunctionRegistry.registerContextMenuAction('core.splits.save-to-file', params =>
-        saveSplitsFromStoreToFile(params.vNode.context, null, params.browserWindow)
+        saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
     );
 
     /*

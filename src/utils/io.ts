@@ -6,8 +6,12 @@ import Vue from 'vue';
 import { isSplits } from '../common/interfaces/splits';
 import { showOpenDialog, showSaveDialog } from './electron';
 import { Logger } from './logger';
+import { Store } from 'vuex';
+import { RootState } from '../store/states/root.state';
+import { ApplicationSettings } from '../common/interfaces/application-settings';
 
 const assetDir = remote ? join(remote.app.getAppPath(), 'resources') : join(app.getAppPath(), 'resources');
+const appSettingsFileName = 'application-settings.json';
 
 export const SPLITS_FILE_FILTER: FileFilter = {
     name: 'Splitterino-Splits',
@@ -74,7 +78,7 @@ export function saveJSONToFile(path: string, data: object, basePath: string = as
  *
  * @returns A Promise which resolves to if the file was successfully loaded into store.
  */
-export function loadSplitsFromFileToStore(instance: Vue, file?: string): Promise<boolean> {
+export async function loadSplitsFromFileToStore(store: Store<RootState>, file?: string): Promise<boolean> {
     let fileSelect: Promise<string>;
 
     if (file != null) {
@@ -85,7 +89,7 @@ export function loadSplitsFromFileToStore(instance: Vue, file?: string): Promise
     }
 
     return fileSelect
-        .then(filePath => {
+        .then(async filePath => {
             if (filePath == null) {
                 Logger.debug('No files selected, skipping loading');
 
@@ -100,8 +104,9 @@ export function loadSplitsFromFileToStore(instance: Vue, file?: string): Promise
 
             Logger.debug('Loaded splits are valid, applying to store');
 
-            return instance.$store.dispatch('splitterino/splits/setSegments', [loaded.splits.segments])
-                .then(() => true);
+            store.dispatch('splitterino/splits/setCurrentOpenFile', filePath);
+
+            return store.dispatch('splitterino/splits/setSegments', [loaded.splits.segments]);
         })
         .catch(error => {
             Logger.error('Error while loading splits', error);
@@ -111,7 +116,12 @@ export function loadSplitsFromFileToStore(instance: Vue, file?: string): Promise
         });
 }
 
-export function saveSplitsFromStoreToFile(instance: Vue, file?: string, window?: BrowserWindow): Promise<boolean> {
+// TODO: Add documentation
+export async function saveSplitsFromStoreToFile(
+    store: Store<RootState>,
+    file?: string,
+    window?: BrowserWindow
+): Promise<boolean> {
     let fileSelect: Promise<string>;
     if (file != null) {
         fileSelect = Promise.resolve(file);
@@ -127,7 +137,7 @@ export function saveSplitsFromStoreToFile(instance: Vue, file?: string, window?:
 
         const fileContent = {
             splits: {
-                segments: instance.$store.state.splitterino.splits.segments,
+                segments: store.state.splitterino.splits.segments,
             }
         };
 
@@ -140,7 +150,7 @@ export function saveSplitsFromStoreToFile(instance: Vue, file?: string, window?:
  *
  * @returns A Promise which resolves to the path of the splits-file.
  */
-export function askUserToOpenSplitsFile(): Promise<string> {
+export async function askUserToOpenSplitsFile(): Promise<string> {
     Logger.debug('Asking user to select a Splits-File');
 
     return showOpenDialog(remote.getCurrentWindow(), {
@@ -161,9 +171,50 @@ export function askUserToOpenSplitsFile(): Promise<string> {
     });
 }
 
+// TODO: Add documentation
 export function askUserToSaveSplitsFile(window?: BrowserWindow): Promise<string> {
     return showSaveDialog(window || remote.getCurrentWindow(), {
         title: 'Save Splits',
         filters: [SPLITS_FILE_FILTER],
     });
+}
+
+// TODO: Add JSON schema validation for application settings
+/**
+ * Loads application settings object from file if it exists
+ * @param store Vuex store instance
+ */
+export async function loadApplicationSettingsFromFile(store: Store<RootState>): Promise<ApplicationSettings> {
+    const appSettings = loadJSONFromFile(appSettingsFileName) as ApplicationSettings;
+
+    if (appSettings) {
+        if (appSettings.lastOpenedSplitsFile) {
+            await loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+        }
+    }
+
+    return appSettings;
+}
+
+/**
+ * Save application settings to file
+ * @param window Main browser window instance
+ * @param store Vuex store instance
+ */
+export function saveApplicationSettingsToFile(window: BrowserWindow, store: Store<RootState>): void {
+    const windowSize = window.getSize();
+    const windowPos = window.getPosition();
+    const lastOpenedSplitsFile = store.state.splitterino.splits.currentOpenFile;
+
+    const newAppSettings: ApplicationSettings = {
+        window: {
+            width: windowSize[0],
+            height: windowSize[1],
+            x: windowPos[0],
+            y: windowPos[1]
+        },
+        lastOpenedSplitsFile
+    };
+
+    saveJSONToFile(appSettingsFileName, newAppSettings);
 }
