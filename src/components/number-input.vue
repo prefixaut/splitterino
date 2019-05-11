@@ -1,32 +1,27 @@
 <template>
     <div class="number-input">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
-
-        <div
-            class="content"
-            ref="input"
-            tabindex="0"
-            contenteditable="true"
-            v-html="internalValue"
-            :disabled="disabled"
-            :min="min"
-            :max="max"
-            @keydown="onKeydownEvent($event)"
-            @keyup="validateInput($event)"
+        <spl-text-input
+            :value="inputValue"
+            @change="onValueChange($event)"
             @blur="defaultValueOnBlur($event)"
-        ></div>
+            ref="input"
+            tabindex="1"
+        ></spl-text-input>
     </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
+import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
+import { clamp } from 'lodash';
 
 import { convertToBoolean } from '../utils/converters';
+import TextInputComponent from './text-input.vue';
 
 @Component
 export default class NumberInputComponent extends Vue {
     @Model('change', { type: [Number, String] })
-    public value: string | number;
+    public value: number | string;
 
     @Prop({ type: Number })
     public min: number;
@@ -34,10 +29,16 @@ export default class NumberInputComponent extends Vue {
     @Prop({ type: Number })
     public max: number;
 
-    @Prop({ type: Boolean })
+    @Prop({
+        type: Boolean,
+        default: false
+    })
     public decimals: boolean;
 
-    @Prop({ type: Boolean })
+    @Prop({
+        type: Boolean,
+        default: false
+    })
     public disabled: boolean;
 
     @Prop({ type: String })
@@ -47,151 +48,204 @@ export default class NumberInputComponent extends Vue {
      * Internal value to prevent Prop-Mutations
      */
     public internalValue = 0;
+    /**
+     * Value for underlying input component.
+     * Used for verification and force updating input
+     */
+    public inputValue = '';
 
     /**
-     * Internal Disabled-State to prevent Prop-Mutations
+     * Flag for when component is mounted.
+     * Prevents watchers to check for validity multiple times
+     * on component initialization
      */
-    public internalDisabled: boolean = false;
+    private isMounted = false;
+
+    public mounted() {
+        this.isMounted = true;
+        // If value was given validate it
+        // Otherwise set default value
+        if (this.value) {
+            this.updateContent(this.value);
+        } else {
+            this.setDefaultValue();
+        }
+    }
 
     /**
-     * If the user should be able to enter decimal values
+     * Set input value to changed value
      */
-    public internalDecimal: boolean = false;
+    public onValueChange(value: string) {
+        this.inputValue = value;
+    }
 
     /**
-     * If increasing the value is currently allowed/possible
+     * Verify input on blur
      */
-    public enableUp = true;
+    public defaultValueOnBlur(event: any) {
+        this.updateContent(this.inputValue);
+        this.$emit('blur', event);
+    }
 
     /**
-     * If decreasing the value is currently allowed/possible
+     * Emit change event for internal value
      */
-    public enableDown = true;
-
-    public readonly flatRegex = /^[+-]?([\d])*$/;
-    public readonly decimalRegex = /^[+-]?([\d])*(\.[\d])?$/;
-
-    private oldRange: Range;
-
-    validateInput(event: KeyboardEvent) {
-        this.updateContent((event.target as HTMLElement).innerHTML);
+    private emitNewValue() {
+        this.$emit('change', this.internalValue);
     }
 
-    onKeydownEvent(event: KeyboardEvent) {
-        this.oldRange = window.getSelection().getRangeAt(0);
+    /**
+     * Set default value for input
+     */
+    private setDefaultValue() {
+        // Set to min value if min is given and greater than 0. Else set to 0
+        this.internalValue = this.min && this.min > 0 ? this.min : 0;
+        this.inputValue = this.internalValue.toString();
     }
 
-    recoverSelection() {
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(this.oldRange);
-    }
-
-    defaultValueOnBlur(event: any) {
-        const value = event.target.value;
-        if (value === '') {
-            event.target.value = 0;
-        }
-    }
-
-    up() {
-        if (!this.enableUp) {
-            return;
-        }
-        (this.$refs.input as any).focus();
-        this.internalValue++;
-        this.updateContent();
-    }
-
-    down() {
-        if (!this.enableDown) {
-            return;
-        }
-        (this.$refs.input as any).focus();
-        this.internalValue--;
-        this.updateContent();
-    }
-
-    updateContent(str?: string) {
-        if (str == null) {
-            str = `${this.internalValue}`;
-        }
-
-        let newValue = 0;
-        if (this.decimals) {
-            newValue = parseFloat(str);
-        } else if (!this.decimals) {
-            newValue = parseInt(str, 10);
-        }
-
-        if (isNaN(newValue) ||!isFinite(newValue)) {
-            this.recoverSelection();
-            (this.$refs.input as any).innerHTML = this.internalValue;
+    /**
+     * Check value for validity
+     */
+    private checkValue(newValue: number) {
+        // If not a number or infinite, set to last known value
+        if (isNaN(newValue) || !isFinite(newValue)) {
+            this.inputValue = '' + this.internalValue;
 
             return;
         }
 
-        if (typeof this.max === 'number' && newValue > this.max) {
+        // Truncate if no deccimals allowed
+        if (!this.decimals) {
+            newValue = Math.trunc(newValue);
+        }
+
+        // Clamp to avoid getting into 64 bit range
+        newValue = clamp(newValue, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+
+        // Check for max and min ranges
+        if (this.max && newValue > this.max) {
             newValue = this.max;
-            this.enableUp = false;
-        } else {
-            this.enableUp = true;
-        }
-
-        if (typeof this.min === 'number' && newValue < this.min) {
+        } else if (this.min && newValue < this.min) {
             newValue = this.min;
-            this.enableDown = false;
+        }
+
+        // Flag if value has changed
+        const hasChanged = this.internalValue !== newValue;
+
+        // Update internal and input values
+        this.internalValue = newValue;
+        this.inputValue = '' + newValue;
+
+        // Emit event if value has changed
+        if (hasChanged) {
+            this.emitNewValue();
+        }
+    }
+
+    /**
+     * Verifies and updates content for number input
+     */
+    private updateContent(value?: number | string) {
+        // If no value was given, reset to default
+        if (value == null) {
+            value = this.internalValue;
+        }
+
+        let newValue: number;
+
+        // Check if string and try to parse to number
+        if (typeof value === 'string') {
+            value = value.trim().replace(',', '.');
+            this.inputValue = value;
+
+            // Check for decimal mode and use appropriate parse function
+            newValue = Number(value);
         } else {
-            this.enableDown = true;
+            this.inputValue = value.toString();
+            // Just set newValue to value to work with later
+            newValue = value;
         }
 
-        const hasValueChanged = this.internalValue !== newValue;
-        if (hasValueChanged || newValue + '' !== str) {
-            this.internalValue = newValue;
-            if (hasValueChanged) {
-                (this.$refs.input as any).innerHTML = newValue;
-            }
-            this.$emit('change', newValue);
-        }
+        // Execute change on next tick to force update of input if needed
+        this.$nextTick(() => {
+            this.checkValue(newValue);
+        });
     }
 
+    /**
+     * Validator for max property
+     */
+    private validateMaxProperty(val: number): boolean {
+        if (val == null) {
+            return true;
+        }
+
+        if (this.min && this.max < this.min) {
+            throw new RangeError('Maximum has to be greater than minimum!');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validator for min property
+     */
+    private validateMinProperty(val: number): boolean {
+        if (val == null) {
+            return true;
+        }
+
+        if (this.max && this.min > this.max) {
+            throw new RangeError('Minimum has to be less than maximum!');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Watch for changes of value property and verify
+     */
     @Watch('value', { immediate: true })
-    onValuePropChange(val, old) {
-        if (val === old) {
+    onValuePropertyChange(val, old) {
+        if (val === this.internalValue) {
             return;
         }
-        this.internalValue = val;
-        this.updateContent();
-    }
 
-    @Watch('disabled', { immediate: true })
-    onDisabledPropChange(value) {
-        this.internalDisabled = convertToBoolean(value);
-    }
-
-    @Watch('min', { immediate: true })
-    onMinPropChange(val, old) {
-        if (typeof this.max === 'number' && val > this.max) {
-            throw new RangeError(
-                'The minimal amount cannot be higher than the maximal!'
-            );
+        if (this.isMounted) {
+            this.updateContent(val);
         }
-        if (val === old) {
-            return;
-        }
-        this.updateContent();
     }
 
+    /**
+     * Watch for changes of max property and verify
+     */
     @Watch('max', { immediate: true })
-    onMaxPropChange(val, old) {
-        if (typeof this.min === 'number' && val < this.min) {
-            throw new RangeError(
-                'The maximal amount cannot be lower than the minimal!'
-            );
-        }
+    onMaxPropertyChange(val, old) {
         if (val === old) {
             return;
         }
-        this.updateContent();
+
+        if (this.isMounted && this.validateMaxProperty(val)) {
+            this.updateContent();
+        }
+    }
+
+    /**
+     * Watch for changes of min property and verify
+     */
+    @Watch('min', { immediate: true })
+    onMinPropertyChange(val, old) {
+        if (val === old) {
+            return;
+        }
+
+        if (this.isMounted && this.validateMinProperty(val)) {
+            this.updateContent();
+        }
     }
 }
 </script>

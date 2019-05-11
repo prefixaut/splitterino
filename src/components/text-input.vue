@@ -12,6 +12,7 @@
             :disabled="disabled"
             :class="{ outline: outline }"
             @input="onValueInputChange($event)"
+            @blur="$listeners.blur"
         />
     </div>
 </template>
