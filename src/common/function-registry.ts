@@ -1,9 +1,24 @@
 import { remote } from 'electron';
 
+import { ACTION_PAUSE, ACTION_SKIP, ACTION_SPLIT, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
 import { closeWindow, newWindow, reloadWindow } from '../utils/electron';
 import { loadSplitsFromFileToStore, saveSplitsFromStoreToFile } from '../utils/io';
+import {
+    CTX_MENU_KEYBINDINGS_OPEN,
+    CTX_MENU_SETTINGS_OPEN,
+    CTX_MENU_SPLITS_EDIT,
+    CTX_MENU_SPLITS_LOAD_FROM_FILE,
+    CTX_MENU_SPLITS_SAVE_TO_FILE,
+    CTX_MENU_WINDOW_CLOSE,
+    CTX_MENU_WINDOW_RELOAD,
+    KEYBINDING_SPLITS_SKIP,
+    KEYBINDING_SPLITS_SPLIT,
+    KEYBINDING_SPLITS_TOGGLE_PAUSE,
+    KEYBINDING_SPLITS_UNDO,
+} from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { KeybindingActionFunction } from './interfaces/keybindings';
+import { TimerStatus } from './timer-status';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -44,16 +59,16 @@ export function registerDefaultFunctions() {
 }
 
 function registerDefaultContextMenuFunctions() {
-/*
-     * Window Actions
-     */
-    FunctionRegistry.registerContextMenuAction('core.window.reload', reloadWindow);
-    FunctionRegistry.registerContextMenuAction('core.window.close', closeWindow);
+    /*
+         * Window Actions
+         */
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_RELOAD, reloadWindow);
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_CLOSE, closeWindow);
 
     /*
      * Split Actions
      */
-    FunctionRegistry.registerContextMenuAction('core.splits.edit', () => {
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, () => {
         newWindow(
             {
                 title: 'Splits Editor',
@@ -65,17 +80,17 @@ function registerDefaultContextMenuFunctions() {
             '/splits-editor'
         );
     });
-    FunctionRegistry.registerContextMenuAction('core.splits.load-from-file', params =>
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params =>
         loadSplitsFromFileToStore(params.vNode.context.$store)
     );
-    FunctionRegistry.registerContextMenuAction('core.splits.save-to-file', params =>
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
         saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
     );
 
     /*
      * Setting Actions
      */
-    FunctionRegistry.registerContextMenuAction('core.settings.open', () => {
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SETTINGS_OPEN, () => {
         newWindow(
             {
                 title: 'Settings',
@@ -91,7 +106,7 @@ function registerDefaultContextMenuFunctions() {
     /*
      * Keybinding Actions
      */
-    FunctionRegistry.registerContextMenuAction('core.keybindings.open', () => {
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
         newWindow(
             {
                 title: 'Keybindings',
@@ -105,4 +120,26 @@ function registerDefaultContextMenuFunctions() {
     });
 }
 
-function registerDefaultKeybindingFunctions() {}
+function registerDefaultKeybindingFunctions() {
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, params => {
+        params.store.dispatch(ACTION_SPLIT);
+    });
+
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SKIP, params => {
+        params.store.dispatch(ACTION_SKIP);
+    });
+
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_UNDO, params => {
+        params.store.dispatch(ACTION_UNDO);
+    });
+
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_TOGGLE_PAUSE, params => {
+        switch (params.store.state.splitterino.timer.status) {
+            case TimerStatus.RUNNING:
+                params.store.dispatch(ACTION_PAUSE);
+                break;
+            case TimerStatus.PAUSED:
+                params.store.dispatch(ACTION_UNPAUSE);
+        }
+    });
+}

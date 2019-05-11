@@ -1,6 +1,7 @@
 import { Module } from 'vuex';
 
 import { KeybindingsState } from '../states/keybindings.state';
+import { KEYBINDING_SPLITS_SPLIT, KEYBINDING_SPLITS_SKIP, KEYBINDING_SPLITS_UNDO, KEYBINDING_SPLITS_TOGGLE_PAUSE } from '../../common/constants';
 
 const MODULE_PATH = 'splitterino/keybindings';
 
@@ -8,20 +9,20 @@ const moduleState: KeybindingsState = {
     disableBindings: false,
     actions: [
         {
-            id: 'core.splits.split',
+            id: KEYBINDING_SPLITS_SPLIT,
             label: 'Split Segment'
         },
         {
-            id: 'core.splits.skip',
+            id: KEYBINDING_SPLITS_SKIP,
             label: 'Skip Segment'
         },
         {
-            id: 'core.splits.revert',
-            label: 'Revert Segment'
+            id: KEYBINDING_SPLITS_UNDO,
+            label: 'Undo Segment'
         },
         {
-            id: 'core.timer.pause',
-            label: 'Pause/Unpause Timer'
+            id: KEYBINDING_SPLITS_TOGGLE_PAUSE,
+            label: 'Pause/Unpause'
         },
     ],
     bindings: [],
