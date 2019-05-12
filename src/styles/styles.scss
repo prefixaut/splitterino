@@ -1,8 +1,8 @@
-@import "vue-select/src/scss/vue-select.scss";
-
-
 @import './core';
 @import './fonts';
+@import './overrides/vue-select';
+
+@import "vue-select/src/scss/vue-select.scss";
 
 *,
 *::before,

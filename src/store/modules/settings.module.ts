@@ -68,7 +68,10 @@ const getters = {
 };
 
 const mutations = {
-    [ID_MUTATION_SET_SETTING](state: SettingsState, { payload: { key, value } }: { payload: { key: string; value: any } }) {
+    [ID_MUTATION_SET_SETTING](
+        state: SettingsState,
+        { payload: { key, value } }: { payload: { key: string; value: any } }
+    ) {
         set(state.settings, key, value);
     },
     [ID_MUTATION_SAVE_SETTINGS_TO_FILE](state: SettingsState) {
@@ -83,7 +86,10 @@ const actions = {
     [ID_ACTION_SET_SETTING](context: ActionContext<SettingsState, RootState>, payload: any) {
         context.commit(ID_MUTATION_SET_SETTING, payload);
     },
-    [ID_ACTION_SET_ALL_SETTINGS](context: ActionContext<SettingsState, RootState>, { settings }: { settings: Settings }) {
+    [ID_ACTION_SET_ALL_SETTINGS](
+        context: ActionContext<SettingsState, RootState>,
+        { settings }: { settings: Settings }
+    ) {
         context.commit(ID_MUTATION_SET_ALL_SETTINGS, settings);
     },
 };

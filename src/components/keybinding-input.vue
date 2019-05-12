@@ -91,6 +91,17 @@ export default class KeybingingInputComponent extends Vue {
             return;
         }
 
+        switch (event.key) {
+            case 'Shift':
+            case 'Alt':
+            case 'Super':
+            case 'Ctrl':
+            case 'AltGr':
+                break;
+            default:
+                keys.push(event.key);
+        }
+
         this.$set(this.internalValue, 'keys', keys);
         this.$set(this.internalValue, 'accelerator', keys.map(keyToAcceleratorString).join('+'));
         this.$emit('change', this.internalValue);

@@ -13,7 +13,11 @@ export function keyToDisplayString(keyCode: string) {
                     return 'Super';
             }
         default:
-            return keycode.names[keyCode].toUpperCase();
+            if (keycode.names[keyCode] != null) {
+                return keycode.names[keyCode].toUpperCase();
+            } else {
+                return keyCode.toUpperCase();
+            }
     }
 }
 
@@ -27,6 +31,10 @@ export function keyToAcceleratorString(keyCode: string) {
                     return 'Super';
             }
         default:
+        if (keycode.names[keyCode] != null) {
             return keycode.names[keyCode].toUpperCase();
+        } else {
+            return keyCode.toUpperCase();
+        }
     }
 }

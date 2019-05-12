@@ -1,0 +1,42 @@
+$vs-controls-color: $spl-color-off-white;
+
+.v-select {
+    border: 1px solid $spl-color-off-black;
+    background: $spl-color-off-black;
+    color: $spl-color-off-white;
+
+    .vs__actions {
+        .vs__clear {
+            margin-right: 12px;
+            margin-top: 3px;
+            fill: $spl-color-light-danger;
+            
+            &:focus {
+                outline: none;
+                fill: $spl-color-primary;
+            }
+        }
+
+        .vs__open-indicator {
+            fill: $spl-color-off-white;
+            margin-top: 3px;
+        }
+    }
+
+    .vs__selected {
+        color: $spl-color-off-white;
+    }
+
+    .vs__search {
+        color: $spl-color-off-white;
+    }
+
+    &.outline {
+        border-color: $spl-color-dark-gray;
+    }
+
+    &.vs--open {
+        outline: none;
+        border-color: $spl-color-primary !important;
+    }
+}

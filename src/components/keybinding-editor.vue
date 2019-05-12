@@ -2,7 +2,7 @@
     <div class="keybinding-editor">
         <div class="bindings">
             <div class="binding" v-for="(binding, index) of bindings" :key="index">
-                <vue-select :options="actions" v-model="bindings[index].action" />
+                <vue-select class="action-select" :options="actions" v-model="bindings[index].action" />
 
                 <spl-keybinding-input v-model="bindings[index]" />
 
@@ -14,7 +14,7 @@
 
         <spl-button class="add-button" theme="primary" outline @click="addNew()">
             <fa-icon icon="plus" />
-            <span>&nbsp;Add new Segment</span>
+            <span>&nbsp;Add new Keybinding</span>
         </spl-button>
     </div>
 </template>
@@ -60,30 +60,45 @@ export default class KeybindingEditorComponent extends Vue {
 @import '../styles/core';
 
 .keybinding-editor {
+    .binding {
+        display: flex;
+        padding: 0 25px;
+        margin: 15px 0;
+
+        .action-select {
+            flex: 1 1 auto;
+            margin-right: 10px;
+        }
+
+        .keybinding-input {
+            flex: 1 1 auto;
+        }
+
+        .clear {
+            flex: 0 0 auto;
+            margin-left: 10px;
+            cursor: pointer;
+
+            border: 1px solid $spl-color-off-black;
+            background: $spl-color-light-danger;
+            color: $spl-color-off-white;
+            padding: 8px 13px;
+            transition: 200ms;
+
+            &.outline {
+                border-color: $spl-color-primary;
+            }
+
+            &:focus {
+                outline: none;
+                border-color: $spl-color-primary;
+            }
+        }
+    }
+
     .add-button {
         margin: 0 auto;
         display: block;
-    }
-
-    .clear {
-        flex: 0 0 auto;
-        margin-left: 10px;
-        cursor: pointer;
-
-        border: 1px solid $spl-color-off-black;
-        background: $spl-color-light-danger;
-        color: $spl-color-off-white;
-        padding: 8px 13px;
-        transition: 200ms;
-
-        &.outline {
-            border-color: $spl-color-primary;
-        }
-
-        &:focus {
-            outline: none;
-            border-color: $spl-color-primary;
-        }
     }
 }
 </style>
