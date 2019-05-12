@@ -2,7 +2,12 @@
     <div class="keybinding-editor">
         <div class="bindings">
             <div class="binding" v-for="(binding, index) of bindings" :key="index">
-                <vue-select class="action-select" :options="actions" v-model="bindings[index].action" />
+                <vue-select
+                    class="action-select"
+                    :options="actions"
+                    :value="bindings[index].action"
+                    @input="setAction(index, $event)"
+                />
 
                 <spl-keybinding-input :value="bindings[index]" @change="setOptions(index, $event)" />
 
@@ -83,7 +88,7 @@ export default class KeybindingEditorComponent extends Vue {
 .keybinding-editor {
     .binding {
         display: flex;
-        padding: 0 25px;
+        padding: 0 20px;
         margin: 15px 0;
 
         .action-select {
