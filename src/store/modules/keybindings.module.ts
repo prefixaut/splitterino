@@ -42,7 +42,6 @@ const getters = {};
 
 const mutations = {
     [ID_MUTATION_SET_BINDINGS](state: KeybindingsState, payload: ActionKeybinding[]) {
-        console.log('mutation', payload);
         if (!Array.isArray(payload)) {
             return;
         }
@@ -53,7 +52,6 @@ const mutations = {
 
 const actions = {
     [ID_ACTION_SET_BINDINGS](context: ActionContext<KeybindingsState, RootState>, payload: ActionKeybinding[]) {
-        console.log('action', payload);
         if (!Array.isArray(payload)) {
             return false;
         }

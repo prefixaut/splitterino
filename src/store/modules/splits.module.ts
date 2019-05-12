@@ -8,33 +8,33 @@ import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
 
-const MODULE_PATH = 'splitterino/splits';
+export const MODULE_PATH = 'splitterino/splits';
 
-const ID_GETTER_PREVIOUS_SEGMENT = 'previousSegment';
-const ID_GETTER_CURRENT_SEGMENT = 'currentSegment';
-const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
-const ID_GETTER_HAS_NEW_PERSONAL_BEST = 'hasNewPersonalBest';
-const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
+export const ID_GETTER_PREVIOUS_SEGMENT = 'previousSegment';
+export const ID_GETTER_CURRENT_SEGMENT = 'currentSegment';
+export const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
+export const ID_GETTER_HAS_NEW_PERSONAL_BEST = 'hasNewPersonalBest';
+export const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
 
-const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
-const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
-const ID_MUTATION_ADD_SEGMENT = 'addSegment';
-const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
-const ID_MUTATION_SET_SEGMENT = 'setSegment';
-const ID_MUTATION_SET_CURRENT = 'setCurrent';
-const ID_MUTATION_SOFT_RESET = 'softReset';
-const ID_MUTATION_HARD_RESET = 'hardReset';
+export const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
+export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
+export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
+export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
+export const ID_MUTATION_SET_SEGMENT = 'setSegment';
+export const ID_MUTATION_SET_CURRENT = 'setCurrent';
+export const ID_MUTATION_SOFT_RESET = 'softReset';
+export const ID_MUTATION_HARD_RESET = 'hardReset';
 
-const ID_ACTION_START = 'start';
-const ID_ACTION_SPLIT = 'split';
-const ID_ACTION_SKIP = 'skip';
-const ID_ACTION_UNDO = 'undo';
-const ID_ACTION_PAUSE = 'pause';
-const ID_ACTION_UNPAUSE = 'unpause';
-const ID_ACTION_RESET = 'reset';
-const ID_ACTION_SOFT_RESET = 'softReset';
-const ID_ACTION_HARD_RESET = 'hardReset';
-const ID_ACTION_SET_SEGMENTS = 'setSegments';
+export const ID_ACTION_START = 'start';
+export const ID_ACTION_SPLIT = 'split';
+export const ID_ACTION_SKIP = 'skip';
+export const ID_ACTION_UNDO = 'undo';
+export const ID_ACTION_PAUSE = 'pause';
+export const ID_ACTION_UNPAUSE = 'unpause';
+export const ID_ACTION_RESET = 'reset';
+export const ID_ACTION_SOFT_RESET = 'softReset';
+export const ID_ACTION_HARD_RESET = 'hardReset';
+export const ID_ACTION_SET_SEGMENTS = 'setSegments';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
 export const GETTER_CURRENT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_CURRENT_SEGMENT}`;

@@ -1,19 +1,18 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, protocol, globalShortcut } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
+import { merge } from 'lodash';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import { OverlayHostPlugin } from 'vue-overlay-host';
-import Vuex, { Dispatch } from 'vuex';
-import { merge } from 'lodash';
+import Vuex from 'vuex';
 
-import { config as storeConfig } from './store';
-import { RootState } from './store/states/root.state';
-import { Logger } from './utils/logger';
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
-import { ApplicationSettings } from './common/interfaces/application-settings';
-import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from './utils/io';
+import { config as storeConfig, patchBackgroundDispatch } from './store';
+import { RootState } from './store/states/root.state';
+import { loadApplicationSettingsFromFile, saveApplicationSettingsToFile } from './utils/io';
+import { Logger } from './utils/logger';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -31,7 +30,7 @@ import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from '
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
-    const store = new Vuex.Store<RootState>({
+    const store = patchBackgroundDispatch(new Vuex.Store<RootState>({
         ...storeConfig,
         plugins: [
             OverlayHostPlugin,
@@ -43,31 +42,7 @@ import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from '
                 });
             }
         ]
-    });
-
-    const originalStoreDispatch = store.dispatch;
-
-    // tslint:disable-next-line
-    store['_dispatch'] = store.dispatch = function(
-        type: string | { type: string; payload: any },
-        ...payload: any[]
-    ) {
-        if (Array.isArray(payload)) {
-            if (payload.length === 0) {
-                payload = undefined;
-            } else if (payload.length === 1) {
-                payload = payload[0];
-            }
-        }
-
-        // Stolen from vuejs/vuex
-        if (typeof type === 'object' && type.type && arguments.length === 1) {
-            payload = [type.payload];
-            type = type.type;
-        }
-
-        originalStoreDispatch(type as string, ...payload);
-    } as Dispatch;
+    }));
 
     const appSettings = await loadApplicationSettingsFromFile(store);
 
