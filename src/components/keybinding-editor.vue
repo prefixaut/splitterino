@@ -2,11 +2,16 @@
     <div class="keybinding-editor">
         <div class="bindings">
             <div class="binding" v-for="(binding, index) of bindings" :key="index">
-                <vue-select class="action-select" :options="actions" v-model="bindings[index].action" />
+                <vue-select
+                    class="action-select"
+                    :options="actions"
+                    :value="bindings[index].action"
+                    @input="setAction(index, $event)"
+                />
 
-                <spl-keybinding-input v-model="bindings[index]" />
+                <spl-keybinding-input :value="bindings[index]" @change="setOptions(index, $event)" />
 
-                <button class="clear" tabindex="0" title="clear combination" @click="clearInput($event, index)">
+                <button class="clear" tabindex="0" title="clear combination" @click="removeBinding(index, $event)">
                     <fa-icon icon="times" />
                 </button>
             </div>
@@ -16,6 +21,12 @@
             <fa-icon icon="plus" />
             <span>&nbsp;Add new Keybinding</span>
         </spl-button>
+
+        <spl-button
+            theme="info"
+            outline
+            @click="saveBindings()"
+        >Save Keybindings</spl-button>
     </div>
 </template>
 
@@ -23,7 +34,8 @@
 import { Vue, Component } from 'vue-property-decorator';
 import { cloneDeep } from 'lodash';
 
-import { ActionKeybinding, KeybindingDescriptor } from '../common/interfaces/keybindings';
+import { ActionKeybinding, KeybindingDescriptor, Keybinding } from '../common/interfaces/keybindings';
+import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
@@ -37,12 +49,22 @@ export default class KeybindingEditorComponent extends Vue {
             this.$store.state.splitterino.keybindings.bindings || []);
     }
 
-    clearInput(event: MouseEvent, index: number) {
+    setAction(index: number, action: KeybindingDescriptor) {
+        this.bindings[index].action = action.id;
+    }
+
+    setOptions(index: number, options: Keybinding) {
+        this.bindings[index] = {
+            ...this.bindings[index],
+            ...options,
+        };
+    }
+
+    removeBinding(index: number, event: MouseEvent) {
         event.preventDefault();
         event.stopPropagation();
 
-        this.$set(this.bindings[index], 'accelerator', null);
-        this.$set(this.bindings[index], 'keys', []);
+        this.bindings.splice(index, 1);
     }
 
     addNew() {
@@ -53,6 +75,10 @@ export default class KeybindingEditorComponent extends Vue {
             global: true,
         });
     }
+
+    saveBindings() {
+        this.$store.dispatch(ACTION_SET_BINDINGS, [ ...this.bindings]);
+    }
 }
 </script>
 
@@ -62,7 +88,7 @@ export default class KeybindingEditorComponent extends Vue {
 .keybinding-editor {
     .binding {
         display: flex;
-        padding: 0 25px;
+        padding: 0 20px;
         margin: 15px 0;
 
         .action-select {
