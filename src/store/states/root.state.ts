@@ -2,12 +2,14 @@ import { ContextMenuState } from './context-menu.state';
 import { SplitsState } from './splits.state';
 import { TimerState } from './timer.state';
 import { SettingsState } from './settings.state';
+import { KeybindingsState } from './keybindings.state';
 
 export interface RootState {
     splitterino: {
-        timer: TimerState;
-        splits: SplitsState;
         contextMenu: ContextMenuState;
+        keybindings: KeybindingsState;
         settings: SettingsState;
+        splits: SplitsState;
+        timer: TimerState;
     };
 }

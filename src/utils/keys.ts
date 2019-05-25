@@ -2,8 +2,8 @@ import { type } from 'os';
 import * as keycode from 'keycode';
 
 export function keyToDisplayString(keyCode: string) {
-    switch (keyCode) {
-        case 'Super':
+    switch (keyCode.toLowerCase()) {
+        case 'super':
             switch (type()) {
                 case 'Darwin':
                     return '⌘';
@@ -22,8 +22,8 @@ export function keyToDisplayString(keyCode: string) {
 }
 
 export function keyToAcceleratorString(keyCode: string) {
-    switch (keyCode) {
-        case 'Super':
+    switch (keyCode.toLowerCase()) {
+        case 'super':
             switch (type()) {
                 case 'Darwin':
                     return 'Cmd';

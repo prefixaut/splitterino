@@ -44,6 +44,14 @@ export interface ActionKeybinding extends Keybinding {
     action: string;
 }
 
+export function isActionKeybinding(value: any): value is ActionKeybinding {
+    if (value == null || typeof value !== 'object') {
+        return false;
+    }
+
+    return typeof value.accelerator === 'string' && Array.isArray(value.keys) && typeof value.action === 'string';
+}
+
 export interface KeybindingActionFunctionParameters {
     store: Store<RootState>;
 }

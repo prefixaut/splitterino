@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 import { Keybinding } from '../common/interfaces/keybindings';
 import { keyToDisplayString, keyToAcceleratorString } from '../utils/keys';
@@ -116,6 +116,11 @@ export default class KeybingingInputComponent extends Vue {
     globalChange(newValue: boolean) {
         this.$set(this.internalValue, 'global', newValue);
         this.$emit('change', this.internalValue);
+    }
+
+    @Watch('value', { immediate: true, deep: true })
+    onValuePropChange(newValue: any) {
+        this.internalValue = newValue;
     }
 }
 </script>

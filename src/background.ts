@@ -14,6 +14,8 @@ import { Logger } from './utils/logger';
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
 import { ApplicationSettings } from './common/interfaces/application-settings';
 import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from './utils/io';
+import { MUTATION_SET_BINDINGS } from './store/modules/keybindings.module';
+import { FunctionRegistry } from './common/function-registry';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -40,6 +42,26 @@ import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from '
                     Object.keys(clients).forEach(id => {
                         clients[id].send('vuex-apply-mutation', mutation);
                     });
+
+                    // Keybindings got updated, refreshing it on electron
+                    if (mutation.payload === MUTATION_SET_BINDINGS) {
+                        globalShortcut.removeAllListeners();
+                        const state = vuexStore.state.splitterino.keybindings;
+                        const bindings = state.bindings;
+
+                        bindings.forEach(theBinding => {
+                            globalShortcut.register(theBinding.accelerator, () => {
+                                // TODO: Check if global and if the window is focused
+
+                                const actionFn = FunctionRegistry.getKeybindingAction(theBinding.action);
+                                if (typeof actionFn === 'function') {
+                                    actionFn({
+                                        store: vuexStore,
+                                    });
+                                }
+                            });
+                        });
+                    }
                 });
             }
         ]
