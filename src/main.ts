@@ -6,6 +6,7 @@ import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 import draggable from 'vuedraggable';
 import VueSelect from 'vue-select';
+import { Injector } from 'lightweight-di';
 
 import App from './app.vue';
 
@@ -36,9 +37,8 @@ import { getClientStore } from './store';
 import { remote } from 'electron';
 import { loadSettings } from './common/load-settings';
 import { registerDefaultFunctions } from './common/function-registry';
-
-// Global Event Bus
-Vue.prototype.$eventHub = new Vue();
+import { ElectronService } from './services/electron.service';
+import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron-interface';
 
 // FontAwesome Icons
 library.add(fas);
@@ -86,6 +86,15 @@ Vue.filter('aevum', value => {
 
 // Disable tips
 Vue.config.productionTip = false;
+
+// Initialize the Dependency-Injection
+const injector = Injector.resolveAndCreate([
+    { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronService },
+]);
+
+// Update the Prototype with an injector and event-hub
+Vue.prototype.$injector = injector;
+Vue.prototype.$eventHub = new Vue();
 
 // Setup the default/core functions in the Function-Registry
 registerDefaultFunctions();

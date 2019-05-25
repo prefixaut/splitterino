@@ -16,8 +16,8 @@
 </template>
 
 <script lang="ts">
-import { remote } from 'electron';
 import { Vue, Component } from 'vue-property-decorator';
+import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron-interface';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {
@@ -29,7 +29,7 @@ export default class TitleBarComponent extends Vue {
     public maximized = false;
 
     created() {
-        const win = remote.getCurrentWindow();
+        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
         this.minimizable = win.isMinimizable();
         this.maximizable = win.isMaximizable();
         this.closeable = win.isClosable();
@@ -44,14 +44,14 @@ export default class TitleBarComponent extends Vue {
     }
 
     minimize() {
-        const win = remote.getCurrentWindow();
+        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
         if (win != null) {
             win.minimize();
         }
     }
 
     toggleMaximize() {
-        const win = remote.getCurrentWindow();
+        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
         if (win != null) {
             if (win.isMaximized()) {
                 win.unmaximize();
@@ -62,7 +62,7 @@ export default class TitleBarComponent extends Vue {
     }
 
     close() {
-        const win = remote.getCurrentWindow();
+        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
         if (win != null) {
             win.close();
         }
