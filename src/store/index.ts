@@ -1,22 +1,25 @@
 import { ipcRenderer, remote } from 'electron';
+import { Injector } from 'lightweight-di';
 import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex, { Dispatch, Store } from 'vuex';
 
 import { Logger } from '../utils/logger';
-import { splitterinoStoreModules } from './modules/index.module';
+import { getSplitterinoStoreModules } from './modules/index.module';
 import { RootState } from './states/root.state';
 
-export const config = {
-    strict: true,
-    modules: {
-        splitterino: {
-            namespaced: true,
-            modules: splitterinoStoreModules
+export function getStoreConfig(injector: Injector) {
+    return {
+        strict: true,
+        modules: {
+            splitterino: {
+                namespaced: true,
+                modules: getSplitterinoStoreModules(injector)
+            }
         }
-    }
-};
+    };
+}
 
-export function getClientStore(vueRef) {
+export function getClientStore(vueRef, injector: Injector) {
     vueRef.use(Vuex);
 
     const store = new Vuex.Store<RootState>({
@@ -50,7 +53,7 @@ export function getClientStore(vueRef) {
                 });
             },
         ],
-        ...config
+        ...getStoreConfig(injector)
     });
 
     // ! FIXME: Just a workaround for store instantiation
@@ -109,7 +112,7 @@ export function patchBackgroundDispatch(store: Store<RootState>): Store<RootStat
     const originalStoreDispatch = store.dispatch;
 
     // tslint:disable-next-line
-    store['_dispatch'] = store.dispatch = function(
+    store['_dispatch'] = store.dispatch = function (
         type: string | { type: string; payload: any },
         ...payload: any[]
     ) {

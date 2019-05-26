@@ -1,7 +1,6 @@
-import { remote } from 'electron';
+import { Injector } from 'lightweight-di';
 
 import { ACTION_PAUSE, ACTION_SKIP, ACTION_SPLIT, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
-import { closeWindow, newWindow, reloadWindow } from '../utils/electron';
 import { loadSplitsFromFileToStore, saveSplitsFromStoreToFile } from '../utils/io';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
@@ -17,6 +16,7 @@ import {
     KEYBINDING_SPLITS_UNDO,
 } from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
+import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron-interface';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
 
@@ -53,26 +53,27 @@ export abstract class FunctionRegistry {
     }
 }
 
-export function registerDefaultFunctions() {
-    registerDefaultContextMenuFunctions();
+export function registerDefaultFunctions(injector: Injector) {
+    registerDefaultContextMenuFunctions(injector);
     registerDefaultKeybindingFunctions();
 }
 
-function registerDefaultContextMenuFunctions() {
+function registerDefaultContextMenuFunctions(injector: Injector) {
+    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     /*
-         * Window Actions
-         */
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_RELOAD, reloadWindow);
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_CLOSE, closeWindow);
+     * Window Actions
+     */
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_RELOAD, () => electron.reloadCurrentWindow());
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_WINDOW_CLOSE, () => electron.closeCurrentWindow());
 
     /*
      * Split Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, () => {
-        newWindow(
+        electron.newWindow(
             {
                 title: 'Splits Editor',
-                parent: remote.getCurrentWindow(),
+                parent: electron.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
                 modal: true,
@@ -91,10 +92,10 @@ function registerDefaultContextMenuFunctions() {
      * Setting Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SETTINGS_OPEN, () => {
-        newWindow(
+        electron.newWindow(
             {
                 title: 'Settings',
-                parent: remote.getCurrentWindow(),
+                parent: electron.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
                 modal: true,
@@ -107,10 +108,10 @@ function registerDefaultContextMenuFunctions() {
      * Keybinding Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
-        newWindow(
+        electron.newWindow(
             {
                 title: 'Keybindings',
-                parent: remote.getCurrentWindow(),
+                parent: electron.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
                 modal: true,

@@ -4,7 +4,6 @@ import { dirname, join } from 'path';
 import Vue from 'vue';
 
 import { isSplits } from '../common/interfaces/splits';
-import { showOpenDialog, showSaveDialog } from './electron';
 import { Logger } from './logger';
 import { Store } from 'vuex';
 import { RootState } from '../store/states/root.state';

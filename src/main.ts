@@ -97,12 +97,12 @@ Vue.prototype.$injector = injector;
 Vue.prototype.$eventHub = new Vue();
 
 // Setup the default/core functions in the Function-Registry
-registerDefaultFunctions();
+registerDefaultFunctions(injector);
 
 // Initialize the Application
 const vue = new Vue({
     render: h => h(App),
-    store: getClientStore(Vue),
+    store: getClientStore(Vue, injector),
     router
 }).$mount('#app');
 

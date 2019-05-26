@@ -9,10 +9,13 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
-import { config as storeConfig, patchBackgroundDispatch } from './store';
+import { getStoreConfig, patchBackgroundDispatch } from './store';
 import { RootState } from './store/states/root.state';
 import { loadApplicationSettingsFromFile, saveApplicationSettingsToFile } from './utils/io';
 import { Logger } from './utils/logger';
+import { Injector } from 'lightweight-di';
+import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron-interface';
+import { ElectronService } from './services/electron.service';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -28,10 +31,15 @@ import { Logger } from './utils/logger';
 
     const clients: any[] = [];
 
+    // Initialize the Dependency-Injection
+    const injector = Injector.resolveAndCreate([
+        { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronService },
+    ]);
+
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
     const store = patchBackgroundDispatch(new Vuex.Store<RootState>({
-        ...storeConfig,
+        ...getStoreConfig(injector),
         plugins: [
             OverlayHostPlugin,
             vuexStore => {

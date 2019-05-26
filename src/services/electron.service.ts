@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserWindowConstructorOptions, OpenDialogOptions, remote, SaveDialogOptions } from 'electron';
+import { BrowserWindow, BrowserWindowConstructorOptions, OpenDialogOptions, remote, SaveDialogOptions, MessageBoxOptions } from 'electron';
 import { Injectable } from 'lightweight-di';
 
 import { Logger } from '../utils/logger';
@@ -22,6 +22,10 @@ export class ElectronService implements ElectronInterface {
 
     constructor() {
         // No dependencies yet
+    }
+
+    public getWindowById(id: number): BrowserWindow {
+        return BrowserWindow.fromId(id);
     }
 
     public getCurrentWindow(): BrowserWindow {
@@ -56,6 +60,18 @@ export class ElectronService implements ElectronInterface {
                 remote.dialog.showSaveDialog(browserWindow, options, path => resolve(path));
             } catch (e) {
                 Logger.debug('Error while opening file save dialog:', e);
+                reject(e);
+            }
+        });
+    }
+
+    public showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
+        return new Promise((resolve, reject) => {
+            try {
+                Logger.debug('Showing message dialog');
+                remote.dialog.showMessageBox(browserWindow, options, response => resolve(response));
+            } catch (e) {
+                Logger.debug('Error while opening message dialog:', e);
                 reject(e);
             }
         });

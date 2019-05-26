@@ -3,6 +3,7 @@ import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
+import { GETTER_MENUES } from '../store/modules/context-menu.module';
 
 export const contextMenuDirective: DirectiveOptions = {
     bind(element: HTMLElement, binding: VNodeDirective, vNode: VNode) {
@@ -34,7 +35,7 @@ function handleContextMenuEvent(event: MouseEvent, value: string[], vNode: VNode
 }
 
 function openContextMenu(value: string[], vNode: VNode) {
-    const menus: ContextMenuItem[] = vNode.context.$store.getters['splitterino/contextMenu/ctxMenu'](value);
+    const menus: ContextMenuItem[] = vNode.context.$store.getters[GETTER_MENUES](value);
     const contextMenu = new remote.Menu();
 
     menus.forEach(menu => {
