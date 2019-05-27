@@ -10,12 +10,17 @@ cache:
   - node_modules/
   - .yarn
 
+stages:
+  - test
+
 before_script:
   # Install extra package to build native modules
   - yarn global add node-gyp
 
 unit_test:
   stage: test
+  tags:
+   - node
   script:
    - yarn config set cache-folder .yarn
    - yarn
