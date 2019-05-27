@@ -2,34 +2,36 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
+import { remote } from 'electron';
 import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
+import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
 import App from './app.vue';
+import { registerDefaultFunctions } from './common/function-registry';
 import ButtonComponent from './components/button.vue';
+import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
 import GameInfoEditorComponent from './components/game-info-editor.vue';
+import KeybindingEditorComponent from './components/keybinding-editor.vue';
+import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
+import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
+import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
+import SettingsEditorComponent from './components/settings-editor.vue';
 import SplitsEditorComponent from './components/splits-editor.vue';
 import SplitsComponent from './components/splits.vue';
 import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
-import SettingsEditorComponent from './components/settings-editor.vue';
-import SettingsEditorGroupComponent from './components/settings-editor-group.vue';
-import SettingsEditorMainComponent from './components/settings-editor-main.vue';
-
-import { contextMenuDirective } from './directives/context-menu.directive';
+import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
-import { remote } from 'electron';
-import { loadSettings } from './common/load-settings';
-import { registerDefaultFunctions } from './common/function-registry';
+import { createInjector } from './utils/services';
 
-// Global Event Bus
-Vue.prototype.$eventHub = new Vue();
+const injector = createInjector();
 
 // FontAwesome Icons
 library.add(fas);
@@ -41,10 +43,16 @@ Vue.component('draggable', draggable);
 // Overlay Host
 Vue.component('vue-overlay-host', OverlayHost);
 
+// Select
+Vue.component('vue-select', VueSelect);
+
 // Register Components
 Vue.component('spl-button', ButtonComponent);
+Vue.component('spl-checkbox', CheckboxComponent);
 Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);
 Vue.component('spl-game-info-editor', GameInfoEditorComponent);
+Vue.component('spl-keybinding-editor', KeybindingEditorComponent);
+Vue.component('spl-keybinding-input', KeybindingInputComponent);
 Vue.component('spl-number-input', NumberInputComponent);
 Vue.component('spl-splits-editor', SplitsEditorComponent);
 Vue.component('spl-splits', SplitsComponent);
@@ -53,11 +61,11 @@ Vue.component('spl-time-input', TimeInputComponent);
 Vue.component('spl-timer', TimerComponent);
 Vue.component('spl-title-bar', TitleBarComponent);
 Vue.component('spl-settings-editor', SettingsEditorComponent);
-Vue.component('spl-settings-editor-group', SettingsEditorGroupComponent);
-Vue.component('spl-settings-editor-main', SettingsEditorMainComponent);
+Vue.component('spl-settings-editor-setting', SettingsEditorSettingComponent);
+Vue.component('spl-settings-editor-sidebar-entry', SettingsEditorSidebarEntryComponent);
 
 // Register Directives
-Vue.directive('spl-ctx-menu', contextMenuDirective);
+Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));
 
 // Register Filters
 const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
@@ -72,13 +80,17 @@ Vue.filter('aevum', value => {
 // Disable tips
 Vue.config.productionTip = false;
 
+// Update the Prototype with an injector and event-hub
+Vue.prototype.$injector = injector;
+Vue.prototype.$eventHub = new Vue();
+
 // Setup the default/core functions in the Function-Registry
-registerDefaultFunctions();
+registerDefaultFunctions(injector);
 
 // Initialize the Application
 const vue = new Vue({
     render: h => h(App),
-    store: getClientStore(Vue),
+    store: getClientStore(Vue, injector),
     router
 }).$mount('#app');
 

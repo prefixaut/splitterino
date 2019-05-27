@@ -22,7 +22,7 @@ import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
 
 import { convertToBoolean,convertToNumber } from '../utils/converters';
 
-@Component
+@Component({ name: 'spl-text-input' })
 export default class TextInputComponent extends Vue {
     @Model('change', String)
     public value: string;

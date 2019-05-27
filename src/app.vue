@@ -8,10 +8,13 @@
 </template>
 
 <script lang="ts">
+import { Vue, Component } from 'vue-property-decorator';
+
+export default class AppComponent extends Vue { }
 </script>
 
 <style lang="scss">
-@import "./styles/styles";
+@import './styles/styles';
 
 #app {
     overflow: hidden;

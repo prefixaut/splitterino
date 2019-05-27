@@ -1,23 +1,25 @@
 import { ipcRenderer, remote } from 'electron';
+import { Injector } from 'lightweight-di';
 import { OverlayHostPlugin } from 'vue-overlay-host';
-import Vuex, { Dispatch } from 'vuex';
-import { merge, cloneDeep } from 'lodash';
+import Vuex, { Dispatch, Store } from 'vuex';
 
-import { splitterinoStoreModules } from './modules/index.module';
 import { Logger } from '../utils/logger';
+import { getSplitterinoStoreModules } from './modules/index.module';
 import { RootState } from './states/root.state';
 
-export const config = {
-    strict: true,
-    modules: {
-        splitterino: {
-            namespaced: true,
-            modules: splitterinoStoreModules
+export function getStoreConfig(injector: Injector) {
+    return {
+        strict: true,
+        modules: {
+            splitterino: {
+                namespaced: true,
+                modules: getSplitterinoStoreModules(injector)
+            }
         }
-    }
-};
+    };
+}
 
-export function getClientStore(vueRef) {
+export function getClientStore(vueRef, injector: Injector) {
     vueRef.use(Vuex);
 
     const store = new Vuex.Store<RootState>({
@@ -51,7 +53,7 @@ export function getClientStore(vueRef) {
                 });
             },
         ],
-        ...config
+        ...getStoreConfig(injector)
     });
 
     // ! FIXME: Just a workaround for store instantiation
@@ -102,6 +104,34 @@ export function getClientStore(vueRef) {
             store.commit(type, payload);
         }
     });
+
+    return store;
+}
+
+export function patchBackgroundDispatch(store: Store<RootState>): Store<RootState> {
+    const originalStoreDispatch = store.dispatch;
+
+    // tslint:disable-next-line
+    store['_dispatch'] = store.dispatch = function (
+        type: string | { type: string; payload: any },
+        ...payload: any[]
+    ) {
+        if (Array.isArray(payload)) {
+            if (payload.length === 0) {
+                payload = undefined;
+            } else if (payload.length === 1) {
+                payload = payload[0];
+            }
+        }
+
+        // Stolen from vuejs/vuex
+        if (typeof type === 'object' && type.type && arguments.length === 1) {
+            payload = [type.payload];
+            type = type.type;
+        }
+
+        originalStoreDispatch(type as string, ...payload);
+    } as Dispatch;
 
     return store;
 }

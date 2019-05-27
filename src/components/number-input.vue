@@ -18,7 +18,7 @@ import { clamp } from 'lodash';
 import { convertToBoolean } from '../utils/converters';
 import TextInputComponent from './text-input.vue';
 
-@Component
+@Component({ name: 'spl-number-input' })
 export default class NumberInputComponent extends Vue {
     @Model('change', { type: [Number, String] })
     public value: number | string;
@@ -109,7 +109,7 @@ export default class NumberInputComponent extends Vue {
     private checkValue(newValue: number) {
         // If not a number or infinite, set to last known value
         if (isNaN(newValue) || !isFinite(newValue)) {
-            this.inputValue = '' + this.internalValue;
+            this.inputValue = `${this.internalValue}`;
 
             return;
         }
@@ -134,7 +134,7 @@ export default class NumberInputComponent extends Vue {
 
         // Update internal and input values
         this.internalValue = newValue;
-        this.inputValue = '' + newValue;
+        this.inputValue = `${newValue}`;
 
         // Emit event if value has changed
         if (hasChanged) {

@@ -1,5 +1,14 @@
 import { Module } from 'vuex';
 
+import {
+    CTX_MENU_KEYBINDINGS_OPEN,
+    CTX_MENU_SETTINGS_OPEN,
+    CTX_MENU_SPLITS_EDIT,
+    CTX_MENU_SPLITS_LOAD_FROM_FILE,
+    CTX_MENU_SPLITS_SAVE_TO_FILE,
+    CTX_MENU_WINDOW_CLOSE,
+    CTX_MENU_WINDOW_RELOAD,
+} from '../../common/constants';
 import { ContextMenuState } from '../states/context-menu.state';
 
 const MODULE_PATH = 'splitterino/contextMenu';
@@ -12,31 +21,37 @@ const moduleState: ContextMenuState = {
     def: [
         {
             label: 'Reload',
-            actions: ['core.window.reload'],
+            actions: [CTX_MENU_WINDOW_RELOAD],
         },
         {
             label: 'Exit',
-            actions: ['core.window.close'],
+            actions: [CTX_MENU_WINDOW_CLOSE],
         },
     ],
     splitter: [
         {
             label: 'Edit Splits ...',
-            actions: ['core.splits.edit'],
+            actions: [CTX_MENU_SPLITS_EDIT],
         },
         {
             label: 'Load Splits ...',
-            actions: ['core.splits.load-from-file'],
+            actions: [CTX_MENU_SPLITS_LOAD_FROM_FILE],
         },
         {
             label: 'Save Splits ...',
-            actions: ['core.splits.save-to-file'],
+            actions: [CTX_MENU_SPLITS_SAVE_TO_FILE],
         },
     ],
     settings: [
         {
             label: 'Settings ...',
-            actions: ['core.settings.open'],
+            actions: [CTX_MENU_SETTINGS_OPEN],
+        },
+    ],
+    keybindings: [
+        {
+            label: 'Keybindings ...',
+            actions: [CTX_MENU_KEYBINDINGS_OPEN],
         },
     ],
 };

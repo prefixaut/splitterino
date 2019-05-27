@@ -15,7 +15,7 @@ import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 
-@Component
+@Component({ name: 'spl-timer' })
 export default class TimerComponent extends Vue {
     @timer.State('status')
     public status: TimerStatus;

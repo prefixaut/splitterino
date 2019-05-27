@@ -1,11 +1,17 @@
-import { contextMenuStoreModule } from './context-menu.module';
-import { splitsStoreModule } from './splits.module';
-import { timerStoreModule } from './timer.module';
-import { settingsStoreModule } from './settings.module';
+import { Injector } from 'lightweight-di';
 
-export const splitterinoStoreModules = {
-    contextMenu: contextMenuStoreModule,
-    splits: splitsStoreModule,
-    timer: timerStoreModule,
-    settings: settingsStoreModule
-};
+import { contextMenuStoreModule } from './context-menu.module';
+import { keybindingsStoreModule } from './keybindings.module';
+import { getSettingsStoreModule } from './settings.module';
+import { getSplitsStoreModule } from './splits.module';
+import { timerStoreModule } from './timer.module';
+
+export function getSplitterinoStoreModules(injector: Injector) {
+    return {
+        contextMenu: contextMenuStoreModule,
+        keybindings: keybindingsStoreModule,
+        settings: getSettingsStoreModule(injector),
+        splits: getSplitsStoreModule(injector),
+        timer: timerStoreModule,
+    };
+}

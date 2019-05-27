@@ -1,7 +1,8 @@
 <template>
-    <div class="settings-editor-main">
+    <div class="settings-editor-setting">
         <div v-for="(item, index) in activeSettingsConfig" :key="index">
-            <div>{{ item.label }}</div>
+            <div class="label">{{ item.label }}</div>
+
             <component
                 :is="item.component"
                 :value="getSettingByPath(activeSettingsPath + '.' + item.key, item.defaultValue)"
@@ -20,8 +21,8 @@ import { SettingsConfigurationObject } from '../store/states/settings.state';
 
 const settingsModule = namespace('splitterino/settings');
 
-@Component
-export default class SettingsEditorMainComponent extends Vue {
+@Component({ name: 'spl-settings-editor-setting' })
+export default class SettingsEditorSettingComponent extends Vue {
     @Prop()
     public activeSettingsConfig: SettingsConfigurationObject[];
 
@@ -49,3 +50,11 @@ export default class SettingsEditorMainComponent extends Vue {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.settings-editor-setting {
+    .label {
+        margin-bottom: 5px;
+    }
+}
+</style>

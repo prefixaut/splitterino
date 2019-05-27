@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-@Component
+@Component({ name: 'spl-configuration-editor' })
 export default class ConfigurationEditorComponent extends Vue { }
 </script>
 

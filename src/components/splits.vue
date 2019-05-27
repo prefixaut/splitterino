@@ -66,7 +66,7 @@ import { now } from '../utils/time';
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
-@Component
+@Component({ name: 'spl-splits' })
 export default class SplitsComponent extends Vue {
     /**
      * Amount of upcoming segments which should be visible
