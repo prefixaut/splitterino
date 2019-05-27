@@ -64,6 +64,8 @@ export const ACTION_HARD_RESET = `${MODULE_PATH}/${ID_ACTION_HARD_RESET}`;
 export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
 
 export function getSplitsStoreModule(injector: Injector): Module<SplitsState, RootState> {
+    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+
     return {
         namespaced: true,
         state: {
@@ -497,7 +499,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 let win = null;
-                const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
                 const id: number = (payload || {}).windowId;
 
                 if (typeof id === 'number' && !isNaN(id) && isFinite(id)) {

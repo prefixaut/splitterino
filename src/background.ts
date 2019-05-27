@@ -9,13 +9,11 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
+import { IOService } from './services/io.service';
 import { getStoreConfig, patchBackgroundDispatch } from './store';
 import { RootState } from './store/states/root.state';
-import { loadApplicationSettingsFromFile, saveApplicationSettingsToFile } from './utils/io';
 import { Logger } from './utils/logger';
-import { Injector } from 'lightweight-di';
-import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron-interface';
-import { ElectronService } from './services/electron.service';
+import { createInjector } from './utils/services';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -32,9 +30,8 @@ import { ElectronService } from './services/electron.service';
     const clients: any[] = [];
 
     // Initialize the Dependency-Injection
-    const injector = Injector.resolveAndCreate([
-        { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronService },
-    ]);
+    const injector = createInjector();
+    const io = injector.get(IOService);
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
@@ -52,7 +49,7 @@ import { ElectronService } from './services/electron.service';
         ]
     }));
 
-    const appSettings = await loadApplicationSettingsFromFile(store);
+    const appSettings = await io.loadApplicationSettingsFromFile(store);
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
@@ -103,7 +100,7 @@ import { ElectronService } from './services/electron.service';
         }
 
         window.on('close', () => {
-            saveApplicationSettingsToFile(mainWindow, store);
+            io.saveApplicationSettingsToFile(mainWindow, store);
         });
 
         window.on('closed', () => {

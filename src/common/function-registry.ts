@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 
+import { IOService } from '../services/io.service';
 import { ACTION_PAUSE, ACTION_SKIP, ACTION_SPLIT, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
-import { loadSplitsFromFileToStore, saveSplitsFromStoreToFile } from '../utils/io';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -60,6 +60,8 @@ export function registerDefaultFunctions(injector: Injector) {
 
 function registerDefaultContextMenuFunctions(injector: Injector) {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const io = injector.get(IOService);
+
     /*
      * Window Actions
      */
@@ -82,10 +84,10 @@ function registerDefaultContextMenuFunctions(injector: Injector) {
         );
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params =>
-        loadSplitsFromFileToStore(params.vNode.context.$store)
+        io.loadSplitsFromFileToStore(params.vNode.context.$store)
     );
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
-        saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
+        io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
     );
 
     /*

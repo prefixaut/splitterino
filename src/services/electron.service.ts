@@ -1,8 +1,21 @@
-import { BrowserWindow, BrowserWindowConstructorOptions, OpenDialogOptions, remote, SaveDialogOptions, MessageBoxOptions } from 'electron';
+import {
+    app,
+    BrowserWindow,
+    BrowserWindowConstructorOptions,
+    Menu,
+    MenuItemConstructorOptions,
+    MessageBoxOptions,
+    OpenDialogOptions,
+    remote,
+    SaveDialogOptions,
+} from 'electron';
 import { Injectable } from 'lightweight-di';
+import { VNode } from 'vue';
 
-import { Logger } from '../utils/logger';
+import { FunctionRegistry } from '../common/function-registry';
+import { ContextMenuItem } from '../common/interfaces/context-menu-item';
 import { ElectronInterface } from '../common/interfaces/electron-interface';
+import { Logger } from '../utils/logger';
 
 @Injectable
 export class ElectronService implements ElectronInterface {
@@ -22,6 +35,14 @@ export class ElectronService implements ElectronInterface {
 
     constructor() {
         // No dependencies yet
+    }
+
+    public isRenderProcess() {
+        return !!remote;
+    }
+
+    public getAppPath() {
+        return this.isRenderProcess() ? remote.app.getAppPath() : app.getAppPath();
     }
 
     public getWindowById(id: number): BrowserWindow {
@@ -89,5 +110,43 @@ export class ElectronService implements ElectronInterface {
 
         win.loadURL(this.url + route);
         win.show();
+    }
+
+    public createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {
+        const contextMenu = new Menu();
+
+        menuItems.forEach(menu => {
+            const options = this.prepareMenuItemOptions(menu, vNode);
+            contextMenu.append(new remote.MenuItem(options));
+        });
+
+        return contextMenu;
+    }
+
+    private prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode): MenuItemConstructorOptions {
+        const options: MenuItemConstructorOptions = {
+            label: menuItem.label,
+            enabled: menuItem.enabled,
+            visible: menuItem.visible,
+        };
+
+        if (Array.isArray(menuItem.actions)) {
+            options.click = (electronMenuItem, browserWindow, event) => {
+                menuItem.actions
+                    .filter(actionName => typeof actionName === 'string' && actionName.length > 0)
+                    .map(actionName => FunctionRegistry.getContextMenuAction(actionName))
+                    .filter(action => typeof action === 'function')
+                    .forEach(action =>
+                        action({
+                            vNode,
+                            menuItem: electronMenuItem,
+                            browserWindow,
+                            event,
+                        })
+                    );
+            };
+        }
+
+        return options;
     }
 }

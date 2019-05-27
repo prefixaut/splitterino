@@ -1,5 +1,3 @@
-import { remote } from 'electron';
-
 export enum LogLevel {
     ERROR = 0b00010,
     WARN = 0b00100,
@@ -58,11 +56,7 @@ export class Logger {
         const messageStr = messages.map(elm => String(elm)).join('\n');
 
         if (isUserWarning > 0) {
-            remote.dialog.showMessageBox(remote.getCurrentWindow(), {
-                title: prefix,
-                message: messageStr,
-                type: messageBoxType,
-            });
+            // TODO: Open Electron window?
         }
     }
 

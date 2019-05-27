@@ -1,13 +1,15 @@
 import { set, get } from 'lodash';
 import Vue from 'vue';
+import { Injector } from 'lightweight-di';
 
 import { RootState } from '../store/states/root.state';
 import { SettingsConfigurationObject, SettingsGroupConfigurationObject } from '../store/states/settings.state';
-import { loadJSONFromFile } from '../utils/io';
 import { Logger } from '../utils/logger';
+import { IOService } from '../services/io.service';
 
-export function loadSettings(vue: Vue) {
-    const settings = loadJSONFromFile('settings.json');
+export function loadSettings(vue: Vue, injector: Injector) {
+    const io = injector.get(IOService);
+    const settings = io.loadJSONFromFile('settings.json');
     const config = (vue.$store.state as RootState).splitterino.settings.configuration;
 
     const loopOverGroup = (

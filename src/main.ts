@@ -2,15 +2,14 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
+import { remote } from 'electron';
 import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
-import draggable from 'vuedraggable';
 import VueSelect from 'vue-select';
-import { Injector } from 'lightweight-di';
+import draggable from 'vuedraggable';
 
 import App from './app.vue';
-
-// Components
+import { registerDefaultFunctions } from './common/function-registry';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
@@ -18,27 +17,21 @@ import GameInfoEditorComponent from './components/game-info-editor.vue';
 import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
+import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
+import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
+import SettingsEditorComponent from './components/settings-editor.vue';
 import SplitsEditorComponent from './components/splits-editor.vue';
 import SplitsComponent from './components/splits.vue';
 import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
-import SettingsEditorComponent from './components/settings-editor.vue';
-import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
-import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
-
-// Directives
-import { contextMenuDirective } from './directives/context-menu.directive';
-
-// Misc
+import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
-import { remote } from 'electron';
-import { loadSettings } from './common/load-settings';
-import { registerDefaultFunctions } from './common/function-registry';
-import { ElectronService } from './services/electron.service';
-import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron-interface';
+import { createInjector } from './utils/services';
+
+const injector = createInjector();
 
 // FontAwesome Icons
 library.add(fas);
@@ -72,7 +65,7 @@ Vue.component('spl-settings-editor-setting', SettingsEditorSettingComponent);
 Vue.component('spl-settings-editor-sidebar-entry', SettingsEditorSidebarEntryComponent);
 
 // Register Directives
-Vue.directive('spl-ctx-menu', contextMenuDirective);
+Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));
 
 // Register Filters
 const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
@@ -86,11 +79,6 @@ Vue.filter('aevum', value => {
 
 // Disable tips
 Vue.config.productionTip = false;
-
-// Initialize the Dependency-Injection
-const injector = Injector.resolveAndCreate([
-    { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronService },
-]);
 
 // Update the Prototype with an injector and event-hub
 Vue.prototype.$injector = injector;
