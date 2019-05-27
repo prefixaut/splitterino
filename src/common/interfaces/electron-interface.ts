@@ -21,7 +21,7 @@ export interface ElectronInterface {
     showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]>;
     showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string>;
     showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number>;
-    newWindow(settings: BrowserWindowConstructorOptions, route: string): void;
+    newWindow(settings: BrowserWindowConstructorOptions, route: string): BrowserWindow;
     createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu;
 }
 

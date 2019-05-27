@@ -110,6 +110,8 @@ export class ElectronService implements ElectronInterface {
 
         win.loadURL(this.url + route);
         win.show();
+
+        return win;
     }
 
     public createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {

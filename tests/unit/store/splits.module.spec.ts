@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { Injector } from 'lightweight-di';
 import { v4 as uuid } from 'uuid';
 import { Module } from 'vuex';
 
@@ -13,11 +12,10 @@ import {
 import { RootState } from '../../../src/store/states/root.state';
 import { SplitsState } from '../../../src/store/states/splits.state';
 import { ElectronMockService } from '../../mocks/electron-mock.service';
+import { createMockInjector } from '../../mocks/mocks';
 
 // Initialize the Dependency-Injection
-const injector = Injector.resolveAndCreate([
-    { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronMockService },
-]);
+const injector = createMockInjector();
 
 describe('Splits Store-Module', () => {
     describe('mutations', () => {
@@ -33,6 +31,7 @@ describe('Splits Store-Module', () => {
                 name: 'test',
             };
 
+            // const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
             const module: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
 
             module.mutations[ID_MUTATION_ADD_SEGMENT](state, segment);
