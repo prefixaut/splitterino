@@ -1,19 +1,18 @@
 import { BrowserWindow, FileFilter } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { Injectable } from 'lightweight-di';
+import { Inject, Injectable } from 'lightweight-di';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
-import { ElectronInterface } from '../common/interfaces/electron-interface';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron-interface';
 import { isSplits } from '../common/interfaces/splits';
 import { RootState } from '../store/states/root.state';
-import { loadFile } from '../utils/io';
 import { Logger } from '../utils/logger';
 
 @Injectable
 export class IOService {
-    constructor(protected electron: ElectronInterface) { }
+    constructor(@Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface) { }
 
     protected readonly assetDir = join(this.electron.getAppPath(), 'resources');
     protected readonly appSettingsFileName = 'application-settings.json';
@@ -63,7 +62,7 @@ export class IOService {
 
     public loadJSONFromFile(path: string, basePath: string = this.assetDir): any {
         try {
-            return JSON.parse(loadFile(path, basePath));
+            return JSON.parse(this.loadFile(path, basePath));
         } catch (e) {
             Logger.error('Error parsing JSON', e);
         }

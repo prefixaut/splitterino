@@ -95,5 +95,5 @@ export function getSettingsStoreModule(injector: Injector): Module<SettingsState
                 context.commit(ID_MUTATION_SET_ALL_SETTINGS, settings);
             },
         },
-    }
+    };
 }
