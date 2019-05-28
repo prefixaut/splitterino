@@ -17,12 +17,13 @@ export const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
 export const ID_GETTER_HAS_NEW_PERSONAL_BEST = 'hasNewPersonalBest';
 export const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
 
+export const ID_MUTATION_SET_CURRENT = 'setCurrent';
+export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
 export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
 export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
 export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_MUTATION_SET_SEGMENT = 'setSegment';
-export const ID_MUTATION_SET_CURRENT = 'setCurrent';
 export const ID_MUTATION_SOFT_RESET = 'softReset';
 export const ID_MUTATION_HARD_RESET = 'hardReset';
 
@@ -43,12 +44,13 @@ export const GETTER_NEXT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_NEXT_SEGMENT}`;
 export const GETTER_HAS_NEW_PERSONAL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_PERSONAL_BEST}`;
 export const GETTER_HAS_NEW_OVERALL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_OVERALL_BEST}`;
 
+export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
+export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
 export const MUTATION_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_CLEAR_SEGMENTS}`;
 export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGMENT}`;
 export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
 export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SEGMENTS}`;
 export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
-export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
 export const MUTATION_SOFT_RESET = `${MODULE_PATH}/${ID_MUTATION_SOFT_RESET}`;
 export const MUTATION_HARD_RESET = `${MODULE_PATH}/${ID_MUTATION_HARD_RESET}`;
 
@@ -62,6 +64,19 @@ export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_SOFT_RESET = `${MODULE_PATH}/${ID_ACTION_SOFT_RESET}`;
 export const ACTION_HARD_RESET = `${MODULE_PATH}/${ID_ACTION_HARD_RESET}`;
 export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
+
+function resetSegment(segment: Segment): Segment {
+    return {
+        ...segment,
+        hasNewOverallBest: false,
+        hasNewPersonalBest: false,
+        previousOverallBest: -1,
+        previousPersonalBest: -1,
+        startTime: -1,
+        skipped: false,
+        passed: false,
+    };
+}
 
 export function getSplitsStoreModule(injector: Injector): Module<SplitsState, RootState> {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
@@ -117,33 +132,21 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             }
         },
         mutations: {
-            [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
-                state.segments = [];
-            },
-            [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
+            [ID_MUTATION_SET_CURRENT](state: SplitsState, index: number) {
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
                     !isFinite(index) ||
-                    index < 0 ||
-                    state.segments.length < index
+                    index < -1 ||
+                    index > state.segments.length
                 ) {
                     return;
                 }
 
-                state.segments.splice(index, 1);
+                state.current = index;
+            },
+            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
+                state.currentOpenFile = filePath;
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
                 /*
@@ -207,43 +210,40 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 state.segments[index] = { ...state.segments[index], ...segment };
             },
-            [ID_MUTATION_SET_CURRENT](state: SplitsState, index: number) {
+            [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
+                /*
+                if (state.status !== TimerStatus.STOPPED) {
+                    return;
+                }
+                */
+
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
                     !isFinite(index) ||
-                    index < -1 ||
-                    index > state.segments.length
+                    index < 0 ||
+                    state.segments.length < index
                 ) {
                     return;
                 }
 
-                state.current = index;
+                state.segments.splice(index, 1);
+            },
+            [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
+                /*
+                if (state.status !== TimerStatus.STOPPED) {
+                    return;
+                }
+                */
+
+                state.segments = [];
             },
             [ID_MUTATION_SOFT_RESET](state: SplitsState) {
-                state.segments = state.segments.map(segment => ({
-                    ...segment,
-                    hasNewOverallBest: false,
-                    hasNewPersonalBest: false,
-                    previousOverallBest: -1,
-                    previousPersonalBest: -1,
-                    startTime: -1,
-                    skipped: false,
-                    passed: false,
-                }));
+                state.segments = state.segments.map(resetSegment);
             },
             [ID_MUTATION_HARD_RESET](state: SplitsState) {
                 state.segments = state.segments.map(segment => {
-                    const newSegment = {
-                        ...segment,
-                        hasNewOverallBest: false,
-                        hasNewPersonalBest: false,
-                        previousOverallBest: -1,
-                        previousPersonalBest: -1,
-                        startTime: -1,
-                        skipped: false,
-                        passed: false,
-                    };
+                    const newSegment = resetSegment(segment);
 
                     if (segment.hasNewPersonalBest) {
                         newSegment.personalBest = segment.previousPersonalBest;
@@ -255,9 +255,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     return newSegment;
                 });
             },
-            setCurrentOpenFile(state: SplitsState, filePath: string) {
-                state.currentOpenFile = filePath;
-            }
         },
         actions: {
             [ID_ACTION_START](context: ActionContext<SplitsState, RootState>) {

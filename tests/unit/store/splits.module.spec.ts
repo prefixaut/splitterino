@@ -22,6 +22,8 @@ import {
     ID_MUTATION_SOFT_RESET,
     MUTATION_HARD_RESET,
     ID_MUTATION_HARD_RESET,
+    MUTATION_SET_CURRENT_OPEN_FILE,
+    ID_MUTATION_SET_CURRENT_OPEN_FILE,
 } from '../../../src/store/modules/splits.module';
 import { RootState } from '../../../src/store/states/root.state';
 import { SplitsState } from '../../../src/store/states/splits.state';
@@ -61,18 +63,133 @@ describe('Splits Store-Module', () => {
     // const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
 
     describe('mutations', () => {
-        it(MUTATION_CLEAR_SEGMENTS, () => {
+        it(MUTATION_SET_CURRENT, () => {
+            const newCurrent = 15;
+
+            const state: SplitsState = {
+                current: -1,
+                currentOpenFile: null,
+                segments: generateSegmentArray(20),
+            };
+
+            module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
+            expect(state.current).to.equal(newCurrent);
+
+            [
+                null,
+                undefined,
+                'invalid',
+                NaN,
+                -NaN,
+                Infinity,
+                -Infinity,
+                -2,
+                state.segments.length,
+                {},
+                [],
+                true,
+                false
+            ].forEach(invalidCurrent => {
+                module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
+                expect(state.current).to.equal(newCurrent);
+            });
+        });
+
+        it (MUTATION_SET_CURRENT_OPEN_FILE, () => {
+            const state: SplitsState = {
+                current: -1,
+                currentOpenFile: null,
+                segments: [],
+            };
+
+            const newCurrentFile = 'test';
+            module.mutations[ID_MUTATION_SET_CURRENT_OPEN_FILE](state, newCurrentFile);
+
+            expect(state.currentOpenFile).to.equal(newCurrentFile);
+        });
+
+        it(MUTATION_ADD_SEGMENT, () => {
+            const state: SplitsState = {
+                current: -1,
+                currentOpenFile: null,
+                segments: [],
+            };
+
+            const segmentOne: Segment = {
+                id: uuid(),
+                name: 'test',
+            };
+
+            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentOne);
+
+            expect(state.segments.length).to.equal(1);
+            expect(state.segments[0].id).to.equal(segmentOne.id);
+
+            const segmentTwo: Segment = {
+                id: uuid(),
+                name: 'test',
+            };
+
+            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentTwo);
+
+            expect(state.segments.length).to.equal(2);
+            expect(state.segments[0].id).to.equal(segmentOne.id);
+            expect(state.segments[1].id).to.equal(segmentTwo.id);
+
+            const segmentThree: Segment = {
+                id: uuid(),
+                name: 'test',
+            };
+
+            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentThree);
+
+            expect(state.segments.length).to.equal(3);
+            expect(state.segments[0].id).to.equal(segmentOne.id);
+            expect(state.segments[1].id).to.equal(segmentTwo.id);
+            expect(state.segments[2].id).to.equal(segmentThree.id);
+        });
+
+        it(MUTATION_SET_SEGMENT, () => {
             const state: SplitsState = {
                 current: -1,
                 currentOpenFile: null,
                 segments: [
-                    { id: 'test', name: 'test' },
-                ],
+                    { id: '0', name: '0' },
+                    { id: '1', name: '1' },
+                    { id: '2', name: '2' },
+                ]
             };
 
-            module.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
+            const newSegment: Segment = {
+                id: uuid(),
+                name: 'test'
+            };
 
-            expect(state.segments.length).to.equal(0);
+            module.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
+
+            expect(state.segments.length).to.equal(3);
+            expect(state.segments[0].id).to.equal(newSegment.id);
+            expect(state.segments[1].id).to.equal('1');
+            expect(state.segments[2].id).to.equal('2');
+        });
+
+        it(MUTATION_SET_ALL_SEGMENTS, () => {
+            const originalSegments = generateSegmentArray(5);
+            const state: SplitsState = {
+                current: -1,
+                currentOpenFile: null,
+                segments: originalSegments.slice(0),
+            };
+
+            expect(state.segments.length).to.equal(originalSegments.length);
+            expect(state.segments).to.deep.eq(originalSegments);
+
+            const newSegments = generateSegmentArray(10);
+
+            module.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, newSegments);
+
+            expect(state.segments.length).to.equal(newSegments.length);
+            expect(state.segments).to.deep.eq(newSegments);
         });
 
         describe(MUTATION_REMOVE_SEGMENT, () => {
@@ -129,120 +246,18 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        it(MUTATION_ADD_SEGMENT, () => {
-            const state: SplitsState = {
-                current: -1,
-                currentOpenFile: null,
-                segments: [],
-            };
-
-            const segmentOne: Segment = {
-                id: uuid(),
-                name: 'test',
-            };
-
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentOne);
-
-            expect(state.segments.length).to.equal(1);
-            expect(state.segments[0].id).to.equal(segmentOne.id);
-
-            const segmentTwo: Segment = {
-                id: uuid(),
-                name: 'test',
-            };
-
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentTwo);
-
-            expect(state.segments.length).to.equal(2);
-            expect(state.segments[0].id).to.equal(segmentOne.id);
-            expect(state.segments[1].id).to.equal(segmentTwo.id);
-
-            const segmentThree: Segment = {
-                id: uuid(),
-                name: 'test',
-            };
-
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentThree);
-
-            expect(state.segments.length).to.equal(3);
-            expect(state.segments[0].id).to.equal(segmentOne.id);
-            expect(state.segments[1].id).to.equal(segmentTwo.id);
-            expect(state.segments[2].id).to.equal(segmentThree.id);
-        });
-
-        it(MUTATION_SET_ALL_SEGMENTS, () => {
-            const originalSegments = generateSegmentArray(5);
-            const state: SplitsState = {
-                current: -1,
-                currentOpenFile: null,
-                segments: originalSegments.slice(0),
-            };
-
-            expect(state.segments.length).to.equal(originalSegments.length);
-            expect(state.segments).to.deep.eq(originalSegments);
-
-            const newSegments = generateSegmentArray(10);
-
-            module.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, newSegments);
-
-            expect(state.segments.length).to.equal(newSegments.length);
-            expect(state.segments).to.deep.eq(newSegments);
-        });
-
-        it(MUTATION_SET_SEGMENT, () => {
+        it(MUTATION_CLEAR_SEGMENTS, () => {
             const state: SplitsState = {
                 current: -1,
                 currentOpenFile: null,
                 segments: [
-                    { id: '0', name: '0' },
-                    { id: '1', name: '1' },
-                    { id: '2', name: '2' },
-                ]
+                    { id: 'test', name: 'test' },
+                ],
             };
 
-            const newSegment: Segment = {
-                id: uuid(),
-                name: 'test'
-            };
+            module.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
 
-            module.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
-
-            expect(state.segments.length).to.equal(3);
-            expect(state.segments[0].id).to.equal(newSegment.id);
-            expect(state.segments[1].id).to.equal('1');
-            expect(state.segments[2].id).to.equal('2');
-        });
-
-        it(MUTATION_SET_CURRENT, () => {
-            const newCurrent = 15;
-
-            const state: SplitsState = {
-                current: -1,
-                currentOpenFile: null,
-                segments: generateSegmentArray(20),
-            };
-
-            module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
-            expect(state.current).to.equal(newCurrent);
-
-            [
-                null,
-                undefined,
-                'invalid',
-                NaN,
-                -NaN,
-                Infinity,
-                -Infinity,
-                -2,
-                state.segments.length,
-                {},
-                [],
-                true,
-                false
-            ].forEach(invalidCurrent => {
-                module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
-                expect(state.current).to.equal(newCurrent);
-            });
+            expect(state.segments.length).to.equal(0);
         });
 
         it(MUTATION_SOFT_RESET, () => {
