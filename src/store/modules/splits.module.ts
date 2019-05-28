@@ -229,26 +229,30 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     previousPersonalBest: -1,
                     startTime: -1,
                     skipped: false,
-                    passed: false
+                    passed: false,
                 }));
             },
             [ID_MUTATION_HARD_RESET](state: SplitsState) {
                 state.segments = state.segments.map(segment => {
-                    if (segment.hasNewPersonalBest) {
-                        segment.personalBest = segment.previousPersonalBest;
-                    }
-                    segment.hasNewPersonalBest = false;
-                    if (segment.hasNewOverallBest) {
-                        segment.overallBest = segment.previousOverallBest;
-                    }
-                    segment.hasNewOverallBest = false;
-                    segment.previousOverallBest = 0;
-                    segment.previousPersonalBest = 0;
-                    segment.startTime = 0;
-                    segment.skipped = false;
-                    segment.passed = false;
+                    const newSegment = {
+                        ...segment,
+                        hasNewOverallBest: false,
+                        hasNewPersonalBest: false,
+                        previousOverallBest: -1,
+                        previousPersonalBest: -1,
+                        startTime: -1,
+                        skipped: false,
+                        passed: false,
+                    };
 
-                    return segment;
+                    if (segment.hasNewPersonalBest) {
+                        newSegment.personalBest = segment.previousPersonalBest;
+                    }
+                    if (segment.hasNewOverallBest) {
+                        newSegment.overallBest = segment.previousOverallBest;
+                    }
+
+                    return newSegment;
                 });
             },
             setCurrentOpenFile(state: SplitsState, filePath: string) {
