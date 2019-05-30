@@ -257,12 +257,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
         },
         actions: {
-            [ID_ACTION_START](context: ActionContext<SplitsState, RootState>) {
+            [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
 
-                if (status !== TimerStatus.STOPPED) {
-                    return;
+                if (status !== TimerStatus.STOPPED || context.state.segments.length < 1) {
+                    return Promise.resolve(false);
                 }
 
                 context.commit(
@@ -281,6 +281,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     }
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, 0);
+
+                return Promise.resolve(true);
             },
             [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>) {
                 const currentTime = now();
@@ -312,6 +314,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     (currentSegment.pauseTime || 0);
 
                 currentSegment.passed = true;
+                currentSegment.skipped = false;
                 currentSegment.time = time;
 
                 if (

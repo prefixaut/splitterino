@@ -1,38 +1,46 @@
 import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
-import { Module } from 'vuex';
+import Vue from 'vue';
+import Vuex, { Module } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../../src/common/interfaces/electron-interface';
 import { Segment } from '../../../src/common/interfaces/segment';
+import { TimerStatus } from '../../../src/common/timer-status';
 import {
+    ACTION_START,
     getSplitsStoreModule,
+    ID_ACTION_START,
     ID_MUTATION_ADD_SEGMENT,
+    ID_MUTATION_CLEAR_SEGMENTS,
+    ID_MUTATION_HARD_RESET,
+    ID_MUTATION_REMOVE_SEGMENT,
+    ID_MUTATION_SET_ALL_SEGMENTS,
+    ID_MUTATION_SET_CURRENT,
+    ID_MUTATION_SET_CURRENT_OPEN_FILE,
+    ID_MUTATION_SET_SEGMENT,
+    ID_MUTATION_SOFT_RESET,
     MUTATION_ADD_SEGMENT,
     MUTATION_CLEAR_SEGMENTS,
-    ID_MUTATION_CLEAR_SEGMENTS,
-    MUTATION_REMOVE_SEGMENT,
-    ID_MUTATION_REMOVE_SEGMENT,
-    MUTATION_SET_ALL_SEGMENTS,
-    ID_MUTATION_SET_ALL_SEGMENTS,
-    MUTATION_SET_SEGMENT,
-    ID_MUTATION_SET_SEGMENT,
-    MUTATION_SET_CURRENT,
-    ID_MUTATION_SET_CURRENT,
-    MUTATION_SOFT_RESET,
-    ID_MUTATION_SOFT_RESET,
     MUTATION_HARD_RESET,
-    ID_MUTATION_HARD_RESET,
+    MUTATION_REMOVE_SEGMENT,
+    MUTATION_SET_ALL_SEGMENTS,
+    MUTATION_SET_CURRENT,
     MUTATION_SET_CURRENT_OPEN_FILE,
-    ID_MUTATION_SET_CURRENT_OPEN_FILE,
+    MUTATION_SET_SEGMENT,
+    MUTATION_SOFT_RESET,
+    ACTION_SPLIT,
+    ID_ACTION_SPLIT,
 } from '../../../src/store/modules/splits.module';
+import { MUTATION_SET_STATUS, timerStoreModule } from '../../../src/store/modules/timer.module';
 import { RootState } from '../../../src/store/states/root.state';
 import { SplitsState } from '../../../src/store/states/splits.state';
-import { ElectronMockService } from '../../mocks/electron-mock.service';
-import { createMockInjector } from '../../mocks/mocks';
+import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
+import { createMockInjector, testAction } from '../../mocks/utils';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
+
+Vue.use(Vuex);
 
 function randomInt(max: number, min: number = 1): number {
     return Math.max(min, Math.floor(Math.random() * Math.floor(max)));
@@ -59,7 +67,8 @@ function generateSegmentArray(size: number): Segment[] {
 }
 
 describe('Splits Store-Module', () => {
-    const module: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
+    const splitsModule: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
+    const timerModule: Module<TimerState, RootState> = timerStoreModule;
     // const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
 
     describe('mutations', () => {
@@ -72,7 +81,7 @@ describe('Splits Store-Module', () => {
                 segments: generateSegmentArray(20),
             };
 
-            module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
+            splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
             expect(state.current).to.equal(newCurrent);
 
             [
@@ -90,12 +99,12 @@ describe('Splits Store-Module', () => {
                 true,
                 false
             ].forEach(invalidCurrent => {
-                module.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
+                splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
                 expect(state.current).to.equal(newCurrent);
             });
         });
 
-        it (MUTATION_SET_CURRENT_OPEN_FILE, () => {
+        it(MUTATION_SET_CURRENT_OPEN_FILE, () => {
             const state: SplitsState = {
                 current: -1,
                 currentOpenFile: null,
@@ -103,7 +112,7 @@ describe('Splits Store-Module', () => {
             };
 
             const newCurrentFile = 'test';
-            module.mutations[ID_MUTATION_SET_CURRENT_OPEN_FILE](state, newCurrentFile);
+            splitsModule.mutations[ID_MUTATION_SET_CURRENT_OPEN_FILE](state, newCurrentFile);
 
             expect(state.currentOpenFile).to.equal(newCurrentFile);
         });
@@ -120,7 +129,7 @@ describe('Splits Store-Module', () => {
                 name: 'test',
             };
 
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentOne);
+            splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentOne);
 
             expect(state.segments.length).to.equal(1);
             expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -130,7 +139,7 @@ describe('Splits Store-Module', () => {
                 name: 'test',
             };
 
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentTwo);
+            splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentTwo);
 
             expect(state.segments.length).to.equal(2);
             expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -141,7 +150,7 @@ describe('Splits Store-Module', () => {
                 name: 'test',
             };
 
-            module.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentThree);
+            splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentThree);
 
             expect(state.segments.length).to.equal(3);
             expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -165,7 +174,7 @@ describe('Splits Store-Module', () => {
                 name: 'test'
             };
 
-            module.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
+            splitsModule.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
 
             expect(state.segments.length).to.equal(3);
             expect(state.segments[0].id).to.equal(newSegment.id);
@@ -186,7 +195,7 @@ describe('Splits Store-Module', () => {
 
             const newSegments = generateSegmentArray(10);
 
-            module.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, newSegments);
+            splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, newSegments);
 
             expect(state.segments.length).to.equal(newSegments.length);
             expect(state.segments).to.deep.eq(newSegments);
@@ -204,7 +213,7 @@ describe('Splits Store-Module', () => {
                         segments: originalSegments.slice(0),
                     };
 
-                    module.mutations[ID_MUTATION_REMOVE_SEGMENT](state, deleteIndex);
+                    splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, deleteIndex);
 
                     // Create a copy
                     const expectedSegments = originalSegments.slice(0);
@@ -239,7 +248,7 @@ describe('Splits Store-Module', () => {
                     true,
                     false
                 ].forEach(value => {
-                    module.mutations[ID_MUTATION_REMOVE_SEGMENT](state, value);
+                    splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, value);
                     expect(state.segments.length).to.equal(originalSegments.length);
                     expect(state.segments).to.deep.eq(originalSegments);
                 });
@@ -255,7 +264,7 @@ describe('Splits Store-Module', () => {
                 ],
             };
 
-            module.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
+            splitsModule.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
 
             expect(state.segments.length).to.equal(0);
         });
@@ -269,7 +278,7 @@ describe('Splits Store-Module', () => {
                 segments: originalSegments.slice(0),
             };
 
-            module.mutations[ID_MUTATION_SOFT_RESET](state, null);
+            splitsModule.mutations[ID_MUTATION_SOFT_RESET](state, null);
 
             state.segments.forEach((segment, index) => {
                 expect(segment.id).to.equal(originalSegments[index].id);
@@ -347,7 +356,7 @@ describe('Splits Store-Module', () => {
                 segments: originalSegments.slice(0),
             };
 
-            module.mutations[ID_MUTATION_HARD_RESET](state, null);
+            splitsModule.mutations[ID_MUTATION_HARD_RESET](state, null);
 
             expect(state.segments[0].id).to.equal(originalSegments[0].id);
             expect(state.segments[0].name).to.equal(originalSegments[0].name);
@@ -404,6 +413,227 @@ describe('Splits Store-Module', () => {
             expect(state.segments[3].startTime).to.equal(-1);
             expect(state.segments[3].skipped).to.equal(false);
             expect(state.segments[3].passed).to.equal(false);
+        });
+    });
+
+    describe('actions', () => {
+        describe(ACTION_START, () => {
+            it('should start the splits and timer', async () => {
+                const startTime = now();
+                const segments = generateSegmentArray(5);
+                const state = {
+                    current: -1,
+                    currentOpenFile: null,
+                    segments: segments,
+                };
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.STOPPED,
+                            startTime: -1,
+                        },
+                    }
+                };
+
+                const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
+                    state, rootState
+                });
+
+                expect(commits).to.have.lengthOf(3);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+
+                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits[0].payload).to.exist;
+                // Either current time or +1, as it may be a millisecond off
+                expect(commits[0].payload.time).to.be.within(startTime, startTime + 1);
+                expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
+
+                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits[1].payload).to.exist;
+                expect(commits[1].payload.index).to.equal(0);
+                expect(commits[1].payload.segment.id).to.equal(segments[0].id);
+                expect(commits[1].payload.segment.startTime).to.be.within(startTime, startTime + 1);
+
+                expect(commits[2]).to.deep.equal({ type: ID_MUTATION_SET_CURRENT, payload: 0 });
+            });
+
+            it('should not start without segments', async () => {
+                const state = {
+                    current: -1,
+                    currentOpenFile: null,
+                    segments: [],
+                };
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.STOPPED,
+                            startTime: -1,
+                        },
+                    }
+                };
+
+                const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
+                    state, rootState
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+            });
+
+            it('should not start when the timer is not stopped', async () => {
+                const state = {
+                    current: -1,
+                    currentOpenFile: null,
+                    segments: [],
+                };
+
+                const statuses = [TimerStatus.FINISHED, TimerStatus.PAUSED, TimerStatus.RUNNING];
+                for (const status of statuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: -1,
+                            },
+                        }
+                    };
+
+                    const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
+                        state, rootState
+                    });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                }
+            });
+        });
+
+        describe(ACTION_SPLIT, () => {
+            it('should split to the next segment', async () => {
+                const segmentTime = 20_000;
+                const segments: Segment[] = [
+                    null,
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: now() - segmentTime,
+                        personalBest: -1,
+                        overallBest: -1,
+                    },
+                    {
+                        id: uuid(),
+                        name: 'next',
+                        time: 123,
+                        passed: true,
+                        skipped: true,
+                    }
+                ];
+                const currentIndex = 1;
+                const state = {
+                    current: currentIndex,
+                    currentOpenFile: null,
+                    segments: segments.slice(0),
+                };
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        },
+                    }
+                };
+
+                const time = now();
+                const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
+                    state,
+                    rootState,
+                });
+
+                expect(commits).to.be.lengthOf(3);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+
+                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits[0].payload).to.exist;
+                expect(commits[0].payload.index).to.equal(currentIndex);
+                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
+                expect(commits[0].payload.segment.time).to.be.within(segmentTime, segmentTime + 1);
+                expect(commits[0].payload.segment.passed).to.equal(true);
+                expect(commits[0].payload.segment.skipped).to.equal(false);
+                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(true);
+                expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
+
+                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits[1].payload).to.exist;
+                expect(commits[1].payload.index).to.equal(currentIndex + 1);
+                expect(commits[1].payload.segment.id).to.equal(segments[currentIndex + 1].id);
+                expect(commits[1].payload.segment.startTime).to.be.within(time, time + 1);
+                expect(commits[1].payload.segment.passed).to.equal(false);
+                expect(commits[1].payload.segment.skipped).to.equal(false);
+
+                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].payload).to.equal(currentIndex + 1);
+            });
+
+            it('should apply personal bests correctly', async () => {
+                const segmentTime = 20_000;
+                const personalBest = 25_000;
+                const segments: Segment[] = [
+                    null,
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: now() - segmentTime,
+                        personalBest: personalBest,
+                        overallBest: -1,
+                    },
+                    {
+                        id: uuid(),
+                        name: 'next',
+                        time: 123,
+                        passed: true,
+                        skipped: true,
+                    }
+                ];
+                const currentIndex = 1;
+                const state = {
+                    current: currentIndex,
+                    currentOpenFile: null,
+                    segments: segments.slice(0),
+                };
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        },
+                    }
+                };
+
+                const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
+                    state,
+                    rootState,
+                });
+
+                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
+                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(true);
+                expect(commits[0].payload.segment.personalBest).to.equal(segmentTime);
+                expect(commits[0].payload.segment.previousPersonalBest).to.equal(personalBest);
+            });
         });
     });
 });
