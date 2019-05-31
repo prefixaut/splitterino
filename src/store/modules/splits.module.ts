@@ -328,6 +328,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     currentSegment.hasNewPersonalBest = true;
                 } else {
                     currentSegment.hasNewPersonalBest = false;
+                    currentSegment.previousPersonalBest = -1;
                 }
 
                 if (
@@ -341,6 +342,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     currentSegment.hasNewOverallBest = true;
                 } else {
                     currentSegment.hasNewOverallBest = false;
+                    currentSegment.previousOverallBest = -1;
                 }
 
                 context.commit(ID_MUTATION_SET_SEGMENT, {

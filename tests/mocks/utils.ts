@@ -62,7 +62,7 @@ export async function testAction<S, R>(
     };
 
     // call the action with mocked store and arguments
-    await (action as MockedAction<S, R>)({
+    const response = await (action as MockedAction<S, R>)({
         ...context,
         commit,
         dispatch,
@@ -71,5 +71,6 @@ export async function testAction<S, R>(
     return {
         commits,
         dispatches,
+        response,
     };
 }
