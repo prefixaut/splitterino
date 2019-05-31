@@ -13,10 +13,6 @@ cache:
 stages:
   - test
 
-before_script:
-  # Install extra package to build native modules
-  - yarn global add node-gyp
-
 unit_test:
   stage: test
   tags:
