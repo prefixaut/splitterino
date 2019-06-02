@@ -6,9 +6,16 @@ import Vuex, { Module } from 'vuex';
 import { Segment } from '../../../src/common/interfaces/segment';
 import { TimerStatus } from '../../../src/common/timer-status';
 import {
+    ACTION_SKIP,
+    ACTION_SPLIT,
     ACTION_START,
+    ACTION_UNDO,
     getSplitsStoreModule,
+    ID_ACTION_SKIP,
+    ID_ACTION_SOFT_RESET,
+    ID_ACTION_SPLIT,
     ID_ACTION_START,
+    ID_ACTION_UNDO,
     ID_MUTATION_ADD_SEGMENT,
     ID_MUTATION_CLEAR_SEGMENTS,
     ID_MUTATION_HARD_RESET,
@@ -27,9 +34,6 @@ import {
     MUTATION_SET_CURRENT_OPEN_FILE,
     MUTATION_SET_SEGMENT,
     MUTATION_SOFT_RESET,
-    ACTION_SPLIT,
-    ID_ACTION_SPLIT,
-    ID_ACTION_SOFT_RESET,
 } from '../../../src/store/modules/splits.module';
 import { MUTATION_SET_STATUS, timerStoreModule } from '../../../src/store/modules/timer.module';
 import { RootState } from '../../../src/store/states/root.state';
@@ -37,7 +41,6 @@ import { SplitsState } from '../../../src/store/states/splits.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, testAction } from '../../mocks/utils';
-import { ACTION_SKIP, ID_ACTION_SKIP } from '../../../src/store/modules/splits.module';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
@@ -49,23 +52,21 @@ function randomInt(max: number, min: number = 1): number {
 }
 
 function generateSegmentArray(size: number): Segment[] {
-    return new Array(size)
-        .fill(null)
-        .map(_ => ({
-            id: uuid(),
-            name: 'test',
-            time: randomInt(99999),
-            hasNewOverallBest: true,
-            hasNewPersonalBest: true,
-            overallBest: randomInt(99999),
-            passed: true,
-            pauseTime: randomInt(99999),
-            personalBest: randomInt(99999),
-            previousOverallBest: randomInt(99999),
-            previousPersonalBest: randomInt(99999),
-            skipped: false,
-            startTime: now(),
-        }));
+    return new Array(size).fill(null).map(_ => ({
+        id: uuid(),
+        name: 'test',
+        time: randomInt(99999),
+        hasNewOverallBest: true,
+        hasNewPersonalBest: true,
+        overallBest: randomInt(99999),
+        passed: true,
+        pauseTime: randomInt(99999),
+        personalBest: randomInt(99999),
+        previousOverallBest: randomInt(99999),
+        previousPersonalBest: randomInt(99999),
+        skipped: false,
+        startTime: now(),
+    }));
 }
 
 describe('Splits Store-Module', () => {
@@ -100,7 +101,7 @@ describe('Splits Store-Module', () => {
                     {},
                     [],
                     true,
-                    false
+                    false,
                 ].forEach(invalidCurrent => {
                     splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
                     expect(state.current).to.equal(newCurrent);
@@ -171,16 +172,12 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     currentOpenFile: null,
-                    segments: [
-                        { id: '0', name: '0' },
-                        { id: '1', name: '1' },
-                        { id: '2', name: '2' },
-                    ]
+                    segments: [{ id: '0', name: '0' }, { id: '1', name: '1' }, { id: '2', name: '2' }],
                 };
 
                 const newSegment: Segment = {
                     id: uuid(),
-                    name: 'test'
+                    name: 'test',
                 };
 
                 splitsModule.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
@@ -258,7 +255,7 @@ describe('Splits Store-Module', () => {
                     {},
                     [],
                     true,
-                    false
+                    false,
                 ].forEach(value => {
                     splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, value);
                     expect(state.segments.length).to.equal(originalSegments.length);
@@ -272,9 +269,7 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     currentOpenFile: null,
-                    segments: [
-                        { id: 'test', name: 'test' },
-                    ],
+                    segments: [{ id: 'test', name: 'test' }],
                 };
 
                 splitsModule.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
@@ -364,7 +359,7 @@ describe('Splits Store-Module', () => {
                         overallBest: randomInt(99999),
                         hasNewOverallBest: true,
                         previousOverallBest: randomInt(99999),
-                    }
+                    },
                 ];
 
                 const state: SplitsState = {
@@ -451,11 +446,12 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.STOPPED,
                             startTime: -1,
                         },
-                    }
+                    },
                 };
 
                 const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
-                    state, rootState
+                    state,
+                    rootState,
                 });
 
                 expect(commits).to.have.lengthOf(3);
@@ -492,11 +488,12 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.STOPPED,
                             startTime: -1,
                         },
-                    }
+                    },
                 };
 
                 const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
-                    state, rootState
+                    state,
+                    rootState,
                 });
 
                 // tslint:disable-next-line:no-unused-expression
@@ -521,11 +518,12 @@ describe('Splits Store-Module', () => {
                                 status: status,
                                 startTime: -1,
                             },
-                        }
+                        },
                     };
 
                     const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_START], {
-                        state, rootState
+                        state,
+                        rootState,
                     });
 
                     // tslint:disable-next-line:no-unused-expression
@@ -549,8 +547,8 @@ describe('Splits Store-Module', () => {
                         timer: {
                             status: TimerStatus.STOPPED,
                             startTime: randomInt(99999),
-                        }
-                    }
+                        },
+                    },
                 };
 
                 const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
@@ -581,7 +579,7 @@ describe('Splits Store-Module', () => {
                         time: 123,
                         passed: true,
                         skipped: true,
-                    }
+                    },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
@@ -596,7 +594,7 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
                         },
-                    }
+                    },
                 };
 
                 const time = now();
@@ -652,7 +650,7 @@ describe('Splits Store-Module', () => {
                         time: 123,
                         passed: true,
                         skipped: true,
-                    }
+                    },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
@@ -667,7 +665,7 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
                         },
-                    }
+                    },
                 };
 
                 const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
@@ -703,7 +701,7 @@ describe('Splits Store-Module', () => {
                         time: 123,
                         passed: true,
                         skipped: true,
-                    }
+                    },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
@@ -718,7 +716,7 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
                         },
-                    }
+                    },
                 };
 
                 const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
@@ -754,7 +752,7 @@ describe('Splits Store-Module', () => {
                         time: 123,
                         passed: true,
                         skipped: true,
-                    }
+                    },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
@@ -769,7 +767,7 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
                         },
-                    }
+                    },
                 };
 
                 const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
@@ -805,7 +803,7 @@ describe('Splits Store-Module', () => {
                         time: 123,
                         passed: true,
                         skipped: true,
-                    }
+                    },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
@@ -820,7 +818,7 @@ describe('Splits Store-Module', () => {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
                         },
-                    }
+                    },
                 };
 
                 const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
@@ -849,12 +847,13 @@ describe('Splits Store-Module', () => {
                         timer: {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
-                        }
-                    }
+                        },
+                    },
                 };
 
                 const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
-                    state, rootState,
+                    state,
+                    rootState,
                 });
 
                 expect(commits).to.be.lengthOf(2);
@@ -877,12 +876,13 @@ describe('Splits Store-Module', () => {
                         timer: {
                             status: TimerStatus.FINISHED,
                             startTime: randomInt(99999),
-                        }
-                    }
+                        },
+                    },
                 };
 
                 const { commits, dispatches } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
-                    state, rootState,
+                    state,
+                    rootState,
                 });
 
                 // tslint:disable-next-line:no-unused-expression
@@ -911,12 +911,13 @@ describe('Splits Store-Module', () => {
                         timer: {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
-                        }
-                    }
+                        },
+                    },
                 };
 
                 const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
-                    state, rootState
+                    state,
+                    rootState,
                 });
 
                 expect(commits).to.be.lengthOf(2);
@@ -954,12 +955,13 @@ describe('Splits Store-Module', () => {
                             timer: {
                                 status: status,
                                 startTime: randomInt(99999),
-                            }
-                        }
+                            },
+                        },
                     };
 
                     const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
-                        state, rootState
+                        state,
+                        rootState,
                     });
 
                     // tslint:disable-next-line:no-unused-expression
@@ -985,12 +987,149 @@ describe('Splits Store-Module', () => {
                         timer: {
                             status: TimerStatus.RUNNING,
                             startTime: randomInt(99999),
-                        }
-                    }
+                        },
+                    },
                 };
 
                 const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
-                    state, rootState
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(response).to.equal(false);
+            });
+        });
+
+        describe(ACTION_UNDO, () => {
+            it('should undo the most recent split', async () => {
+                const pauseTime = randomInt(99999);
+                const segments: Segment[] = [
+                    {
+                        id: uuid(),
+                        name: 'first',
+                        startTime: randomInt(99999),
+                    },
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: randomInt(99999),
+                        pauseTime: pauseTime,
+                        personalBest: randomInt(99999),
+                        hasNewPersonalBest: true,
+                        previousPersonalBest: randomInt(99999),
+                        overallBest: randomInt(99999),
+                        hasNewOverallBest: true,
+                        previousOverallBest: randomInt(99999),
+                    },
+                ];
+                const currentIndex = 1;
+                const state: SplitsState = {
+                    current: currentIndex,
+                    currentOpenFile: null,
+                    segments: segments.slice(0),
+                };
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        },
+                    },
+                };
+
+                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
+                    state,
+                    rootState,
+                });
+
+                expect(commits).to.be.lengthOf(3);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(response).to.equal(true);
+
+                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].payload.index).to.equal(currentIndex);
+                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
+                expect(commits[0].payload.segment.startTime).to.equal(-1);
+                expect(commits[0].payload.segment.time).to.equal(-1);
+                expect(commits[0].payload.segment.passed).to.equal(false);
+                expect(commits[0].payload.segment.skipped).to.equal(false);
+                expect(commits[0].payload.segment.pauseTime).to.equal(0);
+                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].previousPersonalBest);
+                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(false);
+                expect(commits[0].payload.segment.previousPersonalBest).to.equal(-1);
+                expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
+                expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
+                expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
+
+                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
+                expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
+                expect(commits[1].payload.segment.time).to.equal(-1);
+                expect(commits[1].payload.segment.passed).to.equal(false);
+                expect(commits[1].payload.segment.skipped).to.equal(false);
+                expect(commits[1].payload.segment.pauseTime).to.equal(pauseTime);
+
+                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].payload).to.equal(currentIndex - 1);
+            });
+
+            it('should not undo when the timer is not running', async () => {
+                const state: SplitsState = {
+                    current: 1,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                };
+                const invalidStatuses = [TimerStatus.STOPPED, TimerStatus.PAUSED, TimerStatus.FINISHED];
+                for (const status of invalidStatuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            },
+                        },
+                    };
+
+                    const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
+                        state,
+                        rootState,
+                    });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(response).to.equal(false);
+                }
+            });
+
+            it('should not undo when it is the first segment', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        },
+                    },
+                };
+
+                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
+                    state,
+                    rootState,
                 });
 
                 // tslint:disable-next-line:no-unused-expression

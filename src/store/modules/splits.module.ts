@@ -404,13 +404,13 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const index = context.state.current;
 
                 if (status !== TimerStatus.RUNNING || index < 1) {
-                    return;
+                    return false;
                 }
 
                 const segment: Segment = {
                     ...context.state.segments[index],
-                    startTime: 0,
-                    time: 0,
+                    startTime: -1,
+                    time: -1,
                     passed: false,
                     skipped: false
                 };
@@ -418,26 +418,33 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 // Revert PB
                 if (segment.hasNewPersonalBest) {
                     segment.personalBest = segment.previousPersonalBest;
-                    segment.previousPersonalBest = -1;
                     segment.hasNewPersonalBest = false;
                 }
+                segment.previousPersonalBest = -1;
 
                 // Revert OB
                 if (segment.hasNewOverallBest) {
                     segment.overallBest = segment.previousOverallBest;
-                    segment.previousOverallBest = -1;
                     segment.hasNewOverallBest = false;
                 }
+                segment.previousOverallBest = -1;
 
-                const previous: Segment = { ...context.state.segments[index - 1] };
+                const previous: Segment = {
+                    ...context.state.segments[index - 1],
+                    time: -1,
+                    passed: false,
+                    skipped: false,
+                };
                 // Add the pause time of the the current segment to the previous
-                previous.pauseTime += segment.pauseTime;
+                previous.pauseTime = Math.max((previous.pauseTime || 0), 0) + segment.pauseTime;
                 // Clear the pause time afterwards
                 segment.pauseTime = 0;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
                 context.commit(ID_MUTATION_SET_CURRENT, index - 1);
+
+                return true;
             },
             [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>) {
                 const time = now();
