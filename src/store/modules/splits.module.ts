@@ -376,33 +376,28 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context.commit(ID_MUTATION_SET_CURRENT, currentIndex + 1);
             },
             [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>) {
-                const time = now();
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
                 if (
                     status !== TimerStatus.RUNNING ||
-                    index >= context.state.segments.length
+                    index >= context.state.segments.length - 1
                 ) {
-                    return;
+                    return false;
                 }
 
                 const segment: Segment = {
                     ...context.state.segments[index],
-                    time: 0,
-                    startTime: 0,
+                    time: -1,
+                    startTime: -1,
                     skipped: true,
                     passed: false
                 };
 
-                const next: Segment = {
-                    ...context.state.segments[index + 1],
-                    startTime: time
-                };
-
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
-                context.commit(ID_MUTATION_SET_SEGMENT, { index: index + 1, segment: next });
                 context.commit(ID_MUTATION_SET_CURRENT, index + 1);
+
+                return true;
             },
             [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>) {
                 const status = context.rootState.splitterino.timer.status;

@@ -37,6 +37,7 @@ import { SplitsState } from '../../../src/store/states/splits.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, testAction } from '../../mocks/utils';
+import { ACTION_SKIP, ID_ACTION_SKIP } from '../../../src/store/modules/splits.module';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
@@ -683,7 +684,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
             });
 
-            it('should NOT apply personal bests', async () => {
+            it('should not apply personal bests', async () => {
                 const segmentTime = 25_000;
                 const personalBest = 20_000;
                 const overallBest = 10_000;
@@ -785,7 +786,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(overallBest);
             });
 
-            it('should NOT apply overall bests', async () => {
+            it('should not apply overall bests', async () => {
                 const segmentTime = 25_000;
                 const personalBest = 20_000;
                 const overallBest = 10_000;
@@ -891,6 +892,112 @@ describe('Splits Store-Module', () => {
                 expect(dispatches[0].type).to.equal(ID_ACTION_SOFT_RESET);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches[0].payload).to.not.exist;
+            });
+        });
+
+        describe(ACTION_SKIP, () => {
+            it('should skip to the next segment', async () => {
+                const segments = generateSegmentArray(5);
+                const currentIndex = 1;
+                const state: SplitsState = {
+                    current: currentIndex,
+                    currentOpenFile: null,
+                    segments: segments.slice(0),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
+                    state, rootState
+                });
+
+                expect(commits).to.be.lengthOf(2);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(response).to.equal(true);
+
+                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].payload.index).to.equal(currentIndex);
+                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
+                expect(commits[0].payload.segment.time).to.equal(-1);
+                expect(commits[0].payload.segment.startTime).to.equal(-1);
+                expect(commits[0].payload.segment.skipped).to.equal(true);
+                expect(commits[0].payload.segment.passed).to.equal(false);
+
+                expect(commits[1].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[1].payload).to.equal(currentIndex + 1);
+            });
+
+            it('should not skip when timer is not running', async () => {
+                const segments = generateSegmentArray(5);
+                const currentIndex = 1;
+
+                const invalidStatuses = [TimerStatus.STOPPED, TimerStatus.PAUSED, TimerStatus.FINISHED];
+                for (const status of invalidStatuses) {
+                    const state: SplitsState = {
+                        current: currentIndex,
+                        currentOpenFile: null,
+                        segments: segments.slice(0),
+                    };
+
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            }
+                        }
+                    };
+
+                    const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
+                        state, rootState
+                    });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(response).to.equal(false);
+                }
+            });
+
+            it('should not skip when it is the last segment', async () => {
+                const segments = generateSegmentArray(5);
+                const currentIndex = segments.length - 1;
+                const state: SplitsState = {
+                    current: currentIndex,
+                    currentOpenFile: null,
+                    segments: segments.slice(0),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
+                    state, rootState
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(response).to.equal(false);
             });
         });
     });
