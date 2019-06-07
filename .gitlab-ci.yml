@@ -20,4 +20,4 @@ unit_test:
   script:
    - yarn config set cache-folder .yarn
    - yarn
-   - yarn test:unit
+   - yarn test:unit:coverage
