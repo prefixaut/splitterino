@@ -1,21 +1,21 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, protocol, globalShortcut } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, protocol } from 'electron';
+import { merge } from 'lodash';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import { OverlayHostPlugin } from 'vue-overlay-host';
-import Vuex, { Dispatch } from 'vuex';
-import { merge } from 'lodash';
+import Vuex from 'vuex';
 
-import { config as storeConfig } from './store';
+import { applicationSettingsDefaults } from './common/application-settings-defaults';
+import { FunctionRegistry } from './common/function-registry';
+import { IOService } from './services/io.service';
+import { getStoreConfig, patchBackgroundDispatch } from './store';
+import { MUTATION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
-import { applicationSettingsDefaults } from './common/application-settings-defaults';
-import { ApplicationSettings } from './common/interfaces/application-settings';
-import { saveApplicationSettingsToFile, loadApplicationSettingsFromFile } from './utils/io';
-import { MUTATION_SET_BINDINGS } from './store/modules/keybindings.module';
-import { FunctionRegistry } from './common/function-registry';
+import { createInjector } from './utils/services';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -31,10 +31,14 @@ import { FunctionRegistry } from './common/function-registry';
 
     const clients: any[] = [];
 
+    // Initialize the Dependency-Injection
+    const injector = createInjector();
+    const io = injector.get(IOService);
+
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
-    const store = new Vuex.Store<RootState>({
-        ...storeConfig,
+    const store = patchBackgroundDispatch(new Vuex.Store<RootState>({
+        ...getStoreConfig(injector),
         plugins: [
             OverlayHostPlugin,
             vuexStore => {
@@ -65,33 +69,9 @@ import { FunctionRegistry } from './common/function-registry';
                 });
             }
         ]
-    });
+    }));
 
-    const originalStoreDispatch = store.dispatch;
-
-    // tslint:disable-next-line
-    store['_dispatch'] = store.dispatch = function(
-        type: string | { type: string; payload: any },
-        ...payload: any[]
-    ) {
-        if (Array.isArray(payload)) {
-            if (payload.length === 0) {
-                payload = undefined;
-            } else if (payload.length === 1) {
-                payload = payload[0];
-            }
-        }
-
-        // Stolen from vuejs/vuex
-        if (typeof type === 'object' && type.type && arguments.length === 1) {
-            payload = [type.payload];
-            type = type.type;
-        }
-
-        originalStoreDispatch(type as string, ...payload);
-    } as Dispatch;
-
-    const appSettings = await loadApplicationSettingsFromFile(store);
+    const appSettings = await io.loadApplicationSettingsFromFile(store);
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
@@ -142,7 +122,7 @@ import { FunctionRegistry } from './common/function-registry';
         }
 
         window.on('close', () => {
-            saveApplicationSettingsToFile(mainWindow, store);
+            io.saveApplicationSettingsToFile(mainWindow, store);
         });
 
         window.on('closed', () => {

@@ -1,55 +1,83 @@
 {
-  "name": "splitterino",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "serve": "vue-cli-service electron:serve",
-    "build": "vue-cli-service build:electron",
-    "lint": "vue-cli-service lint ./src/**/*.vue ./src/**/*.ts",
-    "postinstall": "electron-builder install-app-deps",
-    "test:unit": "vue-cli-service test:unit"
-  },
-  "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.17",
-    "@fortawesome/free-solid-svg-icons": "^5.8.1",
-    "@fortawesome/vue-fontawesome": "^0.1.6",
-    "@types/lodash": "^4.14.119",
-    "aevum": "^2.0.3",
-    "ajv": "^6.6.1",
-    "electron": "^4.1.4",
-    "keycode": "^2.2.0",
-    "lodash": "^4.17.11",
-    "mz": "^2.7.0",
-    "uuid": "^3.3.2",
-    "vue": "^2.6.10",
-    "vue-class-component": "^7.0.2",
-    "vue-overlay-host": "0.2.0",
-    "vue-property-decorator": "^8.1.0",
-    "vue-router": "^3.0.3",
-    "vue-select": "^3.1.0",
-    "vuedraggable": "^2.20.0",
-    "vuex": "^3.0.1",
-    "vuex-class": "^0.3.1"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.4",
-    "@types/mz": "^0.0.32",
-    "@types/uuid": "^3.4.4",
-    "@vue/cli-plugin-babel": "^3.5.5",
-    "@vue/cli-plugin-typescript": "^3.5.3",
-    "@vue/cli-plugin-unit-mocha": "^3.3.0",
-    "@vue/cli-service": "^3.5.3",
-    "@vue/test-utils": "^1.0.0-beta.20",
-    "chai": "^4.2.0",
-    "lint-staged": "^8.1.0",
-    "node-sass": "^4.9.3",
-    "sass-loader": "^7.1.0",
-    "sasspect": "^1.1.0",
-    "tslint": "^5.15.0",
-    "typescript": "^3.4.2",
-    "vue-cli-plugin-electron-builder": "^1.2.0",
-    "vue-template-compiler": "^2.6.10"
-  },
-  "main": "dist_electron/bundled/background.js"
+    "name": "splitterino",
+    "version": "0.1.0",
+    "main": "dist_electron/bundled/background.js",
+    "private": true,
+    "license": "MIT",
+    "author": {
+        "name": "PreFiXAUT",
+        "email": "mail@prefix.moe"
+    },
+    "contributors": [
+        {
+            "name": "SirChronus",
+            "email": "chronus@prefix.moe"
+        }
+    ],
+    "homepage": "https://github.com/prefixaut/splitterino",
+    "keywords": ["splitterino", "speedrun", "splitter", "timing", "tool", "multiplatform", "vue", "electron", "typescript"],
+    "description": "High-End customizable Splitting-App (Multiplatform)",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/prefixaut/splitterino"
+    },
+    "bugs": {
+        "url": "https://github.com/prefixaut/splitterino/issues"
+    },
+    "scripts": {
+        "serve": "vue-cli-service electron:serve",
+        "build": "vue-cli-service build:electron",
+        "lint": "vue-cli-service lint ./src/**/*.vue ./src/**/*.ts",
+        "postinstall": "electron-builder install-app-deps",
+        "test:unit": "vue-cli-service test:unit",
+        "test:unit:coverage": "nyc vue-cli-service test:unit"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.17",
+        "@fortawesome/free-solid-svg-icons": "^5.8.1",
+        "@fortawesome/vue-fontawesome": "^0.1.6",
+        "@types/lodash": "^4.14.119",
+        "aevum": "^2.0.3",
+        "ajv": "^6.6.1",
+        "electron": "^4.1.4",
+        "keycode": "^2.2.0",
+        "lightweight-di": "^0.6.0",
+        "lodash": "^4.17.11",
+        "mz": "^2.7.0",
+        "tslib": "^1.9.3",
+        "uuid": "^3.3.2",
+        "vue": "^2.6.10",
+        "vue-class-component": "^7.0.2",
+        "vue-overlay-host": "0.2.0",
+        "vue-property-decorator": "^8.1.0",
+        "vue-router": "^3.0.3",
+        "vue-select": "^3.1.0",
+        "vuedraggable": "^2.20.0",
+        "vuex": "^3.0.1",
+        "vuex-class": "^0.3.1"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/mocha": "^5.2.4",
+        "@types/mz": "^0.0.32",
+        "@types/node": "^12.0.2",
+        "@types/uuid": "^3.4.4",
+        "@vue/cli-plugin-babel": "^3.5.5",
+        "@vue/cli-plugin-typescript": "^3.5.3",
+        "@vue/cli-plugin-unit-mocha": "^3.3.0",
+        "@vue/cli-service": "^3.5.3",
+        "@vue/test-utils": "^1.0.0-beta.20",
+        "babel-plugin-istanbul": "^5.1.4",
+        "chai": "^4.2.0",
+        "istanbul-instrumenter-loader": "^3.0.1",
+        "lint-staged": "^8.1.0",
+        "node-sass": "^4.12.0",
+        "nyc": "^14.1.1",
+        "sass-loader": "^7.1.0",
+        "sasspect": "^1.1.0",
+        "tslint": "^5.15.0",
+        "typescript": "^3.4.2",
+        "vue-cli-plugin-electron-builder": "^1.2.0",
+        "vue-template-compiler": "^2.6.10"
+    }
 }

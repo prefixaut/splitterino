@@ -1,7 +1,8 @@
+import { Injector } from 'lightweight-di';
 import { get, set } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
-import { saveJSONToFile } from '../../utils/io';
+import { IOService } from '../../services/io.service';
 import { Typeguard } from '../../utils/is-type';
 import { RootState } from '../states/root.state';
 import { Settings, SettingsState } from '../states/settings.state';
@@ -30,74 +31,69 @@ export const MUTATION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_S
 export const ACTION_SET_SETTING = `${MODULE_PATH}/${ID_ACTION_SET_SETTING}`;
 export const ACTION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SETTINGS}`;
 
-const moduleState: SettingsState = {
-    settings: {
-        splitterino: {
-            core: {},
+export function getSettingsStoreModule(injector: Injector): Module<SettingsState, RootState> {
+    const io = injector.get(IOService);
+
+    return {
+        state: {
+            settings: {
+                splitterino: {
+                    core: {},
+                },
+                plugins: {},
+            },
+            configuration: [
+                {
+                    key: 'splitterino',
+                    type: 'group',
+                    label: 'Splitterino',
+                    children: [],
+                }
+            ],
         },
-        plugins: {},
-    },
-    configuration: [
-        {
-            key: 'splitterino',
-            type: 'group',
-            label: 'Splitterino',
-            children: [],
-        }
-    ],
-};
+        getters: {
+            [ID_GETTER_SETTINGS](state: SettingsState) {
+                return state.settings;
+            },
+            [ID_GETTER_CONFIGURATION](state: SettingsState) {
+                return state.configuration;
+            },
+            [ID_GETTER_GET_SETTING_BY_PATH](state: SettingsState) {
+                return (path: string | string[], defaultValue: any = null, typeguard: Typeguard = null) => {
+                    const value = get(state.settings, path, null);
 
-const getters = {
-    [ID_GETTER_SETTINGS](state: SettingsState) {
-        return state.settings;
-    },
-    [ID_GETTER_CONFIGURATION](state: SettingsState) {
-        return state.configuration;
-    },
-    [ID_GETTER_GET_SETTING_BY_PATH](state: SettingsState) {
-        return (path: string | string[], defaultValue: any = null, typeguard: Typeguard = null) => {
-            const value = get(state.settings, path, null);
-
-            if (value == null || (typeguard && !typeguard(value))) {
-                return defaultValue;
-            } else {
-                return value;
-            }
-        };
-    },
-};
-
-const mutations = {
-    [ID_MUTATION_SET_SETTING](
-        state: SettingsState,
-        { payload: { key, value } }: { payload: { key: string; value: any } }
-    ) {
-        set(state.settings, key, value);
-    },
-    [ID_MUTATION_SAVE_SETTINGS_TO_FILE](state: SettingsState) {
-        saveJSONToFile('settings.json', state.settings);
-    },
-    [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, settings: Settings) {
-        state.settings = settings;
-    },
-};
-
-const actions = {
-    [ID_ACTION_SET_SETTING](context: ActionContext<SettingsState, RootState>, payload: any) {
-        context.commit(ID_MUTATION_SET_SETTING, payload);
-    },
-    [ID_ACTION_SET_ALL_SETTINGS](
-        context: ActionContext<SettingsState, RootState>,
-        { settings }: { settings: Settings }
-    ) {
-        context.commit(ID_MUTATION_SET_ALL_SETTINGS, settings);
-    },
-};
-
-export const settingsStoreModule: Module<SettingsState, any> = {
-    namespaced: true,
-    state: moduleState,
-    getters,
-    mutations,
-    actions,
-};
+                    if (value == null || (typeguard && !typeguard(value))) {
+                        return defaultValue;
+                    } else {
+                        return value;
+                    }
+                };
+            },
+        },
+        mutations: {
+            [ID_MUTATION_SET_SETTING](
+                state: SettingsState,
+                { payload: { key, value } }: { payload: { key: string; value: any } }
+            ) {
+                set(state.settings, key, value);
+            },
+            [ID_MUTATION_SAVE_SETTINGS_TO_FILE](state: SettingsState) {
+                io.saveJSONToFile('settings.json', state.settings);
+            },
+            [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, settings: Settings) {
+                state.settings = settings;
+            },
+        },
+        actions: {
+            [ID_ACTION_SET_SETTING](context: ActionContext<SettingsState, RootState>, payload: any) {
+                context.commit(ID_MUTATION_SET_SETTING, payload);
+            },
+            [ID_ACTION_SET_ALL_SETTINGS](
+                context: ActionContext<SettingsState, RootState>,
+                { settings }: { settings: Settings }
+            ) {
+                context.commit(ID_MUTATION_SET_ALL_SETTINGS, settings);
+            },
+        },
+    };
+}

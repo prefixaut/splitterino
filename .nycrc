@@ -1,0 +1,22 @@
+{
+    "check-coverage": false,
+    "per-file": true,
+    "include": [
+        "src/**/*.{js,vue,ts}"
+    ],
+    "exclude": [
+        "src/*.{js,ts}"
+    ],
+    "reporter": [
+        "lcov",
+        "text",
+        "text-summary"
+    ],
+    "extension": [
+        ".js",
+        ".ts",
+        ".vue"
+    ],
+    "cache": true,
+    "all": true
+}

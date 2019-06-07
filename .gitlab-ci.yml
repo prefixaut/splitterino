@@ -8,7 +8,16 @@ image: node:latest
 cache:
   paths:
   - node_modules/
+  - .yarn
 
-test_async:
+stages:
+  - test
+
+unit_test:
+  stage: test
+  tags:
+   - node
   script:
-   - npm install
+   - yarn config set cache-folder .yarn
+   - yarn
+   - yarn test:unit:coverage
