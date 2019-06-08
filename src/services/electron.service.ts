@@ -14,7 +14,7 @@ import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
-import { ElectronInterface } from '../common/interfaces/electron-interface';
+import { ElectronInterface } from '../common/interfaces/electron';
 import { Logger } from '../utils/logger';
 
 @Injectable
@@ -115,7 +115,7 @@ export class ElectronService implements ElectronInterface {
     }
 
     public createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {
-        const contextMenu = new Menu();
+        const contextMenu = new remote.Menu();
 
         menuItems.forEach(menu => {
             const options = this.prepareMenuItemOptions(menu, vNode);

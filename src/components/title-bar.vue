@@ -17,7 +17,8 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
-import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron-interface';
+import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { BrowserWindow } from 'electron';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {
@@ -27,44 +28,42 @@ export default class TitleBarComponent extends Vue {
 
     public title = 'Splitterino';
     public maximized = false;
+    public windowRef: BrowserWindow;
 
     created() {
-        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
-        this.minimizable = win.isMinimizable();
-        this.maximizable = win.isMaximizable();
-        this.closeable = win.isClosable();
-        this.maximized = win.isMaximized();
+        this.windowRef = this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
+        this.minimizable = this.windowRef.isMinimizable();
+        this.maximizable = this.windowRef.isMaximizable();
+        this.closeable = this.windowRef.isClosable();
+        this.maximized = this.windowRef.isMaximized();
 
-        win.on('maximize', () => {
+        this.windowRef.on('maximize', () => {
             this.maximized = true;
         });
-        win.on('unmaximize', () => {
+        this.windowRef.on('unmaximize', () => {
             this.maximized = false;
         });
     }
 
     minimize() {
-        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
-        if (win != null) {
-            win.minimize();
+        if (this.windowRef != null) {
+            this.windowRef.minimize();
         }
     }
 
     toggleMaximize() {
-        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
-        if (win != null) {
-            if (win.isMaximized()) {
-                win.unmaximize();
+        if (this.windowRef != null) {
+            if (this.windowRef.isMaximized()) {
+                this.windowRef.unmaximize();
             } else {
-                win.maximize();
+                this.windowRef.maximize();
             }
         }
     }
 
     close() {
-        const win = this.$injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
-        if (win != null) {
-            win.close();
+        if (this.windowRef != null) {
+            this.windowRef.close();
         }
     }
 }

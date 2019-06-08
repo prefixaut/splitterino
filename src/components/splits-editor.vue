@@ -127,7 +127,7 @@ export default class SplitsEditorComponent extends Vue {
     }
 
     saveSplits() {
-        this.$store.dispatch('splitterino/splits/setSegments', [this.segments]);
+        this.$store.dispatch('splitterino/splits/setSegments', this.segments);
     }
 }
 </script>

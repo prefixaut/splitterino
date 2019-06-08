@@ -11,6 +11,11 @@ import { VNode } from 'vue';
 
 import { ContextMenuItem } from './context-menu-item';
 
+export interface ActionResult {
+    result?: any;
+    error?: any;
+}
+
 export interface ElectronInterface {
     isRenderProcess(): boolean;
     getAppPath(): string;

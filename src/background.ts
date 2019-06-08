@@ -1,5 +1,5 @@
 'use strict';
-import { app, BrowserWindow, globalShortcut, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import { merge } from 'lodash';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
@@ -9,10 +9,11 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
-import { FunctionRegistry } from './common/function-registry';
+import { registerDefaultFunctions, registerDefaultKeybindingFunctions } from './common/function-registry';
+import { ActionResult } from './common/interfaces/electron';
 import { IOService } from './services/io.service';
-import { getStoreConfig, patchBackgroundDispatch } from './store';
-import { MUTATION_SET_BINDINGS } from './store/modules/keybindings.module';
+import { getStoreConfig } from './store';
+import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
@@ -37,41 +38,25 @@ import { createInjector } from './utils/services';
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
-    const store = patchBackgroundDispatch(new Vuex.Store<RootState>({
+    const store = new Vuex.Store<RootState>({
         ...getStoreConfig(injector),
         plugins: [
             OverlayHostPlugin,
-            vuexStore => {
-                vuexStore.subscribe(mutation => {
+            storeInstance => {
+                storeInstance.subscribe(mutation => {
                     Object.keys(clients).forEach(id => {
                         clients[id].send('vuex-apply-mutation', mutation);
                     });
-
-                    // Keybindings got updated, refreshing it on electron
-                    if (mutation.payload === MUTATION_SET_BINDINGS) {
-                        globalShortcut.removeAllListeners();
-                        const state = vuexStore.state.splitterino.keybindings;
-                        const bindings = state.bindings;
-
-                        bindings.forEach(theBinding => {
-                            globalShortcut.register(theBinding.accelerator, () => {
-                                // TODO: Check if global and if the window is focused
-
-                                const actionFn = FunctionRegistry.getKeybindingAction(theBinding.action);
-                                if (typeof actionFn === 'function') {
-                                    actionFn({
-                                        store: vuexStore,
-                                    });
-                                }
-                            });
-                        });
-                    }
                 });
-            }
+            },
+            getKeybindingsStorePlugin(),
         ]
-    }));
+    });
 
     const appSettings = await io.loadApplicationSettingsFromFile(store);
+
+    // Setup the Keybiding Functions
+    registerDefaultKeybindingFunctions();
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
@@ -90,13 +75,21 @@ import { createInjector } from './utils/services';
     });
 
     // Listener to perform a delegate mutation on the main store
-    ipcMain.on('vuex-mutate', (event, { type, payload }) => {
-        Logger.debug('[background] vuex-mutate', type, payload);
-        store.dispatch(type, ...payload);
+    ipcMain.on('vuex-dispatch', async (event, { type, payload, options }) => {
+        Logger.debug('[background] vuex-dispatch', type, payload, options);
+        try {
+            const dispatchResult = await store.dispatch(type, payload, options);
+            const eventResponse: ActionResult = { result: dispatchResult, error: null };
+            event.returnValue = eventResponse;
+        } catch (error) {
+            const eventResponse: ActionResult = { result: null, error };
+            event.returnValue = eventResponse;
+        }
     });
 
     // Standard scheme must be registered before the app is ready
     protocol.registerStandardSchemes(['app'], { secure: true });
+
     function createMainWindow() {
         const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);

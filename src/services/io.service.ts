@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { Store } from 'vuex';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron-interface';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { isSplits } from '../common/interfaces/splits';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';

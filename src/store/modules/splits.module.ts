@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron-interface';
+import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
 import { Segment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/time';

@@ -56,12 +56,12 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { remote } from 'electron';
 import { clamp } from 'lodash';
 
 import { Segment } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/time';
+import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -180,7 +180,7 @@ export default class SplitsComponent extends Vue {
 
     reset() {
         this.$store.dispatch('splitterino/splits/reset', {
-            windowId: remote.getCurrentWindow().id,
+            windowId: this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().id,
         });
     }
 }

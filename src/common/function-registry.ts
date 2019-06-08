@@ -16,7 +16,7 @@ import {
     KEYBINDING_SPLITS_UNDO,
 } from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
-import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron-interface';
+import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
 
@@ -53,12 +53,7 @@ export abstract class FunctionRegistry {
     }
 }
 
-export function registerDefaultFunctions(injector: Injector) {
-    registerDefaultContextMenuFunctions(injector);
-    registerDefaultKeybindingFunctions();
-}
-
-function registerDefaultContextMenuFunctions(injector: Injector) {
+export function registerDefaultContextMenuFunctions(injector: Injector) {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const io = injector.get(IOService);
 
@@ -123,7 +118,7 @@ function registerDefaultContextMenuFunctions(injector: Injector) {
     });
 }
 
-function registerDefaultKeybindingFunctions() {
+export function registerDefaultKeybindingFunctions() {
     FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, params => {
         params.store.dispatch(ACTION_SPLIT);
     });

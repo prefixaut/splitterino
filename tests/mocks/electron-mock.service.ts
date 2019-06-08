@@ -10,7 +10,7 @@ import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 
 import { ContextMenuItem } from '../../src/common/interfaces/context-menu-item';
-import { ElectronInterface } from '../../src/common/interfaces/electron-interface';
+import { ElectronInterface } from '../../src/common/interfaces/electron';
 
 @Injectable
 export class ElectronMockService implements ElectronInterface {

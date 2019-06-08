@@ -9,7 +9,6 @@ import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
 import App from './app.vue';
-import { registerDefaultFunctions } from './common/function-registry';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
@@ -30,6 +29,7 @@ import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
 import { createInjector } from './utils/services';
+import { registerDefaultContextMenuFunctions } from './common/function-registry';
 
 const injector = createInjector();
 
@@ -81,11 +81,11 @@ Vue.filter('aevum', value => {
 Vue.config.productionTip = false;
 
 // Update the Prototype with an injector and event-hub
-Vue.prototype.$injector = injector;
+Vue.prototype.$services = injector;
 Vue.prototype.$eventHub = new Vue();
 
-// Setup the default/core functions in the Function-Registry
-registerDefaultFunctions(injector);
+// Register context-menu functions
+registerDefaultContextMenuFunctions(injector);
 
 // Initialize the Application
 const vue = new Vue({
