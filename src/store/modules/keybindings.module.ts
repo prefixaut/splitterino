@@ -7,7 +7,7 @@ import {
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
 } from '../../common/constants';
-import { ActionKeybinding } from '../../common/interfaces/keybindings';
+import { ActionKeybinding, isActionKeybinding } from '../../common/interfaces/keybindings';
 import { KeybindingsState } from '../states/keybindings.state';
 import { RootState } from '../states/root.state';
 
@@ -57,10 +57,10 @@ const getters = {};
 const mutations = {
     [ID_MUTATION_SET_BINDINGS](state: KeybindingsState, payload: ActionKeybinding[]) {
         if (!Array.isArray(payload)) {
-            return;
+            payload = [payload];
         }
 
-        state.bindings = payload;
+        state.bindings = payload.filter(isActionKeybinding);
     },
     [ID_MUTATION_DISABLE_BINDINGS](state: KeybindingsState, payload: boolean) {
         state.disableBindings = !!payload;
@@ -69,10 +69,6 @@ const mutations = {
 
 const actions = {
     [ID_ACTION_SET_BINDINGS](context: ActionContext<KeybindingsState, RootState>, payload: ActionKeybinding[]) {
-        if (!Array.isArray(payload)) {
-            return Promise.resolve(false);
-        }
-
         context.commit(ID_MUTATION_SET_BINDINGS, payload);
 
         return Promise.resolve(true);

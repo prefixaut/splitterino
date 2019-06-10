@@ -527,9 +527,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         case 0:
                             return Promise.resolve();
                         case 1:
-                            return context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
-                        case 2:
                             return context.dispatch(ID_ACTION_DISCARDING_RESET);
+                        case 2:
+                            return context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
                     }
                 });
             },

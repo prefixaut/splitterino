@@ -44,9 +44,13 @@ import { createInjector } from './utils/services';
             OverlayHostPlugin,
             storeInstance => {
                 storeInstance.subscribe(mutation => {
-                    Object.keys(clients).forEach(id => {
-                        clients[id].send('vuex-apply-mutation', mutation);
-                    });
+                    try {
+                        Object.keys(clients).forEach(id => {
+                            clients[id].send('vuex-apply-mutation', mutation);
+                        });
+                    } catch (error) {
+                        Logger.error('Error while sending mutation to other processes:', JSON.stringify(mutation));
+                    }
                 });
             },
             getKeybindingsStorePlugin(injector),

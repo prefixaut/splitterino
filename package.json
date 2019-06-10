@@ -36,7 +36,6 @@
         "@fortawesome/fontawesome-svg-core": "^1.2.17",
         "@fortawesome/free-solid-svg-icons": "^5.8.1",
         "@fortawesome/vue-fontawesome": "^0.1.6",
-        "@types/lodash": "^4.14.119",
         "aevum": "^2.0.3",
         "ajv": "^6.6.1",
         "electron": "^4.1.4",
@@ -58,6 +57,7 @@
     },
     "devDependencies": {
         "@types/chai": "^4.1.7",
+        "@types/lodash": "^4.14.119",
         "@types/mocha": "^5.2.4",
         "@types/mz": "^0.0.32",
         "@types/node": "^12.0.2",
