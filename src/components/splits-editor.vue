@@ -11,6 +11,7 @@
                         <tr>
                             <th class="handle"><!-- Drag-Handle --></th>
                             <th class="name">Name</th>
+                            <th class="small-description"><!-- leave empty --></th>
                             <th class="time">Time</th>
                             <th class="personal-best">Personal Best</th>
                             <th class="overall-best">Overall Best</th>
@@ -32,10 +33,14 @@
                             <td class="name">
                                 <spl-text-input
                                     v-model="segment.name"
-                                    :outline="false"
                                     :required="false"
                                     :minlength="1"
                                 />
+                            </td>
+                            <td class="small-description">
+                                <p>Time</p>
+                                <p>PB</p>
+                                <p>OB</p>
                             </td>
                             <td class="time">
                                 <spl-time-input v-model="segment.time" />
@@ -166,6 +171,15 @@ export default class SplitsEditorComponent extends Vue {
 .segment-row {
     > td {
         border-left: 5px solid transparent;
+
+        &.name {
+            min-width: 100px;
+        }
+
+        > .time-input {
+            border: 1px solid $spl-color-very-light-gray;
+            padding: 2px;
+        }
     }
 
     .handle {
@@ -205,6 +219,45 @@ export default class SplitsEditorComponent extends Vue {
             background: $spl-color-light-primary;
             border-color: $spl-color-light-primary;
         }
+    }
+}
+
+.small-description {
+    display: none;
+}
+
+@media (max-width: 850px) {
+    th.time,
+    th.personal-best,
+    th.overall-best {
+        display: none;
+    }
+
+    td.time,
+    td.personal-best,
+    td.overall-best {
+        display: block;
+    }
+
+    th.small-description {
+        display: block;
+    }
+
+    td.small-description {
+        display: table-cell;
+
+        > * {
+            margin-top: 16px;
+        }
+
+        :nth-child(1) {
+            margin-top: 7px;
+        }
+    }
+
+    td > .time-input {
+        padding: 0 !important;
+        border: none !important;
     }
 }
 

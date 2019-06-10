@@ -1,14 +1,7 @@
 <template>
-    <div
-        class="splits-root"
-        :class="['state-' + status, { scrolling: scrollIndex > -1 }]"
-    >
+    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }]">
         <template v-if="segments != null && segments.length > 0">
-            <div
-                class="splits"
-                @mousewheel="scrollSplits"
-                @mouseleave="scrollIndex = -1"
-            >
+            <div class="splits" @mousewheel="scrollSplits" @mouseleave="scrollIndex = -1">
                 <div
                     v-for="(segment, index) in segments"
                     :key="index"
@@ -30,20 +23,10 @@
                     ]"
                 >
                     <div class="name">{{ segment.name }}</div>
-                    <div class="time">{{ segment.time | aevum }}</div>
-                    <div class="best-time">{{ segment.personalBest | aevum }}</div>
-                    <div class="best-segment">{{ segment.overallBest | aevum }}</div>
+                    <div class="time" v-show="(status === 'running' && index <= currentSegment) || status === 'finished'">{{ getSegmentTime(index) | aevum }}</div>
+                    <div class="personal-best">PB: {{ segment.personalBest | aevum }}</div>
+                    <div class="overall-best">OB: {{ segment.overallBest | aevum }}</div>
                 </div>
-            </div>
-
-            <div class="controls">
-                <spl-button outline v-if="status !== 'stopped'" @click="split()">Split</spl-button>
-                <spl-button outline v-else @click="start()">Start</spl-button>
-                <spl-button outline @click="reset()">Reset</spl-button>
-                <spl-button outline v-if="status === 'paused'" @click="unpause()">Unpause</spl-button>
-                <spl-button outline v-else @click="pause()">Pause</spl-button>
-                <spl-button outline @click="skipSplit()">Skip</spl-button>
-                <spl-button outline @click="undoSplit()">Undo</spl-button>
             </div>
         </template>
 
@@ -62,6 +45,7 @@ import { Segment } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/time';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { RootState } from '../store/states/root.state';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -103,6 +87,51 @@ export default class SplitsComponent extends Vue {
      * the currently viewed one.
      */
     public scrollIndex = -1;
+    /**
+     * The time of the current segment which is getting updated
+     * every millisecond when the timer is running.
+     */
+    public currentSegmentTime = 0;
+    /**
+     * Id of the interval to cancel it when the component is getting
+     * destroyed.
+     */
+    private intervalId = -1;
+
+    private statusWatcher = () => {
+        // noop
+    }
+
+    public created() {
+        this.statusWatcher = this.$store.watch(
+            (state: RootState) => state.splitterino.timer.status,
+            () => this.statusChange()
+        );
+    }
+
+    public beforeDestroy() {
+        this.statusWatcher();
+    }
+
+    public statusChange() {
+        if (this.status === TimerStatus.RUNNING) {
+            this.intervalId = window.setInterval(() => {
+                const segment = this.segments[this.currentSegment];
+                this.currentSegmentTime =
+                    now() - (segment.startTime || 0) - (segment.pauseTime || 0);
+            }, 1);
+
+            return;
+        }
+
+        if (this.intervalId > -1) {
+            window.clearInterval(this.intervalId);
+        }
+
+        if (this.status === TimerStatus.STOPPED) {
+            this.currentSegmentTime = 0;
+        }
+    }
 
     public get visibleIndicies(): number[] {
         const current = this.scrollIndex < 0
@@ -141,6 +170,19 @@ export default class SplitsComponent extends Vue {
         return arr;
     }
 
+    public getSegmentTime(index: number) {
+        const segment = this.segments[index];
+        if (this.status === TimerStatus.FINISHED || index < this.currentSegment) {
+            return segment.time;
+        }
+
+        if (this.status !== TimerStatus.RUNNING || index > this.currentSegment) {
+            return null;
+        }
+
+        return this.currentSegmentTime;
+    }
+
     scrollSplits(event: WheelEvent) {
         if (event.deltaY > 0) {
             this.scrollIndex++;
@@ -152,36 +194,6 @@ export default class SplitsComponent extends Vue {
             this.scrollIndex,
             this.segments.length - 1
         ));
-    }
-
-    start() {
-        this.$store.dispatch('splitterino/splits/start');
-    }
-
-    split() {
-        this.$store.dispatch('splitterino/splits/split');
-    }
-
-    pause() {
-        this.$store.dispatch('splitterino/splits/pause');
-    }
-
-    unpause() {
-        this.$store.dispatch('splitterino/splits/unpause');
-    }
-
-    skipSplit() {
-        this.$store.dispatch('splitterino/splits/skip');
-    }
-
-    undoSplit() {
-        this.$store.dispatch('splitterino/splits/undo');
-    }
-
-    reset() {
-        this.$store.dispatch('splitterino/splits/reset', {
-            windowId: this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().id,
-        });
     }
 }
 </script>
@@ -224,6 +236,10 @@ export default class SplitsComponent extends Vue {
             .time {
                 margin-left: 10px;
                 padding: 10px;
+
+                &.hidden {
+                    display: none;
+                }
             }
 
             &.current {
@@ -239,9 +255,15 @@ export default class SplitsComponent extends Vue {
                 display: flex;
             }
 
-            .best-time,
-            .best-segment {
-                display: none;
+            .personal-best,
+            .overall-best {
+                display: contents;
+                font-size: 0.85rem;
+            }
+
+            .overall-best::before {
+                display: block;
+                content: '';
             }
         }
     }

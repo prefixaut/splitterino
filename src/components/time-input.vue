@@ -127,8 +127,6 @@ export default class TimeInputComponent extends Vue {
 @import '../styles/config';
 
 .time-input {
-    background: $spl-color-off-black;
-
     label {
         display: block;
         font-size: 12px;

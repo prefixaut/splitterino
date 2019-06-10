@@ -4,8 +4,9 @@ import { Store } from 'vuex';
 import { FunctionRegistry } from '../../common/function-registry';
 import { MUTATION_SET_BINDINGS } from '../modules/keybindings.module';
 import { RootState } from '../states/root.state';
+import { Injector } from 'lightweight-di';
 
-export function getKeybindingsStorePlugin() {
+export function getKeybindingsStorePlugin(injector: Injector) {
     return (store: Store<RootState>) => {
         store.subscribe(mutation => {
             // Skip all mutations which aren't changing the bindings
@@ -26,6 +27,7 @@ export function getKeybindingsStorePlugin() {
                     if (typeof actionFn === 'function' && !state.disableBindings) {
                         actionFn({
                             store: store,
+                            injector: injector,
                         });
                     }
                 });

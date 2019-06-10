@@ -1,6 +1,7 @@
 import { Store } from 'vuex';
 
 import { RootState } from '../../store/states/root.state';
+import { Injector } from 'lightweight-di';
 
 /**
  * Interface to provide an easy and consistent way to store and
@@ -54,6 +55,7 @@ export function isActionKeybinding(value: any): value is ActionKeybinding {
 
 export interface KeybindingActionFunctionParameters {
     store: Store<RootState>;
+    injector: Injector;
 }
 
 export type KeybindingActionFunction = (params: KeybindingActionFunctionParameters) => void;

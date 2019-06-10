@@ -63,6 +63,9 @@ export default class TitleBarComponent extends Vue {
 
     close() {
         if (this.windowRef != null) {
+            // Destroy the vue instance, to tear down everything
+            this.$root.$destroy();
+
             this.windowRef.close();
         }
     }

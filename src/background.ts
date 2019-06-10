@@ -9,7 +9,7 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
-import { registerDefaultFunctions, registerDefaultKeybindingFunctions } from './common/function-registry';
+import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { ActionResult } from './common/interfaces/electron';
 import { IOService } from './services/io.service';
 import { getStoreConfig } from './store';
@@ -49,7 +49,7 @@ import { createInjector } from './utils/services';
                     });
                 });
             },
-            getKeybindingsStorePlugin(),
+            getKeybindingsStorePlugin(injector),
         ]
     });
 

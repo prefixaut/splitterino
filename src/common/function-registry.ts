@@ -1,7 +1,15 @@
 import { Injector } from 'lightweight-di';
 
 import { IOService } from '../services/io.service';
-import { ACTION_PAUSE, ACTION_SKIP, ACTION_SPLIT, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
+import {
+    ACTION_PAUSE,
+    ACTION_RESET,
+    ACTION_SKIP,
+    ACTION_SPLIT,
+    ACTION_UNDO,
+    ACTION_UNPAUSE,
+    ACTION_START,
+} from '../store/modules/splits.module';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -10,6 +18,7 @@ import {
     CTX_MENU_SPLITS_SAVE_TO_FILE,
     CTX_MENU_WINDOW_CLOSE,
     CTX_MENU_WINDOW_RELOAD,
+    KEYBINDING_SPLITS_RESET,
     KEYBINDING_SPLITS_SKIP,
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
@@ -95,6 +104,8 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 parent: electron.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
+                width: 650,
+                height: 310,
                 modal: true,
             },
             '/settings'
@@ -111,6 +122,8 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 parent: electron.getCurrentWindow(),
                 minWidth: 440,
                 minHeight: 220,
+                width: 650,
+                height: 310,
                 modal: true,
             },
             '/keybindings'
@@ -120,7 +133,14 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
 
 export function registerDefaultKeybindingFunctions() {
     FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, params => {
-        params.store.dispatch(ACTION_SPLIT);
+        // The same action has to start the timer as well
+        switch (params.store.state.splitterino.timer.status) {
+            case TimerStatus.STOPPED:
+                params.store.dispatch(ACTION_START);
+                break;
+            default:
+                params.store.dispatch(ACTION_SPLIT);
+        }
     });
 
     FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SKIP, params => {
@@ -139,5 +159,11 @@ export function registerDefaultKeybindingFunctions() {
             case TimerStatus.PAUSED:
                 params.store.dispatch(ACTION_UNPAUSE);
         }
+    });
+
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_RESET, params => {
+        params.store.dispatch(ACTION_RESET, {
+            windowId: params.injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().id,
+        });
     });
 }

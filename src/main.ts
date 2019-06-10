@@ -68,9 +68,9 @@ Vue.component('spl-settings-editor-sidebar-entry', SettingsEditorSidebarEntryCom
 Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));
 
 // Register Filters
-const formatter = new Aevum('(h:#:)(m:#:)(s:#.)(ddd)');
+const formatter = new Aevum('(h:#:)(m:#:)[s].[ddd]');
 Vue.filter('aevum', value => {
-    if (value == null) {
+    if (value == null || !isFinite(value) || isNaN(value)) {
         return '';
     }
 

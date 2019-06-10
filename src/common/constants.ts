@@ -19,3 +19,4 @@ export const KEYBINDING_SPLITS_SPLIT = 'core.splits.split';
 export const KEYBINDING_SPLITS_SKIP = 'core.splits.skip';
 export const KEYBINDING_SPLITS_UNDO = 'core.splits.undo';
 export const KEYBINDING_SPLITS_TOGGLE_PAUSE = 'core.splits.toggle-pause';
+export const KEYBINDING_SPLITS_RESET = 'core.splits.reset';

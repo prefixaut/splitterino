@@ -1,11 +1,16 @@
 <template>
     <div class="keybinding-editor">
+        <p>
+            Edit the Keybindings for your actions!<br/>
+            <small><b>Note</b>: Keybindings will not trigger while this editor is open</small>
+        </p>
         <div class="bindings">
             <div class="binding" v-for="(binding, index) of bindings" :key="index">
                 <vue-select
                     class="action-select"
+                    label="label"
                     :options="actions"
-                    :value="bindings[index].action"
+                    :value="getBindingAction(index)"
                     @input="setAction(index, $event)"
                 />
 
@@ -34,8 +39,8 @@
 import { Vue, Component } from 'vue-property-decorator';
 import { cloneDeep } from 'lodash';
 
-import { ActionKeybinding, KeybindingDescriptor, Keybinding } from '../common/interfaces/keybindings';
-import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
+import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../common/interfaces/keybindings';
+import { ACTION_SET_BINDINGS, ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
@@ -43,14 +48,31 @@ export default class KeybindingEditorComponent extends Vue {
     public bindings: ActionKeybinding[] = [];
 
     created() {
+        // Disable the bindings while in the editor
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, true);
         this.actions = cloneDeep(
             this.$store.state.splitterino.keybindings.actions || []);
         this.bindings = cloneDeep(
             this.$store.state.splitterino.keybindings.bindings || []);
     }
 
+    beforeDestroy() {
+        // Enable the bindings again, as the editor is getting removed
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, false);
+    }
+
+    getBindingAction(index: number) {
+        const id = this.bindings[index].action;
+
+        return this.actions.find(action => action.id === id);
+    }
+
     setAction(index: number, action: KeybindingDescriptor) {
-        this.bindings[index].action = action.id;
+        if (action == null) {
+            this.bindings[index].action = null;
+        } else {
+            this.bindings[index].action = action.id;
+        }
     }
 
     setOptions(index: number, options: Keybinding) {
@@ -77,7 +99,10 @@ export default class KeybindingEditorComponent extends Vue {
     }
 
     saveBindings() {
-        this.$store.dispatch(ACTION_SET_BINDINGS, [ ...this.bindings]);
+        const filteredBindings = this.bindings.slice(0).filter(isActionKeybinding);
+        if (filteredBindings.length > 0) {
+            this.$store.dispatch(ACTION_SET_BINDINGS, filteredBindings);
+        }
     }
 }
 </script>
@@ -86,18 +111,19 @@ export default class KeybindingEditorComponent extends Vue {
 @import '../styles/core';
 
 .keybinding-editor {
+    padding: 0 20px;
+
     .binding {
         display: flex;
-        padding: 0 20px;
         margin: 15px 0;
 
         .action-select {
-            flex: 1 1 auto;
+            flex: 1 1 50%;
             margin-right: 10px;
         }
 
         .keybinding-input {
-            flex: 1 1 auto;
+            flex: 1 1 50%;
         }
 
         .clear {

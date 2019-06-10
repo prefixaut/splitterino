@@ -12,7 +12,7 @@
             :disabled="disabled"
             :class="{ outline: outline }"
             @input="onValueInputChange($event)"
-            @blur="$listeners.blur"
+            @blur="blurHandler($event)"
         />
     </div>
 </template>
@@ -48,6 +48,10 @@ export default class TextInputComponent extends Vue {
 
     @Prop(String)
     public label: string;
+
+    blurHandler(event: Event) {
+        this.$emit('blur', event);
+    }
 
     onValueInputChange(event: any) {
         const value = event.target.value;
