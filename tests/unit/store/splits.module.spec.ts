@@ -11,7 +11,7 @@ import {
     ACTION_START,
     ACTION_UNDO,
     getSplitsStoreModule,
-    ID_ACTION_SAVING_RESET,
+    ID_ACTION_RESET,
     ID_ACTION_SKIP,
     ID_ACTION_SPLIT,
     ID_ACTION_START,
@@ -751,7 +751,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.empty;
                 expect(dispatches).to.be.lengthOf(1);
 
-                expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
+                expect(dispatches[0].type).to.equal(ID_ACTION_RESET);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches[0].payload).to.not.exist;
             });
