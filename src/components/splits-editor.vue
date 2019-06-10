@@ -12,7 +12,6 @@
                             <th class="handle"><!-- Drag-Handle --></th>
                             <th class="name">Name</th>
                             <th class="small-description"><!-- leave empty --></th>
-                            <th class="time">Time</th>
                             <th class="personal-best">Personal Best</th>
                             <th class="overall-best">Overall Best</th>
                             <th class="manage"><!-- Management --></th>
@@ -38,12 +37,8 @@
                                 />
                             </td>
                             <td class="small-description">
-                                <p>Time</p>
                                 <p>PB</p>
                                 <p>OB</p>
-                            </td>
-                            <td class="time">
-                                <spl-time-input v-model="segment.time" />
                             </td>
                             <td class="personal-best">
                                 <spl-time-input v-model="segment.personalBest" />
@@ -226,14 +221,12 @@ export default class SplitsEditorComponent extends Vue {
     display: none;
 }
 
-@media (max-width: 850px) {
-    th.time,
+@media (max-width: 660px) {
     th.personal-best,
     th.overall-best {
         display: none;
     }
 
-    td.time,
     td.personal-best,
     td.overall-best {
         display: block;

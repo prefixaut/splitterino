@@ -14,18 +14,18 @@ export const MODULE_PATH = 'splitterino/splits';
 export const ID_GETTER_PREVIOUS_SEGMENT = 'previousSegment';
 export const ID_GETTER_CURRENT_SEGMENT = 'currentSegment';
 export const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
-export const ID_GETTER_HAS_NEW_PERSONAL_BEST = 'hasNewPersonalBest';
 export const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
 
 export const ID_MUTATION_SET_CURRENT = 'setCurrent';
-export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
 export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
 export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
 export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_MUTATION_SET_SEGMENT = 'setSegment';
-export const ID_MUTATION_SOFT_RESET = 'softReset';
-export const ID_MUTATION_HARD_RESET = 'hardReset';
+export const ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME = 'previousSegmentsTotalTime';
+export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
+export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
+export const ID_MUTATION_SAVING_RESET = 'savingReset';
 
 export const ID_ACTION_START = 'start';
 export const ID_ACTION_SPLIT = 'split';
@@ -34,25 +34,27 @@ export const ID_ACTION_UNDO = 'undo';
 export const ID_ACTION_PAUSE = 'pause';
 export const ID_ACTION_UNPAUSE = 'unpause';
 export const ID_ACTION_RESET = 'reset';
-export const ID_ACTION_SOFT_RESET = 'softReset';
-export const ID_ACTION_HARD_RESET = 'hardReset';
+export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
+export const ID_ACTION_SAVING_RESET = 'savingReset';
 export const ID_ACTION_SET_SEGMENTS = 'setSegments';
+export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
 export const GETTER_CURRENT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_CURRENT_SEGMENT}`;
 export const GETTER_NEXT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_NEXT_SEGMENT}`;
-export const GETTER_HAS_NEW_PERSONAL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_PERSONAL_BEST}`;
 export const GETTER_HAS_NEW_OVERALL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_OVERALL_BEST}`;
 
 export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
-export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
 export const MUTATION_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_CLEAR_SEGMENTS}`;
 export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGMENT}`;
 export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
 export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SEGMENTS}`;
 export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
-export const MUTATION_SOFT_RESET = `${MODULE_PATH}/${ID_MUTATION_SOFT_RESET}`;
-export const MUTATION_HARD_RESET = `${MODULE_PATH}/${ID_MUTATION_HARD_RESET}`;
+export const MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME =
+    `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME}`;
+export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
+export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
+export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
 
 export const ACTION_START = `${MODULE_PATH}/${ID_ACTION_START}`;
 export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
@@ -61,17 +63,17 @@ export const ACTION_UNDO = `${MODULE_PATH}/${ID_ACTION_UNDO}`;
 export const ACTION_PAUSE = `${MODULE_PATH}/${ID_ACTION_PAUSE}`;
 export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
 export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
-export const ACTION_SOFT_RESET = `${MODULE_PATH}/${ID_ACTION_SOFT_RESET}`;
-export const ACTION_HARD_RESET = `${MODULE_PATH}/${ID_ACTION_HARD_RESET}`;
+export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
+export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
 export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
+export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
 function resetSegment(segment: Segment): Segment {
     return {
         ...segment,
         hasNewOverallBest: false,
-        hasNewPersonalBest: false,
         previousOverallBest: -1,
-        previousPersonalBest: -1,
+        time: -1,
         startTime: -1,
         skipped: false,
         passed: false,
@@ -86,7 +88,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
         state: {
             current: -1,
             segments: [],
-            currentOpenFile: null
+            currentOpenFile: null,
+            previousSegmentsTotalTime: -1,
         },
         getters: {
             [ID_GETTER_PREVIOUS_SEGMENT](state: SplitsState) {
@@ -105,18 +108,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 return index > -1 && index + 1 <= state.segments.length
                     ? state.segments[index + 1]
                     : null;
-            },
-            /**
-             * If there's a new personal best
-             */
-            [ID_GETTER_HAS_NEW_PERSONAL_BEST](state: SplitsState) {
-                for (const segment of state.segments) {
-                    if (segment.hasNewPersonalBest) {
-                        return true;
-                    }
-                }
-
-                return false;
             },
             /**
              * If there's a new overall best
@@ -144,9 +135,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 state.current = index;
-            },
-            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
-                state.currentOpenFile = filePath;
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
                 /*
@@ -238,15 +226,28 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 state.segments = [];
             },
-            [ID_MUTATION_SOFT_RESET](state: SplitsState) {
+            [ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME](state: SplitsState, newTime: number) {
+                if (!isFinite(newTime) || isNaN(newTime)) {
+                    newTime = 0;
+                }
+                state.previousSegmentsTotalTime = newTime;
+            },
+            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
+                state.currentOpenFile = filePath;
+            },
+            [ID_MUTATION_DISCARDING_RESET](state: SplitsState) {
                 state.segments = state.segments.map(resetSegment);
             },
-            [ID_MUTATION_HARD_RESET](state: SplitsState) {
+            [ID_MUTATION_SAVING_RESET](state: SplitsState, isNewPersonalBest: boolean = false) {
+                let totalNewTime = 0;
                 state.segments = state.segments.map(segment => {
                     const newSegment = resetSegment(segment);
 
-                    if (segment.hasNewPersonalBest) {
-                        newSegment.personalBest = segment.previousPersonalBest;
+                    if (segment.passed) {
+                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
+                    }
+                    if (isNewPersonalBest) {
+                        newSegment.personalBest = segment.time;
                     }
                     if (segment.hasNewOverallBest) {
                         newSegment.overallBest = segment.previousOverallBest;
@@ -254,6 +255,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                     return newSegment;
                 });
+
+                if (isNewPersonalBest) {
+                    state.previousSegmentsTotalTime = totalNewTime;
+                }
             },
         },
         actions: {
@@ -270,6 +275,15 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { time, status: TimerStatus.RUNNING },
                     { root: true }
                 );
+
+                let totalTime = 0;
+                context.state.segments.forEach(segment => {
+                    if (segment.passed) {
+                        totalTime += Math.max(0, (segment.personalBest || 0));
+                    }
+                });
+
+                context.commit(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME, totalTime);
 
                 const firstSegment = context.state.segments[0];
 
@@ -291,7 +305,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 switch (status) {
                     case TimerStatus.FINISHED:
                         // Cleanup via reset
-                        context.dispatch(ID_ACTION_SOFT_RESET);
+                        context.dispatch(ID_ACTION_RESET);
 
                         return;
                     case TimerStatus.RUNNING:
@@ -316,20 +330,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 currentSegment.passed = true;
                 currentSegment.skipped = false;
                 currentSegment.time = time;
-
-                if (
-                    currentSegment.personalBest == null ||
-                    currentSegment.personalBest < 0 ||
-                    currentSegment.personalBest > time
-                ) {
-                    // Backup of the previous time to be able to revert it
-                    currentSegment.previousPersonalBest = currentSegment.personalBest;
-                    currentSegment.personalBest = time;
-                    currentSegment.hasNewPersonalBest = true;
-                } else {
-                    currentSegment.hasNewPersonalBest = false;
-                    currentSegment.previousPersonalBest = -1;
-                }
 
                 if (
                     currentSegment.overallBest == null ||
@@ -415,13 +415,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     skipped: false
                 };
 
-                // Revert PB
-                if (segment.hasNewPersonalBest) {
-                    segment.personalBest = segment.previousPersonalBest;
-                    segment.hasNewPersonalBest = false;
-                }
-                segment.previousPersonalBest = -1;
-
                 // Revert OB
                 if (segment.hasNewOverallBest) {
                     segment.overallBest = segment.previousOverallBest;
@@ -494,14 +487,20 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     return Promise.resolve();
                 }
 
-                // If there're no new best-times or it's already finished, we can
-                // safely reset it (hard-reset).
-                if (
-                    !(context.getters.hasNewOverallBest ||
-                        context.getters.hasNewPersonalBest) ||
-                    status === TimerStatus.FINISHED
-                ) {
-                    context.dispatch(ID_ACTION_HARD_RESET);
+                const previousPB = Math.max(0, context.state.previousSegmentsTotalTime);
+                let totalNewTime = 0;
+                context.state.segments.forEach(segment => {
+                    if (segment.passed) {
+                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
+                    }
+                });
+
+                const isNewPersonalBest = previousPB === 0 || totalNewTime < previousPB;
+
+                // if the time is a new PB or the splits should get saved as
+                // the status is finished.
+                if (!isNewPersonalBest || status === TimerStatus.FINISHED) {
+                    context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
 
                     return Promise.resolve();
                 }
@@ -528,25 +527,28 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         case 0:
                             return Promise.resolve();
                         case 1:
-                            return context.dispatch(ID_ACTION_HARD_RESET);
+                            return context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
                         case 2:
-                            return context.dispatch(ID_ACTION_SOFT_RESET);
+                            return context.dispatch(ID_ACTION_DISCARDING_RESET);
                     }
                 });
             },
-            [ID_ACTION_SOFT_RESET](context: ActionContext<SplitsState, RootState>) {
+            [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>) {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
-                context.commit(ID_MUTATION_SOFT_RESET);
+                context.commit(ID_MUTATION_DISCARDING_RESET);
             },
-            [ID_ACTION_HARD_RESET](context: ActionContext<SplitsState, RootState>) {
+            [ID_ACTION_SAVING_RESET](
+                context: ActionContext<SplitsState, RootState>,
+                isNewPersonalBest: boolean = false
+            ) {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
-                context.commit(ID_MUTATION_HARD_RESET);
+                context.commit(ID_MUTATION_SAVING_RESET, isNewPersonalBest);
             },
             [ID_ACTION_SET_SEGMENTS](
                 context: ActionContext<SplitsState, RootState>,
@@ -565,7 +567,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            setCurrentOpenFile(
+            [ID_ACTION_SET_CURRENT_OPEN_FILE](
                 context: ActionContext<SplitsState, RootState>,
                 filePath: string
             ) {

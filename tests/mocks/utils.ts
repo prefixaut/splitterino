@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../src/common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN, ActionResult } from '../../src/common/interfaces/electron';
 import { IOService } from '../../src/services/io.service';
 import { ElectronMockService } from './electron-mock.service';
 
@@ -35,11 +35,17 @@ export interface MockedActionContext<S, R> extends MockedActionContextState<S, R
 
 export type MockedAction<S, R> = (context: MockedActionContext<S, R>, payload?: any) => Promise<any>;
 
+export interface ActionTestResult {
+    commits: MockedTransmission[];
+    dispatches: MockedTransmission[];
+    returnValue: any;
+}
+
 export async function testAction<S, R>(
     action: Action<S, R>,
     context: MockedActionContextState<S, R>,
     payload?: any,
-) {
+): Promise<ActionTestResult> {
     const commits: MockedTransmission[] = [];
     const dispatches: MockedTransmission[] = [];
 
@@ -62,7 +68,7 @@ export async function testAction<S, R>(
     };
 
     // call the action with mocked store and arguments
-    const response = await (action as MockedAction<S, R>)({
+    const returnValue = await (action as MockedAction<S, R>)({
         ...context,
         commit,
         dispatch,
@@ -71,6 +77,6 @@ export async function testAction<S, R>(
     return {
         commits,
         dispatches,
-        response,
+        returnValue: returnValue,
     };
 }

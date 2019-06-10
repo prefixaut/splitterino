@@ -9,6 +9,7 @@ import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interface
 import { isSplits } from '../common/interfaces/splits';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
+import { ACTION_SET_SEGMENTS, ACTION_SET_CURRENT_OPEN_FILE } from '../store/modules/splits.module';
 
 @Injectable
 export class IOService {
@@ -108,9 +109,9 @@ export class IOService {
 
                 Logger.debug('Loaded splits are valid, applying to store');
 
-                store.dispatch('splitterino/splits/setCurrentOpenFile', filePath);
+                store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
 
-                return store.dispatch('splitterino/splits/setSegments', [loaded.splits.segments]);
+                return store.dispatch(ACTION_SET_SEGMENTS, [...loaded.splits.segments]);
             })
             .catch(error => {
                 Logger.error('Error while loading splits', error);
