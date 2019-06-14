@@ -17,6 +17,7 @@ import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
+import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -25,6 +26,9 @@ import { createInjector } from './utils/services';
         // tslint:disable-next-line no-require-imports no-var-requires
         require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
     }
+
+    // Standard scheme must be registered before the app is ready
+    protocol.registerStandardSchemes(['app'], { secure: true });
 
     // global reference to mainWindow (necessary to prevent window
     // from being garbage collected)
@@ -91,9 +95,6 @@ import { createInjector } from './utils/services';
         }
     });
 
-    // Standard scheme must be registered before the app is ready
-    protocol.registerStandardSchemes(['app'], { secure: true });
-
     function createMainWindow() {
         const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
@@ -159,6 +160,13 @@ import { createInjector } from './utils/services';
             // Install Vue Devtools
             await installVueDevtools();
         }
+
+        // Load the keybindings once the application is actually loaded
+        // Has to be done before creating the main window.
+        if (Array.isArray(appSettings.keybindings)) {
+            store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
+        }
+
         mainWindow = createMainWindow();
     });
 })();

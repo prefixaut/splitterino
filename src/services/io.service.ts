@@ -197,11 +197,6 @@ export class IOService {
             if (typeof appSettings.lastOpenedSplitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
             }
-            if (Array.isArray(appSettings.keybindings)) {
-                setTimeout(() => {
-                    store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
-                }, 2_000);
-            }
         }
 
         return appSettings;
