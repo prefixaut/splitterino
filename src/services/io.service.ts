@@ -5,8 +5,10 @@ import { dirname, join } from 'path';
 import { Store } from 'vuex';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron-interface';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { isSplits } from '../common/interfaces/splits';
+import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
+import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
 
@@ -108,9 +110,9 @@ export class IOService {
 
                 Logger.debug('Loaded splits are valid, applying to store');
 
-                store.dispatch('splitterino/splits/setCurrentOpenFile', filePath);
+                await store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
 
-                return store.dispatch('splitterino/splits/setSegments', [loaded.splits.segments]);
+                return store.dispatch(ACTION_SET_SEGMENTS, [...loaded.splits.segments]);
             })
             .catch(error => {
                 Logger.error('Error while loading splits', error);
@@ -191,8 +193,8 @@ export class IOService {
     public async loadApplicationSettingsFromFile(store: Store<RootState>): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (appSettings) {
-            if (appSettings.lastOpenedSplitsFile) {
+        if (appSettings != null && typeof appSettings === 'object') {
+            if (typeof appSettings.lastOpenedSplitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
             }
         }
@@ -209,6 +211,7 @@ export class IOService {
         const windowSize = window.getSize();
         const windowPos = window.getPosition();
         const lastOpenedSplitsFile = store.state.splitterino.splits.currentOpenFile;
+        const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
             window: {
@@ -217,7 +220,8 @@ export class IOService {
                 x: windowPos[0],
                 y: windowPos[1]
             },
-            lastOpenedSplitsFile
+            lastOpenedSplitsFile,
+            keybindings,
         };
 
         this.saveJSONToFile(this.appSettingsFileName, newAppSettings);

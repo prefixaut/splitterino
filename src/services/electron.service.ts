@@ -2,6 +2,7 @@ import {
     app,
     BrowserWindow,
     BrowserWindowConstructorOptions,
+    dialog,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
@@ -14,7 +15,7 @@ import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
-import { ElectronInterface } from '../common/interfaces/electron-interface';
+import { ElectronInterface } from '../common/interfaces/electron';
 import { Logger } from '../utils/logger';
 
 @Injectable
@@ -50,7 +51,7 @@ export class ElectronService implements ElectronInterface {
     }
 
     public getCurrentWindow(): BrowserWindow {
-        return remote.getCurrentWindow();
+        return this.isRenderProcess() ? remote.getCurrentWindow() : BrowserWindow.getFocusedWindow();
     }
 
     public reloadCurrentWindow() {
@@ -65,7 +66,8 @@ export class ElectronService implements ElectronInterface {
         return new Promise((resolve, reject) => {
             try {
                 Logger.debug('Showing Open-File dialog');
-                const paths = remote.dialog.showOpenDialog(browserWindow, options);
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                const paths = dialogToUse.showOpenDialog(browserWindow, options);
                 resolve(paths);
             } catch (e) {
                 Logger.debug('Error while opening file open dialog:', e);
@@ -78,7 +80,8 @@ export class ElectronService implements ElectronInterface {
         return new Promise((resolve, reject) => {
             try {
                 Logger.debug('Showing Save-File dialog');
-                remote.dialog.showSaveDialog(browserWindow, options, path => resolve(path));
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                dialogToUse.showSaveDialog(browserWindow, options, path => resolve(path));
             } catch (e) {
                 Logger.debug('Error while opening file save dialog:', e);
                 reject(e);
@@ -90,7 +93,8 @@ export class ElectronService implements ElectronInterface {
         return new Promise((resolve, reject) => {
             try {
                 Logger.debug('Showing message dialog');
-                remote.dialog.showMessageBox(browserWindow, options, response => resolve(response));
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                dialogToUse.showMessageBox(browserWindow, options, response => resolve(response));
             } catch (e) {
                 Logger.debug('Error while opening message dialog:', e);
                 reject(e);
@@ -115,7 +119,7 @@ export class ElectronService implements ElectronInterface {
     }
 
     public createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {
-        const contextMenu = new Menu();
+        const contextMenu = new remote.Menu();
 
         menuItems.forEach(menu => {
             const options = this.prepareMenuItemOptions(menu, vNode);

@@ -9,11 +9,15 @@ import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
+import { registerDefaultKeybindingFunctions } from './common/function-registry';
+import { ActionResult } from './common/interfaces/electron';
 import { IOService } from './services/io.service';
-import { getStoreConfig, patchBackgroundDispatch } from './store';
+import { getStoreConfig } from './store';
+import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
+import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -22,6 +26,9 @@ import { createInjector } from './utils/services';
         // tslint:disable-next-line no-require-imports no-var-requires
         require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
     }
+
+    // Standard scheme must be registered before the app is ready
+    protocol.registerStandardSchemes(['app'], { secure: true });
 
     // global reference to mainWindow (necessary to prevent window
     // from being garbage collected)
@@ -35,21 +42,29 @@ import { createInjector } from './utils/services';
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
-    const store = patchBackgroundDispatch(new Vuex.Store<RootState>({
+    const store = new Vuex.Store<RootState>({
         ...getStoreConfig(injector),
         plugins: [
             OverlayHostPlugin,
-            vuexStore => {
-                vuexStore.subscribe(mutation => {
-                    Object.keys(clients).forEach(id => {
-                        clients[id].send('vuex-apply-mutation', mutation);
-                    });
+            storeInstance => {
+                storeInstance.subscribe(mutation => {
+                    try {
+                        Object.keys(clients).forEach(id => {
+                            clients[id].send('vuex-apply-mutation', mutation);
+                        });
+                    } catch (error) {
+                        Logger.error('Error while sending mutation to other processes:', JSON.stringify(mutation));
+                    }
                 });
-            }
+            },
+            getKeybindingsStorePlugin(injector),
         ]
-    }));
+    });
 
     const appSettings = await io.loadApplicationSettingsFromFile(store);
+
+    // Setup the Keybiding Functions
+    registerDefaultKeybindingFunctions();
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
@@ -68,13 +83,18 @@ import { createInjector } from './utils/services';
     });
 
     // Listener to perform a delegate mutation on the main store
-    ipcMain.on('vuex-mutate', (event, { type, payload }) => {
-        Logger.debug('[background] vuex-mutate', type, payload);
-        store.dispatch(type, ...payload);
+    ipcMain.on('vuex-dispatch', async (event, { type, payload, options }) => {
+        Logger.debug('[background] vuex-dispatch', type, payload, options);
+        try {
+            const dispatchResult = await store.dispatch(type, payload, options);
+            const eventResponse: ActionResult = { result: dispatchResult, error: null };
+            event.returnValue = eventResponse;
+        } catch (error) {
+            const eventResponse: ActionResult = { result: null, error };
+            event.returnValue = eventResponse;
+        }
     });
 
-    // Standard scheme must be registered before the app is ready
-    protocol.registerStandardSchemes(['app'], { secure: true });
     function createMainWindow() {
         const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
@@ -140,6 +160,13 @@ import { createInjector } from './utils/services';
             // Install Vue Devtools
             await installVueDevtools();
         }
+
+        // Load the keybindings once the application is actually loaded
+        // Has to be done before creating the main window.
+        if (Array.isArray(appSettings.keybindings)) {
+            store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
+        }
+
         mainWindow = createMainWindow();
     });
 })();

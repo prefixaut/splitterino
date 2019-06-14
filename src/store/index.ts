@@ -1,8 +1,9 @@
 import { ipcRenderer, remote } from 'electron';
 import { Injector } from 'lightweight-di';
 import { OverlayHostPlugin } from 'vue-overlay-host';
-import Vuex, { Dispatch, Store } from 'vuex';
+import Vuex, { DispatchOptions, Payload } from 'vuex';
 
+import { ActionResult } from '../common/interfaces/electron';
 import { Logger } from '../utils/logger';
 import { getSplitterinoStoreModules } from './modules/index.module';
 import { RootState } from './states/root.state';
@@ -68,26 +69,47 @@ export function getClientStore(vueRef, injector: Injector) {
 
     // Override the dispatch function to delegate it to the main process instead
     // tslint:disable-next-line only-arrow-functions no-string-literal
-    store['_dispatch'] = store.dispatch = function(
-        type: string | { type: string; payload: any },
-        ...payload: any[]
+    store['_dispatch'] = store.dispatch = function<P extends Payload>(
+        typeMaybeWithPayload: string | P,
+        payloadOrOptions?: any | DispatchOptions,
+        options?: DispatchOptions
     ) {
-        if (Array.isArray(payload)) {
-            if (payload.length === 0) {
-                payload = undefined;
-            } else if (payload.length === 1) {
-                payload = payload[0];
+        let actualType: string;
+        let actualPayload: any;
+        let actualOptions: DispatchOptions;
+
+        if (typeof typeMaybeWithPayload === 'string') {
+            actualType = typeMaybeWithPayload;
+            actualPayload = payloadOrOptions;
+            actualOptions = options;
+        } else if (typeMaybeWithPayload != null && typeof typeMaybeWithPayload === 'object') {
+            const { type, ...payloadData } = typeMaybeWithPayload;
+            actualType = type;
+            actualPayload = payloadData;
+            actualOptions = payloadOrOptions;
+        }
+
+        if (actualType == null) {
+            return Promise.reject(new Error('The type of the dispatch could not be determined'));
+        }
+
+        return new Promise((resolve, reject) => {
+            try {
+                const actionResult: ActionResult = ipcRenderer.sendSync('vuex-dispatch', {
+                    type: actualType,
+                    payload: actualPayload,
+                    options: actualOptions
+                });
+                if (actionResult.error == null) {
+                    resolve(actionResult.result);
+                } else {
+                    reject(actionResult.error);
+                }
+            } catch (error) {
+                reject(error);
             }
-        }
-
-        // Stolen from vuejs/vuex
-        if (typeof type === 'object' && type.type && arguments.length === 1) {
-            payload = [type.payload];
-            type = type.type;
-        }
-
-        ipcRenderer.send('vuex-mutate', { type, payload });
-    } as Dispatch;
+        });
+    };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         Logger.debug('[client] vuex-apply-mutation', type);
@@ -104,34 +126,6 @@ export function getClientStore(vueRef, injector: Injector) {
             store.commit(type, payload);
         }
     });
-
-    return store;
-}
-
-export function patchBackgroundDispatch(store: Store<RootState>): Store<RootState> {
-    const originalStoreDispatch = store.dispatch;
-
-    // tslint:disable-next-line
-    store['_dispatch'] = store.dispatch = function (
-        type: string | { type: string; payload: any },
-        ...payload: any[]
-    ) {
-        if (Array.isArray(payload)) {
-            if (payload.length === 0) {
-                payload = undefined;
-            } else if (payload.length === 1) {
-                payload = payload[0];
-            }
-        }
-
-        // Stolen from vuejs/vuex
-        if (typeof type === 'object' && type.type && arguments.length === 1) {
-            payload = [type.payload];
-            type = type.type;
-        }
-
-        originalStoreDispatch(type as string, ...payload);
-    } as Dispatch;
 
     return store;
 }

@@ -1,6 +1,5 @@
 <template>
     <div class="timer">
-        Timer:
         <span class="content">{{ currentTime | aevum }}</span>
     </div>
 </template>
@@ -29,21 +28,32 @@ export default class TimerComponent extends Vue {
     @timer.State('pauseTotal')
     public pauseTotal: number;
 
+    @timer.State('finishTime')
+    public finishTime: number;
+
+    /**
+     * The time which is getting updated every millisecond
+     * when the timer is running.
+     */
     public currentTime = 0;
+    /**
+     * Id of the interval to cancel it when the component is getting
+     * destroyed.
+     */
     private intervalId = -1;
 
     private statusWatcher = () => {
         // noop
     }
 
-    created() {
+    public created() {
         this.statusWatcher = this.$store.watch(
             (state: RootState) => state.splitterino.timer.status,
             () => this.statusChange()
         );
     }
 
-    public destroy() {
+    public beforeDestroy() {
         this.statusWatcher();
     }
 
@@ -59,6 +69,10 @@ export default class TimerComponent extends Vue {
 
         if (this.intervalId > -1) {
             window.clearInterval(this.intervalId);
+        }
+
+        if (this.status === TimerStatus.FINISHED) {
+            this.currentTime = this.finishTime - (this.startTime + this.startDelay);
         }
 
         if (this.status === TimerStatus.STOPPED) {

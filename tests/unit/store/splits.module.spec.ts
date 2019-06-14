@@ -11,29 +11,30 @@ import {
     ACTION_START,
     ACTION_UNDO,
     getSplitsStoreModule,
+    ID_ACTION_RESET,
     ID_ACTION_SKIP,
-    ID_ACTION_SOFT_RESET,
     ID_ACTION_SPLIT,
     ID_ACTION_START,
     ID_ACTION_UNDO,
     ID_MUTATION_ADD_SEGMENT,
     ID_MUTATION_CLEAR_SEGMENTS,
-    ID_MUTATION_HARD_RESET,
+    ID_MUTATION_DISCARDING_RESET,
     ID_MUTATION_REMOVE_SEGMENT,
+    ID_MUTATION_SAVING_RESET,
     ID_MUTATION_SET_ALL_SEGMENTS,
     ID_MUTATION_SET_CURRENT,
     ID_MUTATION_SET_CURRENT_OPEN_FILE,
+    ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME,
     ID_MUTATION_SET_SEGMENT,
-    ID_MUTATION_SOFT_RESET,
     MUTATION_ADD_SEGMENT,
     MUTATION_CLEAR_SEGMENTS,
-    MUTATION_HARD_RESET,
+    MUTATION_DISCARDING_RESET,
     MUTATION_REMOVE_SEGMENT,
+    MUTATION_SAVING_RESET,
     MUTATION_SET_ALL_SEGMENTS,
     MUTATION_SET_CURRENT,
     MUTATION_SET_CURRENT_OPEN_FILE,
     MUTATION_SET_SEGMENT,
-    MUTATION_SOFT_RESET,
 } from '../../../src/store/modules/splits.module';
 import { MUTATION_SET_STATUS, timerStoreModule } from '../../../src/store/modules/timer.module';
 import { RootState } from '../../../src/store/states/root.state';
@@ -57,13 +58,11 @@ function generateSegmentArray(size: number): Segment[] {
         name: 'test',
         time: randomInt(99999),
         hasNewOverallBest: true,
-        hasNewPersonalBest: true,
         overallBest: randomInt(99999),
         passed: true,
         pauseTime: randomInt(99999),
         personalBest: randomInt(99999),
         previousOverallBest: randomInt(99999),
-        previousPersonalBest: randomInt(99999),
         skipped: false,
         startTime: now(),
     }));
@@ -83,6 +82,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: generateSegmentArray(20),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
@@ -115,6 +115,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const newCurrentFile = 'test';
@@ -130,6 +131,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const segmentOne: Segment = {
@@ -173,6 +175,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [{ id: '0', name: '0' }, { id: '1', name: '1' }, { id: '2', name: '2' }],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const newSegment: Segment = {
@@ -196,6 +199,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 expect(state.segments.length).to.equal(originalSegments.length);
@@ -220,6 +224,7 @@ describe('Splits Store-Module', () => {
                         current: -1,
                         currentOpenFile: null,
                         segments: originalSegments.slice(0),
+                        previousSegmentsTotalTime: randomInt(99999),
                     };
 
                     splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, deleteIndex);
@@ -240,6 +245,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 [
@@ -270,6 +276,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [{ id: 'test', name: 'test' }],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
@@ -278,7 +285,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SOFT_RESET, () => {
+        describe(MUTATION_DISCARDING_RESET, () => {
             it('should apply the mutation correctly', () => {
                 const originalSegments: Segment[] = generateSegmentArray(10);
                 const state: SplitsState = {
@@ -286,22 +293,21 @@ describe('Splits Store-Module', () => {
                     currentOpenFile: null,
                     // Create a copy
                     segments: originalSegments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_SOFT_RESET](state, null);
+                splitsModule.mutations[ID_MUTATION_DISCARDING_RESET](state, null);
 
                 state.segments.forEach((segment, index) => {
                     expect(segment.id).to.equal(originalSegments[index].id);
                     expect(segment.name).to.equal(originalSegments[index].name);
-                    expect(segment.time).to.equal(originalSegments[index].time);
+                    expect(segment.time).to.equal(-1);
                     expect(segment.pauseTime).to.equal(originalSegments[index].pauseTime);
                     expect(segment.personalBest).to.equal(originalSegments[index].personalBest);
                     expect(segment.overallBest).to.equal(originalSegments[index].overallBest);
 
                     expect(segment.hasNewOverallBest).to.equal(false);
-                    expect(segment.hasNewPersonalBest).to.equal(false);
                     expect(segment.previousOverallBest).to.equal(-1);
-                    expect(segment.previousPersonalBest).to.equal(-1);
                     expect(segment.startTime).to.equal(-1);
                     expect(segment.skipped).to.equal(false);
                     expect(segment.passed).to.equal(false);
@@ -309,54 +315,26 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_HARD_RESET, () => {
-            it('should apply the mutation correctly', () => {
+        describe(MUTATION_SAVING_RESET, () => {
+            it('should apply the time without personal-bests mutation correctly', () => {
                 const originalSegments: Segment[] = [
                     {
                         id: uuid(),
                         name: 'none',
-                        time: randomInt(99999),
+                        time: 1000,
                         pauseTime: randomInt(99999),
-                        personalBest: randomInt(99999),
+                        personalBest: 99,
                         hasNewOverallBest: false,
-                        previousPersonalBest: randomInt(99999),
-                        overallBest: randomInt(99999),
-                        hasNewPersonalBest: false,
-                        previousOverallBest: randomInt(99999),
-                    },
-                    {
-                        id: uuid(),
-                        name: 'pb',
-                        time: randomInt(99999),
-                        pauseTime: randomInt(99999),
-                        personalBest: randomInt(99999),
-                        hasNewPersonalBest: true,
-                        previousPersonalBest: randomInt(99999),
-                        overallBest: randomInt(99999),
-                        hasNewOverallBest: false,
+                        overallBest: randomInt(999),
                         previousOverallBest: randomInt(99999),
                     },
                     {
                         id: uuid(),
                         name: 'ob',
-                        time: randomInt(99999),
+                        time: randomInt(999),
                         pauseTime: randomInt(99999),
                         personalBest: randomInt(99999),
-                        hasNewPersonalBest: false,
-                        previousPersonalBest: randomInt(99999),
-                        overallBest: randomInt(99999),
-                        hasNewOverallBest: true,
-                        previousOverallBest: randomInt(99999),
-                    },
-                    {
-                        id: uuid(),
-                        name: 'both',
-                        time: randomInt(99999),
-                        pauseTime: randomInt(99999),
-                        personalBest: randomInt(99999),
-                        hasNewPersonalBest: true,
-                        previousPersonalBest: randomInt(99999),
-                        overallBest: randomInt(99999),
+                        overallBest: 1000,
                         hasNewOverallBest: true,
                         previousOverallBest: randomInt(99999),
                     },
@@ -366,18 +344,19 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_HARD_RESET](state, null);
+                splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
+
+                expect(state.segments).to.have.lengthOf(originalSegments.length);
 
                 expect(state.segments[0].id).to.equal(originalSegments[0].id);
                 expect(state.segments[0].name).to.equal(originalSegments[0].name);
-                expect(state.segments[0].time).to.equal(originalSegments[0].time);
+                expect(state.segments[0].time).to.equal(-1);
                 expect(state.segments[0].pauseTime).to.equal(originalSegments[0].pauseTime);
                 expect(state.segments[0].personalBest).to.equal(originalSegments[0].personalBest);
                 expect(state.segments[0].overallBest).to.equal(originalSegments[0].overallBest);
-                expect(state.segments[0].hasNewPersonalBest).to.equal(false);
-                expect(state.segments[0].previousPersonalBest).to.equal(-1);
                 expect(state.segments[0].hasNewOverallBest).to.equal(false);
                 expect(state.segments[0].previousOverallBest).to.equal(-1);
                 expect(state.segments[0].startTime).to.equal(-1);
@@ -386,46 +365,18 @@ describe('Splits Store-Module', () => {
 
                 expect(state.segments[1].id).to.equal(originalSegments[1].id);
                 expect(state.segments[1].name).to.equal(originalSegments[1].name);
-                expect(state.segments[1].time).to.equal(originalSegments[1].time);
+                expect(state.segments[1].time).to.equal(-1);
                 expect(state.segments[1].pauseTime).to.equal(originalSegments[1].pauseTime);
-                expect(state.segments[1].personalBest).to.equal(originalSegments[1].previousPersonalBest);
-                expect(state.segments[1].overallBest).to.equal(originalSegments[1].overallBest);
-                expect(state.segments[1].hasNewPersonalBest).to.equal(false);
-                expect(state.segments[1].previousPersonalBest).to.equal(-1);
+                expect(state.segments[1].personalBest).to.equal(originalSegments[1].personalBest);
+                expect(state.segments[1].overallBest).to.equal(originalSegments[1].previousOverallBest);
                 expect(state.segments[1].hasNewOverallBest).to.equal(false);
                 expect(state.segments[1].previousOverallBest).to.equal(-1);
                 expect(state.segments[1].startTime).to.equal(-1);
                 expect(state.segments[1].skipped).to.equal(false);
                 expect(state.segments[1].passed).to.equal(false);
-
-                expect(state.segments[2].id).to.equal(originalSegments[2].id);
-                expect(state.segments[2].name).to.equal(originalSegments[2].name);
-                expect(state.segments[2].time).to.equal(originalSegments[2].time);
-                expect(state.segments[2].pauseTime).to.equal(originalSegments[2].pauseTime);
-                expect(state.segments[2].personalBest).to.equal(originalSegments[2].personalBest);
-                expect(state.segments[2].overallBest).to.equal(originalSegments[2].previousOverallBest);
-                expect(state.segments[2].hasNewPersonalBest).to.equal(false);
-                expect(state.segments[2].previousPersonalBest).to.equal(-1);
-                expect(state.segments[2].hasNewOverallBest).to.equal(false);
-                expect(state.segments[2].previousOverallBest).to.equal(-1);
-                expect(state.segments[2].startTime).to.equal(-1);
-                expect(state.segments[2].skipped).to.equal(false);
-                expect(state.segments[2].passed).to.equal(false);
-
-                expect(state.segments[3].id).to.equal(originalSegments[3].id);
-                expect(state.segments[3].name).to.equal(originalSegments[3].name);
-                expect(state.segments[3].time).to.equal(originalSegments[3].time);
-                expect(state.segments[3].pauseTime).to.equal(originalSegments[3].pauseTime);
-                expect(state.segments[3].personalBest).to.equal(originalSegments[3].previousPersonalBest);
-                expect(state.segments[3].overallBest).to.equal(originalSegments[3].previousOverallBest);
-                expect(state.segments[3].hasNewPersonalBest).to.equal(false);
-                expect(state.segments[3].previousPersonalBest).to.equal(-1);
-                expect(state.segments[3].hasNewOverallBest).to.equal(false);
-                expect(state.segments[3].previousOverallBest).to.equal(-1);
-                expect(state.segments[3].startTime).to.equal(-1);
-                expect(state.segments[3].skipped).to.equal(false);
-                expect(state.segments[3].passed).to.equal(false);
             });
+
+            // TODO: Create case for Personal Bests
         });
     });
 
@@ -438,6 +389,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: segments,
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -454,7 +406,14 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                expect(commits).to.have.lengthOf(3);
+                let totalTime = 0;
+                segments.forEach(segment => {
+                    if (segment.passed) {
+                        totalTime += Math.max(0, (segment.personalBest || 0));
+                    }
+                });
+
+                expect(commits).to.have.lengthOf(4);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
 
@@ -465,14 +424,17 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.time).to.be.within(startTime, startTime + 1);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
-                // tslint:disable-next-line:no-unused-expression
-                expect(commits[1].payload).to.exist;
-                expect(commits[1].payload.index).to.equal(0);
-                expect(commits[1].payload.segment.id).to.equal(segments[0].id);
-                expect(commits[1].payload.segment.startTime).to.be.within(startTime, startTime + 1);
+                expect(commits[1].type).to.equal(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME);
+                expect(commits[1].payload).to.equal(totalTime);
 
-                expect(commits[2]).to.deep.equal({ type: ID_MUTATION_SET_CURRENT, payload: 0 });
+                expect(commits[2].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits[2].payload).to.exist;
+                expect(commits[2].payload.index).to.equal(0);
+                expect(commits[2].payload.segment.id).to.equal(segments[0].id);
+                expect(commits[2].payload.segment.startTime).to.be.within(startTime, startTime + 1);
+
+                expect(commits[3]).to.deep.equal({ type: ID_MUTATION_SET_CURRENT, payload: 0 });
             });
 
             it('should not start without segments', async () => {
@@ -480,6 +442,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -507,6 +470,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const statuses = [TimerStatus.FINISHED, TimerStatus.PAUSED, TimerStatus.RUNNING];
@@ -540,6 +504,7 @@ describe('Splits Store-Module', () => {
                     current: -1,
                     currentOpenFile: null,
                     segments: [],
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -586,6 +551,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -615,7 +581,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.time).to.be.within(segmentTime, segmentTime + 1);
                 expect(commits[0].payload.segment.passed).to.equal(true);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(true);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
@@ -629,108 +594,6 @@ describe('Splits Store-Module', () => {
 
                 expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex + 1);
-            });
-
-            it('should apply personal bests correctly', async () => {
-                const segmentTime = 20_000;
-                const personalBest = 25_000;
-                const overallBest = 10_000;
-                const segments: Segment[] = [
-                    null,
-                    {
-                        id: uuid(),
-                        name: 'test',
-                        startTime: now() - segmentTime,
-                        personalBest: personalBest,
-                        overallBest: overallBest,
-                    },
-                    {
-                        id: uuid(),
-                        name: 'next',
-                        time: 123,
-                        passed: true,
-                        skipped: true,
-                    },
-                ];
-                const currentIndex = 1;
-                const state: SplitsState = {
-                    current: currentIndex,
-                    currentOpenFile: null,
-                    segments: segments.slice(0),
-                };
-                const rootState = {
-                    splitterino: {
-                        splits: state,
-                        timer: {
-                            status: TimerStatus.RUNNING,
-                            startTime: randomInt(99999),
-                        },
-                    },
-                };
-
-                const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
-                    state,
-                    rootState,
-                });
-
-                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(true);
-                expect(commits[0].payload.segment.personalBest).to.be.within(segmentTime, segmentTime + 1);
-                expect(commits[0].payload.segment.previousPersonalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
-                expect(commits[0].payload.segment.overallBest).to.equal(overallBest);
-                expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
-            });
-
-            it('should not apply personal bests', async () => {
-                const segmentTime = 25_000;
-                const personalBest = 20_000;
-                const overallBest = 10_000;
-                const segments: Segment[] = [
-                    null,
-                    {
-                        id: uuid(),
-                        name: 'test',
-                        startTime: now() - segmentTime,
-                        personalBest: personalBest,
-                        overallBest: overallBest,
-                    },
-                    {
-                        id: uuid(),
-                        name: 'next',
-                        time: 123,
-                        passed: true,
-                        skipped: true,
-                    },
-                ];
-                const currentIndex = 1;
-                const state: SplitsState = {
-                    current: currentIndex,
-                    currentOpenFile: null,
-                    segments: segments.slice(0),
-                };
-                const rootState = {
-                    splitterino: {
-                        splits: state,
-                        timer: {
-                            status: TimerStatus.RUNNING,
-                            startTime: randomInt(99999),
-                        },
-                    },
-                };
-
-                const { commits } = await testAction(splitsModule.actions[ID_ACTION_SPLIT], {
-                    state,
-                    rootState,
-                });
-
-                expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(false);
-                expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.previousPersonalBest).to.equal(-1);
-                expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
-                expect(commits[0].payload.segment.overallBest).to.equal(overallBest);
-                expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
             });
 
             it('should apply overall bests correctly', async () => {
@@ -759,6 +622,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -776,10 +640,7 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(true);
-                expect(commits[0].payload.segment.personalBest).to.be.within(segmentTime, segmentTime + 1);
-                expect(commits[0].payload.segment.previousPersonalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
+                expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
                 expect(commits[0].payload.segment.overallBest).to.be.within(segmentTime, segmentTime + 1);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(overallBest);
             });
@@ -810,6 +671,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -827,9 +689,7 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(false);
                 expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.previousPersonalBest).to.equal(-1);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.overallBest).to.equal(overallBest);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
@@ -840,6 +700,7 @@ describe('Splits Store-Module', () => {
                     current: 0,
                     currentOpenFile: null,
                     segments: generateSegmentArray(1),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -869,6 +730,7 @@ describe('Splits Store-Module', () => {
                     current: 1,
                     currentOpenFile: null,
                     segments: generateSegmentArray(1),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -889,7 +751,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.empty;
                 expect(dispatches).to.be.lengthOf(1);
 
-                expect(dispatches[0].type).to.equal(ID_ACTION_SOFT_RESET);
+                expect(dispatches[0].type).to.equal(ID_ACTION_RESET);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches[0].payload).to.not.exist;
             });
@@ -903,6 +765,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const rootState = {
@@ -915,7 +778,7 @@ describe('Splits Store-Module', () => {
                     },
                 };
 
-                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
                     state,
                     rootState,
                 });
@@ -923,7 +786,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.lengthOf(2);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                expect(response).to.equal(true);
+                expect(returnValue).to.equal(true);
 
                 expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
@@ -947,6 +810,7 @@ describe('Splits Store-Module', () => {
                         current: currentIndex,
                         currentOpenFile: null,
                         segments: segments.slice(0),
+                        previousSegmentsTotalTime: randomInt(99999),
                     };
 
                     const rootState = {
@@ -959,16 +823,17 @@ describe('Splits Store-Module', () => {
                         },
                     };
 
-                    const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
-                        state,
-                        rootState,
-                    });
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_SKIP], {
+                            state,
+                            rootState,
+                        });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
                     // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
-                    expect(response).to.equal(false);
+                    expect(returnValue).to.equal(false);
                 }
             });
 
@@ -979,6 +844,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const rootState = {
@@ -991,7 +857,7 @@ describe('Splits Store-Module', () => {
                     },
                 };
 
-                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_SKIP], {
                     state,
                     rootState,
                 });
@@ -1000,7 +866,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.empty;
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                expect(response).to.equal(false);
+                expect(returnValue).to.equal(false);
             });
         });
 
@@ -1019,8 +885,6 @@ describe('Splits Store-Module', () => {
                         startTime: randomInt(99999),
                         pauseTime: pauseTime,
                         personalBest: randomInt(99999),
-                        hasNewPersonalBest: true,
-                        previousPersonalBest: randomInt(99999),
                         overallBest: randomInt(99999),
                         hasNewOverallBest: true,
                         previousOverallBest: randomInt(99999),
@@ -1031,6 +895,7 @@ describe('Splits Store-Module', () => {
                     current: currentIndex,
                     currentOpenFile: null,
                     segments: segments.slice(0),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -1042,7 +907,7 @@ describe('Splits Store-Module', () => {
                     },
                 };
 
-                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
                     state,
                     rootState,
                 });
@@ -1050,7 +915,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.lengthOf(3);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                expect(response).to.equal(true);
+                expect(returnValue).to.equal(true);
 
                 expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
@@ -1060,9 +925,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.pauseTime).to.equal(0);
-                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].previousPersonalBest);
-                expect(commits[0].payload.segment.hasNewPersonalBest).to.equal(false);
-                expect(commits[0].payload.segment.previousPersonalBest).to.equal(-1);
+                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
                 expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
@@ -1084,6 +947,7 @@ describe('Splits Store-Module', () => {
                     current: 1,
                     currentOpenFile: null,
                     segments: generateSegmentArray(3),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
                 const invalidStatuses = [TimerStatus.STOPPED, TimerStatus.PAUSED, TimerStatus.FINISHED];
                 for (const status of invalidStatuses) {
@@ -1097,16 +961,17 @@ describe('Splits Store-Module', () => {
                         },
                     };
 
-                    const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
-                        state,
-                        rootState,
-                    });
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_UNDO], {
+                            state,
+                            rootState,
+                        });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
                     // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
-                    expect(response).to.equal(false);
+                    expect(returnValue).to.equal(false);
                 }
             });
 
@@ -1115,6 +980,7 @@ describe('Splits Store-Module', () => {
                     current: 0,
                     currentOpenFile: null,
                     segments: generateSegmentArray(3),
+                    previousSegmentsTotalTime: randomInt(99999),
                 };
 
                 const rootState = {
@@ -1127,7 +993,7 @@ describe('Splits Store-Module', () => {
                     },
                 };
 
-                const { commits, dispatches, response } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNDO], {
                     state,
                     rootState,
                 });
@@ -1136,7 +1002,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.be.empty;
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                expect(response).to.equal(false);
+                expect(returnValue).to.equal(false);
             });
         });
     });

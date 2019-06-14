@@ -18,10 +18,6 @@ export interface Segment {
      */
     name: string;
     /**
-     * The time of the Segment in milliseconds
-     */
-    time?: number;
-    /**
      * The time of how long the timer was paused in this segment
      */
     pauseTime?: number;
@@ -48,19 +44,13 @@ export interface Segment {
      */
 
     /**
+     * The time of the Segment in milliseconds
+     */
+    time?: number;
+    /**
      * Internal timestamp when the segment started.
      */
     startTime?: number;
-    /**
-     * If the currently set personal best has been overridden
-     * and can be reverted from {@link previousPersonalBest}.
-     */
-    hasNewPersonalBest?: boolean;
-    /**
-     * Backup of the personal best for when the segment is
-     * getting resetted and should revert the content.
-     */
-    previousPersonalBest?: number;
     /**
      * If the currently set overall best has been overridden
      * and can be reverted from {@link previousOverallBest}.

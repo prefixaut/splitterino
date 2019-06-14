@@ -1,7 +1,9 @@
 <template>
-    <div class="default-view container" v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']">
+    <div class="default-view" v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']">
         <spl-splits/>
-        <spl-timer/>
+        <div class="container">
+            <spl-timer/>
+        </div>
     </div>
 </template>
 
