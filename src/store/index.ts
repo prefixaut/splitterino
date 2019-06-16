@@ -90,8 +90,21 @@ export function getClientStore(vueRef, injector: Injector) {
         }
 
         if (actualType == null) {
-            return Promise.reject(new Error('The type of the dispatch could not be determined'));
+            const errorMsg = 'The type for the dispatch could not be determined';
+            Logger.error({
+                msg: errorMsg,
+                arguments: arguments
+            });
+
+            return Promise.reject(new Error(errorMsg));
         }
+
+        Logger.debug({
+            msg: 'Forwarding action to main process',
+            type: actualType,
+            payload: actualPayload,
+            options: actualOptions,
+        });
 
         return new Promise((resolve, reject) => {
             try {
@@ -113,7 +126,7 @@ export function getClientStore(vueRef, injector: Injector) {
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
         Logger.debug({
-            msg: '[client] vuex-apply-mutation',
+            msg: 'vuex-apply-mutation',
             type,
             payload
         });

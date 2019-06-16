@@ -3,7 +3,6 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
 import { join } from 'path';
-import * as pino from 'pino';
 import Vue from 'vue';
 import { OverlayHost } from 'vue-overlay-host';
 import VueSelect from 'vue-select';
@@ -58,12 +57,20 @@ process.on('unhandledRejection', (reason, promise) => {
 
 (async () => {
     const injector = createInjector();
+
+    // Initialize the logger
+    Logger.initialize(injector);
+
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
 
     // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IOService);
-    const logFile = join(io.getAssetDirectory(), 'render-thread.json');
-    Logger.registerHandler(pino.destination(logFile), { level: 'trace' });
+    const logFile = join(io.getAssetDirectory(), 'application.log');
+
+    // Casting it to any, as pino is loading the browser implementation in the render process
+    // in that, we can't import/require the 'destination' function. Instead, we have to pass
+    // it as an regular file-descriptor and pino will figure it out.
+    Logger.registerHandler(logFile as any, { level: 'trace' });
 
     // FontAwesome Icons
     library.add(fas);

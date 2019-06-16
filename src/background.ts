@@ -67,9 +67,12 @@ process.on('unhandledRejection', (reason, promise) => {
     /** Instance of an injector with resolved services */
     const injector = createInjector();
 
+    // Initialize the logger
+    Logger.initialize(injector);
+
     // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IOService);
-    const logFile = join(io.getAssetDirectory(), 'main-thread.json');
+    const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: 'trace' });
 
     // Main instance of the Vuex-Store
@@ -104,7 +107,7 @@ process.on('unhandledRejection', (reason, promise) => {
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`[background] vuex-connect: ${windowId}`);
+        Logger.debug(`vuex-connect: ${windowId}`);
 
         clients[windowId] = event.sender;
         event.returnValue = store.state;
@@ -112,7 +115,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     ipcMain.on('vuex-disconnect', event => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`[background] vuex-disconnect ${windowId}`);
+        Logger.debug(`vuex-disconnect ${windowId}`);
 
         delete clients[windowId];
     });
@@ -120,7 +123,7 @@ process.on('unhandledRejection', (reason, promise) => {
     // Listener to perform a delegate mutation on the main store
     ipcMain.on('vuex-dispatch', async (event, { type, payload, options }) => {
         Logger.debug({
-            msg: '[background] vuex-dispatch',
+            msg: 'vuex-dispatch',
             type,
             payload,
             options,
@@ -136,12 +139,10 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     function createMainWindow() {
-        Logger.debug('creating window ...');
         const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
 
         const window = new BrowserWindow(browserWindowOptions);
-        Logger.debug('window created!');
 
         if (isDevelopment) {
             // Load the url of the dev server if in development mode
@@ -198,7 +199,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // create main BrowserWindow when electron is ready
     app.on('ready', async () => {
-        Logger.debug('App ready!');
         if (isDevelopment && !process.env.IS_TEST) {
             // Install Vue Devtools
             await installVueDevtools();
@@ -210,7 +210,6 @@ process.on('unhandledRejection', (reason, promise) => {
             store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
         }
 
-        Logger.debug('creating new main widnow!');
         mainWindow = createMainWindow();
     });
 
@@ -219,11 +218,13 @@ process.on('unhandledRejection', (reason, promise) => {
         if (process.platform === 'win32') {
             process.on('message', data => {
                 if (data === 'graceful-exit') {
+                    Logger.info('Received message to shutdown! Closing app ...');
                     app.quit();
                 }
             });
         } else {
             process.on('SIGTERM', () => {
+                Logger.info('Received message to shutdown! Closing app ...');
                 app.quit();
             });
         }
