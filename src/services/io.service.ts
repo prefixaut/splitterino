@@ -7,7 +7,6 @@ import { Store } from 'vuex';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { isSplits } from '../common/interfaces/splits';
-import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
 import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
@@ -24,11 +23,20 @@ export class IOService {
         extensions: ['splits'],
     };
 
+    public getAssetDirectory() {
+        return this.assetDir;
+    }
+
     public loadFile(path: string, basePath: string = this.assetDir): string | null {
+        const filePath = join(basePath, path);
         try {
-            return readFileSync(join(basePath, path), { encoding: 'utf8' });
+            return readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
-            Logger.error('Error reading file:', join(this.assetDir, path), 'Reason', e);
+            Logger.error({
+                msg: 'Error loading file',
+                file: filePath,
+                error: e
+            });
         }
 
         return null;
@@ -43,18 +51,30 @@ export class IOService {
             mkdirSync(dirname(filePath), { recursive: true });
         } catch (e) {
             if (e.code !== 'EEXIST') {
-                Logger.error('Error creating directory structure:', dirname(filePath), 'Reason', e);
+                Logger.error({
+                    msg: 'Error while creating directory structure',
+                    directory: dirname(filePath),
+                    error: e
+                });
 
                 return false;
             }
         }
 
-        Logger.debug('Writing file', filePath, data);
+        Logger.debug({
+            msg: 'Writing to file',
+            file: filePath,
+            data
+        });
 
         try {
             writeFileSync(filePath, data, { encoding: 'utf8' });
         } catch (e) {
-            Logger.error('Error writing file:', filePath, 'Reason', e);
+            Logger.error({
+                msg: 'Error while writing file',
+                file: filePath,
+                error: e
+            });
 
             return false;
         }
@@ -66,7 +86,10 @@ export class IOService {
         try {
             return JSON.parse(this.loadFile(path, basePath));
         } catch (e) {
-            Logger.error('Error parsing JSON', e);
+            Logger.error({
+                msg: 'Error parsing JSON',
+                error: e
+            });
         }
 
         return null;
@@ -115,7 +138,10 @@ export class IOService {
                 return store.dispatch(ACTION_SET_SEGMENTS, [...loaded.splits.segments]);
             })
             .catch(error => {
-                Logger.error('Error while loading splits', error);
+                Logger.error({
+                    msg: 'Error while loading splits',
+                    error,
+                });
 
                 // Rethrow the error to be processed
                 throw error;

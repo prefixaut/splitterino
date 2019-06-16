@@ -69,7 +69,7 @@ export function getClientStore(vueRef, injector: Injector) {
 
     // Override the dispatch function to delegate it to the main process instead
     // tslint:disable-next-line only-arrow-functions no-string-literal
-    store['_dispatch'] = store.dispatch = function<P extends Payload>(
+    store['_dispatch'] = store.dispatch = function <P extends Payload>(
         typeMaybeWithPayload: string | P,
         payloadOrOptions?: any | DispatchOptions,
         options?: DispatchOptions
@@ -112,7 +112,11 @@ export function getClientStore(vueRef, injector: Injector) {
     };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
-        Logger.debug('[client] vuex-apply-mutation', type);
+        Logger.debug({
+            msg: '[client] vuex-apply-mutation',
+            type,
+            payload
+        });
         if (
             payload != null &&
             typeof payload === 'object' &&

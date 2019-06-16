@@ -1,82 +1,55 @@
-export enum LogLevel {
-    ERROR = 0b00010,
-    WARN = 0b00100,
-    INFO = 0b00110,
-    DEBUG = 0b01000,
-    TRACE = 0b01010,
-    ERROR_USER = 0b00011,
-    WARN_USER = 0b00101,
-}
+import { createWriteStream } from 'fs';
+import pino from 'pino';
+
 // tslint:disable:no-console
 export class Logger {
-    /**
-     * Log a message with given log level
-     *
-     * @param level Level at which to log the message. Use {@link LogLevel}
-     * @param messages Messages to log
-     */
-    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]): void {
-        // tslint:disable-next-line:no-bitwise
-        const isUserWarning: number = level & 0b1;
-        let prefix: string;
-        let logFunction: (message?: any, ...optionalParams: any[]) => void;
-        let messageBoxType;
-        // tslint:disable-next-line:no-bitwise no-magic-numbers
-        level &= 0b1110;
-        switch (level) {
-            case LogLevel.ERROR: {
-                prefix = 'Error';
-                logFunction = console.error;
-                messageBoxType = 'error';
-                break;
-            }
-            case LogLevel.WARN: {
-                prefix = 'Warn';
-                logFunction = console.warn;
-                messageBoxType = 'warning';
-                break;
-            }
-            case LogLevel.INFO: {
-                prefix = 'Info';
-                logFunction = console.info;
-                break;
-            }
-            case LogLevel.DEBUG: {
-                prefix = 'Debug';
-                logFunction = console.debug;
-                break;
-            }
-            case LogLevel.TRACE: {
-                prefix = 'Trace';
-                logFunction = console.trace;
-            }
+
+    // Starts with a default handler for the console
+    private static logHandlers: pino.Logger[] = [pino({
+        level: 'debug',
+        prettyPrint: {
+            colorize: true,
+            translateTime: 'hh:mm:ss',
         }
+    })];
 
-        logFunction(`[${prefix}]`, ...messages);
-        const messageStr = messages.map(elm => String(elm)).join('\n');
-
-        if (isUserWarning > 0) {
-            // TODO: Open Electron window?
-        }
+    public static registerHandler(stream?: pino.DestinationStream, options?: pino.LoggerOptions) {
+        this.logHandlers.push(pino(options || {}, stream));
     }
 
-    public static trace(...messages: any[]) {
-        Logger.log(LogLevel.TRACE, ...messages);
+    public static trace(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.trace(messageOrData as any);
+        });
     }
 
-    public static debug(...messages: any[]) {
-        Logger.log(LogLevel.DEBUG, ...messages);
+    public static debug(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.debug(messageOrData as any);
+        });
     }
 
-    public static info(...messages: any[]) {
-        Logger.log(LogLevel.INFO, ...messages);
+    public static info(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.info(messageOrData as any);
+        });
     }
 
-    public static warn(...messages: any[]) {
-        Logger.log(LogLevel.WARN, ...messages);
+    public static warn(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.warn(messageOrData as any);
+        });
     }
 
-    public static error(...messages: any[]) {
-        Logger.log(LogLevel.ERROR, ...messages);
+    public static error(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.error(messageOrData as any);
+        });
+    }
+
+    public static fatal(messageOrData: string | object) {
+        this.logHandlers.forEach(handler => {
+            handler.fatal(messageOrData as any);
+        });
     }
 }

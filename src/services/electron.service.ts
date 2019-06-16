@@ -70,7 +70,10 @@ export class ElectronService implements ElectronInterface {
                 const paths = dialogToUse.showOpenDialog(browserWindow, options);
                 resolve(paths);
             } catch (e) {
-                Logger.debug('Error while opening file open dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening file open dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
@@ -83,7 +86,10 @@ export class ElectronService implements ElectronInterface {
                 const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
                 dialogToUse.showSaveDialog(browserWindow, options, path => resolve(path));
             } catch (e) {
-                Logger.debug('Error while opening file save dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening file save dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
@@ -96,7 +102,10 @@ export class ElectronService implements ElectronInterface {
                 const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
                 dialogToUse.showMessageBox(browserWindow, options, response => resolve(response));
             } catch (e) {
-                Logger.debug('Error while opening message dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening message dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
