@@ -3,6 +3,7 @@ import {
     BrowserWindow,
     BrowserWindowConstructorOptions,
     dialog,
+    ipcRenderer,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
@@ -200,5 +201,13 @@ export class ElectronService implements ElectronInterface {
         }
 
         return options;
+    }
+
+    public ipcSend(channel: string, ...args: any[]): void {
+        if (this.isRenderProcess()) {
+            ipcRenderer.send(channel, ...args);
+        } else {
+            // Do nothing?
+        }
     }
 }

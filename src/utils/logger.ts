@@ -1,7 +1,7 @@
-import pino from 'pino';
-import { remote } from 'electron';
 import { Injector } from 'lightweight-di';
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import pino from 'pino';
+
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 
 /**
  * Wrapper Class to nearly log all messages from Splitterino
@@ -21,6 +21,7 @@ export class Logger {
     })];
     private static isInitialized = false;
     private static windowId: number = null;
+    private static electron: ElectronInterface;
 
     private static enrichMessage(messageOrData: string | object): object {
         let data: object = {
@@ -48,8 +49,8 @@ export class Logger {
             return;
         }
 
-        const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
-        const window = electron.getCurrentWindow();
+        this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+        const window = this.electron.getCurrentWindow();
         if (window != null && typeof window.id === 'number') {
             this.windowId = window.id;
         }
@@ -60,45 +61,49 @@ export class Logger {
         this.logHandlers.push(pino(options || {}, stream));
     }
 
+    /**
+     * Internal function! Do not use unless you know what you're doing.
+     * Prone to change! Use the regular logging functions instead if possible.
+     *
+     * @param logFnName The logging function to call in the handlers
+     * @param data The data which the handlers should receive
+     */
+    public static _logToHandlers(logFnName: string, data: object) {
+        if (this.electron.isRenderProcess()) {
+            this.electron.ipcSend('spl-log', logFnName, data);
+        }
+        this.logHandlers.forEach(handler => {
+            handler[logFnName](data);
+        });
+    }
+
     public static trace(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.trace(data);
-        });
+        this._logToHandlers('trace', data);
     }
 
     public static debug(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.debug(data);
-        });
+        this._logToHandlers('debug', data);
     }
 
     public static info(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.info(data);
-        });
+        this._logToHandlers('info', data);
     }
 
     public static warn(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.warn(data);
-        });
+        this._logToHandlers('warn', data);
     }
 
     public static error(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.error(data);
-        });
+        this._logToHandlers('error', data);
     }
 
     public static fatal(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this.logHandlers.forEach(handler => {
-            handler.fatal(data);
-        });
+        this._logToHandlers('fatal', data);
     }
 }

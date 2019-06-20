@@ -138,6 +138,10 @@ process.on('unhandledRejection', (reason, promise) => {
         }
     });
 
+    ipcMain.on('spl-log', (_, level: string, data: object) => {
+        Logger._logToHandlers(level, data);
+    });
+
     function createMainWindow() {
         const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
