@@ -19,7 +19,9 @@ const moduleState: TimerState = {
     startDelay: 0,
     startTime: 0,
     pauseTime: 0,
+    igtPauseTime: 0,
     pauseTotal: 0,
+    igtPauseTotal: 0,
     finishTime: 0,
 };
 
@@ -59,12 +61,26 @@ const mutations = {
                 } else if (from === TimerStatus.PAUSED) {
                     state.pauseTotal += time - state.pauseTime;
                     state.pauseTime = 0;
+                } else if (from === TimerStatus.RUNNING_IGT_PAUSE) {
+                    state.igtPauseTotal += time - state.igtPauseTime;
+                    state.igtPauseTime = 0;
                 }
                 break;
             case TimerStatus.PAUSED:
+                if (from !== TimerStatus.RUNNING_IGT_PAUSE) {
+                    state.igtPauseTime = time;
+                }
                 state.pauseTime = time;
                 break;
             case TimerStatus.FINISHED:
+                if (from === TimerStatus.PAUSED) {
+                    state.pauseTotal += time - state.pauseTime;
+                    state.pauseTime = 0;
+                }
+                if (from === TimerStatus.PAUSED || from === TimerStatus.RUNNING_IGT_PAUSE) {
+                    state.igtPauseTotal += time - state.igtPauseTime;
+                    state.igtPauseTime = 0;
+                }
                 state.finishTime = time;
                 break;
             case TimerStatus.STOPPED:

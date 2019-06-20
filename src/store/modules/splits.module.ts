@@ -32,7 +32,9 @@ export const ID_ACTION_SPLIT = 'split';
 export const ID_ACTION_SKIP = 'skip';
 export const ID_ACTION_UNDO = 'undo';
 export const ID_ACTION_PAUSE = 'pause';
+export const ID_ACTION_PAUSE_IGT = 'pause_igt';
 export const ID_ACTION_UNPAUSE = 'unpause';
+export const ID_ACTION_UNPAUSE_IGT = 'unpause_igt';
 export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
@@ -61,7 +63,9 @@ export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
 export const ACTION_SKIP = `${MODULE_PATH}/${ID_ACTION_SKIP}`;
 export const ACTION_UNDO = `${MODULE_PATH}/${ID_ACTION_UNDO}`;
 export const ACTION_PAUSE = `${MODULE_PATH}/${ID_ACTION_PAUSE}`;
+export const ACTION_PAUSE_IGT = `${MODULE_PATH}/${ID_ACTION_PAUSE_IGT}`;
 export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
+export const ACTION_UNPAUSE_IGT = `${MODULE_PATH}/${ID_ACTION_UNPAUSE_IGT}`;
 export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
@@ -322,14 +326,15 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const currentSegment: Segment = {
                     ...context.state.segments[currentIndex]
                 };
-                const time =
-                    currentTime -
-                    currentSegment.startTime -
-                    (currentSegment.pauseTime || 0);
+                const tmpTime = currentTime -
+                    currentSegment.startTime;
+                const time = tmpTime - (currentSegment.pauseTime || 0);
+                const inGameTime = tmpTime - (currentSegment.igtPauseTime || 0);
 
                 currentSegment.passed = true;
                 currentSegment.skipped = false;
                 currentSegment.time = time;
+                currentSegment.inGameTime = inGameTime;
 
                 if (
                     currentSegment.overallBest == null ||
@@ -430,8 +435,11 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 };
                 // Add the pause time of the the current segment to the previous
                 previous.pauseTime = Math.max((previous.pauseTime || 0), 0) + segment.pauseTime;
-                // Clear the pause time afterwards
+                // Also do that for the IGT Pause time
+                previous.igtPauseTime = Math.max((previous.igtPauseTime || 0), 0) + segment.igtPauseTime;
+                // Clear the pause times afterwards
                 segment.pauseTime = 0;
+                segment.igtPauseTime = 0;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
@@ -452,19 +460,58 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { root: true }
                 );
             },
+            [ID_ACTION_PAUSE_IGT](context: ActionContext<SplitsState, RootState>) {
+                const time = now();
+                const status = context.rootState.splitterino.timer.status;
+                if (status !== TimerStatus.RUNNING) {
+                    return;
+                }
+
+                context.commit(
+                    MUTATION_SET_STATUS,
+                    { time, status: TimerStatus.RUNNING_IGT_PAUSE },
+                    { root: true }
+                );
+            },
             [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>) {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
 
-                if (status !== TimerStatus.PAUSED) {
+                if (status !== TimerStatus.PAUSED && status !== TimerStatus.RUNNING_IGT_PAUSE) {
                     return;
                 }
 
-                const pauseAddition =
-                    time - context.rootState.splitterino.timer.pauseTime;
+                const pauseAddition = time - context.rootState.splitterino.timer.pauseTime;
+                const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
                 const index = context.state.current;
+                // Create a copy of the segment so it can be safely edited
                 const segment: Segment = { ...context.state.segments[index] };
                 segment.pauseTime += pauseAddition;
+                segment.igtPauseTime += igtPauseAddition;
+
+                context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
+                context.commit(
+                    MUTATION_SET_STATUS,
+                    {
+                        time,
+                        status: TimerStatus.RUNNING
+                    },
+                    { root: true }
+                );
+            },
+            [ID_ACTION_UNPAUSE_IGT](context: ActionContext<SplitsState, RootState>) {
+                const time = now();
+                const status = context.rootState.splitterino.timer.status;
+
+                if (status !== TimerStatus.RUNNING_IGT_PAUSE) {
+                    return;
+                }
+
+                const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
+                const index = context.state.current;
+                // Create a copy of the segment so it can be safely edited
+                const segment: Segment = { ...context.state.segments[index] };
+                segment.igtPauseTime += igtPauseAddition;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(

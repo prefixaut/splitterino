@@ -10,31 +10,45 @@ export function isSegment(data: any): data is Segment {
 export { SegmentSchema };
 export { validatorFunction as SegmentValidator };
 
+/**
+ * Defines a single Segment in a Split.
+ * Contains all basic information need to calculate
+ * and save the times.
+ */
 export interface Segment {
-    /** ID of the segment to identify it. Format is a UUID */
+    /**
+     * ID of the segment to identify it.
+     * Format is a UUID (v4).
+     */
     id: string;
     /**
-     * Display-Name of the Segment
+     * Display-Name of the Segment.
      */
     name: string;
     /**
-     * The time of how long the timer was paused in this segment
+     * The time of how long the timer was paused in this segment.
      */
     pauseTime?: number;
     /**
-     * The time of the personal best in milliseconds
+     * Additional pause time for IGT calculations.
+     */
+    igtPauseTime?: number;
+    /**
+     * The time of the personal best in milliseconds.
      */
     personalBest?: number;
     /**
-     * The time of the overall best in milliseconds
+     * The time of the overall best in milliseconds.
      */
     overallBest?: number;
     /**
-     * If the Segment has been passed successfully
+     * If the Segment has been passed successfully.
+     * Usually the opposite of `skipped`.
      */
     passed?: boolean;
     /**
-     * If the Segment has been skipped
+     * If the Segment has been skipped.
+     * Usually the opposite of `passed`.
      */
     skipped?: boolean;
 
@@ -44,9 +58,13 @@ export interface Segment {
      */
 
     /**
-     * The time of the Segment in milliseconds
+     * The RTA time of the Segment in milliseconds.
      */
     time?: number;
+    /**
+     * The IGT time of the Segment in milliseconds.
+     */
+    inGameTime?: number;
     /**
      * Internal timestamp when the segment started.
      */
