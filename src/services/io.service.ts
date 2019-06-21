@@ -7,7 +7,6 @@ import { Store } from 'vuex';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { isSplits } from '../common/interfaces/splits';
-import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
 import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
@@ -24,11 +23,25 @@ export class IOService {
         extensions: ['splits'],
     };
 
+    public getAssetDirectory() {
+        return this.assetDir;
+    }
+
     public loadFile(path: string, basePath: string = this.assetDir): string | null {
+        const filePath = join(basePath, path);
+        Logger.debug({
+            msg: 'Attempting to load file',
+            file: filePath,
+        });
+
         try {
-            return readFileSync(join(basePath, path), { encoding: 'utf8' });
+            return readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
-            Logger.error('Error reading file:', join(this.assetDir, path), 'Reason', e);
+            Logger.error({
+                msg: 'Error loading file',
+                file: filePath,
+                error: e
+            });
         }
 
         return null;
@@ -37,24 +50,33 @@ export class IOService {
     public saveFile(path: string, data: string, basePath: string = this.assetDir): boolean {
         const filePath = join(basePath, path);
 
-        Logger.debug('Creating file directory structure');
+        Logger.trace({
+            msg: 'Attempting to save to file',
+            file: filePath,
+        });
 
         try {
             mkdirSync(dirname(filePath), { recursive: true });
         } catch (e) {
             if (e.code !== 'EEXIST') {
-                Logger.error('Error creating directory structure:', dirname(filePath), 'Reason', e);
+                Logger.error({
+                    msg: 'Error while creating directory structure',
+                    directory: dirname(filePath),
+                    error: e
+                });
 
                 return false;
             }
         }
 
-        Logger.debug('Writing file', filePath, data);
-
         try {
             writeFileSync(filePath, data, { encoding: 'utf8' });
         } catch (e) {
-            Logger.error('Error writing file:', filePath, 'Reason', e);
+            Logger.error({
+                msg: 'Error while writing file',
+                file: filePath,
+                error: e
+            });
 
             return false;
         }
@@ -63,10 +85,17 @@ export class IOService {
     }
 
     public loadJSONFromFile(path: string, basePath: string = this.assetDir): any {
+        let loadedFile: string;
         try {
-            return JSON.parse(this.loadFile(path, basePath));
+            loadedFile = this.loadFile(path, basePath);
+
+            return JSON.parse(loadedFile);
         } catch (e) {
-            Logger.error('Error parsing JSON', e);
+            Logger.error({
+                msg: 'Error parsing JSON from string',
+                string: loadedFile,
+                error: e
+            });
         }
 
         return null;
@@ -88,7 +117,10 @@ export class IOService {
         let fileSelect: Promise<string>;
 
         if (file != null) {
-            Logger.debug(`Loading splits from provided File "${file}"`);
+            Logger.debug({
+                msg: 'Loading splits from provided File',
+                file,
+            });
             fileSelect = Promise.resolve(file);
         } else {
             fileSelect = this.askUserToOpenSplitsFile();
@@ -102,20 +134,32 @@ export class IOService {
                     return Promise.resolve(false);
                 }
 
-                Logger.debug(`Loading splits from File: "${filePath}"`);
+                Logger.debug({
+                    msg: 'Loading splits from File',
+                    file: filePath
+                });
                 const loaded = this.loadJSONFromFile(filePath, '');
+
                 if (loaded == null || typeof loaded !== 'object' || !isSplits(loaded.splits)) {
+                    Logger.error({
+                        msg: 'The loaded splits are not valid Splits!',
+                        file: filePath,
+                    });
+
                     throw new Error(`The loaded splits from "${filePath}" are not valid Splits!`);
                 }
 
-                Logger.debug('Loaded splits are valid, applying to store');
+                Logger.debug('Loaded splits are valid! Applying to store ...');
 
                 await store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
 
                 return store.dispatch(ACTION_SET_SEGMENTS, [...loaded.splits.segments]);
             })
             .catch(error => {
-                Logger.error('Error while loading splits', error);
+                Logger.error({
+                    msg: 'Error while loading splits',
+                    error,
+                });
 
                 // Rethrow the error to be processed
                 throw error;
@@ -130,18 +174,29 @@ export class IOService {
     ): Promise<boolean> {
         let fileSelect: Promise<string>;
         if (file != null) {
+            Logger.debug({
+                msg: 'Saving splits to provided File',
+                file,
+            });
             fileSelect = Promise.resolve(file);
         } else {
             fileSelect = this.askUserToSaveSplitsFile(window);
         }
 
         return fileSelect.then(fileToSave => {
-            Logger.debug(`Saving to the File: ${fileToSave}`);
             if (fileToSave == null) {
+                Logger.debug('The file to which should be saved to, is null, skipping saving');
+
                 return false;
             }
 
+            Logger.debug({
+                msg: 'Saving Splits to the File',
+                file: fileToSave
+            });
+
             const fileContent = {
+                // TODO: Saving the $schema definition as well?
                 splits: {
                     segments: store.state.splitterino.splits.segments,
                 }
@@ -157,7 +212,7 @@ export class IOService {
      * @returns A Promise which resolves to the path of the splits-file.
      */
     public askUserToOpenSplitsFile(): Promise<string> {
-        Logger.debug('Asking user to select a Splits-File');
+        Logger.debug('Asking user to select a Splits-File ...');
 
         return this.electron.showOpenDialog(this.electron.getCurrentWindow(), {
             title: 'Load Splits',
@@ -172,6 +227,11 @@ export class IOService {
             } else {
                 singlePath = null;
             }
+
+            Logger.debug({
+                msg: 'User has selected Splits-File',
+                file: singlePath,
+            });
 
             return singlePath;
         });
@@ -223,6 +283,11 @@ export class IOService {
             lastOpenedSplitsFile,
             keybindings,
         };
+
+        Logger.debug({
+            msg: 'Saving applcation settings to file',
+            settings: newAppSettings,
+        });
 
         this.saveJSONToFile(this.appSettingsFileName, newAppSettings);
     }

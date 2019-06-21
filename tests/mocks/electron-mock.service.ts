@@ -88,4 +88,8 @@ export class ElectronMockService implements ElectronInterface {
     createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {
         return null;
     }
+
+    ipcSend(channel: string, ...args: any[]): void {
+        // Noop
+    }
 }

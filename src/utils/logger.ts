@@ -1,82 +1,109 @@
-export enum LogLevel {
-    ERROR = 0b00010,
-    WARN = 0b00100,
-    INFO = 0b00110,
-    DEBUG = 0b01000,
-    TRACE = 0b01010,
-    ERROR_USER = 0b00011,
-    WARN_USER = 0b00101,
-}
-// tslint:disable:no-console
+import { Injector } from 'lightweight-di';
+import pino from 'pino';
+
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
+
+/**
+ * Wrapper Class to nearly log all messages from Splitterino
+ * and Plugins in one centralized and unified way.
+ *
+ * Currently using the pino library for handling log messages.
+ */
 export class Logger {
+
+    // Starts with a default handler for the console
+    private static logHandlers: pino.Logger[] = [pino({
+        level: 'debug',
+        prettyPrint: {
+            colorize: true,
+            translateTime: 'hh:mm:ss',
+        },
+    })];
+    private static isInitialized = false;
+    private static windowId: number = null;
+    private static electron: ElectronInterface;
+
+    private static enrichMessage(messageOrData: string | object): object {
+        let data: object = {
+            isMainThread: this.windowId == null,
+            windowId: this.windowId,
+        };
+
+        if (typeof messageOrData === 'string') {
+            data = {
+                ...data,
+                msg: messageOrData,
+            };
+        } else {
+            data = {
+                ...(messageOrData || {}),
+                ...data,
+            };
+        }
+
+        return data;
+    }
+
+    public static initialize(injector: Injector) {
+        if (this.isInitialized) {
+            return;
+        }
+
+        this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+        const window = this.electron.getCurrentWindow();
+        if (window != null && typeof window.id === 'number') {
+            this.windowId = window.id;
+        }
+        this.isInitialized = true;
+    }
+
+    public static registerHandler(stream?: pino.DestinationStream, options?: pino.LoggerOptions) {
+        this.logHandlers.push(pino(options || {}, stream));
+    }
+
     /**
-     * Log a message with given log level
+     * Internal function! Do not use unless you know what you're doing.
+     * Prone to change! Use the regular logging functions instead if possible.
      *
-     * @param level Level at which to log the message. Use {@link LogLevel}
-     * @param messages Messages to log
+     * @param logFnName The logging function to call in the handlers
+     * @param data The data which the handlers should receive
      */
-    public static log(level: LogLevel = LogLevel.INFO, ...messages: any[]): void {
-        // tslint:disable-next-line:no-bitwise
-        const isUserWarning: number = level & 0b1;
-        let prefix: string;
-        let logFunction: (message?: any, ...optionalParams: any[]) => void;
-        let messageBoxType;
-        // tslint:disable-next-line:no-bitwise no-magic-numbers
-        level &= 0b1110;
-        switch (level) {
-            case LogLevel.ERROR: {
-                prefix = 'Error';
-                logFunction = console.error;
-                messageBoxType = 'error';
-                break;
-            }
-            case LogLevel.WARN: {
-                prefix = 'Warn';
-                logFunction = console.warn;
-                messageBoxType = 'warning';
-                break;
-            }
-            case LogLevel.INFO: {
-                prefix = 'Info';
-                logFunction = console.info;
-                break;
-            }
-            case LogLevel.DEBUG: {
-                prefix = 'Debug';
-                logFunction = console.debug;
-                break;
-            }
-            case LogLevel.TRACE: {
-                prefix = 'Trace';
-                logFunction = console.trace;
-            }
+    public static _logToHandlers(logFnName: string, data: object) {
+        if (this.electron.isRenderProcess()) {
+            this.electron.ipcSend('spl-log', logFnName, data);
         }
-
-        logFunction(`[${prefix}]`, ...messages);
-        const messageStr = messages.map(elm => String(elm)).join('\n');
-
-        if (isUserWarning > 0) {
-            // TODO: Open Electron window?
-        }
+        this.logHandlers.forEach(handler => {
+            handler[logFnName](data);
+        });
     }
 
-    public static trace(...messages: any[]) {
-        Logger.log(LogLevel.TRACE, ...messages);
+    public static trace(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('trace', data);
     }
 
-    public static debug(...messages: any[]) {
-        Logger.log(LogLevel.DEBUG, ...messages);
+    public static debug(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('debug', data);
     }
 
-    public static info(...messages: any[]) {
-        Logger.log(LogLevel.INFO, ...messages);
+    public static info(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('info', data);
     }
 
-    public static warn(...messages: any[]) {
-        Logger.log(LogLevel.WARN, ...messages);
+    public static warn(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('warn', data);
     }
 
-    public static error(...messages: any[]) {
-        Logger.log(LogLevel.ERROR, ...messages);
+    public static error(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('error', data);
+    }
+
+    public static fatal(messageOrData: string | object) {
+        const data = this.enrichMessage(messageOrData);
+        this._logToHandlers('fatal', data);
     }
 }

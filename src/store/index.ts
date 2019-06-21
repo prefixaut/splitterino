@@ -69,7 +69,7 @@ export function getClientStore(vueRef, injector: Injector) {
 
     // Override the dispatch function to delegate it to the main process instead
     // tslint:disable-next-line only-arrow-functions no-string-literal
-    store['_dispatch'] = store.dispatch = function<P extends Payload>(
+    store['_dispatch'] = store.dispatch = function <P extends Payload>(
         typeMaybeWithPayload: string | P,
         payloadOrOptions?: any | DispatchOptions,
         options?: DispatchOptions
@@ -90,8 +90,21 @@ export function getClientStore(vueRef, injector: Injector) {
         }
 
         if (actualType == null) {
-            return Promise.reject(new Error('The type of the dispatch could not be determined'));
+            const errorMsg = 'The type for the dispatch could not be determined';
+            Logger.error({
+                msg: errorMsg,
+                arguments: arguments
+            });
+
+            return Promise.reject(new Error(errorMsg));
         }
+
+        Logger.debug({
+            msg: 'Forwarding action to main process',
+            type: actualType,
+            payload: actualPayload,
+            options: actualOptions,
+        });
 
         return new Promise((resolve, reject) => {
             try {
@@ -112,7 +125,11 @@ export function getClientStore(vueRef, injector: Injector) {
     };
 
     ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
-        Logger.debug('[client] vuex-apply-mutation', type);
+        Logger.debug({
+            msg: 'vuex-apply-mutation',
+            type,
+            payload
+        });
         if (
             payload != null &&
             typeof payload === 'object' &&

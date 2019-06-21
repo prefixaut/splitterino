@@ -27,18 +27,27 @@ export function getKeybindingsStorePlugin(injector: Injector) {
 
                 bindings.forEach((theBinding, index) => {
                     globalShortcut.register(theBinding.accelerator, () => {
-                        Logger.debug('Keybinding pressed:', theBinding.accelerator);
+                        Logger.debug({
+                            msg: 'Keybinding pressed',
+                            binding: theBinding
+                        });
                         // TODO: Check if global and if the window is focused
 
                         const actionFn = FunctionRegistry.getKeybindingAction(theBinding.action);
                         if (typeof actionFn === 'function' && !state.disableBindings) {
-                            Logger.debug('Calling handler for action:', theBinding.action);
+                            Logger.debug({
+                                msg: 'Calling handler for action',
+                                binding: theBinding
+                            });
                             actionFn({
                                 store: store,
                                 injector: injector,
                             });
                         } else {
-                            Logger.debug('No handler found for action:', theBinding.action);
+                            Logger.debug({
+                                msg: 'No handler found for action',
+                                binding: theBinding
+                            });
                         }
                     });
                 });

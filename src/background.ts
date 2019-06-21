@@ -1,7 +1,8 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, WebContents } from 'electron';
 import { merge } from 'lodash';
-import * as path from 'path';
+import { join } from 'path';
+import * as pino from 'pino';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
@@ -13,11 +14,32 @@ import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { ActionResult } from './common/interfaces/electron';
 import { IOService } from './services/io.service';
 import { getStoreConfig } from './store';
+import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
+
+process.on('uncaughtException', err => {
+    Logger.fatal({
+        msg: 'Uncaught Exception in background process!',
+        error: err,
+    });
+
+    // exit the application safely
+    app.exit(1);
+
+    // end the process
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    Logger.fatal({
+        msg: 'There was an unhandled Rejection in the background process!',
+        promise,
+        error: reason,
+    });
+});
 
 (async () => {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -30,15 +52,28 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
     // Standard scheme must be registered before the app is ready
     protocol.registerStandardSchemes(['app'], { secure: true });
 
-    // global reference to mainWindow (necessary to prevent window
-    // from being garbage collected)
+    /**
+     * global reference of the main window.
+     * necessary to prevent window from being garbage collected.
+     */
     let mainWindow: BrowserWindow;
 
-    const clients: any[] = [];
+    /**
+     * List of all clients/windows that were created.
+     * The index in which they are put, is the corresponding BrowserWindow ID
+     */
+    const clients: WebContents[] = [];
 
-    // Initialize the Dependency-Injection
+    /** Instance of an injector with resolved services */
     const injector = createInjector();
+
+    // Initialize the logger
+    Logger.initialize(injector);
+
+    // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IOService);
+    const logFile = join(io.getAssetDirectory(), 'application.log');
+    Logger.registerHandler(pino.destination(logFile), { level: 'trace' });
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
@@ -53,7 +88,10 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
                             clients[id].send('vuex-apply-mutation', mutation);
                         });
                     } catch (error) {
-                        Logger.error('Error while sending mutation to other processes:', JSON.stringify(mutation));
+                        Logger.error({
+                            msg: 'Error while sending mutation to other processes',
+                            mutation,
+                        });
                     }
                 });
             },
@@ -69,7 +107,7 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', event => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug('[background] vuex-connect', windowId);
+        Logger.debug(`vuex-connect: ${windowId}`);
 
         clients[windowId] = event.sender;
         event.returnValue = store.state;
@@ -77,14 +115,19 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 
     ipcMain.on('vuex-disconnect', event => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug('[background] vuex-disconnect', windowId);
+        Logger.debug(`vuex-disconnect ${windowId}`);
 
         delete clients[windowId];
     });
 
     // Listener to perform a delegate mutation on the main store
     ipcMain.on('vuex-dispatch', async (event, { type, payload, options }) => {
-        Logger.debug('[background] vuex-dispatch', type, payload, options);
+        Logger.debug({
+            msg: 'vuex-dispatch',
+            type,
+            payload,
+            options,
+        });
         try {
             const dispatchResult = await store.dispatch(type, payload, options);
             const eventResponse: ActionResult = { result: dispatchResult, error: null };
@@ -93,6 +136,10 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
             const eventResponse: ActionResult = { result: null, error };
             event.returnValue = eventResponse;
         }
+    });
+
+    ipcMain.on('spl-log', (_, level: string, data: object) => {
+        Logger._logToHandlers(level, data);
     });
 
     function createMainWindow() {
@@ -112,7 +159,7 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
             //   Load the index.html when not in development
             window.loadURL(
                 formatUrl({
-                    pathname: path.join(__dirname, 'index.html'),
+                    pathname: join(__dirname, 'index.html'),
                     protocol: 'file',
                     slashes: true
                 })
@@ -169,4 +216,26 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 
         mainWindow = createMainWindow();
     });
-})();
+
+    // Exit cleanly on request from parent process in development mode.
+    if (isDevelopment) {
+        if (process.platform === 'win32') {
+            process.on('message', data => {
+                if (data === 'graceful-exit') {
+                    Logger.info('Received message to shutdown! Closing app ...');
+                    app.quit();
+                }
+            });
+        } else {
+            process.on('SIGTERM', () => {
+                Logger.info('Received message to shutdown! Closing app ...');
+                app.quit();
+            });
+        }
+    }
+})().catch(err => {
+    Logger.fatal({
+        msg: 'Unknown Error in the main thread!',
+        error: err,
+    });
+});

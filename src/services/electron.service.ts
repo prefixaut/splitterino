@@ -3,6 +3,7 @@ import {
     BrowserWindow,
     BrowserWindowConstructorOptions,
     dialog,
+    ipcRenderer,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
@@ -65,12 +66,19 @@ export class ElectronService implements ElectronInterface {
     public showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
         return new Promise((resolve, reject) => {
             try {
-                Logger.debug('Showing Open-File dialog');
+                Logger.debug('Opening "open-file" dialog ...');
                 const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
                 const paths = dialogToUse.showOpenDialog(browserWindow, options);
+                Logger.debug({
+                    msg: '"open-file" dialog closed',
+                    files: paths,
+                });
                 resolve(paths);
             } catch (e) {
-                Logger.debug('Error while opening file open dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening "open-file" dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
@@ -79,11 +87,20 @@ export class ElectronService implements ElectronInterface {
     public showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
         return new Promise((resolve, reject) => {
             try {
-                Logger.debug('Showing Save-File dialog');
+                Logger.debug('Opening "save-file" dialog ...');
                 const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showSaveDialog(browserWindow, options, path => resolve(path));
+                dialogToUse.showSaveDialog(browserWindow, options, path => {
+                    Logger.debug({
+                        msg: '"save-file" dialog closed',
+                        file: path,
+                    });
+                    resolve(path);
+                });
             } catch (e) {
-                Logger.debug('Error while opening file save dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening "save-file" dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
@@ -92,30 +109,60 @@ export class ElectronService implements ElectronInterface {
     public showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
         return new Promise((resolve, reject) => {
             try {
-                Logger.debug('Showing message dialog');
+                Logger.debug('Opening "message" dialog');
                 const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showMessageBox(browserWindow, options, response => resolve(response));
+                dialogToUse.showMessageBox(browserWindow, options, response => {
+                    Logger.debug({
+                        msg: '"message" dialog closed',
+                        response,
+                    });
+                    resolve(response);
+                });
             } catch (e) {
-                Logger.debug('Error while opening message dialog:', e);
+                Logger.debug({
+                    msg: 'Error while opening "message" dialog',
+                    error: e
+                });
                 reject(e);
             }
         });
     }
 
-    public newWindow(settings: BrowserWindowConstructorOptions, route: string = '') {
-        const win = new remote.BrowserWindow({
-            ...this.defaultWindowSettings,
-            ...settings,
+    public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {
+        Logger.debug({
+            msg: 'Creating new window ...',
+            settings,
+            route
         });
 
-        if (!process.env.IS_TEST) {
-            win.webContents.openDevTools({ mode: 'detach' });
+        try {
+            const win = new remote.BrowserWindow({
+                ...this.defaultWindowSettings,
+                ...settings,
+            });
+
+            if (!process.env.IS_TEST) {
+                win.webContents.openDevTools({ mode: 'detach' });
+            }
+
+            win.loadURL(this.url + route);
+            win.show();
+
+            Logger.debug({
+                msg: 'Window successfully created',
+                window: win
+            });
+
+            return win;
+        } catch (err) {
+            Logger.error({
+                msg: 'Error while creating a new window!',
+                error: err,
+            });
+
+            // Bubble the error up
+            throw err;
         }
-
-        win.loadURL(this.url + route);
-        win.show();
-
-        return win;
     }
 
     public createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu {
@@ -154,5 +201,13 @@ export class ElectronService implements ElectronInterface {
         }
 
         return options;
+    }
+
+    public ipcSend(channel: string, ...args: any[]): void {
+        if (this.isRenderProcess()) {
+            ipcRenderer.send(channel, ...args);
+        } else {
+            // Do nothing?
+        }
     }
 }
