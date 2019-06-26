@@ -3,14 +3,16 @@ import { v4 as uuid } from 'uuid';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { Segment } from '../../../src/common/interfaces/segment';
+import { getFinalTime, Segment, SegmentTime, TimingMethod } from '../../../src/common/interfaces/segment';
 import { TimerStatus } from '../../../src/common/timer-status';
 import {
+    ACTION_PAUSE,
     ACTION_SKIP,
     ACTION_SPLIT,
     ACTION_START,
     ACTION_UNDO,
     getSplitsStoreModule,
+    ID_ACTION_PAUSE,
     ID_ACTION_RESET,
     ID_ACTION_SKIP,
     ID_ACTION_SPLIT,
@@ -41,28 +43,36 @@ import { RootState } from '../../../src/store/states/root.state';
 import { SplitsState } from '../../../src/store/states/splits.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
-import { createMockInjector, testAction } from '../../mocks/utils';
+import { createMockInjector, randomInt, testAction } from '../../mocks/utils';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
 
 Vue.use(Vuex);
 
-function randomInt(max: number, min: number = 1): number {
-    return Math.max(min, Math.floor(Math.random() * Math.floor(max)));
+function generateRandomTime(): SegmentTime {
+    return {
+        igt: {
+            rawTime: randomInt(99999),
+            pauseTime: randomInt(99999),
+        },
+        rta: {
+            rawTime: randomInt(99999),
+            pauseTime: randomInt(99999),
+        }
+    };
 }
 
 function generateSegmentArray(size: number): Segment[] {
     return new Array(size).fill(null).map(_ => ({
         id: uuid(),
         name: 'test',
-        time: randomInt(99999),
+        currentTime: generateRandomTime(),
         hasNewOverallBest: true,
-        overallBest: randomInt(99999),
+        overallBest: generateRandomTime(),
         passed: true,
-        pauseTime: randomInt(99999),
-        personalBest: randomInt(99999),
-        previousOverallBest: randomInt(99999),
+        personalBest: generateRandomTime(),
+        previousOverallBest: generateRandomTime(),
         skipped: false,
         startTime: now(),
     }));
@@ -80,9 +90,11 @@ describe('Splits Store-Module', () => {
 
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: generateSegmentArray(20),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
@@ -113,9 +125,11 @@ describe('Splits Store-Module', () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const newCurrentFile = 'test';
@@ -129,9 +143,11 @@ describe('Splits Store-Module', () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const segmentOne: Segment = {
@@ -173,9 +189,11 @@ describe('Splits Store-Module', () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [{ id: '0', name: '0' }, { id: '1', name: '1' }, { id: '2', name: '2' }],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const newSegment: Segment = {
@@ -197,9 +215,11 @@ describe('Splits Store-Module', () => {
                 const originalSegments = generateSegmentArray(5);
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 expect(state.segments.length).to.equal(originalSegments.length);
@@ -222,9 +242,11 @@ describe('Splits Store-Module', () => {
                 deleteIndicies.forEach(deleteIndex => {
                     const state: SplitsState = {
                         current: -1,
+                        timing: TimingMethod.RTA,
                         currentOpenFile: null,
                         segments: originalSegments.slice(0),
-                        previousSegmentsTotalTime: randomInt(99999),
+                        previousRTATotal: randomInt(99999),
+                        previousIGTTotal: randomInt(99999),
                     };
 
                     splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, deleteIndex);
@@ -243,9 +265,11 @@ describe('Splits Store-Module', () => {
                 const originalSegments = generateSegmentArray(5);
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 [
@@ -274,9 +298,11 @@ describe('Splits Store-Module', () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [{ id: 'test', name: 'test' }],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
@@ -290,10 +316,12 @@ describe('Splits Store-Module', () => {
                 const originalSegments: Segment[] = generateSegmentArray(10);
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     // Create a copy
                     segments: originalSegments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_DISCARDING_RESET](state, null);
@@ -301,13 +329,12 @@ describe('Splits Store-Module', () => {
                 state.segments.forEach((segment, index) => {
                     expect(segment.id).to.equal(originalSegments[index].id);
                     expect(segment.name).to.equal(originalSegments[index].name);
-                    expect(segment.time).to.equal(-1);
-                    expect(segment.pauseTime).to.equal(originalSegments[index].pauseTime);
+                    expect(segment.currentTime).to.equal(null);
                     expect(segment.personalBest).to.equal(originalSegments[index].personalBest);
                     expect(segment.overallBest).to.equal(originalSegments[index].overallBest);
 
                     expect(segment.hasNewOverallBest).to.equal(false);
-                    expect(segment.previousOverallBest).to.equal(-1);
+                    expect(segment.previousOverallBest).to.equal(null);
                     expect(segment.startTime).to.equal(-1);
                     expect(segment.skipped).to.equal(false);
                     expect(segment.passed).to.equal(false);
@@ -321,30 +348,102 @@ describe('Splits Store-Module', () => {
                     {
                         id: uuid(),
                         name: 'none',
-                        time: 1000,
-                        pauseTime: randomInt(99999),
-                        personalBest: 99,
+                        currentTime: {
+                            rta: {
+                                rawTime: 1000,
+                                pauseTime: randomInt(99999),
+                            },
+                            igt: {
+                                rawTime: 1000,
+                                pauseTime: randomInt(99999),
+                            },
+                        },
+                        personalBest: {
+                            rta: {
+                                rawTime: 99,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 99,
+                                pauseTime: 0,
+                            },
+                        },
                         hasNewOverallBest: false,
-                        overallBest: randomInt(999),
-                        previousOverallBest: randomInt(99999),
+                        overallBest: {
+                            rta: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                        },
+                        previousOverallBest: {
+                            rta: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                        }
                     },
                     {
                         id: uuid(),
                         name: 'ob',
-                        time: randomInt(999),
-                        pauseTime: randomInt(99999),
-                        personalBest: randomInt(99999),
-                        overallBest: 1000,
+                        currentTime: {
+                            rta: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                        },
+                        personalBest: {
+                            rta: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                        },
                         hasNewOverallBest: true,
-                        previousOverallBest: randomInt(99999),
+                        overallBest: {
+                            rta: {
+                                rawTime: 1000,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 1000,
+                                pauseTime: 0,
+                            },
+                        },
+                        previousOverallBest: {
+                            rta: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                        },
                     },
                 ];
 
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: originalSegments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
@@ -353,24 +452,22 @@ describe('Splits Store-Module', () => {
 
                 expect(state.segments[0].id).to.equal(originalSegments[0].id);
                 expect(state.segments[0].name).to.equal(originalSegments[0].name);
-                expect(state.segments[0].time).to.equal(-1);
-                expect(state.segments[0].pauseTime).to.equal(originalSegments[0].pauseTime);
+                expect(state.segments[0].currentTime).to.equal(null);
                 expect(state.segments[0].personalBest).to.equal(originalSegments[0].personalBest);
                 expect(state.segments[0].overallBest).to.equal(originalSegments[0].overallBest);
                 expect(state.segments[0].hasNewOverallBest).to.equal(false);
-                expect(state.segments[0].previousOverallBest).to.equal(-1);
+                expect(state.segments[0].previousOverallBest).to.equal(null);
                 expect(state.segments[0].startTime).to.equal(-1);
                 expect(state.segments[0].skipped).to.equal(false);
                 expect(state.segments[0].passed).to.equal(false);
 
                 expect(state.segments[1].id).to.equal(originalSegments[1].id);
                 expect(state.segments[1].name).to.equal(originalSegments[1].name);
-                expect(state.segments[1].time).to.equal(-1);
-                expect(state.segments[1].pauseTime).to.equal(originalSegments[1].pauseTime);
+                expect(state.segments[1].currentTime).to.equal(null);
                 expect(state.segments[1].personalBest).to.equal(originalSegments[1].personalBest);
-                expect(state.segments[1].overallBest).to.equal(originalSegments[1].previousOverallBest);
+                expect(state.segments[1].overallBest).to.equal(originalSegments[1].currentTime);
                 expect(state.segments[1].hasNewOverallBest).to.equal(false);
-                expect(state.segments[1].previousOverallBest).to.equal(-1);
+                expect(state.segments[1].previousOverallBest).to.equal(null);
                 expect(state.segments[1].startTime).to.equal(-1);
                 expect(state.segments[1].skipped).to.equal(false);
                 expect(state.segments[1].passed).to.equal(false);
@@ -387,9 +484,11 @@ describe('Splits Store-Module', () => {
                 const segments = generateSegmentArray(5);
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments,
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -406,10 +505,12 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                let totalTime = 0;
+                let totalRTATime = 0;
+                let totalIGTTIme = 0;
                 segments.forEach(segment => {
                     if (segment.passed) {
-                        totalTime += Math.max(0, (segment.personalBest || 0));
+                        totalRTATime += getFinalTime(segment.personalBest.rta);
+                        totalIGTTIme += getFinalTime(segment.personalBest.rta);
                     }
                 });
 
@@ -421,11 +522,11 @@ describe('Splits Store-Module', () => {
                 // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.exist;
                 // Either current time or +1, as it may be a millisecond off
-                expect(commits[0].payload.time).to.be.within(startTime, startTime + 1);
+                expect(commits[0].payload.currentTime).to.be.within(startTime, startTime + 1);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME);
-                expect(commits[1].payload).to.equal(totalTime);
+                expect(commits[1].payload).to.equal(totalRTATime);
 
                 expect(commits[2].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 // tslint:disable-next-line:no-unused-expression
@@ -440,9 +541,11 @@ describe('Splits Store-Module', () => {
             it('should not start without segments', async () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -468,9 +571,11 @@ describe('Splits Store-Module', () => {
             it('should not start when the timer is not stopped', async () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const statuses = [TimerStatus.FINISHED, TimerStatus.PAUSED, TimerStatus.RUNNING];
@@ -502,9 +607,11 @@ describe('Splits Store-Module', () => {
             it('should not do anything while not running', async () => {
                 const state: SplitsState = {
                     current: -1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: [],
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -535,13 +642,22 @@ describe('Splits Store-Module', () => {
                         id: uuid(),
                         name: 'test',
                         startTime: now() - segmentTime,
-                        personalBest: -1,
-                        overallBest: -1,
+                        personalBest: null,
+                        overallBest: null,
                     },
                     {
                         id: uuid(),
                         name: 'next',
-                        time: 123,
+                        currentTime: {
+                            rta: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                        },
                         passed: true,
                         skipped: true,
                     },
@@ -549,9 +665,11 @@ describe('Splits Store-Module', () => {
                 const currentIndex = 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -578,7 +696,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload).to.exist;
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.time).to.be.within(segmentTime, segmentTime + 1);
+                expect(commits[0].payload.segment.currentTime).to.be.within(segmentTime, segmentTime + 1);
                 expect(commits[0].payload.segment.passed).to.equal(true);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
@@ -597,22 +715,49 @@ describe('Splits Store-Module', () => {
             });
 
             it('should apply overall bests correctly', async () => {
-                const segmentTime = 5_000;
-                const personalBest = 25_000;
-                const overallBest = 10_000;
+                const segmentTimeMs = 5_000;
+                const personalBest: SegmentTime = {
+                    rta: {
+                        rawTime: 25_000,
+                        pauseTime: 0,
+                    },
+                    igt: {
+                        rawTime: 25_000,
+                        pauseTime: 0,
+                    },
+                };
+                const overallBest: SegmentTime = {
+                    rta: {
+                        rawTime: 10_000,
+                        pauseTime: 0,
+                    },
+                    igt: {
+                        rawTime: 10_000,
+                        pauseTime: 0,
+                    },
+                };
                 const segments: Segment[] = [
                     null,
                     {
                         id: uuid(),
                         name: 'test',
-                        startTime: now() - segmentTime,
+                        startTime: now() - segmentTimeMs,
                         personalBest: personalBest,
                         overallBest: overallBest,
                     },
                     {
                         id: uuid(),
                         name: 'next',
-                        time: 123,
+                        currentTime: {
+                            rta: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                        },
                         passed: true,
                         skipped: true,
                     },
@@ -620,9 +765,11 @@ describe('Splits Store-Module', () => {
                 const currentIndex = 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -641,27 +788,54 @@ describe('Splits Store-Module', () => {
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.overallBest).to.be.within(segmentTime, segmentTime + 1);
+                expect(commits[0].payload.segment.overallBest.rta.rawTime).to.be.within(segmentTimeMs, segmentTimeMs + 1);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(overallBest);
             });
 
             it('should not apply overall bests', async () => {
-                const segmentTime = 25_000;
-                const personalBest = 20_000;
-                const overallBest = 10_000;
+                const segmentTimeMs = 25_000;
+                const personalBest: SegmentTime = {
+                    rta: {
+                        rawTime: 20_000,
+                        pauseTime: 0,
+                    },
+                    igt: {
+                        rawTime: 20_000,
+                        pauseTime: 0,
+                    },
+                };
+                const overallBest: SegmentTime = {
+                    rta: {
+                        rawTime: 10_000,
+                        pauseTime: 0,
+                    },
+                    igt: {
+                        rawTime: 10_000,
+                        pauseTime: 0,
+                    },
+                };
                 const segments: Segment[] = [
                     null,
                     {
                         id: uuid(),
                         name: 'test',
-                        startTime: now() - segmentTime,
+                        startTime: now() - segmentTimeMs,
                         personalBest: personalBest,
                         overallBest: overallBest,
                     },
                     {
                         id: uuid(),
                         name: 'next',
-                        time: 123,
+                        currentTime: {
+                            rta: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 123,
+                                pauseTime: 0,
+                            },
+                        },
                         passed: true,
                         skipped: true,
                     },
@@ -669,9 +843,11 @@ describe('Splits Store-Module', () => {
                 const currentIndex = 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -692,15 +868,17 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.overallBest).to.equal(overallBest);
-                expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
+                expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
             });
 
             it('should finish after the last split', async () => {
                 const state: SplitsState = {
                     current: 0,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: generateSegmentArray(1),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -728,9 +906,11 @@ describe('Splits Store-Module', () => {
             it('should reset after the run is finished', async () => {
                 const state: SplitsState = {
                     current: 1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: generateSegmentArray(1),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -763,9 +943,11 @@ describe('Splits Store-Module', () => {
                 const currentIndex = 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const rootState = {
@@ -791,7 +973,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.time).to.equal(-1);
+                expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.startTime).to.equal(-1);
                 expect(commits[0].payload.segment.skipped).to.equal(true);
                 expect(commits[0].payload.segment.passed).to.equal(false);
@@ -808,9 +990,11 @@ describe('Splits Store-Module', () => {
                 for (const status of invalidStatuses) {
                     const state: SplitsState = {
                         current: currentIndex,
+                        timing: TimingMethod.RTA,
                         currentOpenFile: null,
                         segments: segments.slice(0),
-                        previousSegmentsTotalTime: randomInt(99999),
+                        previousRTATotal: randomInt(99999),
+                        previousIGTTotal: randomInt(99999),
                     };
 
                     const rootState = {
@@ -842,9 +1026,11 @@ describe('Splits Store-Module', () => {
                 const currentIndex = segments.length - 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const rootState = {
@@ -883,19 +1069,20 @@ describe('Splits Store-Module', () => {
                         id: uuid(),
                         name: 'test',
                         startTime: randomInt(99999),
-                        pauseTime: pauseTime,
-                        personalBest: randomInt(99999),
-                        overallBest: randomInt(99999),
+                        personalBest: generateRandomTime(),
+                        overallBest: generateRandomTime(),
                         hasNewOverallBest: true,
-                        previousOverallBest: randomInt(99999),
+                        previousOverallBest: generateRandomTime(),
                     },
                 ];
                 const currentIndex = 1;
                 const state: SplitsState = {
                     current: currentIndex,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: segments.slice(0),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const rootState = {
                     splitterino: {
@@ -921,19 +1108,19 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.startTime).to.equal(-1);
-                expect(commits[0].payload.segment.time).to.equal(-1);
+                expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.pauseTime).to.equal(0);
                 expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
                 expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
-                expect(commits[0].payload.segment.previousOverallBest).to.equal(-1);
+                expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
                 expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
-                expect(commits[1].payload.segment.time).to.equal(-1);
+                expect(commits[1].payload.segment.currentTime).to.equal(null);
                 expect(commits[1].payload.segment.passed).to.equal(false);
                 expect(commits[1].payload.segment.skipped).to.equal(false);
                 expect(commits[1].payload.segment.pauseTime).to.equal(pauseTime);
@@ -945,9 +1132,11 @@ describe('Splits Store-Module', () => {
             it('should not undo when the timer is not running', async () => {
                 const state: SplitsState = {
                     current: 1,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: generateSegmentArray(3),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
                 const invalidStatuses = [TimerStatus.STOPPED, TimerStatus.PAUSED, TimerStatus.FINISHED];
                 for (const status of invalidStatuses) {
@@ -978,9 +1167,11 @@ describe('Splits Store-Module', () => {
             it('should not undo when it is the first segment', async () => {
                 const state: SplitsState = {
                     current: 0,
+                    timing: TimingMethod.RTA,
                     currentOpenFile: null,
                     segments: generateSegmentArray(3),
-                    previousSegmentsTotalTime: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
                 };
 
                 const rootState = {
@@ -1003,6 +1194,40 @@ describe('Splits Store-Module', () => {
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(false);
+            });
+        });
+
+        describe(ACTION_PAUSE, () => {
+            it('should pause the timer (RTA & IGT)', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const time = now();
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_PAUSE], {
+                    state,
+                    rootState,
+                });
+            });
+
+            it('should not pause the timer unless it is running', async () => {
+
             });
         });
     });

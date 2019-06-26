@@ -80,3 +80,13 @@ export async function testAction<S, R>(
         returnValue: returnValue,
     };
 }
+
+export function randomInt(max: number, min: number = 1): number {
+    return Math.max(min, Math.floor(Math.random() * Math.floor(max)));
+}
+
+export function wait(timeout: number) {
+    return new Promise<void>(resolve => {
+        setTimeout(() => resolve(), timeout);
+    });
+}

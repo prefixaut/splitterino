@@ -4,6 +4,7 @@
     "title": "Splits",
     "description": "Format in which splits are getting saved to file or should be transmitted",
     "type": "object",
+    "required": ["segments"],
     "properties": {
         "segments": {
             "description": "An array of segments which are associated to these splits",
@@ -13,7 +14,10 @@
             "items": {
                 "$ref": "http://splitterino.prefix.moe/segment.schema.json"
             }
+        },
+        "timing": {
+            "description": "The timing-method which is used for the splits",
+            "$ref": "http://splitterino.prefix.moe/timing-method.schema.json"
         }
-    },
-    "required": ["segments"]
+    }
 }

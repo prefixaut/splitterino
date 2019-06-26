@@ -4,6 +4,7 @@
     "title": "Segment",
     "description": "Describes a single Segment",
     "type": "object",
+    "required": ["id", "name"],
     "properties": {
         "id": {
             "description": "The ID which identifies the Segment",
@@ -14,25 +15,15 @@
             "description": "The name of the Segment",
             "type": "string"
         },
-        "time": {
-            "description": "The time of the Segment in milliseconds",
-            "type": "integer",
-            "minimum": 0
-        },
-        "pauseTime": {
-            "description": "The time of how long the timer was paused in this segment",
-            "type": "integer",
-            "minimum": 0
-        },
         "personalBest": {
             "description": "The time of the personal best in milliseconds",
-            "type": "integer",
-            "minimum": 0
+            "type": "object",
+            "$ref": "http://splitterino.prefix.moe/segment-time.schema.json"
         },
         "overallBest": {
             "description": "The time of the overall best in milliseconds",
-            "type": "integer",
-            "minimum": 0
+            "type": "object",
+            "$ref": "http://splitterino.prefix.moe/segment-time.schema.json"
         },
         "passed": {
             "description": "If the Segment has been passed successfully",
@@ -42,6 +33,5 @@
             "description": "If the Segment has been skipped",
             "type": "boolean"
         }
-    },
-    "required": ["id", "name"]
+    }
 }

@@ -2,7 +2,7 @@ import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { Segment } from '../../common/interfaces/segment';
+import { Segment, getFinalTime, TimingMethod, SegmentTime } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
@@ -17,6 +17,7 @@ export const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
 export const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
 
 export const ID_MUTATION_SET_CURRENT = 'setCurrent';
+export const ID_MUTATION_SET_TIMING = 'setTiming';
 export const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
 export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
 export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
@@ -32,9 +33,7 @@ export const ID_ACTION_SPLIT = 'split';
 export const ID_ACTION_SKIP = 'skip';
 export const ID_ACTION_UNDO = 'undo';
 export const ID_ACTION_PAUSE = 'pause';
-export const ID_ACTION_PAUSE_IGT = 'pause_igt';
 export const ID_ACTION_UNPAUSE = 'unpause';
-export const ID_ACTION_UNPAUSE_IGT = 'unpause_igt';
 export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
@@ -47,6 +46,7 @@ export const GETTER_NEXT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_NEXT_SEGMENT}`;
 export const GETTER_HAS_NEW_OVERALL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_OVERALL_BEST}`;
 
 export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
+export const MUTATION_SET_TIMING = `${MODULE_PATH}/${ID_MUTATION_SET_TIMING}`;
 export const MUTATION_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_CLEAR_SEGMENTS}`;
 export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGMENT}`;
 export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
@@ -63,21 +63,23 @@ export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
 export const ACTION_SKIP = `${MODULE_PATH}/${ID_ACTION_SKIP}`;
 export const ACTION_UNDO = `${MODULE_PATH}/${ID_ACTION_UNDO}`;
 export const ACTION_PAUSE = `${MODULE_PATH}/${ID_ACTION_PAUSE}`;
-export const ACTION_PAUSE_IGT = `${MODULE_PATH}/${ID_ACTION_PAUSE_IGT}`;
 export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
-export const ACTION_UNPAUSE_IGT = `${MODULE_PATH}/${ID_ACTION_UNPAUSE_IGT}`;
 export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
 export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
 export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
+export interface PauseOptions {
+    igtOnly: boolean;
+}
+
 function resetSegment(segment: Segment): Segment {
     return {
         ...segment,
         hasNewOverallBest: false,
-        previousOverallBest: -1,
-        time: -1,
+        previousOverallBest: null,
+        currentTime: null,
         startTime: -1,
         skipped: false,
         passed: false,
@@ -92,8 +94,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
         state: {
             current: -1,
             segments: [],
+            timing: TimingMethod.RTA,
             currentOpenFile: null,
-            previousSegmentsTotalTime: -1,
+            previousRTATotal: -1,
+            previousIGTTotal: -1,
         },
         getters: {
             [ID_GETTER_PREVIOUS_SEGMENT](state: SplitsState) {
@@ -139,6 +143,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 state.current = index;
+            },
+            [ID_MUTATION_SET_TIMING](state: SplitsState, timing: TimingMethod) {
+                // Be sure that the timing is valid
+                switch (timing) {
+                    case TimingMethod.RTA:
+                    case TimingMethod.IGT:
+                        state.timing = timing;
+                }
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
                 /*
@@ -234,7 +246,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 if (!isFinite(newTime) || isNaN(newTime)) {
                     newTime = 0;
                 }
-                state.previousSegmentsTotalTime = newTime;
+                state.previousRTATotal = newTime;
             },
             [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
                 state.currentOpenFile = filePath;
@@ -243,15 +255,18 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.segments = state.segments.map(resetSegment);
             },
             [ID_MUTATION_SAVING_RESET](state: SplitsState, isNewPersonalBest: boolean = false) {
-                let totalNewTime = 0;
+                let newRTATotal = 0;
+                let newIGTTotal = 0;
+
                 state.segments = state.segments.map(segment => {
                     const newSegment = resetSegment(segment);
 
                     if (segment.passed) {
-                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
+                        newRTATotal += getFinalTime(segment.currentTime.rta);
+                        newIGTTotal += getFinalTime(segment.currentTime.igt);
                     }
                     if (isNewPersonalBest) {
-                        newSegment.personalBest = segment.time;
+                        newSegment.personalBest = segment.currentTime;
                     }
                     if (segment.hasNewOverallBest) {
                         newSegment.overallBest = segment.previousOverallBest;
@@ -261,7 +276,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 });
 
                 if (isNewPersonalBest) {
-                    state.previousSegmentsTotalTime = totalNewTime;
+                    state.previousRTATotal = newRTATotal;
                 }
             },
         },
@@ -280,14 +295,17 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { root: true }
                 );
 
-                let totalTime = 0;
+                let totalRTATime = 0;
+                let totalIGTTime = 0;
+
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalTime += Math.max(0, (segment.personalBest || 0));
+                        totalRTATime += getFinalTime(segment.personalBest.rta);
+                        totalIGTTime += getFinalTime(segment.personalBest.igt);
                     }
                 });
 
-                context.commit(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME, totalTime);
+                context.commit(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME, totalRTATime);
 
                 const firstSegment = context.state.segments[0];
 
@@ -305,7 +323,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>) {
                 const currentTime = now();
 
-                const status = context.rootState.splitterino.timer.status;
+                const { status, igtPauseTotal, pauseTotal } = context.rootState.splitterino.timer;
                 switch (status) {
                     case TimerStatus.FINISHED:
                         // Cleanup via reset
@@ -319,35 +337,41 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         return;
                 }
 
-                const currentIndex = context.state.current;
+                const { current: currentIndex, timing } = context.state;
 
                 // Get the segment and spread it to create a copy to be able
                 // to modify it.
                 const currentSegment: Segment = {
                     ...context.state.segments[currentIndex]
                 };
-                const tmpTime = currentTime -
-                    currentSegment.startTime;
-                const time = tmpTime - (currentSegment.pauseTime || 0);
-                const inGameTime = tmpTime - (currentSegment.igtPauseTime || 0);
+                const rawTime = currentTime - currentSegment.startTime;
+                const newTime: SegmentTime = {
+                    igt: {
+                        rawTime,
+                        pauseTime: igtPauseTotal,
+                    },
+                    rta: {
+                        rawTime,
+                        pauseTime: pauseTotal,
+                    },
+                };
 
                 currentSegment.passed = true;
                 currentSegment.skipped = false;
-                currentSegment.time = time;
-                currentSegment.inGameTime = inGameTime;
+                currentSegment.currentTime = newTime;
 
                 if (
                     currentSegment.overallBest == null ||
-                    currentSegment.overallBest < 0 ||
-                    currentSegment.overallBest > time
+                    currentSegment.overallBest[timing] == null ||
+                    getFinalTime(currentSegment.overallBest[timing]) > getFinalTime(newTime[timing])
                 ) {
                     // Backup of the previous time to be able to revert it
                     currentSegment.previousOverallBest = currentSegment.overallBest;
-                    currentSegment.overallBest = time;
+                    currentSegment.overallBest = newTime;
                     currentSegment.hasNewOverallBest = true;
                 } else {
                     currentSegment.hasNewOverallBest = false;
-                    currentSegment.previousOverallBest = -1;
+                    currentSegment.previousOverallBest = null;
                 }
 
                 context.commit(ID_MUTATION_SET_SEGMENT, {
@@ -369,7 +393,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const next: Segment = {
                     ...context.state.segments[currentIndex + 1],
                     startTime: currentTime,
-                    time: 0,
+                    currentTime: null,
                     passed: false,
                     skipped: false
                 };
@@ -393,8 +417,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 const segment: Segment = {
                     ...context.state.segments[index],
-                    time: -1,
-                    startTime: -1,
+                    currentTime: null,
                     skipped: true,
                     passed: false
                 };
@@ -415,7 +438,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const segment: Segment = {
                     ...context.state.segments[index],
                     startTime: -1,
-                    time: -1,
+                    currentTime: null,
                     passed: false,
                     skipped: false
                 };
@@ -425,21 +448,27 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     segment.overallBest = segment.previousOverallBest;
                     segment.hasNewOverallBest = false;
                 }
-                segment.previousOverallBest = -1;
+                segment.previousOverallBest = null;
 
                 const previous: Segment = {
                     ...context.state.segments[index - 1],
-                    time: -1,
+                    currentTime: null,
                     passed: false,
                     skipped: false,
                 };
-                // Add the pause time of the the current segment to the previous
-                previous.pauseTime = Math.max((previous.pauseTime || 0), 0) + segment.pauseTime;
-                // Also do that for the IGT Pause time
-                previous.igtPauseTime = Math.max((previous.igtPauseTime || 0), 0) + segment.igtPauseTime;
-                // Clear the pause times afterwards
-                segment.pauseTime = 0;
-                segment.igtPauseTime = 0;
+
+                if (!previous.passed || previous.currentTime == null) {
+                    previous.currentTime = segment.currentTime;
+                } else {
+                    Object.keys(TimingMethod).forEach(timing => {
+                        if (previous.currentTime[timing] == null) {
+                            previous.currentTime[timing] = segment.currentTime[timing];
+                        } else {
+                            previous.currentTime[timing].pauseTime += segment.currentTime[timing].pauseTime;
+                        }
+                        segment.currentTime[timing] = null;
+                    });
+                }
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
@@ -447,71 +476,46 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>) {
+            [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>, payload: PauseOptions) {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
                 if (status !== TimerStatus.RUNNING) {
-                    return;
+                    return false;
+                }
+
+                let toStatus = TimerStatus.PAUSED;
+                if (payload.igtOnly) {
+                    toStatus = TimerStatus.RUNNING_IGT_PAUSE;
                 }
 
                 context.commit(
                     MUTATION_SET_STATUS,
-                    { time, status: TimerStatus.PAUSED },
+                    { time, status: toStatus },
                     { root: true }
                 );
+
+                return true;
             },
-            [ID_ACTION_PAUSE_IGT](context: ActionContext<SplitsState, RootState>) {
+            [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>, payload: PauseOptions) {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
-                if (status !== TimerStatus.RUNNING) {
+                const igtOnly = payload.igtOnly;
+
+                if (status !== TimerStatus.PAUSED && (igtOnly && status !== TimerStatus.RUNNING_IGT_PAUSE)) {
                     return;
                 }
 
-                context.commit(
-                    MUTATION_SET_STATUS,
-                    { time, status: TimerStatus.RUNNING_IGT_PAUSE },
-                    { root: true }
-                );
-            },
-            [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>) {
-                const time = now();
-                const status = context.rootState.splitterino.timer.status;
-
-                if (status !== TimerStatus.PAUSED && status !== TimerStatus.RUNNING_IGT_PAUSE) {
-                    return;
-                }
-
-                const pauseAddition = time - context.rootState.splitterino.timer.pauseTime;
-                const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
                 const index = context.state.current;
                 // Create a copy of the segment so it can be safely edited
                 const segment: Segment = { ...context.state.segments[index] };
-                segment.pauseTime += pauseAddition;
-                segment.igtPauseTime += igtPauseAddition;
 
-                context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
-                context.commit(
-                    MUTATION_SET_STATUS,
-                    {
-                        time,
-                        status: TimerStatus.RUNNING
-                    },
-                    { root: true }
-                );
-            },
-            [ID_ACTION_UNPAUSE_IGT](context: ActionContext<SplitsState, RootState>) {
-                const time = now();
-                const status = context.rootState.splitterino.timer.status;
-
-                if (status !== TimerStatus.RUNNING_IGT_PAUSE) {
-                    return;
+                if (!igtOnly) {
+                    const pauseAddition = time - context.rootState.splitterino.timer.pauseTime;
+                    segment.currentTime.rta.pauseTime += pauseAddition;
                 }
 
                 const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
-                const index = context.state.current;
-                // Create a copy of the segment so it can be safely edited
-                const segment: Segment = { ...context.state.segments[index] };
-                segment.igtPauseTime += igtPauseAddition;
+                segment.currentTime.igt.pauseTime += igtPauseAddition;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(
@@ -534,15 +538,21 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     return Promise.resolve();
                 }
 
-                const previousPB = Math.max(0, context.state.previousSegmentsTotalTime);
-                let totalNewTime = 0;
+                const previousRTAPB = Math.max(0, context.state.previousRTATotal);
+                const previousIGTPB = Math.max(0, context.state.previousIGTTotal);
+                let totalRTATime = 0;
+                let totalIGTTime = 0;
+
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
+                        totalRTATime += getFinalTime(segment.currentTime.rta);
+                        totalIGTTime += getFinalTime(segment.currentTime.igt);
                     }
                 });
 
-                const isNewPersonalBest = previousPB === 0 || totalNewTime < previousPB;
+                const isNewRTAPB = previousRTAPB === 0 || totalRTATime < previousRTAPB;
+                const isNewIGTPB = previousIGTPB === 0 || totalIGTTime < previousIGTPB;
+                const isNewPersonalBest = context.state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
 
                 // if the time is a new PB or the splits should get saved as
                 // the status is finished.

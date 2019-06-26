@@ -41,7 +41,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import { clamp } from 'lodash';
 
-import { Segment } from '../common/interfaces/segment';
+import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/time';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
@@ -78,6 +78,9 @@ export default class SplitsComponent extends Vue {
 
     @splits.State('current')
     public currentSegment: number;
+
+    @splits.State('timing')
+    public timing: TimingMethod;
 
     /**
      * Scroll index. Used to scroll over the splits with
@@ -118,7 +121,7 @@ export default class SplitsComponent extends Vue {
             this.intervalId = window.setInterval(() => {
                 const segment = this.segments[this.currentSegment];
                 this.currentSegmentTime =
-                    now() - (segment.startTime || 0) - (segment.pauseTime || 0);
+                    now() - getFinalTime(segment.currentTime[this.timing]);
             }, 1);
 
             return;
@@ -173,7 +176,7 @@ export default class SplitsComponent extends Vue {
     public getSegmentTime(index: number) {
         const segment = this.segments[index];
         if (this.status === TimerStatus.FINISHED || index < this.currentSegment) {
-            return segment.time;
+            return getFinalTime(segment.currentTime[this.timing]);
         }
 
         if (this.status !== TimerStatus.RUNNING || index > this.currentSegment) {
