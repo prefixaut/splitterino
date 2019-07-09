@@ -31,11 +31,12 @@ import { router } from './router';
 import { getClientStore } from './store';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
+import { SegmentTime, TimingMethod, getFinalTime } from './common/interfaces/segment';
 
-process.on('uncaughtException', err => {
+process.on('uncaughtException', error => {
     Logger.fatal({
-        msg: 'Uncaught Exception in background process!',
-        error: err,
+        msg: 'Uncaught Exception in render process!',
+        error: error,
     });
 
     // Close the window
@@ -103,6 +104,9 @@ process.on('unhandledRejection', (reason, promise) => {
         }
 
         return formatter.format(value, { padding: true });
+    });
+    Vue.filter('time', (value: SegmentTime, timing: TimingMethod = TimingMethod.RTA) => {
+        return value == null || value[timing] == null ? null : getFinalTime(value[timing]);
     });
 
     // Disable tips

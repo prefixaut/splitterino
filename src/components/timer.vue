@@ -60,17 +60,19 @@ export default class TimerComponent extends Vue {
             (state: RootState) => state.splitterino.timer.status,
             () => this.statusChange()
         );
+
+        this.calculateCurrentTime();
+        this.statusChange();
     }
 
     public beforeDestroy() {
         this.statusWatcher();
     }
 
-    public statusChange() {
+    public statusChange(forceUpdate: boolean = false) {
         if (this.status === TimerStatus.RUNNING) {
             this.intervalId = window.setInterval(() => {
-                this.currentTime = (now() - this.startTime - this.startDelay)
-                    - (this.igt ? this.pauseTotal : this.igtPauseTotal);
+                this.calculateCurrentTime();
             }, 1);
 
             return;
@@ -87,6 +89,11 @@ export default class TimerComponent extends Vue {
         if (this.status === TimerStatus.STOPPED) {
             this.currentTime = 0;
         }
+    }
+
+    private calculateCurrentTime() {
+        this.currentTime = (now() - this.startTime - this.startDelay)
+            - (this.igt ? this.igtPauseTotal : this.pauseTotal);
     }
 }
 </script>

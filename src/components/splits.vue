@@ -23,9 +23,15 @@
                     ]"
                 >
                     <div class="name">{{ segment.name }}</div>
-                    <div class="time" v-show="(status === 'running' && index <= currentSegment) || status === 'finished'">{{ getSegmentTime(index) | aevum }}</div>
-                    <div class="personal-best">PB: {{ segment.personalBest | aevum }}</div>
-                    <div class="overall-best">OB: {{ segment.overallBest | aevum }}</div>
+                    <div
+                        class="time"
+                        v-show="(status === 'running' && index <= currentSegment) ||
+                            status === 'finished' || status === 'paused' || status === 'running_igt_pause'"
+                    >
+                        {{ getSegmentTime(index) | aevum }}
+                    </div>
+                    <div class="personal-best">PB: {{ segment.personalBest | time(timing) | aevum }}</div>
+                    <div class="overall-best">OB: {{ segment.overallBest | time(timing) | aevum }}</div>
                 </div>
             </div>
         </template>
@@ -46,6 +52,7 @@ import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/time';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { RootState } from '../store/states/root.state';
+import { Logger } from '../utils/logger';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -110,6 +117,9 @@ export default class SplitsComponent extends Vue {
             (state: RootState) => state.splitterino.timer.status,
             () => this.statusChange()
         );
+
+        this.calculateCurrentSegmentTime();
+        this.statusChange();
     }
 
     public beforeDestroy() {
@@ -119,9 +129,7 @@ export default class SplitsComponent extends Vue {
     public statusChange() {
         if (this.status === TimerStatus.RUNNING) {
             this.intervalId = window.setInterval(() => {
-                const segment = this.segments[this.currentSegment];
-                this.currentSegmentTime =
-                    now() - getFinalTime(segment.currentTime[this.timing]);
+                this.calculateCurrentSegmentTime();
             }, 1);
 
             return;
@@ -133,6 +141,26 @@ export default class SplitsComponent extends Vue {
 
         if (this.status === TimerStatus.STOPPED) {
             this.currentSegmentTime = 0;
+        }
+    }
+
+    private calculateCurrentSegmentTime() {
+        try {
+            const segment = this.segments[this.currentSegment];
+            if (segment != null) {
+                let pauseTime = 0;
+                if (segment.currentTime != null && segment.currentTime[this.timing] != null) {
+                    pauseTime = segment.currentTime[this.timing].pauseTime;
+                }
+                this.currentSegmentTime = now() - segment.startTime - pauseTime;
+            }
+        } catch (error) {
+            // Clear the interval to not trigger billions of errors
+            window.clearInterval(this.intervalId);
+            Logger.error({
+                msg: 'Error in timer update-interval of splits-component!',
+                error,
+            });
         }
     }
 
@@ -179,7 +207,11 @@ export default class SplitsComponent extends Vue {
             return getFinalTime(segment.currentTime[this.timing]);
         }
 
-        if (this.status !== TimerStatus.RUNNING || index > this.currentSegment) {
+        if ((
+            this.status !== TimerStatus.RUNNING &&
+            this.status !== TimerStatus.PAUSED &&
+            this.status !== TimerStatus.RUNNING_IGT_PAUSE
+        ) || index > this.currentSegment) {
             return null;
         }
 

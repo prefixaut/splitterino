@@ -313,32 +313,133 @@ describe('Splits Store-Module', () => {
 
         describe(MUTATION_DISCARDING_RESET, () => {
             it('should apply the mutation correctly', () => {
-                const originalSegments: Segment[] = generateSegmentArray(10);
+                const originalSegments: Segment[] = [
+                    {
+                        id: uuid(),
+                        name: 'none',
+                        currentTime: {
+                            rta: {
+                                rawTime: 1000,
+                                pauseTime: randomInt(99999),
+                            },
+                            igt: {
+                                rawTime: 1000,
+                                pauseTime: randomInt(99999),
+                            },
+                        },
+                        personalBest: {
+                            rta: {
+                                rawTime: 99,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 99,
+                                pauseTime: 0,
+                            },
+                        },
+                        hasNewOverallBest: false,
+                        overallBest: {
+                            rta: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                        },
+                        previousOverallBest: {
+                            rta: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999),
+                                pauseTime: 0,
+                            },
+                        }
+                    },
+                    {
+                        id: uuid(),
+                        name: 'ob',
+                        currentTime: {
+                            rta: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(999),
+                                pauseTime: 0,
+                            },
+                        },
+                        personalBest: {
+                            rta: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                        },
+                        hasNewOverallBest: true,
+                        overallBest: {
+                            rta: {
+                                rawTime: 1000,
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: 1000,
+                                pauseTime: 0,
+                            },
+                        },
+                        previousOverallBest: {
+                            rta: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                            igt: {
+                                rawTime: randomInt(99999, 1000),
+                                pauseTime: 0,
+                            },
+                        },
+                    },
+                ];
+
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
                     currentOpenFile: null,
-                    // Create a copy
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_DISCARDING_RESET](state, null);
+                splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
 
-                state.segments.forEach((segment, index) => {
-                    expect(segment.id).to.equal(originalSegments[index].id);
-                    expect(segment.name).to.equal(originalSegments[index].name);
-                    expect(segment.currentTime).to.equal(null);
-                    expect(segment.personalBest).to.equal(originalSegments[index].personalBest);
-                    expect(segment.overallBest).to.equal(originalSegments[index].overallBest);
+                expect(state.segments).to.have.lengthOf(originalSegments.length);
 
-                    expect(segment.hasNewOverallBest).to.equal(false);
-                    expect(segment.previousOverallBest).to.equal(null);
-                    expect(segment.startTime).to.equal(-1);
-                    expect(segment.skipped).to.equal(false);
-                    expect(segment.passed).to.equal(false);
-                });
+                expect(state.segments[0].id).to.equal(originalSegments[0].id);
+                expect(state.segments[0].name).to.equal(originalSegments[0].name);
+                expect(state.segments[0].currentTime).to.equal(null);
+                expect(state.segments[0].personalBest).to.equal(originalSegments[0].personalBest);
+                expect(state.segments[0].overallBest).to.equal(originalSegments[0].overallBest);
+                expect(state.segments[0].hasNewOverallBest).to.equal(false);
+                expect(state.segments[0].previousOverallBest).to.equal(null);
+                expect(state.segments[0].startTime).to.equal(-1);
+                expect(state.segments[0].skipped).to.equal(false);
+                expect(state.segments[0].passed).to.equal(false);
+
+                expect(state.segments[1].id).to.equal(originalSegments[1].id);
+                expect(state.segments[1].name).to.equal(originalSegments[1].name);
+                expect(state.segments[1].currentTime).to.equal(null);
+                expect(state.segments[1].personalBest).to.equal(originalSegments[1].personalBest);
+                expect(state.segments[1].overallBest).to.equal(originalSegments[1].overallBest);
+                expect(state.segments[1].hasNewOverallBest).to.equal(false);
+                expect(state.segments[1].previousOverallBest).to.equal(null);
+                expect(state.segments[1].startTime).to.equal(-1);
+                expect(state.segments[1].skipped).to.equal(false);
+                expect(state.segments[1].passed).to.equal(false);
             });
         });
 
@@ -465,7 +566,7 @@ describe('Splits Store-Module', () => {
                 expect(state.segments[1].name).to.equal(originalSegments[1].name);
                 expect(state.segments[1].currentTime).to.equal(null);
                 expect(state.segments[1].personalBest).to.equal(originalSegments[1].personalBest);
-                expect(state.segments[1].overallBest).to.equal(originalSegments[1].currentTime);
+                expect(state.segments[1].overallBest).to.equal(originalSegments[1].overallBest);
                 expect(state.segments[1].hasNewOverallBest).to.equal(false);
                 expect(state.segments[1].previousOverallBest).to.equal(null);
                 expect(state.segments[1].startTime).to.equal(-1);
@@ -522,7 +623,7 @@ describe('Splits Store-Module', () => {
                 // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.exist;
                 // Either current time or +1, as it may be a millisecond off
-                expect(commits[0].payload.currentTime).to.be.within(startTime, startTime + 1);
+                expect(commits[0].payload.time).to.be.within(startTime, startTime + 1);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME);
@@ -696,7 +797,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload).to.exist;
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.currentTime).to.be.within(segmentTime, segmentTime + 1);
+                expect(commits[0].payload.segment.currentTime.rta.rawTime).to.be.within(segmentTime, segmentTime + 1);
                 expect(commits[0].payload.segment.passed).to.equal(true);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
@@ -788,7 +889,8 @@ describe('Splits Store-Module', () => {
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
-                expect(commits[0].payload.segment.overallBest.rta.rawTime).to.be.within(segmentTimeMs, segmentTimeMs + 1);
+                expect(commits[0].payload.segment.overallBest.rta.rawTime)
+                    .to.be.within(segmentTimeMs, segmentTimeMs + 1);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(overallBest);
             });
 
@@ -1226,9 +1328,10 @@ describe('Splits Store-Module', () => {
                 });
             });
 
-            it('should not pause the timer unless it is running', async () => {
+           /*it('should not pause the timer unless it is running', async () => {
 
             });
+            */
         });
     });
 });

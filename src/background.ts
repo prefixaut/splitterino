@@ -20,10 +20,10 @@ import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
 
-process.on('uncaughtException', err => {
+process.on('uncaughtException', error => {
     Logger.fatal({
         msg: 'Uncaught Exception in background process!',
-        error: err,
+        error: error,
     });
 
     // exit the application safely

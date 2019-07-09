@@ -8,6 +8,7 @@ import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
+import { Logger } from '../../utils/logger';
 
 export const MODULE_PATH = 'splitterino/splits';
 
@@ -252,7 +253,15 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.currentOpenFile = filePath;
             },
             [ID_MUTATION_DISCARDING_RESET](state: SplitsState) {
-                state.segments = state.segments.map(resetSegment);
+                state.segments = state.segments.map(segment => {
+                    const newSegment = resetSegment(segment);
+
+                    if (segment.hasNewOverallBest) {
+                        newSegment.overallBest = segment.previousOverallBest;
+                    }
+
+                    return newSegment;
+                });
             },
             [ID_MUTATION_SAVING_RESET](state: SplitsState, isNewPersonalBest: boolean = false) {
                 let newRTATotal = 0;
@@ -265,11 +274,13 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         newRTATotal += getFinalTime(segment.currentTime.rta);
                         newIGTTotal += getFinalTime(segment.currentTime.igt);
                     }
+
                     if (isNewPersonalBest) {
-                        newSegment.personalBest = segment.currentTime;
-                    }
-                    if (segment.hasNewOverallBest) {
-                        newSegment.overallBest = segment.previousOverallBest;
+                        if (segment.passed) {
+                            newSegment.personalBest = segment.currentTime;
+                        } else {
+                            newSegment.personalBest = null;
+                        }
                     }
 
                     return newSegment;
@@ -277,6 +288,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 if (isNewPersonalBest) {
                     state.previousRTATotal = newRTATotal;
+                    state.previousIGTTotal = newIGTTotal;
                 }
             },
         },
@@ -363,6 +375,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 if (
                     currentSegment.overallBest == null ||
                     currentSegment.overallBest[timing] == null ||
+                    getFinalTime(currentSegment.overallBest[timing]) === 0 ||
                     getFinalTime(currentSegment.overallBest[timing]) > getFinalTime(newTime[timing])
                 ) {
                     // Backup of the previous time to be able to revert it
@@ -484,7 +497,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 let toStatus = TimerStatus.PAUSED;
-                if (payload.igtOnly) {
+                if ((payload || { igtOnly: false }).igtOnly) {
                     toStatus = TimerStatus.RUNNING_IGT_PAUSE;
                 }
 
@@ -499,7 +512,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>, payload: PauseOptions) {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
-                const igtOnly = payload.igtOnly;
+                const igtOnly = (payload || { igtOnly: false }).igtOnly;
 
                 if (status !== TimerStatus.PAUSED && (igtOnly && status !== TimerStatus.RUNNING_IGT_PAUSE)) {
                     return;
@@ -509,12 +522,25 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 // Create a copy of the segment so it can be safely edited
                 const segment: Segment = { ...context.state.segments[index] };
 
+                if (segment.currentTime == null) {
+                    segment.currentTime = {
+                        rta: { rawTime: 0, pauseTime: 0 },
+                        igt: { rawTime: 0, pauseTime: 0 },
+                    };
+                }
+
                 if (!igtOnly) {
                     const pauseAddition = time - context.rootState.splitterino.timer.pauseTime;
+                    if (segment.currentTime.rta == null) {
+                        segment.currentTime.rta = { rawTime: 0, pauseTime: 0 };
+                    }
                     segment.currentTime.rta.pauseTime += pauseAddition;
                 }
 
                 const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
+                if (segment.currentTime.igt == null) {
+                    segment.currentTime.igt = { rawTime: 0, pauseTime: 0 };
+                }
                 segment.currentTime.igt.pauseTime += igtPauseAddition;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
@@ -550,16 +576,22 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     }
                 });
 
-                const isNewRTAPB = previousRTAPB === 0 || totalRTATime < previousRTAPB;
-                const isNewIGTPB = previousIGTPB === 0 || totalIGTTime < previousIGTPB;
+                const isNewRTAPB = previousRTAPB !== 0 || totalRTATime < previousRTAPB;
+                const isNewIGTPB = previousIGTPB !== 0 || totalIGTTime < previousIGTPB;
                 const isNewPersonalBest = context.state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
+                const isNewOverallBest = context.getters[ID_GETTER_HAS_NEW_OVERALL_BEST];
 
                 // if the time is a new PB or the splits should get saved as
                 // the status is finished.
-                if (!isNewPersonalBest || status === TimerStatus.FINISHED) {
+                if (status === TimerStatus.FINISHED) {
                     context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
 
                     return Promise.resolve();
+                }
+
+                // We can safely discard when the run hasn't finished yet and no new OB is set yet
+                if (!isNewOverallBest) {
+                    return context.dispatch(ID_ACTION_DISCARDING_RESET);
                 }
 
                 let win = null;
