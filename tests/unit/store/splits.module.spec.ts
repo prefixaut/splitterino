@@ -20,7 +20,6 @@ import {
     ID_ACTION_UNDO,
     ID_MUTATION_ADD_SEGMENT,
     ID_MUTATION_CLEAR_SEGMENTS,
-    ID_MUTATION_DISCARDING_RESET,
     ID_MUTATION_REMOVE_SEGMENT,
     ID_MUTATION_SAVING_RESET,
     ID_MUTATION_SET_ALL_SEGMENTS,
@@ -37,13 +36,19 @@ import {
     MUTATION_SET_CURRENT,
     MUTATION_SET_CURRENT_OPEN_FILE,
     MUTATION_SET_SEGMENT,
+    ACTION_UNPAUSE,
+    ID_ACTION_UNPAUSE,
+    ACTION_RESET,
+    ID_ACTION_SAVING_RESET,
+    ID_ACTION_DISCARDING_RESET,
 } from '../../../src/store/modules/splits.module';
-import { MUTATION_SET_STATUS, timerStoreModule } from '../../../src/store/modules/timer.module';
+import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { RootState } from '../../../src/store/states/root.state';
 import { SplitsState } from '../../../src/store/states/splits.state';
-import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, testAction } from '../../mocks/utils';
+import { ELECTRON_INTERFACE_TOKEN } from '../../../src/common/interfaces/electron';
+import { ElectronMockService } from '../../mocks/electron-mock.service';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
@@ -51,14 +56,17 @@ const injector = createMockInjector();
 Vue.use(Vuex);
 
 function generateRandomTime(): SegmentTime {
+    const rawTime = randomInt(99999, 100);
+    const pauseTime = randomInt(rawTime - 1, 1);
+
     return {
         igt: {
-            rawTime: randomInt(99999),
-            pauseTime: randomInt(99999),
+            rawTime,
+            pauseTime,
         },
         rta: {
-            rawTime: randomInt(99999),
-            pauseTime: randomInt(99999),
+            rawTime,
+            pauseTime,
         }
     };
 }
@@ -80,7 +88,7 @@ function generateSegmentArray(size: number): Segment[] {
 
 describe('Splits Store-Module', () => {
     const splitsModule: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
-    // const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
+    const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
 
     it('should be a valid module', () => {
         expect(splitsModule).to.be.a('object');
@@ -797,7 +805,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                expect(commits).to.be.lengthOf(3);
+                expect(commits).to.have.lengthOf(3);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
 
@@ -1006,7 +1014,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                expect(commits).to.be.lengthOf(2);
+                expect(commits).to.have.lengthOf(2);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
 
@@ -1040,7 +1048,7 @@ describe('Splits Store-Module', () => {
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                expect(dispatches).to.be.lengthOf(1);
+                expect(dispatches).to.have.lengthOf(1);
 
                 expect(dispatches[0].type).to.equal(ID_ACTION_RESET);
                 // tslint:disable-next-line:no-unused-expression
@@ -1076,7 +1084,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                expect(commits).to.be.lengthOf(2);
+                expect(commits).to.have.lengthOf(2);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
@@ -1214,7 +1222,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                expect(commits).to.be.lengthOf(3);
+                expect(commits).to.have.lengthOf(3);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
@@ -1332,17 +1340,771 @@ describe('Splits Store-Module', () => {
                 };
 
                 const time = now();
-
                 const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_PAUSE], {
                     state,
                     rootState,
                 });
+
+                expect(commits).to.have.lengthOf(1);
+                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[0].payload.time).to.be.within(time, time + 1);
+                expect(commits[0].payload.status).to.equal(TimerStatus.PAUSED);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
             });
 
-           /*it('should not pause the timer unless it is running', async () => {
+            it('should not pause the timer unless it is running', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
 
+                const invalidStatuses = [TimerStatus.FINISHED, TimerStatus.STOPPED];
+                for (const status of invalidStatuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            }
+                        }
+                    };
+
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_PAUSE], {
+                            state,
+                            rootState,
+                        });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(returnValue).to.equal(false);
+                }
             });
-            */
+
+            it('should only pause the IGT Timer', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const time = now();
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_PAUSE], {
+                    state,
+                    rootState,
+                }, { igtOnly: true });
+
+                expect(commits).to.have.lengthOf(1);
+                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[0].payload.time).to.be.within(time, time + 1);
+                expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING_IGT_PAUSE);
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should not pause the IGT timer unless it is running', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const invalidStatuses = [TimerStatus.FINISHED, TimerStatus.STOPPED, TimerStatus.RUNNING_IGT_PAUSE];
+                for (const status of invalidStatuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            }
+                        }
+                    };
+
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_PAUSE], {
+                            state,
+                            rootState,
+                        }, { igtOnly: true });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(returnValue).to.equal(false);
+                }
+            });
+        });
+
+        describe(ACTION_UNPAUSE, () => {
+            it('should unpause all timers when it was paused previously', async () => {
+                const currentIndex = 0;
+                const originalSegments: Segment[] = generateSegmentArray(3);
+                const state: SplitsState = {
+                    current: currentIndex,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.PAUSED,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const time = now();
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNPAUSE], {
+                    state,
+                    rootState,
+                });
+
+                expect(commits).to.have.lengthOf(2);
+
+                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].payload.index).to.equal(currentIndex);
+                expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
+
+                expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[1].payload.time).to.be.within(time, time + 1);
+                expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should not unpause when the timer was not paused previously', async () => {
+                const currentIndex = 0;
+                const originalSegments: Segment[] = generateSegmentArray(3);
+                const state: SplitsState = {
+                    current: currentIndex,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const invalidStatuses = [
+                    TimerStatus.FINISHED,
+                    TimerStatus.RUNNING,
+                    TimerStatus.RUNNING_IGT_PAUSE,
+                    TimerStatus.STOPPED
+                ];
+
+                for (const status of invalidStatuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            }
+                        }
+                    };
+
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_UNPAUSE], {
+                            state,
+                            rootState,
+                        });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(returnValue).to.equal(false);
+                }
+            });
+
+            it('should unpause the IGT timer when it was paused previously', async () => {
+                const currentIndex = 0;
+                const originalSegments: Segment[] = generateSegmentArray(3);
+                const state: SplitsState = {
+                    current: currentIndex,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING_IGT_PAUSE,
+                            startTime: randomInt(99999),
+                        }
+                    }
+                };
+
+                const time = now();
+                const { commits, dispatches, returnValue } = await testAction(
+                    splitsModule.actions[ID_ACTION_UNPAUSE], {
+                        state,
+                        rootState,
+                    }, { igtOnly: true });
+
+                expect(commits).to.have.lengthOf(2);
+
+                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].payload.index).to.equal(currentIndex);
+                expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
+
+                expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[1].payload.time).to.be.within(time, time + 1);
+                expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should not unpause when the IGT timer was not paused previously', async () => {
+                const currentIndex = 0;
+                const originalSegments: Segment[] = generateSegmentArray(3);
+                const state: SplitsState = {
+                    current: currentIndex,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousRTATotal: randomInt(99999),
+                    previousIGTTotal: randomInt(99999),
+                };
+
+                const invalidStatuses = [
+                    TimerStatus.FINISHED,
+                    TimerStatus.RUNNING,
+                    TimerStatus.STOPPED,
+                    TimerStatus.PAUSED,
+                ];
+
+                for (const status of invalidStatuses) {
+                    const rootState = {
+                        splitterino: {
+                            splits: state,
+                            timer: {
+                                status: status,
+                                startTime: randomInt(99999),
+                            }
+                        }
+                    };
+
+                    const { commits, dispatches, returnValue } = await testAction(
+                        splitsModule.actions[ID_ACTION_UNPAUSE], {
+                            state,
+                            rootState,
+                        }, { igtOnly: true });
+
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(commits).to.be.empty;
+                    // tslint:disable-next-line:no-unused-expression
+                    expect(dispatches).to.be.empty;
+                    expect(returnValue).to.equal(false);
+                }
+            });
+
+            it('should apply the pause time to the current segment time', async () => {
+                const initialPauseTime = 10_000;
+                const pauseTime = 5_000;
+                const totalPauseTime = initialPauseTime + pauseTime;
+                const originalSegments: Segment[] = [
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: randomInt(99999),
+                        currentTime: {
+                            rta: { rawTime: 0, pauseTime: initialPauseTime },
+                            igt: { rawTime: 0, pauseTime: initialPauseTime },
+                        },
+                    },
+                ];
+
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousIGTTotal: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.PAUSED,
+                            startTime: randomInt(99999),
+                            pauseTime: now() - pauseTime,
+                            igtPauseTime: now() - pauseTime,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNPAUSE], {
+                    state,
+                    rootState
+                });
+
+                expect(commits).to.have.lengthOf(2);
+                expect(commits[0].payload.segment.currentTime.rta.pauseTime)
+                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+                expect(commits[0].payload.segment.currentTime.igt.pauseTime)
+                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should apply the IGT pause time to the current segment time', async () => {
+                const initialPauseTime = 10_000;
+                const pauseTime = 5_000;
+                const totalPauseTime = initialPauseTime + pauseTime;
+                const originalSegments: Segment[] = [
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: randomInt(99999),
+                        currentTime: {
+                            rta: { rawTime: 0, pauseTime: initialPauseTime },
+                            igt: { rawTime: 0, pauseTime: initialPauseTime },
+                        },
+                    },
+                ];
+
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousIGTTotal: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING_IGT_PAUSE,
+                            startTime: randomInt(99999),
+                            igtPauseTime: now() - pauseTime,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNPAUSE], {
+                    state,
+                    rootState
+                }, { igtOnly: true });
+
+                expect(commits).to.have.lengthOf(2);
+                expect(commits[0].payload.segment.currentTime.rta.pauseTime).to.equal(initialPauseTime);
+                expect(commits[0].payload.segment.currentTime.igt.pauseTime)
+                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should apply the pause time without intial pause time', async () => {
+                const pauseTime = 5_000;
+                const originalSegments: Segment[] = [
+                    {
+                        id: uuid(),
+                        name: 'test',
+                        startTime: randomInt(99999),
+                        currentTime: null,
+                    },
+                ];
+
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: originalSegments.slice(0),
+                    previousIGTTotal: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.PAUSED,
+                            startTime: randomInt(99999),
+                            pauseTime: now() - pauseTime,
+                            igtPauseTime: now() - pauseTime,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_UNPAUSE], {
+                    state,
+                    rootState
+                });
+
+                expect(commits).to.have.lengthOf(2);
+                expect(commits[0].payload.segment.currentTime.rta.pauseTime)
+                    .to.be.within(pauseTime, pauseTime + 1);
+                expect(commits[0].payload.segment.currentTime.igt.pauseTime)
+                    .to.be.within(pauseTime, pauseTime + 1);
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+        });
+
+        describe(ACTION_RESET, () => {
+            it('should not reset when it\'s already stopped', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousIGTTotal: randomInt(99999),
+                    previousRTATotal: randomInt(99999),
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.STOPPED,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should trigger a saving reset without a new PB', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousIGTTotal: 1,
+                    previousRTATotal: 1,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.FINISHED,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
+                expect(dispatches[0].payload.isNewPersonalBest).to.equal(false);
+
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should trigger a saving reset with a new PB', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: generateSegmentArray(3),
+                    previousIGTTotal: 1_000_000,
+                    previousRTATotal: 1_000_000,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.FINISHED,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
+                expect(dispatches[0].payload.isNewPersonalBest).to.equal(true);
+
+                expect(returnValue).to.equal(true);
+            });
+
+            it('should trigger a discarding reset when not finished and no new OB has been set', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: [
+                        {
+                            id: uuid(),
+                            name: 'test',
+                            passed: false,
+                            hasNewOverallBest: false,
+                        }
+                    ],
+                    previousIGTTotal: 1,
+                    previousRTATotal: 1,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                        }
+                    }
+                };
+
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_DISCARDING_RESET);
+                expect(dispatches[0].payload).to.equal(undefined);
+
+                // Returns undefined, as the other reset action isn't actually getting called due to the mock
+                expect(returnValue).to.equal(undefined);
+            });
+
+            it('should not trigger a reset when the user cancels the reset in the dialog', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: [
+                        {
+                            id: uuid(),
+                            name: 'test',
+                            passed: true,
+                            currentTime: generateRandomTime(),
+                            personalBest: generateRandomTime(),
+                            hasNewOverallBest: true,
+                        }
+                    ],
+                    previousIGTTotal: 1,
+                    previousRTATotal: 1,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                        }
+                    }
+                };
+
+                electron.setResponseMessageDialog(0);
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+                // tslint:disable-next-line:no-unused-expression
+                expect(dispatches).to.be.empty;
+                expect(returnValue).to.equal(false);
+            });
+
+            it('should trigger a discarding reset, when the user choose to', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: [
+                        {
+                            id: uuid(),
+                            name: 'test',
+                            passed: true,
+                            currentTime: generateRandomTime(),
+                            personalBest: generateRandomTime(),
+                            hasNewOverallBest: true,
+                        }
+                    ],
+                    previousIGTTotal: 1,
+                    previousRTATotal: 1,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                        }
+                    }
+                };
+
+                electron.setResponseMessageDialog(1);
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_DISCARDING_RESET);
+                expect(dispatches[0].payload).to.equal(undefined);
+
+                // Returns undefined, as the other reset action isn't actually getting called due to the mock
+                expect(returnValue).to.equal(undefined);
+            });
+
+            it('should trigger a saving reset without a PB, when the user choose to', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: [
+                        {
+                            id: uuid(),
+                            name: 'test',
+                            passed: true,
+                            currentTime: generateRandomTime(),
+                            personalBest: generateRandomTime(),
+                            hasNewOverallBest: true,
+                        }
+                    ],
+                    previousIGTTotal: 1,
+                    previousRTATotal: 1,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                        }
+                    }
+                };
+
+                electron.setResponseMessageDialog(2);
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
+                expect(dispatches[0].payload.isNewPersonalBest).to.equal(false);
+
+                // Returns undefined, as the other reset action isn't actually getting called due to the mock
+                expect(returnValue).to.equal(undefined);
+            });
+
+            it('should trigger a saving reset with a PB, when the user choose to', async () => {
+                const state: SplitsState = {
+                    current: 0,
+                    timing: TimingMethod.RTA,
+                    currentOpenFile: null,
+                    segments: [
+                        {
+                            id: uuid(),
+                            name: 'test',
+                            passed: true,
+                            currentTime: generateRandomTime(),
+                            personalBest: generateRandomTime(),
+                            hasNewOverallBest: true,
+                        }
+                    ],
+                    previousIGTTotal: 1_000_000,
+                    previousRTATotal: 1_000_000,
+                };
+
+                const rootState = {
+                    splitterino: {
+                        splits: state,
+                        timer: {
+                            status: TimerStatus.RUNNING,
+                        }
+                    }
+                };
+
+                electron.setResponseMessageDialog(2);
+                const { commits, dispatches, returnValue } = await testAction(splitsModule.actions[ID_ACTION_RESET], {
+                    state,
+                    rootState,
+                });
+
+                // tslint:disable-next-line:no-unused-expression
+                expect(commits).to.be.empty;
+
+                expect(dispatches).to.have.lengthOf(1);
+                expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
+                expect(dispatches[0].payload.isNewPersonalBest).to.equal(true);
+
+                // Returns undefined, as the other reset action isn't actually getting called due to the mock
+                expect(returnValue).to.equal(undefined);
+            });
         });
     });
 });

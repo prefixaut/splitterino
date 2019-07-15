@@ -75,6 +75,10 @@ export interface PauseOptions {
     igtOnly: boolean;
 }
 
+export interface ResetOptions {
+    isNewPersonalBest: boolean;
+}
+
 function resetSegment(segment: Segment): Segment {
     return {
         ...segment,
@@ -154,12 +158,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 if (segment == null || typeof segment !== 'object') {
                     return;
                 }
@@ -171,12 +169,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.segments.push(segment);
             },
             [ID_MUTATION_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 if (!Array.isArray(segments)) {
                     return;
                 }
@@ -216,12 +208,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.segments[index] = { ...state.segments[index], ...segment };
             },
             [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
@@ -235,12 +221,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.segments.splice(index, 1);
             },
             [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 state.segments = [];
             },
             [ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME](state: SplitsState, newTime: number) {
@@ -293,12 +273,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
         },
         actions: {
-            [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            async [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
 
                 if (status !== TimerStatus.STOPPED || context.state.segments.length < 1) {
-                    return Promise.resolve(false);
+                    return false;
                 }
 
                 context.commit(
@@ -330,9 +310,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, 0);
 
-                return Promise.resolve(true);
+                return true;
             },
-            [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const currentTime = now();
 
                 const { status, igtPauseTotal, pauseTotal } = context.rootState.splitterino.timer;
@@ -341,12 +321,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         // Cleanup via reset
                         context.dispatch(ID_ACTION_RESET);
 
-                        return;
+                        return true;
                     case TimerStatus.RUNNING:
                         break;
                     default:
                         // Ignore the split-event when it's not running
-                        return;
+                        return false;
                 }
 
                 const { current: currentIndex, timing } = context.state;
@@ -400,7 +380,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         { root: true }
                     );
 
-                    return;
+                    return true;
                 }
 
                 const next: Segment = {
@@ -416,8 +396,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     segment: next
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, currentIndex + 1);
+
+                return true;
             },
-            [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
@@ -440,7 +422,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
@@ -488,15 +470,22 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>, payload: PauseOptions) {
+            async [ID_ACTION_PAUSE](
+                context: ActionContext<SplitsState, RootState>,
+                payload: PauseOptions
+            ): Promise<boolean> {
                 const time = now();
+                const igtOnly = (payload || { igtOnly: false }).igtOnly;
                 const status = context.rootState.splitterino.timer.status;
-                if (status !== TimerStatus.RUNNING) {
+                if (igtOnly ? (
+                    status === TimerStatus.RUNNING_IGT_PAUSE ||
+                    status !== TimerStatus.RUNNING
+                ) : status !== TimerStatus.RUNNING) {
                     return false;
                 }
 
                 let toStatus = TimerStatus.PAUSED;
-                if ((payload || { igtOnly: false }).igtOnly) {
+                if (igtOnly) {
                     toStatus = TimerStatus.RUNNING_IGT_PAUSE;
                 }
 
@@ -508,13 +497,16 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>, payload: PauseOptions) {
+            async [ID_ACTION_UNPAUSE](
+                context: ActionContext<SplitsState, RootState>,
+                payload: PauseOptions
+            ): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
                 const igtOnly = (payload || { igtOnly: false }).igtOnly;
 
-                if (status !== TimerStatus.PAUSED && (igtOnly && status !== TimerStatus.RUNNING_IGT_PAUSE)) {
-                    return;
+                if (igtOnly ? status !== TimerStatus.RUNNING_IGT_PAUSE : status !== TimerStatus.PAUSED) {
+                    return false;
                 }
 
                 const index = context.state.current;
@@ -551,16 +543,18 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     },
                     { root: true }
                 );
+
+                return true;
             },
             async [ID_ACTION_RESET](
                 context: ActionContext<SplitsState, RootState>,
                 payload: { [key: string]: any }
-            ) {
+            ): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
 
                 // When the Timer is already stopped, nothing to do
                 if (status === TimerStatus.STOPPED) {
-                    return Promise.resolve();
+                    return true;
                 }
 
                 const previousRTAPB = Math.max(0, context.state.previousRTATotal);
@@ -575,17 +569,17 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     }
                 });
 
-                const isNewRTAPB = previousRTAPB !== 0 || totalRTATime < previousRTAPB;
-                const isNewIGTPB = previousIGTPB !== 0 || totalIGTTime < previousIGTPB;
+                const isNewRTAPB = previousRTAPB === 0 || (totalRTATime > 0 && totalRTATime < previousRTAPB);
+                const isNewIGTPB = previousIGTPB === 0 || (totalIGTTime > 0 && totalIGTTime < previousIGTPB);
                 const isNewPersonalBest = context.state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
-                const isNewOverallBest = context.getters[ID_GETTER_HAS_NEW_OVERALL_BEST];
+                const isNewOverallBest = context.state.segments.findIndex(segment => segment.passed) !== -1;
 
                 // if the time is a new PB or the splits should get saved as
                 // the status is finished.
                 if (status === TimerStatus.FINISHED) {
-                    context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
+                    context.dispatch(ID_ACTION_SAVING_RESET, { isNewPersonalBest });
 
-                    return Promise.resolve();
+                    return true;
                 }
 
                 // We can safely discard when the run hasn't finished yet and no new OB is set yet
@@ -610,38 +604,43 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
     `,
                         buttons: ['Cancel', 'Discard', 'Save']
                     }
-                ).then(async res => {
+                ).then(res => {
                     switch (res) {
                         case 0:
-                            return Promise.resolve();
+                            return false;
                         case 1:
                             return context.dispatch(ID_ACTION_DISCARDING_RESET);
                         case 2:
-                            return context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
+                            return context.dispatch(ID_ACTION_SAVING_RESET, { isNewPersonalBest });
                     }
                 });
             },
-            [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
                 context.commit(ID_MUTATION_DISCARDING_RESET);
+
+                return true;
             },
-            [ID_ACTION_SAVING_RESET](
+            async [ID_ACTION_SAVING_RESET](
                 context: ActionContext<SplitsState, RootState>,
-                isNewPersonalBest: boolean = false
-            ) {
+                payload: ResetOptions
+            ): Promise<boolean> {
+                const isNewPersonalBest = (payload || { isNewPersonalBest: false }).isNewPersonalBest;
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
                 context.commit(ID_MUTATION_SAVING_RESET, isNewPersonalBest);
+
+                return true;
             },
-            [ID_ACTION_SET_SEGMENTS](
+            async [ID_ACTION_SET_SEGMENTS](
                 context: ActionContext<SplitsState, RootState>,
                 payload: Segment[]
-            ) {
+            ): Promise<boolean> {
                 if (!Array.isArray(payload)) {
                     throw new Error('Payload has to be an array! ' + JSON.stringify(payload));
                 }

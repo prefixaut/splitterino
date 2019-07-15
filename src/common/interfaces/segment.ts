@@ -9,7 +9,9 @@ export function isSegment(data: any): data is Segment {
 }
 
 export function getFinalTime(time: DetailedTime): number {
-    return time == null ? 0 : Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0);
+    return time == null ? 0 : Math.max(
+        Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0),
+        0);
 }
 
 export { SegmentSchema };
