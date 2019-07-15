@@ -10,6 +10,7 @@ import {
     CTX_MENU_WINDOW_RELOAD,
 } from '../../common/constants';
 import { ContextMenuState } from '../states/context-menu.state';
+import { RootState } from '../states/root.state';
 
 const MODULE_PATH = 'splitterino/contextMenu';
 
@@ -76,7 +77,7 @@ const mutations = {};
 
 const actions = {};
 
-export const contextMenuStoreModule: Module<ContextMenuState, any> = {
+export const contextMenuStoreModule: Module<ContextMenuState, RootState> = {
     namespaced: true,
     state: moduleState,
     getters,
