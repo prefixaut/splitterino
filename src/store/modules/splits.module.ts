@@ -2,8 +2,9 @@ import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { Segment, getFinalTime, TimingMethod, SegmentTime } from '../../common/interfaces/segment';
+import { getFinalTime, Segment, SegmentTime, TimingMethod } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
+import { asCleanNumber } from '../../utils/converters';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
@@ -24,7 +25,8 @@ export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
 export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
 export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_MUTATION_SET_SEGMENT = 'setSegment';
-export const ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME = 'previousSegmentsTotalTime';
+export const ID_MUTATION_SET_PREVIOUS_RTA_TIME = 'setPreviousRTATime';
+export const ID_MUTATION_SET_PREVIOUS_IGT_TIME = 'setPreviousIGTTime';
 export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
 export const ID_MUTATION_SAVING_RESET = 'savingReset';
@@ -38,7 +40,7 @@ export const ID_ACTION_UNPAUSE = 'unpause';
 export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
-export const ID_ACTION_SET_SEGMENTS = 'setSegments';
+export const ID_ACTION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
@@ -53,8 +55,8 @@ export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGM
 export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
 export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SEGMENTS}`;
 export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
-export const MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME =
-    `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME}`;
+export const MUTATION_SET_PREVIOUS_RTA_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_RTA_TIME}`;
+export const MUTATION_SET_PREVIOUS_IGT_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_IGT_TIME}`;
 export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
 export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
 export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
@@ -68,7 +70,7 @@ export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
 export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
-export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
+export const ACTION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SEGMENTS}`;
 export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
 export interface PauseOptions {
@@ -76,6 +78,9 @@ export interface PauseOptions {
 }
 
 export interface ResetOptions {
+    windowId: number;
+}
+export interface SavingResetOptions {
     isNewPersonalBest: boolean;
 }
 
@@ -157,6 +162,15 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         state.timing = timing;
                 }
             },
+            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
+                state.currentOpenFile = filePath;
+            },
+            [ID_MUTATION_SET_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
+                state.previousRTATotal = asCleanNumber(newTime);
+            },
+            [ID_MUTATION_SET_PREVIOUS_IGT_TIME](state: SplitsState, newTime: number) {
+                state.previousIGTTotal = asCleanNumber(newTime);
+            },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
                 if (segment == null || typeof segment !== 'object') {
                     return;
@@ -223,15 +237,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
                 state.segments = [];
             },
-            [ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME](state: SplitsState, newTime: number) {
-                if (!isFinite(newTime) || isNaN(newTime)) {
-                    newTime = 0;
-                }
-                state.previousRTATotal = newTime;
-            },
-            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
-                state.currentOpenFile = filePath;
-            },
             [ID_MUTATION_DISCARDING_RESET](state: SplitsState) {
                 state.segments = state.segments.map(segment => {
                     const newSegment = resetSegment(segment);
@@ -243,7 +248,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     return newSegment;
                 });
             },
-            [ID_MUTATION_SAVING_RESET](state: SplitsState, isNewPersonalBest: boolean = false) {
+            [ID_MUTATION_SAVING_RESET](state: SplitsState, payload: SavingResetOptions) {
+                const isNewPersonalBest = (payload || { isNewPersonalBest: false }).isNewPersonalBest;
                 let newRTATotal = 0;
                 let newIGTTotal = 0;
 
@@ -297,7 +303,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     }
                 });
 
-                context.commit(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME, totalRTATime);
+                context.commit(ID_MUTATION_SET_PREVIOUS_RTA_TIME, totalRTATime);
+                context.commit(ID_MUTATION_SET_PREVIOUS_IGT_TIME, totalIGTTime);
 
                 const firstSegment = context.state.segments[0];
 
@@ -454,7 +461,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 if (!previous.passed || previous.currentTime == null) {
                     previous.currentTime = context.state.segments[index].currentTime;
                 } else {
-                    Object.keys(TimingMethod).forEach(timing => {
+                    [TimingMethod.RTA, TimingMethod.RTA].forEach(timing => {
                         if (previous.currentTime[timing] == null) {
                             previous.currentTime[timing] = segment.currentTime[timing];
                         } else {
@@ -548,7 +555,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
             async [ID_ACTION_RESET](
                 context: ActionContext<SplitsState, RootState>,
-                payload: { [key: string]: any }
+                payload: ResetOptions
             ): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
 
@@ -588,9 +595,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 let win = null;
-                const id: number = (payload || {}).windowId;
+                const id: number = (payload || { windowId: null }).windowId;
 
-                if (typeof id === 'number' && !isNaN(id) && isFinite(id)) {
+                if (typeof id !== 'number' && !isNaN(id) && isFinite(id)) {
                     win = electron.getWindowById(id);
                 }
 
@@ -626,23 +633,28 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
             async [ID_ACTION_SAVING_RESET](
                 context: ActionContext<SplitsState, RootState>,
-                payload: ResetOptions
+                payload: SavingResetOptions
             ): Promise<boolean> {
                 const isNewPersonalBest = (payload || { isNewPersonalBest: false }).isNewPersonalBest;
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
-                context.commit(ID_MUTATION_SAVING_RESET, isNewPersonalBest);
+                context.commit(ID_MUTATION_SAVING_RESET, { isNewPersonalBest });
 
                 return true;
             },
-            async [ID_ACTION_SET_SEGMENTS](
+            async [ID_ACTION_SET_ALL_SEGMENTS](
                 context: ActionContext<SplitsState, RootState>,
                 payload: Segment[]
             ): Promise<boolean> {
                 if (!Array.isArray(payload)) {
-                    throw new Error('Payload has to be an array! ' + JSON.stringify(payload));
+                    Logger.warn({
+                        msg: 'Payload has to be an array!',
+                        payload: payload
+                    });
+
+                    return false;
                 }
 
                 const status = context.rootState.splitterino.timer.status;
@@ -658,7 +670,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context: ActionContext<SplitsState, RootState>,
                 filePath: string
             ) {
-                context.commit('setCurrentOpenFile', filePath);
+                context.commit(MUTATION_SET_CURRENT_OPEN_FILE, filePath);
             }
         }
     };

@@ -5,7 +5,7 @@ import Vuex, { Module } from 'vuex';
 import { getSettingsStoreModule } from '../../../src/store/modules/settings.module';
 import { RootState } from '../../../src/store/states/root.state';
 import { SettingsState } from '../../../src/store/states/settings.state';
-import { createMockInjector } from '../../mocks/utils';
+import { createMockInjector } from '../../utils';
 
 const injector = createMockInjector();
 

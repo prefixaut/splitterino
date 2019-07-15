@@ -6,6 +6,7 @@ import { RootState } from '../store/states/root.state';
 import { SettingsConfigurationObject, SettingsGroupConfigurationObject } from '../store/states/settings.state';
 import { Logger } from '../utils/logger';
 import { IOService } from '../services/io.service';
+import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 
 export function loadSettings(vue: Vue, injector: Injector) {
     const io = injector.get(IOService);
@@ -35,5 +36,5 @@ export function loadSettings(vue: Vue, injector: Injector) {
         loopOverGroup(group.children, group.key);
     }
 
-    vue.$store.dispatch('splitterino/settings/setAllSettings', { settings });
+    vue.$store.dispatch(ACTION_SET_ALL_SETTINGS, { settings });
 }

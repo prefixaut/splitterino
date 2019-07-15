@@ -1,9 +1,9 @@
 import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN, ActionResult } from '../../src/common/interfaces/electron';
-import { IOService } from '../../src/services/io.service';
-import { ElectronMockService } from './electron-mock.service';
+import { ELECTRON_INTERFACE_TOKEN } from '../src/common/interfaces/electron';
+import { IOService } from '../src/services/io.service';
+import { ElectronMockService } from './mocks/electron-mock.service';
 
 // Initialize the Dependency-Injection
 export function createMockInjector(): Injector {
