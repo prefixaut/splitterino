@@ -465,13 +465,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 const previous: Segment = {
                     ...context.state.segments[index - 1],
-                    currentTime: null,
                     passed: false,
                     skipped: false,
                 };
 
                 if (!previous.passed || previous.currentTime == null) {
-                    previous.currentTime = segment.currentTime;
+                    previous.currentTime = context.state.segments[index].currentTime;
                 } else {
                     Object.keys(TimingMethod).forEach(timing => {
                         if (previous.currentTime[timing] == null) {

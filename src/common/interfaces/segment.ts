@@ -1,5 +1,6 @@
 import * as SegmentSchema from '../../schemas/segment.schema.json';
 import { createValidator, validate } from '../../utils/schemas';
+import { asCleanNumber } from '../../utils/converters';
 
 const validatorFunction = createValidator(SegmentSchema);
 
@@ -8,7 +9,7 @@ export function isSegment(data: any): data is Segment {
 }
 
 export function getFinalTime(time: DetailedTime): number {
-    return time == null ? 0 : time.rawTime - time.pauseTime;
+    return time == null ? 0 : Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0);
 }
 
 export { SegmentSchema };

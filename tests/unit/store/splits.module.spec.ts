@@ -80,8 +80,17 @@ function generateSegmentArray(size: number): Segment[] {
 
 describe('Splits Store-Module', () => {
     const splitsModule: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
-    const timerModule: Module<TimerState, RootState> = timerStoreModule;
     // const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
+
+    it('should be a valid module', () => {
+        expect(splitsModule).to.be.a('object');
+        // tslint:disable-next-line no-unused-expression
+        expect(splitsModule).to.have.property('state').and.to.be.a('object').which.has.keys;
+        // tslint:disable-next-line no-unused-expression
+        expect(splitsModule).to.have.property('mutations').and.to.be.a('object').which.has.keys;
+        // tslint:disable-next-line no-unused-expression
+        expect(splitsModule).to.have.property('actions').and.to.be.a('object').which.has.keys;
+    });
 
     describe('mutations', () => {
         describe(MUTATION_SET_CURRENT, () => {
@@ -1076,7 +1085,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
-                expect(commits[0].payload.segment.startTime).to.equal(-1);
+                expect(commits[0].payload.segment.startTime).to.equal(segments[currentIndex].startTime);
                 expect(commits[0].payload.segment.skipped).to.equal(true);
                 expect(commits[0].payload.segment.passed).to.equal(false);
 
@@ -1175,6 +1184,10 @@ describe('Splits Store-Module', () => {
                         overallBest: generateRandomTime(),
                         hasNewOverallBest: true,
                         previousOverallBest: generateRandomTime(),
+                        currentTime: {
+                            rta: { rawTime: 0, pauseTime: pauseTime },
+                            igt: { rawTime: 0, pauseTime: pauseTime },
+                        },
                     },
                 ];
                 const currentIndex = 1;
@@ -1213,7 +1226,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
-                expect(commits[0].payload.segment.pauseTime).to.equal(0);
                 expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
                 expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
@@ -1222,10 +1234,9 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
                 expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
-                expect(commits[1].payload.segment.currentTime).to.equal(null);
                 expect(commits[1].payload.segment.passed).to.equal(false);
                 expect(commits[1].payload.segment.skipped).to.equal(false);
-                expect(commits[1].payload.segment.pauseTime).to.equal(pauseTime);
+                expect(commits[1].payload.segment.currentTime.rta.pauseTime).to.equal(pauseTime);
 
                 expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex - 1);
