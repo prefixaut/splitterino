@@ -91,6 +91,7 @@ process.on('unhandledRejection', (reason, promise) => {
                         Logger.error({
                             msg: 'Error while sending mutation to other processes',
                             mutation,
+                            error,
                         });
                     }
                 });
@@ -100,7 +101,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     const appSettings = await io.loadApplicationSettingsFromFile(store);
-    await io.loadSettingsFromFile(store);
+    await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();

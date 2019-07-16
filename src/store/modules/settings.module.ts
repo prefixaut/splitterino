@@ -11,11 +11,9 @@ export const MODULE_PATH = 'splitterino/settings';
 const ID_GETTER_GET_SETTING_BY_PATH = 'getSettingByPath';
 const ID_GETTER_GET_SETTINGS_CONFIGURATION_VALUES_BY_PATH = 'getSettingsConfigurationValueByPath';
 
-const ID_MUTATION_SET_SETTING = 'setSetting';
 const ID_MUTATION_SET_ALL_SETTINGS = 'setAllSettings';
 const ID_MUTATION_BULK_SET_SETTINGS = 'bulkSetSettings';
 
-const ID_ACTION_SET_SETTING = 'setSetting';
 const ID_ACTION_SET_ALL_SETTINGS = 'setAllSettings';
 const ID_ACTION_BULK_SET_SETTINGS = 'bulkSetSettings';
 
@@ -23,13 +21,15 @@ export const GETTER_SETTING_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_SETTING_BY
 export const GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH =
     `${MODULE_PATH}/${ID_GETTER_GET_SETTINGS_CONFIGURATION_VALUES_BY_PATH}`;
 
-export const MUTATION_SET_SETTING = `${MODULE_PATH}/${ID_MUTATION_SET_SETTING}`;
 export const MUTATION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SETTINGS}`;
 export const MUTATION_BULK_SET_SETTINGS = `${MODULE_PATH}/${ID_MUTATION_BULK_SET_SETTINGS}`;
 
-export const ACTION_SET_SETTING = `${MODULE_PATH}/${ID_ACTION_SET_SETTING}`;
 export const ACTION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SETTINGS}`;
 export const ACTION_BULK_SET_SETTINGS = `${MODULE_PATH}/${ID_ACTION_BULK_SET_SETTINGS}`;
+
+export interface SettingsPayload {
+    settings: Settings;
+}
 
 export function getSettingsStoreModule(): Module<SettingsState, RootState> {
     return {
@@ -110,22 +110,16 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
             },
         },
         mutations: {
-            [ID_MUTATION_SET_SETTING](
-                state: SettingsState,
-                { payload: { key, value } }: { payload: { key: string; value: any } }
-            ) {
-                set(state.settings, key, value);
+            [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, payload: SettingsPayload) {
+                state.settings = payload.settings;
             },
-            [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, { settings }: { settings: Settings }) {
-                state.settings = settings;
-            },
-            [ID_MUTATION_BULK_SET_SETTINGS](state: SettingsState, { settings }: { settings: Settings }) {
-                const newSettings = merge({}, state.settings, settings);
+            [ID_MUTATION_BULK_SET_SETTINGS](state: SettingsState, payload: SettingsPayload) {
+                const newSettings = merge({}, state.settings, payload.settings);
                 const oldSettings = cloneDeep(state.settings);
 
                 state.settings = newSettings;
 
-                for (const [moduleKey, modulE] of Object.entries(settings)) {
+                for (const [moduleKey, modulE] of Object.entries(payload.settings)) {
                     for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
                         for (const [groupKey, group] of Object.entries(namespacE)) {
                             for (const [settingKey, setting] of Object.entries(group)) {
@@ -146,20 +140,11 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
             }
         },
         actions: {
-            [ID_ACTION_SET_SETTING](context: ActionContext<SettingsState, RootState>, payload: any) {
-                context.commit(ID_MUTATION_SET_SETTING, payload);
+            [ID_ACTION_SET_ALL_SETTINGS](context: ActionContext<SettingsState, RootState>, payload: SettingsPayload) {
+                context.commit(ID_MUTATION_SET_ALL_SETTINGS, payload);
             },
-            [ID_ACTION_SET_ALL_SETTINGS](
-                context: ActionContext<SettingsState, RootState>,
-                { settings }: { settings: Settings }
-            ) {
-                context.commit(ID_MUTATION_SET_ALL_SETTINGS, { settings });
-            },
-            [ID_ACTION_BULK_SET_SETTINGS](
-                context: ActionContext<SettingsState, RootState>,
-                { settings }: { settings: Settings }
-            ) {
-                context.commit(ID_MUTATION_BULK_SET_SETTINGS, settings);
+            [ID_ACTION_BULK_SET_SETTINGS](context: ActionContext<SettingsState, RootState>, payload: SettingsPayload) {
+                context.commit(ID_MUTATION_BULK_SET_SETTINGS, payload);
             }
         },
     };

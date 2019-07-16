@@ -318,7 +318,7 @@ export class IOService {
         this.saveJSONToFile(this.settingsFileName, flattenedSettings);
     }
 
-    public async loadSettingsFromFile(store: Store<RootState>) {
+    public async loadSettingsFromFileToStore(store: Store<RootState>) {
         const loadedSettings = this.loadJSONFromFile(this.settingsFileName);
         const parsedSettings: Settings = {
             splitterino: {

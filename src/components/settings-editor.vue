@@ -22,9 +22,10 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
-import { GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH, GETTER_SETTING_BY_PATH, ACTION_BULK_SET_SETTINGS, MUTATION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { set } from 'lodash';
+
+import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
+import { GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH, GETTER_SETTING_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IOService } from '../services/io.service';
 
 @Component({ name: 'spl-settings-editor' })
@@ -58,7 +59,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public applySettings() {
-        this.$store.commit(ACTION_BULK_SET_SETTINGS, { settings: this.changedSettings });
+        this.$store.dispatch(ACTION_BULK_SET_SETTINGS, { settings: this.changedSettings });
     }
 }
 </script>

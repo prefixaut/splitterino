@@ -73,14 +73,14 @@ export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
 export const ACTION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SEGMENTS}`;
 export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
-export interface PauseOptions {
+export interface PausePayload {
     igtOnly: boolean;
 }
 
-export interface ResetOptions {
+export interface ResetPayload {
     windowId: number;
 }
-export interface SavingResetOptions {
+export interface SavingResetPayload {
     isNewPersonalBest: boolean;
 }
 
@@ -477,7 +477,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
             async [ID_ACTION_PAUSE](
                 context: ActionContext<SplitsState, RootState>,
-                payload: PauseOptions
+                payload: PausePayload
             ): Promise<boolean> {
                 const time = now();
                 const igtOnly = payload && payload.igtOnly;
@@ -505,7 +505,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
             async [ID_ACTION_UNPAUSE](
                 context: ActionContext<SplitsState, RootState>,
-                payload: PauseOptions
+                payload: PausePayload
             ): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
@@ -554,7 +554,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
             async [ID_ACTION_RESET](
                 context: ActionContext<SplitsState, RootState>,
-                payload: ResetOptions
+                payload: ResetPayload
             ): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
 
@@ -663,11 +663,11 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_SET_CURRENT_OPEN_FILE](
+            async [ID_ACTION_SET_CURRENT_OPEN_FILE](
                 context: ActionContext<SplitsState, RootState>,
                 filePath: string
             ) {
-                context.commit(MUTATION_SET_CURRENT_OPEN_FILE, filePath);
+                context.commit(ID_MUTATION_SET_CURRENT_OPEN_FILE, filePath);
             }
         }
     };
