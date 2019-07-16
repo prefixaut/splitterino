@@ -12,7 +12,7 @@ const injector = createMockInjector();
 Vue.use(Vuex);
 
 describe('Settings Store-Module', () => {
-    const settingsModule: Module<SettingsState, RootState> = getSettingsStoreModule(injector);
+    const settingsModule: Module<SettingsState, RootState> = getSettingsStoreModule();
 
     it('should be a valid module', () => {
         expect(settingsModule).to.be.a('object');

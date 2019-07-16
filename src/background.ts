@@ -91,6 +91,7 @@ process.on('unhandledRejection', (reason, promise) => {
                         Logger.error({
                             msg: 'Error while sending mutation to other processes',
                             mutation,
+                            error,
                         });
                     }
                 });
@@ -100,6 +101,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     const appSettings = await io.loadApplicationSettingsFromFile(store);
+    await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
@@ -143,7 +145,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     function createMainWindow() {
-        const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
+        const loadedBrowserWindowOptions = appSettings.window;
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
 
         const window = new BrowserWindow(browserWindowOptions);

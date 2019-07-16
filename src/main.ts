@@ -10,6 +10,7 @@ import draggable from 'vuedraggable';
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
 import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
+import { getFinalTime, SegmentTime, TimingMethod } from './common/interfaces/segment';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
@@ -17,8 +18,7 @@ import GameInfoEditorComponent from './components/game-info-editor.vue';
 import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
-import SettingsEditorSettingComponent from './components/settings-editor-setting.vue';
-import SettingsEditorSidebarEntryComponent from './components/settings-editor-sidebar-entry.vue';
+import SettingsEditorSidebarComponent from './components/settings-editor-sidebar.vue';
 import SettingsEditorComponent from './components/settings-editor.vue';
 import SplitsEditorComponent from './components/splits-editor.vue';
 import SplitsComponent from './components/splits.vue';
@@ -29,9 +29,9 @@ import TitleBarComponent from './components/title-bar.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
+import { eventHub } from './utils/event-hub';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { SegmentTime, TimingMethod, getFinalTime } from './common/interfaces/segment';
 
 process.on('uncaughtException', error => {
     Logger.fatal({
@@ -90,8 +90,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-timer', TimerComponent);
     Vue.component('spl-title-bar', TitleBarComponent);
     Vue.component('spl-settings-editor', SettingsEditorComponent);
-    Vue.component('spl-settings-editor-setting', SettingsEditorSettingComponent);
-    Vue.component('spl-settings-editor-sidebar-entry', SettingsEditorSidebarEntryComponent);
+    Vue.component('spl-settings-editor-sidebar', SettingsEditorSidebarComponent);
 
     // Register Directives
     Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));
@@ -114,7 +113,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Update the Prototype with an injector and event-hub
     Vue.prototype.$services = injector;
-    Vue.prototype.$eventHub = new Vue();
+    Vue.prototype.$eventHub = eventHub;
 
     // Register context-menu functions
     registerDefaultContextMenuFunctions(injector);

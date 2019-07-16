@@ -3029,7 +3029,7 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(1);
                 expect(commits[0]).to.deep.equal({
-                    type: MUTATION_SET_CURRENT_OPEN_FILE,
+                    type: ID_MUTATION_SET_CURRENT_OPEN_FILE,
                     payload: newFilePath,
                 });
 
