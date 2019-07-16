@@ -130,17 +130,14 @@ export function getClientStore(vueRef, injector: Injector) {
             type,
             payload
         });
-        if (
-            payload != null &&
-            typeof payload === 'object' &&
-            !Array.isArray(payload)
-        ) {
-            store.commit({
-                type,
-                ...payload
-            });
-        } else {
+
+        try {
             store.commit(type, payload);
+        } catch (err) {
+            Logger.error({
+                msg: 'Could not apply vuex-mutation!',
+                error: err,
+            });
         }
     });
 

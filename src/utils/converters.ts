@@ -29,7 +29,7 @@ export function convertToNumber(
         return defaultValue;
     }
     if (typeof value === 'number') {
-        return value;
+        return asCleanNumber(value);
     }
     if (typeof value === 'string') {
         if (allowDecimals) {
@@ -40,4 +40,8 @@ export function convertToNumber(
     }
 
     return defaultValue;
+}
+
+export function asCleanNumber(value: number, cleanValue: number = 0) {
+    return (isNaN(value) || !isFinite(value)) ? cleanValue : value;
 }

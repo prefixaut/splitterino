@@ -1,4 +1,4 @@
-import { Segment } from '../../common/interfaces/segment';
+import { Segment, TimingMethod } from '../../common/interfaces/segment';
 
 export interface SplitsState {
     /**
@@ -11,11 +11,19 @@ export interface SplitsState {
      */
     segments: Segment[];
     /**
-     * The sum of time of the previous segments.
-     * Used to check if a run was a new PB or not.
-     * Only calculated when a new run is starting.
+     * Which timing method should be used for the splits.
      */
-    previousSegmentsTotalTime: number;
+    timing: TimingMethod;
+    /**
+     * The sum of all segment RTA times before the run started.
+     * Used to determine if the run was a PB or not.
+     */
+    previousRTATotal: number;
+    /**
+     * The sum of all segment IGT times before the run started.
+     * Used to determine if the run was a PB or not.
+     */
+    previousIGTTotal: number;
     /**
      * Currently open .splits file
      */

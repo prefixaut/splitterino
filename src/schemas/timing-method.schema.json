@@ -1,0 +1,8 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://splitterino.prefix.moe/timing-method.schema.json",
+    "title": "Timing Method",
+    "description": "Timing methods which can be used for segment times",
+    "type": "string",
+    "enum": ["igt", "rta"]
+}

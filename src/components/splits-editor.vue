@@ -90,6 +90,7 @@ import { isEqual, cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 import { Segment } from '../common/interfaces/segment';
+import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 
 const splits = namespace('splitterino/splits');
 
@@ -127,7 +128,7 @@ export default class SplitsEditorComponent extends Vue {
     }
 
     saveSplits() {
-        this.$store.dispatch('splitterino/splits/setSegments', this.segments);
+        this.$store.dispatch(ACTION_SET_ALL_SEGMENTS, this.segments);
     }
 }
 </script>

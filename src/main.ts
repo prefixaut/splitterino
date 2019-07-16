@@ -10,6 +10,7 @@ import draggable from 'vuedraggable';
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
 import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
+import { getFinalTime, SegmentTime, TimingMethod } from './common/interfaces/segment';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
@@ -28,14 +29,14 @@ import TitleBarComponent from './components/title-bar.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
+import { eventHub } from './utils/event-hub';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { eventHub } from './utils/event-hub';
 
-process.on('uncaughtException', err => {
+process.on('uncaughtException', error => {
     Logger.fatal({
-        msg: 'Uncaught Exception in background process!',
-        error: err,
+        msg: 'Uncaught Exception in render process!',
+        error: error,
     });
 
     // Close the window
@@ -102,6 +103,9 @@ process.on('unhandledRejection', (reason, promise) => {
         }
 
         return formatter.format(value, { padding: true });
+    });
+    Vue.filter('time', (value: SegmentTime, timing: TimingMethod = TimingMethod.RTA) => {
+        return value == null || value[timing] == null ? null : getFinalTime(value[timing]);
     });
 
     // Disable tips

@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://splitterino.prefix.moe/detailed-time.schema.json",
+    "title": "Detailed Time",
+    "description": "Format in which times can easily be represented and stored",
+    "type": "object",
+    "required": ["rawTime", "pauseTime"],
+    "properties": {
+        "rawTime": {
+            "description": "The time of the segment in milliseconds which count towards the run",
+            "type": "integer",
+            "minimum": 0
+        },
+        "pauseTime": {
+            "description": "The time of the segment in milliseconds which were spent paused",
+            "type": "integer",
+            "minimum": 0
+        }
+    }
+}

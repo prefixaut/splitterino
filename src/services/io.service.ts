@@ -8,7 +8,7 @@ import { set } from 'lodash';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { isSplits } from '../common/interfaces/splits';
-import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_SEGMENTS } from '../store/modules/splits.module';
+import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
@@ -157,7 +157,7 @@ export class IOService {
 
                 await store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
 
-                return store.dispatch(ACTION_SET_SEGMENTS, [...loaded.splits.segments]);
+                return store.dispatch(ACTION_SET_ALL_SEGMENTS, [...loaded.splits.segments]);
             })
             .catch(error => {
                 Logger.error({
