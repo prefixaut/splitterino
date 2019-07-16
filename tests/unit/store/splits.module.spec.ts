@@ -1,5 +1,4 @@
-import { expect, use } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
@@ -62,8 +61,6 @@ import { SplitsState } from '../../../src/store/states/splits.state';
 import { now } from '../../../src/utils/time';
 import { ElectronMockService } from '../../mocks/electron-mock.service';
 import { createMockInjector, randomInt, testAction } from '../../utils';
-
-use(chaiAsPromised);
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
