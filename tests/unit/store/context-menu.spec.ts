@@ -2,14 +2,14 @@ import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { contextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
+import { getContextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
 import { ContextMenuState } from '../../../src/store/states/context-menu.state';
 import { RootState } from '../../../src/store/states/root.state';
 
 Vue.use(Vuex);
 
 describe('Context-Menu Store-Module', () => {
-    const contextMenuModule: Module<ContextMenuState, RootState> = contextMenuStoreModule;
+    const contextMenuModule: Module<ContextMenuState, RootState> = getContextMenuStoreModule();
 
     it('should be a valid module', () => {
         expect(contextMenuModule).to.be.a('object');
