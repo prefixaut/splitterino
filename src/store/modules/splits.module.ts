@@ -201,12 +201,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     isNaN(index) ||
                     !isFinite(index) ||
                     index < 0 ||
-                    state.segments.length < index
+                    index >= state.segments.length
                 ) {
                     return;
                 }
 
-                state.segments[index] = { ...state.segments[index], ...segment };
+                state.segments.splice(index, 1, segment);
             },
             [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
                 if (
