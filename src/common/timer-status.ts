@@ -5,11 +5,16 @@ export enum TimerStatus {
      */
     STOPPED = 'stopped',
     /**
-     * When the timer is running
+     * When the timer is running.
      */
     RUNNING = 'running',
     /**
-     * When the user/script paused the timer
+     * When the timer is running,
+     * but the time should not get counted towards the IGT.
+     */
+    RUNNING_IGT_PAUSE = 'running_igt_pause',
+    /**
+     * When the timer is paused.
      */
     PAUSED = 'paused',
     /**

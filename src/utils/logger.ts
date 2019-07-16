@@ -12,13 +12,7 @@ import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interface
 export class Logger {
 
     // Starts with a default handler for the console
-    private static logHandlers: pino.Logger[] = [pino({
-        level: 'debug',
-        prettyPrint: {
-            colorize: true,
-            translateTime: 'hh:mm:ss',
-        },
-    })];
+    private static logHandlers: pino.Logger[] = [];
     private static isInitialized = false;
     private static windowId: number = null;
     private static electron: ElectronInterface;
@@ -49,6 +43,13 @@ export class Logger {
             return;
         }
 
+        this.logHandlers.push(pino({
+            level: 'debug',
+            prettyPrint: {
+                colorize: true,
+                translateTime: 'hh:mm:ss',
+            },
+        }));
         this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
         const window = this.electron.getCurrentWindow();
         if (window != null && typeof window.id === 'number') {
@@ -69,7 +70,7 @@ export class Logger {
      * @param data The data which the handlers should receive
      */
     public static _logToHandlers(logFnName: string, data: object) {
-        if (this.electron.isRenderProcess()) {
+        if (this.electron && this.electron.isRenderProcess()) {
             this.electron.ipcSend('spl-log', logFnName, data);
         }
         this.logHandlers.forEach(handler => {

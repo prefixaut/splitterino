@@ -2,8 +2,10 @@ import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { Segment } from '../../common/interfaces/segment';
+import { Segment, SegmentTime, TimingMethod, isSegment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
+import { asCleanNumber } from '../../utils/converters';
+import { Logger } from '../../utils/logger';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
@@ -17,12 +19,14 @@ export const ID_GETTER_NEXT_SEGMENT = 'nextSegment';
 export const ID_GETTER_HAS_NEW_OVERALL_BEST = 'hasNewOverallBest';
 
 export const ID_MUTATION_SET_CURRENT = 'setCurrent';
+export const ID_MUTATION_SET_TIMING = 'setTiming';
 export const ID_MUTATION_CLEAR_SEGMENTS = 'clearSegments';
 export const ID_MUTATION_REMOVE_SEGMENT = 'removeSegment';
 export const ID_MUTATION_ADD_SEGMENT = 'addSegment';
 export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_MUTATION_SET_SEGMENT = 'setSegment';
-export const ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME = 'previousSegmentsTotalTime';
+export const ID_MUTATION_SET_PREVIOUS_RTA_TIME = 'setPreviousRTATime';
+export const ID_MUTATION_SET_PREVIOUS_IGT_TIME = 'setPreviousIGTTime';
 export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
 export const ID_MUTATION_SAVING_RESET = 'savingReset';
@@ -36,7 +40,7 @@ export const ID_ACTION_UNPAUSE = 'unpause';
 export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
-export const ID_ACTION_SET_SEGMENTS = 'setSegments';
+export const ID_ACTION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
@@ -45,13 +49,14 @@ export const GETTER_NEXT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_NEXT_SEGMENT}`;
 export const GETTER_HAS_NEW_OVERALL_BEST = `${MODULE_PATH}/${ID_GETTER_HAS_NEW_OVERALL_BEST}`;
 
 export const MUTATION_SET_CURRENT = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT}`;
+export const MUTATION_SET_TIMING = `${MODULE_PATH}/${ID_MUTATION_SET_TIMING}`;
 export const MUTATION_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_CLEAR_SEGMENTS}`;
 export const MUTATION_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_REMOVE_SEGMENT}`;
 export const MUTATION_ADD_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_ADD_SEGMENT}`;
 export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SEGMENTS}`;
 export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
-export const MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME =
-    `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME}`;
+export const MUTATION_SET_PREVIOUS_RTA_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_RTA_TIME}`;
+export const MUTATION_SET_PREVIOUS_IGT_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_IGT_TIME}`;
 export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
 export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
 export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
@@ -65,15 +70,26 @@ export const ACTION_UNPAUSE = `${MODULE_PATH}/${ID_ACTION_UNPAUSE}`;
 export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
-export const ACTION_SET_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_SEGMENTS}`;
+export const ACTION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SEGMENTS}`;
 export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
+
+export interface PauseOptions {
+    igtOnly: boolean;
+}
+
+export interface ResetOptions {
+    windowId: number;
+}
+export interface SavingResetOptions {
+    isNewPersonalBest: boolean;
+}
 
 function resetSegment(segment: Segment): Segment {
     return {
         ...segment,
         hasNewOverallBest: false,
-        previousOverallBest: -1,
-        time: -1,
+        previousOverallBest: null,
+        currentTime: null,
         startTime: -1,
         skipped: false,
         passed: false,
@@ -88,8 +104,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
         state: {
             current: -1,
             segments: [],
+            timing: TimingMethod.RTA,
             currentOpenFile: null,
-            previousSegmentsTotalTime: -1,
+            previousRTATotal: -1,
+            previousIGTTotal: -1,
         },
         getters: {
             [ID_GETTER_PREVIOUS_SEGMENT](state: SplitsState) {
@@ -136,31 +154,32 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 state.current = index;
             },
+            [ID_MUTATION_SET_TIMING](state: SplitsState, timing: TimingMethod) {
+                // Be sure that the timing is valid
+                switch (timing) {
+                    case TimingMethod.RTA:
+                    case TimingMethod.IGT:
+                        state.timing = timing;
+                }
+            },
+            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
+                state.currentOpenFile = filePath;
+            },
+            [ID_MUTATION_SET_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
+                state.previousRTATotal = asCleanNumber(newTime);
+            },
+            [ID_MUTATION_SET_PREVIOUS_IGT_TIME](state: SplitsState, newTime: number) {
+                state.previousIGTTotal = asCleanNumber(newTime);
+            },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
-                if (segment == null || typeof segment !== 'object') {
-                    return;
-                }
-
-                if (!segment.hasOwnProperty('name')) {
+                if (!isSegment(segment)) {
                     return;
                 }
 
                 state.segments.push(segment);
             },
             [ID_MUTATION_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
-                if (!Array.isArray(segments)) {
+                if (!Array.isArray(segments) || segments.findIndex(segment => !isSegment(segment)) > -1) {
                     return;
                 }
 
@@ -170,7 +189,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state: SplitsState,
                 payload: { index: number; segment: Segment }
             ) {
-                if (payload == null || typeof payload !== 'object') {
+                if (payload == null || typeof payload !== 'object' || !isSegment(payload.segment)) {
                     return;
                 }
 
@@ -182,29 +201,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     isNaN(index) ||
                     !isFinite(index) ||
                     index < 0 ||
-                    state.segments.length < index
+                    index >= state.segments.length
                 ) {
                     return;
                 }
 
-                // Check if the new segment is somewhat valid
-                if (
-                    segment == null ||
-                    typeof segment !== 'object' ||
-                    !segment.hasOwnProperty('name')
-                ) {
-                    return;
-                }
-
-                state.segments[index] = { ...state.segments[index], ...segment };
+                state.segments.splice(index, 1, segment);
             },
             [ID_MUTATION_REMOVE_SEGMENT](state: SplitsState, index: number) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
@@ -218,56 +222,62 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.segments.splice(index, 1);
             },
             [ID_MUTATION_CLEAR_SEGMENTS](state: SplitsState) {
-                /*
-                if (state.status !== TimerStatus.STOPPED) {
-                    return;
-                }
-                */
-
                 state.segments = [];
             },
-            [ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME](state: SplitsState, newTime: number) {
-                if (!isFinite(newTime) || isNaN(newTime)) {
-                    newTime = 0;
-                }
-                state.previousSegmentsTotalTime = newTime;
-            },
-            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
-                state.currentOpenFile = filePath;
-            },
             [ID_MUTATION_DISCARDING_RESET](state: SplitsState) {
-                state.segments = state.segments.map(resetSegment);
-            },
-            [ID_MUTATION_SAVING_RESET](state: SplitsState, isNewPersonalBest: boolean = false) {
-                let totalNewTime = 0;
                 state.segments = state.segments.map(segment => {
                     const newSegment = resetSegment(segment);
 
-                    if (segment.passed) {
-                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
-                    }
-                    if (isNewPersonalBest) {
-                        newSegment.personalBest = segment.time;
-                    }
                     if (segment.hasNewOverallBest) {
                         newSegment.overallBest = segment.previousOverallBest;
                     }
 
                     return newSegment;
                 });
+            },
+            [ID_MUTATION_SAVING_RESET](state: SplitsState) {
+                let newRTATotal = 0;
+                let newIGTTotal = 0;
+
+                state.segments.forEach(segment => {
+                    if (segment.passed) {
+                        newRTATotal += segment.currentTime.rta.rawTime;
+                        newIGTTotal += segment.currentTime.igt.rawTime;
+                    }
+                });
+
+                const isNewRTAPB = state.previousRTATotal === 0 ||
+                    (newRTATotal > 0 && newRTATotal < state.previousRTATotal);
+                const isNewIGTPB = state.previousIGTTotal === 0 ||
+                    (newIGTTotal > 0 && newIGTTotal < state.previousIGTTotal);
+                const isNewPersonalBest = state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
 
                 if (isNewPersonalBest) {
-                    state.previousSegmentsTotalTime = totalNewTime;
+                    state.segments = state.segments.map(segment => {
+                        if (segment.passed) {
+                            segment.personalBest = { ...segment.currentTime };
+                        } else {
+                            segment.personalBest = null;
+                        }
+
+                        return segment;
+                    });
+
+                    state.previousRTATotal = newRTATotal;
+                    state.previousIGTTotal = newIGTTotal;
                 }
+
+                // Reset the segments now
+                state.segments = state.segments.map(segment => resetSegment(segment));
             },
         },
         actions: {
-            [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            async [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
 
                 if (status !== TimerStatus.STOPPED || context.state.segments.length < 1) {
-                    return Promise.resolve(false);
+                    return false;
                 }
 
                 context.commit(
@@ -276,14 +286,18 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { root: true }
                 );
 
-                let totalTime = 0;
+                let totalRTATime = 0;
+                let totalIGTTime = 0;
+
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalTime += Math.max(0, (segment.personalBest || 0));
+                        totalRTATime += segment.personalBest.rta.rawTime;
+                        totalIGTTime += segment.personalBest.igt.rawTime;
                     }
                 });
 
-                context.commit(ID_MUTATION_SET_PREVIOUS_SEGMENTS_TOTAL_TIME, totalTime);
+                context.commit(ID_MUTATION_SET_PREVIOUS_RTA_TIME, totalRTATime);
+                context.commit(ID_MUTATION_SET_PREVIOUS_IGT_TIME, totalIGTTime);
 
                 const firstSegment = context.state.segments[0];
 
@@ -296,53 +310,61 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, 0);
 
-                return Promise.resolve(true);
+                return true;
             },
-            [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const currentTime = now();
 
-                const status = context.rootState.splitterino.timer.status;
+                const { status, igtPauseTotal, pauseTotal } = context.rootState.splitterino.timer;
                 switch (status) {
                     case TimerStatus.FINISHED:
                         // Cleanup via reset
                         context.dispatch(ID_ACTION_RESET);
 
-                        return;
+                        return true;
                     case TimerStatus.RUNNING:
                         break;
                     default:
                         // Ignore the split-event when it's not running
-                        return;
+                        return false;
                 }
 
-                const currentIndex = context.state.current;
+                const { current: currentIndex, timing } = context.state;
 
                 // Get the segment and spread it to create a copy to be able
                 // to modify it.
                 const currentSegment: Segment = {
                     ...context.state.segments[currentIndex]
                 };
-                const time =
-                    currentTime -
-                    currentSegment.startTime -
-                    (currentSegment.pauseTime || 0);
+                const rawTime = currentTime - currentSegment.startTime;
+                const newTime: SegmentTime = {
+                    igt: {
+                        rawTime,
+                        pauseTime: igtPauseTotal,
+                    },
+                    rta: {
+                        rawTime,
+                        pauseTime: pauseTotal,
+                    },
+                };
 
                 currentSegment.passed = true;
                 currentSegment.skipped = false;
-                currentSegment.time = time;
+                currentSegment.currentTime = newTime;
 
                 if (
                     currentSegment.overallBest == null ||
-                    currentSegment.overallBest < 0 ||
-                    currentSegment.overallBest > time
+                    currentSegment.overallBest[timing] == null ||
+                    currentSegment.overallBest[timing].rawTime === 0 ||
+                    currentSegment.overallBest[timing].rawTime > newTime[timing].rawTime
                 ) {
                     // Backup of the previous time to be able to revert it
                     currentSegment.previousOverallBest = currentSegment.overallBest;
-                    currentSegment.overallBest = time;
+                    currentSegment.overallBest = newTime;
                     currentSegment.hasNewOverallBest = true;
                 } else {
                     currentSegment.hasNewOverallBest = false;
-                    currentSegment.previousOverallBest = -1;
+                    currentSegment.previousOverallBest = null;
                 }
 
                 context.commit(ID_MUTATION_SET_SEGMENT, {
@@ -358,13 +380,13 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         { root: true }
                     );
 
-                    return;
+                    return true;
                 }
 
                 const next: Segment = {
                     ...context.state.segments[currentIndex + 1],
                     startTime: currentTime,
-                    time: 0,
+                    currentTime: null,
                     passed: false,
                     skipped: false
                 };
@@ -374,8 +396,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     segment: next
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, currentIndex + 1);
+
+                return true;
             },
-            [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
@@ -388,8 +412,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 const segment: Segment = {
                     ...context.state.segments[index],
-                    time: -1,
-                    startTime: -1,
+                    currentTime: null,
                     skipped: true,
                     passed: false
                 };
@@ -399,7 +422,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
@@ -410,7 +433,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const segment: Segment = {
                     ...context.state.segments[index],
                     startTime: -1,
-                    time: -1,
                     passed: false,
                     skipped: false
                 };
@@ -420,18 +442,32 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     segment.overallBest = segment.previousOverallBest;
                     segment.hasNewOverallBest = false;
                 }
-                segment.previousOverallBest = -1;
+                segment.previousOverallBest = null;
 
                 const previous: Segment = {
                     ...context.state.segments[index - 1],
-                    time: -1,
-                    passed: false,
-                    skipped: false,
                 };
-                // Add the pause time of the the current segment to the previous
-                previous.pauseTime = Math.max((previous.pauseTime || 0), 0) + segment.pauseTime;
-                // Clear the pause time afterwards
-                segment.pauseTime = 0;
+
+                if (segment.currentTime != null) {
+                    if (!previous.passed || previous.currentTime == null) {
+                        previous.currentTime = context.state.segments[index].currentTime;
+                    } else {
+                        [TimingMethod.RTA, TimingMethod.IGT].forEach(timing => {
+                            if (previous.currentTime[timing] == null) {
+                                previous.currentTime[timing] = segment.currentTime[timing];
+                            } else {
+                                previous.currentTime[timing].pauseTime += segment.currentTime[timing].pauseTime;
+                            }
+                        });
+                    }
+                }
+
+                // Mark the previous segment as neither passed or skipped
+                previous.passed = false;
+                previous.skipped = false;
+
+                // Remove the currentTime from the segment now
+                segment.currentTime = null;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
@@ -439,32 +475,70 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            [ID_ACTION_PAUSE](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_PAUSE](
+                context: ActionContext<SplitsState, RootState>,
+                payload: PauseOptions
+            ): Promise<boolean> {
                 const time = now();
+                const igtOnly = payload && payload.igtOnly;
                 const status = context.rootState.splitterino.timer.status;
-                if (status !== TimerStatus.RUNNING) {
-                    return;
+
+                if (igtOnly ? (
+                    status === TimerStatus.RUNNING_IGT_PAUSE ||
+                    status !== TimerStatus.RUNNING
+                ) : status !== TimerStatus.RUNNING) {
+                    return false;
+                }
+
+                let toStatus = TimerStatus.PAUSED;
+                if (igtOnly) {
+                    toStatus = TimerStatus.RUNNING_IGT_PAUSE;
                 }
 
                 context.commit(
                     MUTATION_SET_STATUS,
-                    { time, status: TimerStatus.PAUSED },
+                    { time, status: toStatus },
                     { root: true }
                 );
+
+                return true;
             },
-            [ID_ACTION_UNPAUSE](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_UNPAUSE](
+                context: ActionContext<SplitsState, RootState>,
+                payload: PauseOptions
+            ): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
+                const igtOnly = payload && payload.igtOnly;
 
-                if (status !== TimerStatus.PAUSED) {
-                    return;
+                if (igtOnly ? status !== TimerStatus.RUNNING_IGT_PAUSE : status !== TimerStatus.PAUSED) {
+                    return false;
                 }
 
-                const pauseAddition =
-                    time - context.rootState.splitterino.timer.pauseTime;
                 const index = context.state.current;
+                // Create a copy of the segment so it can be safely edited
                 const segment: Segment = { ...context.state.segments[index] };
-                segment.pauseTime += pauseAddition;
+
+                if (segment.currentTime == null) {
+                    segment.currentTime = {
+                        rta: { rawTime: 0, pauseTime: 0 },
+                        igt: { rawTime: 0, pauseTime: 0 },
+                    };
+                }
+
+                if (!igtOnly) {
+                    const pauseAddition = time - context.rootState.splitterino.timer.pauseTime;
+                    if (segment.currentTime.rta == null) {
+                        segment.currentTime.rta = { rawTime: 0, pauseTime: 0 };
+                    }
+                    segment.currentTime.rta.pauseTime += pauseAddition;
+                }
+
+                const igtPauseAddition = time - context.rootState.splitterino.timer.igtPauseTime;
+                if (segment.currentTime.igt == null) {
+                    segment.currentTime.igt = { rawTime: 0, pauseTime: 0 };
+                }
+                segment.currentTime.igt.pauseTime += igtPauseAddition;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(
@@ -475,40 +549,54 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     },
                     { root: true }
                 );
+
+                return true;
             },
             async [ID_ACTION_RESET](
                 context: ActionContext<SplitsState, RootState>,
-                payload: { [key: string]: any }
-            ) {
+                payload: ResetOptions
+            ): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
 
                 // When the Timer is already stopped, nothing to do
                 if (status === TimerStatus.STOPPED) {
-                    return Promise.resolve();
+                    return true;
                 }
 
-                const previousPB = Math.max(0, context.state.previousSegmentsTotalTime);
-                let totalNewTime = 0;
+                const previousRTAPB = Math.max(0, context.state.previousRTATotal);
+                const previousIGTPB = Math.max(0, context.state.previousIGTTotal);
+                let totalRTATime = 0;
+                let totalIGTTime = 0;
+
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalNewTime += Math.max(0, (segment.time || 0) - (segment.pauseTime || 0));
+                        totalRTATime += segment.currentTime.rta.rawTime;
+                        totalIGTTime += segment.currentTime.igt.rawTime;
                     }
                 });
 
-                const isNewPersonalBest = previousPB === 0 || totalNewTime < previousPB;
+                const isNewRTAPB = previousRTAPB === 0 || (totalRTATime > 0 && totalRTATime < previousRTAPB);
+                const isNewIGTPB = previousIGTPB === 0 || (totalIGTTime > 0 && totalIGTTime < previousIGTPB);
+                const isNewPersonalBest = context.state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
+                const isNewOverallBest = context.state.segments.findIndex(segment => segment.passed) !== -1;
 
                 // if the time is a new PB or the splits should get saved as
                 // the status is finished.
-                if (!isNewPersonalBest || status === TimerStatus.FINISHED) {
-                    context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
+                if (status === TimerStatus.FINISHED) {
+                    context.dispatch(ID_ACTION_SAVING_RESET);
 
-                    return Promise.resolve();
+                    return true;
+                }
+
+                // We can safely discard when the run hasn't finished yet and no new OB is set yet
+                if (!isNewOverallBest) {
+                    return context.dispatch(ID_ACTION_DISCARDING_RESET);
                 }
 
                 let win = null;
-                const id: number = (payload || {}).windowId;
+                const id: number = (payload || { windowId: null }).windowId;
 
-                if (typeof id === 'number' && !isNaN(id) && isFinite(id)) {
+                if (typeof id !== 'number' && !isNaN(id) && isFinite(id)) {
                     win = electron.getWindowById(id);
                 }
 
@@ -522,40 +610,48 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
     `,
                         buttons: ['Cancel', 'Discard', 'Save']
                     }
-                ).then(async res => {
+                ).then(res => {
                     switch (res) {
                         case 0:
-                            return Promise.resolve();
+                            return false;
                         case 1:
                             return context.dispatch(ID_ACTION_DISCARDING_RESET);
                         case 2:
-                            return context.dispatch(ID_ACTION_SAVING_RESET, isNewPersonalBest);
+                            return context.dispatch(ID_ACTION_SAVING_RESET, { isNewPersonalBest });
                     }
                 });
             },
-            [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>) {
+            async [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
                 context.commit(ID_MUTATION_DISCARDING_RESET);
+
+                return true;
             },
-            [ID_ACTION_SAVING_RESET](
-                context: ActionContext<SplitsState, RootState>,
-                isNewPersonalBest: boolean = false
-            ) {
+            async [ID_ACTION_SAVING_RESET](
+                context: ActionContext<SplitsState, RootState>
+            ): Promise<boolean> {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
-                context.commit(ID_MUTATION_SAVING_RESET, isNewPersonalBest);
+                context.commit(ID_MUTATION_SAVING_RESET);
+
+                return true;
             },
-            [ID_ACTION_SET_SEGMENTS](
+            async [ID_ACTION_SET_ALL_SEGMENTS](
                 context: ActionContext<SplitsState, RootState>,
                 payload: Segment[]
-            ) {
+            ): Promise<boolean> {
                 if (!Array.isArray(payload)) {
-                    throw new Error('Payload has to be an array! ' + JSON.stringify(payload));
+                    Logger.warn({
+                        msg: 'Payload has to be an array!',
+                        payload: payload
+                    });
+
+                    return false;
                 }
 
                 const status = context.rootState.splitterino.timer.status;
@@ -571,7 +667,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context: ActionContext<SplitsState, RootState>,
                 filePath: string
             ) {
-                context.commit('setCurrentOpenFile', filePath);
+                context.commit(MUTATION_SET_CURRENT_OPEN_FILE, filePath);
             }
         }
     };
