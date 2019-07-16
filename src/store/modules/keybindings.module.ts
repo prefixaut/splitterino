@@ -80,7 +80,7 @@ const actions = {
     }
 };
 
-export const keybindingsStoreModule: Module<KeybindingsState, any> = {
+export const keybindingsStoreModule: Module<KeybindingsState, RootState> = {
     namespaced: true,
     state: moduleState,
     getters,
