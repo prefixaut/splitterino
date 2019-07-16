@@ -10,7 +10,7 @@ export function getSplitterinoStoreModules(injector: Injector) {
     return {
         contextMenu: contextMenuStoreModule,
         keybindings: keybindingsStoreModule,
-        settings: getSettingsStoreModule(injector),
+        settings: getSettingsStoreModule(),
         splits: getSplitsStoreModule(injector),
         timer: timerStoreModule,
     };

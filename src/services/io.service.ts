@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { Inject, Injectable } from 'lightweight-di';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
+import { set } from 'lodash';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
@@ -10,6 +11,8 @@ import { isSplits } from '../common/interfaces/splits';
 import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
+import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
+import { Settings } from '../store/states/settings.state';
 
 @Injectable
 export class IOService {
@@ -17,6 +20,7 @@ export class IOService {
 
     protected readonly assetDir = join(this.electron.getAppPath(), 'resources');
     protected readonly appSettingsFileName = 'application-settings.json';
+    protected readonly settingsFileName = 'settings.json';
 
     public static readonly SPLITS_FILE_FILTER: FileFilter = {
         name: 'Splitterino-Splits',
@@ -259,7 +263,7 @@ export class IOService {
             }
         }
 
-        return appSettings;
+        return appSettings || { window: {} };
     }
 
     /**
@@ -290,5 +294,57 @@ export class IOService {
         });
 
         this.saveJSONToFile(this.appSettingsFileName, newAppSettings);
+    }
+
+    /**
+     * Flattens current settings and saves them to settings file
+     * @param store Store instance to retrieve settings from
+     */
+    public saveSettingsToFile(store: Store<RootState>) {
+        const flattenedSettings = {};
+        const settings = store.state.splitterino.settings.settings;
+
+        for (const [moduleKey, modulE] of Object.entries(settings)) {
+            for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
+                for (const [groupKey, group] of Object.entries(namespacE)) {
+                    for (const [settingKey, setting] of Object.entries(group)) {
+                        const path = `${moduleKey}.${namespaceKey}.${groupKey}.${settingKey}`;
+                        flattenedSettings[path] = setting;
+                    }
+                }
+            }
+        }
+
+        this.saveJSONToFile(this.settingsFileName, flattenedSettings);
+    }
+
+    public async loadSettingsFromFile(store: Store<RootState>) {
+        const loadedSettings = this.loadJSONFromFile(this.settingsFileName);
+        const parsedSettings: Settings = {
+            splitterino: {
+                core: {}
+            },
+            plugins: {}
+        };
+
+        if (loadedSettings != null) {
+            for (const [moduleKey, modulE] of Object.entries(store.state.splitterino.settings.configuration)) {
+                for (const namespacE of modulE) {
+                    for (const group of namespacE.groups) {
+                        for (const setting of group.settings) {
+                            let value = setting.defaultValue;
+                            const path = `${moduleKey}.${namespacE.key}.${group.key}.${setting.key}`;
+                            if (loadedSettings[path] !== undefined) {
+                                value = loadedSettings[path];
+                            }
+
+                            set<Settings>(parsedSettings, path, value);
+                        }
+                    }
+                }
+            }
+
+            await store.dispatch(ACTION_SET_ALL_SETTINGS, { settings: parsedSettings });
+        }
     }
 }

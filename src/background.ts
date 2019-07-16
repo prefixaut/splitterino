@@ -100,6 +100,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     const appSettings = await io.loadApplicationSettingsFromFile(store);
+    await io.loadSettingsFromFile(store);
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
@@ -143,7 +144,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     function createMainWindow() {
-        const loadedBrowserWindowOptions = appSettings ? appSettings.window : {};
+        const loadedBrowserWindowOptions = appSettings.window;
         const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
 
         const window = new BrowserWindow(browserWindowOptions);
