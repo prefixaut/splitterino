@@ -2,14 +2,14 @@ import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { getFinalTime, Segment, SegmentTime, TimingMethod } from '../../common/interfaces/segment';
+import { Segment, SegmentTime, TimingMethod, isSegment } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { asCleanNumber } from '../../utils/converters';
+import { Logger } from '../../utils/logger';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
-import { Logger } from '../../utils/logger';
 
 export const MODULE_PATH = 'splitterino/splits';
 
@@ -172,18 +172,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.previousIGTTotal = asCleanNumber(newTime);
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
-                if (segment == null || typeof segment !== 'object') {
-                    return;
-                }
-
-                if (!segment.hasOwnProperty('name')) {
+                if (!isSegment(segment)) {
                     return;
                 }
 
                 state.segments.push(segment);
             },
             [ID_MUTATION_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
-                if (!Array.isArray(segments)) {
+                if (!Array.isArray(segments) || segments.findIndex(segment => !isSegment(segment)) > -1) {
                     return;
                 }
 
@@ -193,7 +189,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state: SplitsState,
                 payload: { index: number; segment: Segment }
             ) {
-                if (payload == null || typeof payload !== 'object') {
+                if (payload == null || typeof payload !== 'object' || !isSegment(payload.segment)) {
                     return;
                 }
 
@@ -206,15 +202,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     !isFinite(index) ||
                     index < 0 ||
                     state.segments.length < index
-                ) {
-                    return;
-                }
-
-                // Check if the new segment is somewhat valid
-                if (
-                    segment == null ||
-                    typeof segment !== 'object' ||
-                    !segment.hasOwnProperty('name')
                 ) {
                     return;
                 }
@@ -248,34 +235,40 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     return newSegment;
                 });
             },
-            [ID_MUTATION_SAVING_RESET](state: SplitsState, payload: SavingResetOptions) {
-                const isNewPersonalBest = (payload || { isNewPersonalBest: false }).isNewPersonalBest;
+            [ID_MUTATION_SAVING_RESET](state: SplitsState) {
                 let newRTATotal = 0;
                 let newIGTTotal = 0;
 
-                state.segments = state.segments.map(segment => {
-                    const newSegment = resetSegment(segment);
-
+                state.segments.forEach(segment => {
                     if (segment.passed) {
-                        newRTATotal += getFinalTime(segment.currentTime.rta);
-                        newIGTTotal += getFinalTime(segment.currentTime.igt);
+                        newRTATotal += segment.currentTime.rta.rawTime;
+                        newIGTTotal += segment.currentTime.igt.rawTime;
                     }
-
-                    if (isNewPersonalBest) {
-                        if (segment.passed) {
-                            newSegment.personalBest = segment.currentTime;
-                        } else {
-                            newSegment.personalBest = null;
-                        }
-                    }
-
-                    return newSegment;
                 });
 
+                const isNewRTAPB = state.previousRTATotal === 0 ||
+                    (newRTATotal > 0 && newRTATotal < state.previousRTATotal);
+                const isNewIGTPB = state.previousIGTTotal === 0 ||
+                    (newIGTTotal > 0 && newIGTTotal < state.previousIGTTotal);
+                const isNewPersonalBest = state.timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
+
                 if (isNewPersonalBest) {
+                    state.segments = state.segments.map(segment => {
+                        if (segment.passed) {
+                            segment.personalBest = { ...segment.currentTime };
+                        } else {
+                            segment.personalBest = null;
+                        }
+
+                        return segment;
+                    });
+
                     state.previousRTATotal = newRTATotal;
                     state.previousIGTTotal = newIGTTotal;
                 }
+
+                // Reset the segments now
+                state.segments = state.segments.map(segment => resetSegment(segment));
             },
         },
         actions: {
@@ -298,8 +291,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalRTATime += getFinalTime(segment.personalBest.rta);
-                        totalIGTTime += getFinalTime(segment.personalBest.igt);
+                        totalRTATime += segment.personalBest.rta.rawTime;
+                        totalIGTTime += segment.personalBest.igt.rawTime;
                     }
                 });
 
@@ -362,8 +355,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 if (
                     currentSegment.overallBest == null ||
                     currentSegment.overallBest[timing] == null ||
-                    getFinalTime(currentSegment.overallBest[timing]) === 0 ||
-                    getFinalTime(currentSegment.overallBest[timing]) > getFinalTime(newTime[timing])
+                    currentSegment.overallBest[timing].rawTime === 0 ||
+                    currentSegment.overallBest[timing].rawTime > newTime[timing].rawTime
                 ) {
                     // Backup of the previous time to be able to revert it
                     currentSegment.previousOverallBest = currentSegment.overallBest;
@@ -440,7 +433,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const segment: Segment = {
                     ...context.state.segments[index],
                     startTime: -1,
-                    currentTime: null,
                     passed: false,
                     skipped: false
                 };
@@ -454,22 +446,28 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 const previous: Segment = {
                     ...context.state.segments[index - 1],
-                    passed: false,
-                    skipped: false,
                 };
 
-                if (!previous.passed || previous.currentTime == null) {
-                    previous.currentTime = context.state.segments[index].currentTime;
-                } else {
-                    [TimingMethod.RTA, TimingMethod.RTA].forEach(timing => {
-                        if (previous.currentTime[timing] == null) {
-                            previous.currentTime[timing] = segment.currentTime[timing];
-                        } else {
-                            previous.currentTime[timing].pauseTime += segment.currentTime[timing].pauseTime;
-                        }
-                        segment.currentTime[timing] = null;
-                    });
+                if (segment.currentTime != null) {
+                    if (!previous.passed || previous.currentTime == null) {
+                        previous.currentTime = context.state.segments[index].currentTime;
+                    } else {
+                        [TimingMethod.RTA, TimingMethod.IGT].forEach(timing => {
+                            if (previous.currentTime[timing] == null) {
+                                previous.currentTime[timing] = segment.currentTime[timing];
+                            } else {
+                                previous.currentTime[timing].pauseTime += segment.currentTime[timing].pauseTime;
+                            }
+                        });
+                    }
                 }
+
+                // Mark the previous segment as neither passed or skipped
+                previous.passed = false;
+                previous.skipped = false;
+
+                // Remove the currentTime from the segment now
+                segment.currentTime = null;
 
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
@@ -482,8 +480,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 payload: PauseOptions
             ): Promise<boolean> {
                 const time = now();
-                const igtOnly = (payload || { igtOnly: false }).igtOnly;
+                const igtOnly = payload && payload.igtOnly;
                 const status = context.rootState.splitterino.timer.status;
+
                 if (igtOnly ? (
                     status === TimerStatus.RUNNING_IGT_PAUSE ||
                     status !== TimerStatus.RUNNING
@@ -510,7 +509,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             ): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
-                const igtOnly = (payload || { igtOnly: false }).igtOnly;
+                const igtOnly = payload && payload.igtOnly;
 
                 if (igtOnly ? status !== TimerStatus.RUNNING_IGT_PAUSE : status !== TimerStatus.PAUSED) {
                     return false;
@@ -571,8 +570,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalRTATime += getFinalTime(segment.currentTime.rta);
-                        totalIGTTime += getFinalTime(segment.currentTime.igt);
+                        totalRTATime += segment.currentTime.rta.rawTime;
+                        totalIGTTime += segment.currentTime.igt.rawTime;
                     }
                 });
 
@@ -584,7 +583,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 // if the time is a new PB or the splits should get saved as
                 // the status is finished.
                 if (status === TimerStatus.FINISHED) {
-                    context.dispatch(ID_ACTION_SAVING_RESET, { isNewPersonalBest });
+                    context.dispatch(ID_ACTION_SAVING_RESET);
 
                     return true;
                 }
@@ -632,15 +631,13 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 return true;
             },
             async [ID_ACTION_SAVING_RESET](
-                context: ActionContext<SplitsState, RootState>,
-                payload: SavingResetOptions
+                context: ActionContext<SplitsState, RootState>
             ): Promise<boolean> {
-                const isNewPersonalBest = (payload || { isNewPersonalBest: false }).isNewPersonalBest;
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
-                context.commit(ID_MUTATION_SAVING_RESET, { isNewPersonalBest });
+                context.commit(ID_MUTATION_SAVING_RESET);
 
                 return true;
             },

@@ -5,7 +5,12 @@ import { asCleanNumber } from '../../utils/converters';
 const validatorFunction = createValidator(SegmentSchema);
 
 export function isSegment(data: any): data is Segment {
-    return validate(data, validatorFunction);
+    // Manual check until #37 is fixed
+    return data != null &&
+        typeof data === 'object' &&
+        typeof data.name === 'string' &&
+        typeof data.id === 'string' &&
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(data.id);
 }
 
 export function getFinalTime(time: DetailedTime): number {
