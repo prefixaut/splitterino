@@ -82,12 +82,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Splits Editor',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
-                modal: true,
-                webPreferences: {
-                    nodeIntegration: true
-                }
+                modal: true
             },
             '/splits-editor'
         );
@@ -101,7 +96,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                     title: 'Open Splits File',
                     parent: electron.getCurrentWindow(),
                     resizable: false,
-                    width: 400,
+                    width: 440,
                     height: 250,
                     modal: true,
                     webPreferences: {
@@ -124,14 +119,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Settings',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
                 width: 650,
                 height: 310,
-                modal: true,
-                webPreferences: {
-                    nodeIntegration: true
-                }
+                modal: true
             },
             '/settings'
         );
@@ -145,14 +135,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Keybindings',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
                 width: 650,
                 height: 310,
-                modal: true,
-                webPreferences: {
-                    nodeIntegration: true
-                }
+                modal: true
             },
             '/keybindings'
         );
