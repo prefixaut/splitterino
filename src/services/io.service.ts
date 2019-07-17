@@ -263,7 +263,7 @@ export class IOService {
             }
         }
 
-        return appSettings || { window: {} };
+        return appSettings || { windowOptions: {} };
     }
 
     /**
@@ -278,7 +278,7 @@ export class IOService {
         const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
-            window: {
+            windowOptions: {
                 width: windowSize[0],
                 height: windowSize[1],
                 x: windowPos[0],
