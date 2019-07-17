@@ -1,7 +1,6 @@
 import { get, set, merge, cloneDeep, isEqual } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
-import { Typeguard } from '../../utils/is-type';
 import { RootState } from '../states/root.state';
 import { Settings, SettingsState, SettingsConfigurationValue, SettingsConfigurationNamespace } from '../states/settings.state';
 import { eventHub } from '../../utils/event-hub';
@@ -98,14 +97,8 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
                 };
             },
             [ID_GETTER_GET_SETTING_BY_PATH](state: SettingsState) {
-                return (path: string | string[], defaultValue: any = null, typeguard: Typeguard = null) => {
-                    const value = get(state.settings, path, null);
-
-                    if (value == null || (typeguard && !typeguard(value))) {
-                        return defaultValue;
-                    } else {
-                        return value;
-                    }
+                return (path: string | string[], defaultValue: any = null) => {
+                    return get(state.settings, path, defaultValue);
                 };
             },
         },

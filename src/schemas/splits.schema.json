@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://splitterino.prefix.moe/splits.schema.json",
+    "$id": "splits",
     "title": "Splits",
     "description": "Format in which splits are getting saved to file or should be transmitted",
     "type": "object",
@@ -12,12 +12,12 @@
             "minItems": 0,
             "uniqueItems": true,
             "items": {
-                "$ref": "http://splitterino.prefix.moe/segment.schema.json"
+                "$ref": "segment.schema.json"
             }
         },
         "timing": {
             "description": "The timing-method which is used for the splits",
-            "$ref": "http://splitterino.prefix.moe/timing-method.schema.json"
+            "$ref": "timing-method.schema.json"
         }
     }
 }

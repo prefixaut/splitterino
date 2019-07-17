@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "id": "http://splitterino.prefix.moe/segment.schema.json",
+    "$id": "segment",
     "title": "Segment",
     "description": "Describes a single Segment",
     "type": "object",
@@ -17,13 +17,11 @@
         },
         "personalBest": {
             "description": "The time of the personal best in milliseconds",
-            "type": "object",
-            "$ref": "http://splitterino.prefix.moe/segment-time.schema.json"
+            "$ref": "segment-time.schema.json"
         },
         "overallBest": {
             "description": "The time of the overall best in milliseconds",
-            "type": "object",
-            "$ref": "http://splitterino.prefix.moe/segment-time.schema.json"
+            "$ref": "segment-time.schema.json"
         },
         "passed": {
             "description": "If the Segment has been passed successfully",

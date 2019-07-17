@@ -14,5 +14,6 @@
     ],
     "files.associations": {
         "*.splits": "json"
-    }
+    },
+    "typescript.preferences.importModuleSpecifier": "relative"
 }
