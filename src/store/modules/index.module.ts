@@ -1,19 +1,17 @@
 import { Injector } from 'lightweight-di';
 
-import { contextMenuStoreModule } from './context-menu.module';
-import { gameInfoStoreModule } from './game-info.module';
-import { keybindingsStoreModule } from './keybindings.module';
+import { getContextMenuStoreModule } from './context-menu.module';
+import { getKeybindingsStoreModule } from './keybindings.module';
 import { getSettingsStoreModule } from './settings.module';
 import { getSplitsStoreModule } from './splits.module';
-import { timerStoreModule } from './timer.module';
+import { getTimerStoreModule } from './timer.module';
 
 export function getSplitterinoStoreModules(injector: Injector) {
     return {
-        contextMenu: contextMenuStoreModule,
-        gameInfo: gameInfoStoreModule,
-        keybindings: keybindingsStoreModule,
-        settings: getSettingsStoreModule(injector),
+        contextMenu: getContextMenuStoreModule(),
+        keybindings: getKeybindingsStoreModule(),
+        settings: getSettingsStoreModule(),
         splits: getSplitsStoreModule(injector),
-        timer: timerStoreModule,
+        timer: getTimerStoreModule(),
     };
 }

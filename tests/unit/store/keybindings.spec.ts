@@ -2,14 +2,14 @@ import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { keybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
+import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
 import { KeybindingsState } from '../../../src/store/states/keybindings.state';
 import { RootState } from '../../../src/store/states/root.state';
 
 Vue.use(Vuex);
 
 describe('Keybindings Store-Module', () => {
-    const keybindingsModule: Module<KeybindingsState, RootState> = keybindingsStoreModule;
+    const keybindingsModule: Module<KeybindingsState, RootState> = getKeybindingsStoreModule();
 
     it('should be a valid module', () => {
         expect(keybindingsModule).to.be.a('object');
