@@ -46,9 +46,11 @@ export class Logger {
         // TODO: Set level via cli flag
         this.logHandlers.push(pino({
             level: 'debug',
+            base: null,
             prettyPrint: {
                 colorize: true,
                 translateTime: 'SYS:HH:MM:ss',
+                ignore: 'isMainThread,windowId'
             },
         }));
         this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);

@@ -26,6 +26,7 @@ import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
+import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
@@ -91,6 +92,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-title-bar', TitleBarComponent);
     Vue.component('spl-settings-editor', SettingsEditorComponent);
     Vue.component('spl-settings-editor-sidebar', SettingsEditorSidebarComponent);
+    Vue.component('spl-open-splits-prompt', OpenSplitsPromptComponent);
 
     // Register Directives
     Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));

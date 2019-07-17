@@ -3,6 +3,6 @@ import { ActionKeybinding } from './keybindings';
 
 export interface ApplicationSettings {
     windowOptions: BrowserWindowConstructorOptions;
-    lastOpenedSplitsFile?: string;
+    lastOpenedSplitsFiles?: string[];
     keybindings?: ActionKeybinding[];
 }

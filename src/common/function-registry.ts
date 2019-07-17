@@ -28,6 +28,7 @@ import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
+import { RootState } from '../store/states/root.state';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -62,6 +63,7 @@ export abstract class FunctionRegistry {
     }
 }
 
+// TODO: Defaults for new windows
 export function registerDefaultContextMenuFunctions(injector: Injector) {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const io = injector.get(IOService);
@@ -83,13 +85,33 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 minWidth: 440,
                 minHeight: 220,
                 modal: true,
+                webPreferences: {
+                    nodeIntegration: true
+                }
             },
             '/splits-editor'
         );
     });
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params =>
-        io.loadSplitsFromFileToStore(params.vNode.context.$store)
-    );
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
+        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles.length === 0) {
+            io.loadSplitsFromFileToStore(params.vNode.context.$store);
+        } else {
+            electron.newWindow(
+                {
+                    title: 'Open Splits File',
+                    parent: electron.getCurrentWindow(),
+                    resizable: false,
+                    width: 400,
+                    height: 250,
+                    modal: true,
+                    webPreferences: {
+                        nodeIntegration: true
+                    }
+                },
+                '/open-splits'
+            );
+        }
+    });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
         io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
     );
@@ -107,6 +129,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 width: 650,
                 height: 310,
                 modal: true,
+                webPreferences: {
+                    nodeIntegration: true
+                }
             },
             '/settings'
         );
@@ -125,6 +150,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 width: 650,
                 height: 310,
                 modal: true,
+                webPreferences: {
+                    nodeIntegration: true
+                }
             },
             '/keybindings'
         );

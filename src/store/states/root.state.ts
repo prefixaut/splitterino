@@ -3,6 +3,7 @@ import { SplitsState } from './splits.state';
 import { TimerState } from './timer.state';
 import { SettingsState } from './settings.state';
 import { KeybindingsState } from './keybindings.state';
+import { MetaState } from './meta.state';
 
 export interface RootState {
     splitterino: {
@@ -11,5 +12,6 @@ export interface RootState {
         settings: SettingsState;
         splits: SplitsState;
         timer: TimerState;
+        meta: MetaState;
     };
 }

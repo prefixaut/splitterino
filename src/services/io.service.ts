@@ -1,5 +1,5 @@
 import { BrowserWindow, FileFilter } from 'electron';
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { Inject, Injectable } from 'lightweight-di';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
@@ -7,12 +7,13 @@ import { set } from 'lodash';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
+import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { Settings } from '../store/states/settings.state';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
+import { ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
 
 @Injectable
 export class IOService {
@@ -21,7 +22,7 @@ export class IOService {
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
     ) {
         const isDevelopment = process.env.NODE_ENV !== 'production';
-        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'ressources' : '..');
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'resources' : '..');
     }
 
     protected readonly assetDir;
@@ -48,8 +49,8 @@ export class IOService {
         try {
             content =  readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
-            Logger.error({
-                msg: 'Error loading file',
+            Logger.warn({
+                msg: 'Could not load file',
                 file: filePath,
                 error: e
             });
@@ -102,8 +103,8 @@ export class IOService {
 
             return JSON.parse(loadedFile);
         } catch (e) {
-            Logger.error({
-                msg: 'Error parsing JSON from string',
+            Logger.warn({
+                msg: 'Could not parse JSON from file',
                 string: loadedFile,
                 error: e
             });
@@ -162,7 +163,7 @@ export class IOService {
 
                 Logger.debug('Loaded splits are valid! Applying to store ...');
 
-                await store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
+                await store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath);
 
                 return store.dispatch(ACTION_SET_ALL_SEGMENTS, [...loaded.splits.segments]);
             })
@@ -261,16 +262,33 @@ export class IOService {
      * Loads application settings object from file if it exists
      * @param store Vuex store instance
      */
-    public async loadApplicationSettingsFromFile(store: Store<RootState>): Promise<ApplicationSettings> {
+    public async loadApplicationSettingsFromFile(
+        store: Store<RootState>,
+        splitsFile?: string
+    ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (appSettings != null && typeof appSettings === 'object') {
-            if (typeof appSettings.lastOpenedSplitsFile === 'string') {
-                await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+        if (splitsFile != null && typeof splitsFile === 'string') {
+            await this.loadSplitsFromFileToStore(store, splitsFile);
+        } else if (appSettings != null && typeof appSettings === 'object') {
+            let lastOpenedSplitsFiles: string[] = [];
+            if (Array.isArray(appSettings.lastOpenedSplitsFiles)) {
+                lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles.filter(file => existsSync(file));
+
+                if (
+                    typeof lastOpenedSplitsFiles[0] === 'string'
+                ) {
+                    await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, appSettings.lastOpenedSplitsFiles);
+                    await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFiles[0]);
+                }
             }
+
         }
 
-        return appSettings || { windowOptions: {} };
+        return appSettings ||
+            {
+                windowOptions: {}
+            };
     }
 
     /**
@@ -281,7 +299,7 @@ export class IOService {
     public saveApplicationSettingsToFile(window: BrowserWindow, store: Store<RootState>): void {
         const windowSize = window.getSize();
         const windowPos = window.getPosition();
-        const lastOpenedSplitsFile = store.state.splitterino.splits.currentOpenFile;
+        const lastOpenedSplitsFiles = store.state.splitterino.meta.lastOpenedSplitsFiles;
         const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
@@ -291,7 +309,7 @@ export class IOService {
                 x: windowPos[0],
                 y: windowPos[1]
             },
-            lastOpenedSplitsFile,
+            lastOpenedSplitsFiles,
             keybindings,
         };
 

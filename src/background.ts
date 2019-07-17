@@ -105,7 +105,12 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
-    const appSettings = await io.loadApplicationSettingsFromFile(store);
+    let splitsFile: string;
+    if (!isDevelopment) {
+        splitsFile = process.argv[1];
+    }
+
+    const appSettings = await io.loadApplicationSettingsFromFile(store, splitsFile);
     await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions

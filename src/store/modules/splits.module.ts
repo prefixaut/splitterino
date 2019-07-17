@@ -28,7 +28,6 @@ export const ID_MUTATION_SET_ALL_SEGMENTS = 'setAllSegments';
 export const ID_MUTATION_SET_SEGMENT = 'setSegment';
 export const ID_MUTATION_SET_PREVIOUS_RTA_TIME = 'setPreviousRTATime';
 export const ID_MUTATION_SET_PREVIOUS_IGT_TIME = 'setPreviousIGTTime';
-export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
 export const ID_MUTATION_SAVING_RESET = 'savingReset';
 
@@ -42,7 +41,6 @@ export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
 export const ID_ACTION_SET_ALL_SEGMENTS = 'setAllSegments';
-export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
 export const GETTER_CURRENT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_CURRENT_SEGMENT}`;
@@ -58,7 +56,6 @@ export const MUTATION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_S
 export const MUTATION_SET_SEGMENT = `${MODULE_PATH}/${ID_MUTATION_SET_SEGMENT}`;
 export const MUTATION_SET_PREVIOUS_RTA_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_RTA_TIME}`;
 export const MUTATION_SET_PREVIOUS_IGT_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_PREVIOUS_IGT_TIME}`;
-export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_CURRENT_OPEN_FILE}`;
 export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
 export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
 
@@ -72,7 +69,6 @@ export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
 export const ACTION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SEGMENTS}`;
-export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
 export interface PausePayload {
     igtOnly: boolean;
@@ -107,7 +103,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             current: -1,
             segments: [],
             timing: TimingMethod.RTA,
-            currentOpenFile: null,
             previousRTATotal: -1,
             previousIGTTotal: -1,
         },
@@ -163,9 +158,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     case TimingMethod.IGT:
                         state.timing = timing;
                 }
-            },
-            [ID_MUTATION_SET_CURRENT_OPEN_FILE](state: SplitsState, filePath: string) {
-                state.currentOpenFile = filePath;
             },
             [ID_MUTATION_SET_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
                 state.previousRTATotal = asCleanNumber(newTime);
@@ -664,12 +656,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context.commit(ID_MUTATION_SET_ALL_SEGMENTS, payload);
 
                 return true;
-            },
-            async [ID_ACTION_SET_CURRENT_OPEN_FILE](
-                context: ActionContext<SplitsState, RootState>,
-                filePath: string
-            ) {
-                context.commit(ID_MUTATION_SET_CURRENT_OPEN_FILE, filePath);
             }
         }
     };
