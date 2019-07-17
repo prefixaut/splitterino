@@ -5,15 +5,18 @@ import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { TimerState } from '../states/timer.state';
 
-const MODULE_PATH = 'splitterino/timer';
+export const MODULE_PATH = 'splitterino/timer';
 
-const ID_MUTATION_SET_START_DELAY = 'setStartDelay';
-const ID_MUTATION_SET_START_TIME = 'setStartTime';
-const ID_MUTATION_SET_STATUS = 'setStatus';
+export const ID_MUTATION_SET_START_DELAY = 'setStartDelay';
+export const ID_MUTATION_SET_STATUS = 'setStatus';
 
 export const MUTATION_SET_START_DELAY = `${MODULE_PATH}/${ID_MUTATION_SET_START_DELAY}`;
-export const MUTATION_SET_START_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_START_TIME}`;
 export const MUTATION_SET_STATUS = `${MODULE_PATH}/${ID_MUTATION_SET_STATUS}`;
+
+export interface StatusChangePayload {
+    time: number;
+    status: TimerStatus;
+}
 
 export function getTimerStoreModule(): Module<TimerState, RootState> {
     return {
@@ -31,67 +34,118 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
         getters: {},
         mutations: {
             [ID_MUTATION_SET_START_DELAY](state: TimerState, to: number) {
-                if (state.status !== TimerStatus.STOPPED) {
+                // Don't allow invalid content to be set
+                if (typeof to !== 'number' || isNaN(to) || !isFinite(to) || to < 0) {
                     return;
                 }
+
                 state.startDelay = to;
-            },
-            [ID_MUTATION_SET_START_TIME](state: TimerState, to: number) {
-                state.startTime = to;
             },
             [ID_MUTATION_SET_STATUS](
                 state: TimerState,
-                to: TimerStatus | { time: number; status: TimerStatus }
+                payload: TimerStatus | StatusChangePayload
             ) {
                 let changeTo: TimerStatus;
                 let time = now();
 
-                if (typeof to === 'string') {
-                    changeTo = to;
+                if (typeof payload === 'string') {
+                    changeTo = payload;
+                } else if (payload != null && typeof payload === 'object') {
+                    time = payload.time;
+                    changeTo = payload.status;
                 } else {
-                    time = to.time;
-                    changeTo = to.status;
-                }
-
-                if (changeTo == null) {
                     return;
                 }
 
                 const from = state.status;
                 switch (changeTo) {
                     case TimerStatus.RUNNING:
-                        if (from === TimerStatus.STOPPED) {
-                            state.startTime = time;
-                        } else if (from === TimerStatus.PAUSED) {
-                            state.pauseTotal += time - state.pauseTime;
-                            state.pauseTime = 0;
-                        } else if (from === TimerStatus.RUNNING_IGT_PAUSE) {
-                            state.igtPauseTotal += time - state.igtPauseTime;
-                            state.igtPauseTime = 0;
+                        switch (from) {
+                            case TimerStatus.STOPPED:
+                                state.startTime = time;
+                                break;
+                            case TimerStatus.PAUSED:
+                                state.pauseTotal += time - state.pauseTime;
+                                state.pauseTime = 0;
+                            // tslint:disable-next-line:no-switch-case-fall-through
+                            case TimerStatus.RUNNING_IGT_PAUSE:
+                                state.igtPauseTotal += time - state.igtPauseTime;
+                                state.igtPauseTime = 0;
+                                break;
+                            case TimerStatus.FINISHED:
+                                state.finishTime = 0;
+                                break;
+                            default:
+                                return;
                         }
                         break;
+
                     case TimerStatus.PAUSED:
-                        if (from !== TimerStatus.RUNNING_IGT_PAUSE) {
-                            state.igtPauseTime = time;
+                        switch (from) {
+                            case TimerStatus.RUNNING:
+                                state.igtPauseTime = time;
+                                // tslint:disable-next-line:no-switch-case-fall-through
+                            case TimerStatus.RUNNING_IGT_PAUSE:
+                                state.pauseTime = time;
+                                break;
+                            default:
+                                return;
                         }
-                        state.pauseTime = time;
                         break;
-                    case TimerStatus.FINISHED:
-                        if (from === TimerStatus.PAUSED) {
-                            state.pauseTotal += time - state.pauseTime;
-                            state.pauseTime = 0;
+
+                    case TimerStatus.RUNNING_IGT_PAUSE:
+                        switch (from) {
+                            case TimerStatus.RUNNING:
+                            case TimerStatus.FINISHED:
+                                state.igtPauseTime = time;
+                                break;
+                            case TimerStatus.PAUSED:
+                                state.pauseTotal += time - state.pauseTime;
+                                state.pauseTime = 0;
+                                break;
+                            default:
+                                return;
                         }
-                        if (from === TimerStatus.PAUSED || from === TimerStatus.RUNNING_IGT_PAUSE) {
-                            state.igtPauseTotal += time - state.igtPauseTime;
-                            state.igtPauseTime = 0;
+                        break;
+
+                    case TimerStatus.FINISHED:
+                        switch (from) {
+                            case TimerStatus.PAUSED:
+                                state.pauseTotal += time - state.pauseTime;
+                                state.pauseTime = 0;
+                            // tslint:disable-next-line:no-switch-case-fall-through
+                            case TimerStatus.RUNNING_IGT_PAUSE:
+                                state.igtPauseTotal += time - state.igtPauseTime;
+                                state.igtPauseTime = 0;
+                                break;
+                            case TimerStatus.RUNNING:
+                                break;
+                            default:
+                                return;
                         }
                         state.finishTime = time;
                         break;
+
                     case TimerStatus.STOPPED:
-                        state.startTime = 0;
-                        state.pauseTime = 0;
-                        state.pauseTotal = 0;
-                        state.finishTime = 0;
+                        switch (from) {
+                            case TimerStatus.RUNNING:
+                            case TimerStatus.RUNNING_IGT_PAUSE:
+                            case TimerStatus.PAUSED:
+                            case TimerStatus.FINISHED:
+                                state.startTime = 0;
+                                state.pauseTime = 0;
+                                state.pauseTotal = 0;
+                                state.igtPauseTime = 0;
+                                state.igtPauseTotal = 0;
+                                state.finishTime = 0;
+                                break;
+                            default:
+                                return;
+                        }
+                        break;
+
+                    default:
+                        return;
                 }
                 state.status = changeTo;
             },
