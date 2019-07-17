@@ -105,7 +105,7 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
-    const appSettings = await io.loadApplicationSettingsFromFile(store);
+    const appSettings = await io.loadApplicationSettingsFromFile(store, process.argv[1]);
     await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions
