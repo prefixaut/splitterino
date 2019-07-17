@@ -1,5 +1,9 @@
 <template>
     <div class="splits-editor-view" v-spl-ctx-menu="['def']">
+        <div class="container">
+            <h1>Game Information</h1>
+            <spl-game-info-editor></spl-game-info-editor>
+        </div>
         <spl-splits-editor>
             <h1>Splits Editor</h1>
         </spl-splits-editor>
@@ -15,6 +19,6 @@ export default class SplitsEditorView extends Vue {}
 
 <style lang="scss" scoped>
 .splits-editor-view {
-    height: 100%;
+    height: auto;
 }
 </style>

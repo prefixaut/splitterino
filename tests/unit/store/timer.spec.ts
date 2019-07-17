@@ -14,7 +14,6 @@ import { RootState } from '../../../src/store/states/root.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { randomInt } from '../../utils';
-import { SplitsState } from '../../../src/store/states/splits.state';
 
 Vue.use(Vuex);
 
@@ -116,7 +115,7 @@ describe('Timer Store-Module', () => {
 
                     expect(state.status).to.equal(initialState.status);
                     expect(state.startDelay).to.equal(initialState.startDelay);
-                    expect(state.startTime).to.equal(initialState.startTime)
+                    expect(state.startTime).to.equal(initialState.startTime);
                     expect(state.pauseTime).to.equal(initialState.pauseTime);
                     expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                     expect(state.pauseTotal).to.equal(initialState.pauseTotal);
@@ -127,7 +126,7 @@ describe('Timer Store-Module', () => {
 
                     expect(state.status).to.equal(initialState.status);
                     expect(state.startDelay).to.equal(initialState.startDelay);
-                    expect(state.startTime).to.equal(initialState.startTime)
+                    expect(state.startTime).to.equal(initialState.startTime);
                     expect(state.pauseTime).to.equal(initialState.pauseTime);
                     expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                     expect(state.pauseTotal).to.equal(initialState.pauseTotal);

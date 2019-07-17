@@ -8,7 +8,7 @@ export interface GameInfoState {
      */
     category: string;
     /**
-     * ISO-3166-1 Alpha 3 Language Code in which the game is being run
+     * ISO-3166-1 Alpha 2 Language Code in which the game is being run
      */
     language?: string;
     /**

@@ -1,6 +1,7 @@
 import * as SplitsSchema from '../../schemas/splits.schema.json';
+import { GameInfoState } from '../../store/states/game-info.state.js';
 import { createValidator, validate } from '../../utils/schemas';
-import { Segment } from './segment';
+import { Segment, TimingMethod } from './segment';
 
 const validatorFunction = createValidator(SplitsSchema);
 
@@ -13,4 +14,6 @@ export { validatorFunction as SplitsValidator };
 
 export interface Splits {
     segments: Segment[];
+    timing: TimingMethod;
+    game: GameInfoState;
 }
