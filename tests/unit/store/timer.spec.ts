@@ -86,6 +86,82 @@ describe('Timer Store-Module', () => {
         });
 
         describe(MUTATION_SET_STATUS, () => {
+            it('should not switch to an invalid status', () => {
+                const initialState: TimerState = {
+                    status: TimerStatus.STOPPED,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+                const state: TimerState = { ...initialState };
+
+                [
+                    undefined,
+                    null,
+                    'strings',
+                    123,
+                    -123,
+                    NaN,
+                    -NaN,
+                    Infinity,
+                    -Infinity,
+                    {},
+                    [],
+                ].forEach(invalidStatus => {
+                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, invalidStatus);
+
+                    expect(state.status).to.equal(initialState.status);
+                    expect(state.startDelay).to.equal(initialState.startDelay);
+                    expect(state.startTime).to.equal(initialState.startTime)
+                    expect(state.pauseTime).to.equal(initialState.pauseTime);
+                    expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                    expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                    expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                    expect(state.finishTime).to.equal(initialState.finishTime);
+
+                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, { time: now(), status: invalidStatus });
+
+                    expect(state.status).to.equal(initialState.status);
+                    expect(state.startDelay).to.equal(initialState.startDelay);
+                    expect(state.startTime).to.equal(initialState.startTime)
+                    expect(state.pauseTime).to.equal(initialState.pauseTime);
+                    expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                    expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                    expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                    expect(state.finishTime).to.equal(initialState.finishTime);
+                });
+            });
+
+            it('should should use the provided time when switching the status', () => {
+                const time = now() - 20_000;
+                const initialState: TimerState = {
+                    status: TimerStatus.STOPPED,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+                const state: TimerState = { ...initialState };
+
+                timerModule.mutations[ID_MUTATION_SET_STATUS](state, { time, status: TimerStatus.RUNNING });
+
+                expect(state.status).to.equal(TimerStatus.RUNNING);
+                expect(state.startDelay).to.equal(initialState.startDelay);
+                expect(state.startTime).to.equal(time);
+                expect(state.pauseTime).to.equal(initialState.pauseTime);
+                expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                expect(state.finishTime).to.equal(initialState.finishTime);
+            });
+
             it('should start the timer correctly [STOPPED => RUNNING]', () => {
                 const initialState: TimerState = {
                     status: TimerStatus.STOPPED,
@@ -429,7 +505,142 @@ describe('Timer Store-Module', () => {
             });
 
             it('should do nothing when switching from an invalid status to running igt paused' +
-                 '[* => RUNNING_IGT_PAUSED]', () => {
+                '[* => RUNNING_IGT_PAUSED]', () => {
+                    const initialState: TimerState = {
+                        status: null,
+                        startDelay: randomInt(99_999),
+                        startTime: randomInt(99_999),
+                        pauseTime: randomInt(99_999),
+                        igtPauseTime: randomInt(99_999),
+                        pauseTotal: randomInt(99_999),
+                        igtPauseTotal: randomInt(99_999),
+                        finishTime: randomInt(99_999),
+                    };
+
+                    [
+                        undefined,
+                        null,
+                        'strings',
+                        123,
+                        -123,
+                        NaN,
+                        -NaN,
+                        Infinity,
+                        -Infinity,
+                        {},
+                        [],
+                        TimerStatus.STOPPED,
+                        TimerStatus.RUNNING_IGT_PAUSE,
+                    ].forEach((invalidStatus: any) => {
+                        const state = {
+                            ...initialState,
+                            status: invalidStatus,
+                        };
+
+                        timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+
+                        expect(state.status).to.deep.equal(invalidStatus);
+                        expect(state.startDelay).to.equal(initialState.startDelay);
+                        expect(state.startTime).to.equal(initialState.startTime);
+                        expect(state.pauseTime).to.equal(initialState.pauseTime);
+                        expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                        expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                        expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                        expect(state.finishTime).to.equal(initialState.finishTime);
+                    });
+                });
+
+            it('should finish the timer when it was paused previously [PAUSED => FINISHED]', () => {
+                const initialState: TimerState = {
+                    status: TimerStatus.PAUSED,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+
+                const state = { ...initialState };
+
+                const time = now();
+                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+
+                expect(state.status).to.deep.equal(TimerStatus.FINISHED);
+                expect(state.startDelay).to.equal(initialState.startDelay);
+                expect(state.startTime).to.equal(initialState.startTime);
+                expect(state.pauseTime).to.equal(0);
+                expect(state.igtPauseTime).to.equal(0);
+                expect(state.pauseTotal).to.be.within(
+                    initialState.pauseTotal + (time - initialState.pauseTime),
+                    initialState.pauseTotal + (time - initialState.pauseTime) + 1
+                );
+                expect(state.igtPauseTotal).to.be.within(
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime),
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + 1
+                );
+                expect(state.finishTime).to.be.within(time, time + 1);
+            });
+
+            it('should finish the paused IGT timer correctly [RUNNING_IGT_PAUSED => FINISHED]', () => {
+                const initialState: TimerState = {
+                    status: TimerStatus.RUNNING_IGT_PAUSE,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+
+                const state = { ...initialState };
+
+                const time = now();
+                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+
+                expect(state.status).to.deep.equal(TimerStatus.FINISHED);
+                expect(state.startDelay).to.equal(initialState.startDelay);
+                expect(state.startTime).to.equal(initialState.startTime);
+                expect(state.pauseTime).to.equal(initialState.pauseTime);
+                expect(state.igtPauseTime).to.equal(0);
+                expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                expect(state.igtPauseTotal).to.be.within(
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime),
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + 1
+                );
+                expect(state.finishTime).to.be.within(time, time + 1);
+            });
+
+            it('should finish the running timer correctly [RUNNING => FINISHED]', () => {
+                const initialState: TimerState = {
+                    status: TimerStatus.RUNNING,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+
+                const state = { ...initialState };
+
+                const time = now();
+                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+
+                expect(state.status).to.deep.equal(TimerStatus.FINISHED);
+                expect(state.startDelay).to.equal(initialState.startDelay);
+                expect(state.startTime).to.equal(initialState.startTime);
+                expect(state.pauseTime).to.equal(initialState.pauseTime);
+                expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                expect(state.finishTime).to.be.within(time, time + 1);
+            });
+
+            it('should do nothing when switching from an invalid status to finished [* => FINISHED]', () => {
                 const initialState: TimerState = {
                     status: null,
                     startDelay: randomInt(99_999),
@@ -454,14 +665,94 @@ describe('Timer Store-Module', () => {
                     {},
                     [],
                     TimerStatus.STOPPED,
-                    TimerStatus.RUNNING_IGT_PAUSE,
+                    TimerStatus.FINISHED,
                 ].forEach((invalidStatus: any) => {
                     const state = {
                         ...initialState,
                         status: invalidStatus,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+
+                    expect(state.status).to.deep.equal(invalidStatus);
+                    expect(state.startDelay).to.equal(initialState.startDelay);
+                    expect(state.startTime).to.equal(initialState.startTime);
+                    expect(state.pauseTime).to.equal(initialState.pauseTime);
+                    expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
+                    expect(state.pauseTotal).to.equal(initialState.pauseTotal);
+                    expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
+                    expect(state.finishTime).to.equal(initialState.finishTime);
+                });
+            });
+
+            it('should clean up the timer correctly [RUNNING/RUNNING_IGT_PAUSED/PAUSED/FINISHED => FINISHED]', () => {
+                const initialState: TimerState = {
+                    status: null,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+
+                [
+                    TimerStatus.RUNNING,
+                    TimerStatus.RUNNING_IGT_PAUSE,
+                    TimerStatus.PAUSED,
+                    TimerStatus.FINISHED
+                ].forEach(status => {
+                    const state = {
+                        ...initialState,
+                        status: status,
+                    };
+
+                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.STOPPED);
+
+                    expect(state.status).to.deep.equal(TimerStatus.STOPPED);
+                    expect(state.startDelay).to.equal(initialState.startDelay);
+                    expect(state.startTime).to.equal(0);
+                    expect(state.pauseTime).to.equal(0);
+                    expect(state.igtPauseTime).to.equal(0);
+                    expect(state.pauseTotal).to.equal(0);
+                    expect(state.igtPauseTotal).to.equal(0);
+                    expect(state.finishTime).to.equal(0);
+                });
+            });
+
+            it('should do nothing when switching from an invalid status to stopped [* => STOPPED]', () => {
+                const initialState: TimerState = {
+                    status: null,
+                    startDelay: randomInt(99_999),
+                    startTime: randomInt(99_999),
+                    pauseTime: randomInt(99_999),
+                    igtPauseTime: randomInt(99_999),
+                    pauseTotal: randomInt(99_999),
+                    igtPauseTotal: randomInt(99_999),
+                    finishTime: randomInt(99_999),
+                };
+
+                [
+                    undefined,
+                    null,
+                    'strings',
+                    123,
+                    -123,
+                    NaN,
+                    -NaN,
+                    Infinity,
+                    -Infinity,
+                    {},
+                    [],
+                    TimerStatus.STOPPED,
+                ].forEach((invalidStatus: any) => {
+                    const state = {
+                        ...initialState,
+                        status: invalidStatus,
+                    };
+
+                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.STOPPED);
 
                     expect(state.status).to.deep.equal(invalidStatus);
                     expect(state.startDelay).to.equal(initialState.startDelay);

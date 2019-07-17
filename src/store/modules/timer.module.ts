@@ -43,19 +43,17 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
             },
             [ID_MUTATION_SET_STATUS](
                 state: TimerState,
-                to: TimerStatus | StatusChangePayload
+                payload: TimerStatus | StatusChangePayload
             ) {
                 let changeTo: TimerStatus;
                 let time = now();
 
-                if (typeof to === 'string') {
-                    changeTo = to;
+                if (typeof payload === 'string') {
+                    changeTo = payload;
+                } else if (payload != null && typeof payload === 'object') {
+                    time = payload.time;
+                    changeTo = payload.status;
                 } else {
-                    time = to.time;
-                    changeTo = to.status;
-                }
-
-                if (changeTo == null) {
                     return;
                 }
 
@@ -120,24 +118,30 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
                                 state.igtPauseTotal += time - state.igtPauseTime;
                                 state.igtPauseTime = 0;
                                 break;
-                            case TimerStatus.STOPPED:
-                            case TimerStatus.FINISHED:
+                            case TimerStatus.RUNNING:
+                                break;
+                            default:
                                 return;
                         }
                         state.finishTime = time;
                         break;
 
                     case TimerStatus.STOPPED:
-                        if (from === TimerStatus.STOPPED) {
-                            return;
+                        switch (from) {
+                            case TimerStatus.RUNNING:
+                            case TimerStatus.RUNNING_IGT_PAUSE:
+                            case TimerStatus.PAUSED:
+                            case TimerStatus.FINISHED:
+                                state.startTime = 0;
+                                state.pauseTime = 0;
+                                state.pauseTotal = 0;
+                                state.igtPauseTime = 0;
+                                state.igtPauseTotal = 0;
+                                state.finishTime = 0;
+                                break;
+                            default:
+                                return;
                         }
-
-                        state.startTime = 0;
-                        state.pauseTime = 0;
-                        state.pauseTotal = 0;
-                        state.igtPauseTime = 0;
-                        state.igtPauseTotal = 0;
-                        state.finishTime = 0;
                         break;
 
                     default:
