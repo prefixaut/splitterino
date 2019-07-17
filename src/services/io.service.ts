@@ -261,10 +261,15 @@ export class IOService {
      * Loads application settings object from file if it exists
      * @param store Vuex store instance
      */
-    public async loadApplicationSettingsFromFile(store: Store<RootState>): Promise<ApplicationSettings> {
+    public async loadApplicationSettingsFromFile(
+        store: Store<RootState>,
+        splitsFile: string
+    ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (appSettings != null && typeof appSettings === 'object') {
+        if (splitsFile != null && typeof splitsFile === 'string') {
+            await this.loadSplitsFromFileToStore(store, splitsFile);
+        } else if (appSettings != null && typeof appSettings === 'object') {
             if (typeof appSettings.lastOpenedSplitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
             }
