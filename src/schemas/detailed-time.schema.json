@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://splitterino.prefix.moe/detailed-time.schema.json",
+    "$id": "detailed-time",
     "title": "Detailed Time",
     "description": "Format in which times can easily be represented and stored",
     "type": "object",

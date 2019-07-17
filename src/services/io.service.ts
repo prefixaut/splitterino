@@ -7,18 +7,24 @@ import { set } from 'lodash';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { isSplits } from '../common/interfaces/splits';
 import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { Settings } from '../store/states/settings.state';
+import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 
 @Injectable
 export class IOService {
-    constructor(@Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface) { }
+    constructor(
+        @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
+        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
+    ) {
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'ressources' : '..');
+    }
 
-    protected readonly assetDir = join(this.electron.getAppPath(), 'resources');
+    protected readonly assetDir;
     protected readonly appSettingsFileName = 'application-settings.json';
     protected readonly settingsFileName = 'settings.json';
 
@@ -38,8 +44,9 @@ export class IOService {
             file: filePath,
         });
 
+        let content: string = null;
         try {
-            return readFileSync(filePath, { encoding: 'utf8' });
+            content =  readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
             Logger.error({
                 msg: 'Error loading file',
@@ -48,7 +55,7 @@ export class IOService {
             });
         }
 
-        return null;
+        return content;
     }
 
     public saveFile(path: string, data: string, basePath: string = this.assetDir): boolean {
@@ -144,7 +151,7 @@ export class IOService {
                 });
                 const loaded = this.loadJSONFromFile(filePath, '');
 
-                if (loaded == null || typeof loaded !== 'object' || !isSplits(loaded.splits)) {
+                if (loaded == null || typeof loaded !== 'object' || !this.validator.isSplits(loaded.splits)) {
                     Logger.error({
                         msg: 'The loaded splits are not valid Splits!',
                         file: filePath,
