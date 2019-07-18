@@ -12,7 +12,6 @@ import {
     ACTION_RESET,
     ACTION_SAVING_RESET,
     ACTION_SET_ALL_SEGMENTS,
-    ACTION_SET_CURRENT_OPEN_FILE,
     ACTION_SKIP,
     ACTION_SPLIT,
     ACTION_START,
@@ -24,7 +23,6 @@ import {
     ID_ACTION_RESET,
     ID_ACTION_SAVING_RESET,
     ID_ACTION_SET_ALL_SEGMENTS,
-    ID_ACTION_SET_CURRENT_OPEN_FILE,
     ID_ACTION_SKIP,
     ID_ACTION_SPLIT,
     ID_ACTION_START,
@@ -37,7 +35,6 @@ import {
     ID_MUTATION_SAVING_RESET,
     ID_MUTATION_SET_ALL_SEGMENTS,
     ID_MUTATION_SET_CURRENT,
-    ID_MUTATION_SET_CURRENT_OPEN_FILE,
     ID_MUTATION_SET_PREVIOUS_IGT_TIME,
     ID_MUTATION_SET_PREVIOUS_RTA_TIME,
     ID_MUTATION_SET_SEGMENT,
@@ -49,7 +46,6 @@ import {
     MUTATION_SAVING_RESET,
     MUTATION_SET_ALL_SEGMENTS,
     MUTATION_SET_CURRENT,
-    MUTATION_SET_CURRENT_OPEN_FILE,
     MUTATION_SET_PREVIOUS_IGT_TIME,
     MUTATION_SET_PREVIOUS_RTA_TIME,
     MUTATION_SET_SEGMENT,
@@ -120,7 +116,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(20),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -155,7 +150,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(1),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -190,31 +184,12 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SET_CURRENT_OPEN_FILE, () => {
-            it('should apply the mutation correctly', () => {
-                const state: SplitsState = {
-                    current: -1,
-                    timing: TimingMethod.RTA,
-                    currentOpenFile: null,
-                    segments: [],
-                    previousRTATotal: randomInt(99999),
-                    previousIGTTotal: randomInt(99999),
-                };
-
-                const newCurrentFile = 'test';
-                splitsModule.mutations[ID_MUTATION_SET_CURRENT_OPEN_FILE](state, newCurrentFile);
-
-                expect(state.currentOpenFile).to.equal(newCurrentFile);
-            });
-        });
-
         describe(MUTATION_SET_PREVIOUS_RTA_TIME, () => {
             it('should apply the mutation correctly', () => {
                 const newTime = randomInt(99999);
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -232,7 +207,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -249,7 +223,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -293,7 +266,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -335,7 +307,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -362,7 +333,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [initialSegment],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -409,7 +379,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [initialSegment],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -448,7 +417,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -468,7 +436,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -534,7 +501,6 @@ describe('Splits Store-Module', () => {
                     const state: SplitsState = {
                         current: -1,
                         timing: TimingMethod.RTA,
-                        currentOpenFile: null,
                         segments: originalSegments.slice(0),
                         previousRTATotal: randomInt(99999),
                         previousIGTTotal: randomInt(99999),
@@ -556,7 +522,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -588,7 +553,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [{ id: 'test', name: 'test' }],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -698,7 +662,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -830,7 +793,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -907,7 +869,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: 1_000_000,
                     previousIGTTotal: 1_000_000,
@@ -942,7 +903,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments,
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1002,7 +962,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1032,7 +991,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1068,7 +1026,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1126,7 +1083,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1226,7 +1182,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1305,7 +1260,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1336,7 +1290,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(1),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1368,7 +1321,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(1),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1405,7 +1357,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1452,7 +1403,6 @@ describe('Splits Store-Module', () => {
                     const state: SplitsState = {
                         current: currentIndex,
                         timing: TimingMethod.RTA,
-                        currentOpenFile: null,
                         segments: segments.slice(0),
                         previousRTATotal: randomInt(99999),
                         previousIGTTotal: randomInt(99999),
@@ -1488,7 +1438,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1544,7 +1493,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1625,7 +1573,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1703,7 +1650,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: segments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1756,7 +1702,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 1,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1791,7 +1736,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1825,7 +1769,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1860,7 +1803,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1896,7 +1838,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1931,7 +1872,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -1971,7 +1911,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -2014,7 +1953,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -2058,7 +1996,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -2102,7 +2039,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: currentIndex,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousRTATotal: randomInt(99999),
                     previousIGTTotal: randomInt(99999),
@@ -2159,7 +2095,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2212,7 +2147,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2258,7 +2192,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2308,7 +2241,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2358,7 +2290,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: originalSegments.slice(0),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2398,7 +2329,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousIGTTotal: randomInt(99999),
                     previousRTATotal: randomInt(99999),
@@ -2429,7 +2359,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousIGTTotal: 1,
                     previousRTATotal: 1,
@@ -2461,7 +2390,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: generateSegmentArray(3),
                     previousIGTTotal: 1_000_000,
                     previousRTATotal: 1_000_000,
@@ -2493,7 +2421,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2534,7 +2461,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2575,7 +2501,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2616,7 +2541,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2661,7 +2585,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2706,7 +2629,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [
                         {
                             id: uuid(),
@@ -2753,7 +2675,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2799,7 +2720,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2843,7 +2763,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2890,7 +2809,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2926,7 +2844,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2962,7 +2879,6 @@ describe('Splits Store-Module', () => {
                 const state: SplitsState = {
                     current: 0,
                     timing: TimingMethod.RTA,
-                    currentOpenFile: null,
                     segments: [],
                     previousRTATotal: 0,
                     previousIGTTotal: 0,
@@ -2997,45 +2913,6 @@ describe('Splits Store-Module', () => {
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
-            });
-        });
-
-        describe(ACTION_SET_CURRENT_OPEN_FILE, () => {
-            it('should forward the action to the mutation', async () => {
-                const newFilePath = 'test something';
-                const state: SplitsState = {
-                    current: 0,
-                    timing: TimingMethod.RTA,
-                    currentOpenFile: null,
-                    segments: [],
-                    previousRTATotal: 0,
-                    previousIGTTotal: 0,
-                };
-
-                const rootState = {
-                    splitterino: {
-                        splits: state,
-                        timer: {
-                            status: TimerStatus.STOPPED,
-                        }
-                    }
-                };
-
-                const { commits, dispatches, returnValue } = await testAction(
-                    splitsModule.actions[ID_ACTION_SET_CURRENT_OPEN_FILE], {
-                        state,
-                        rootState,
-                    }, newFilePath);
-
-                expect(commits).to.have.lengthOf(1);
-                expect(commits[0]).to.deep.equal({
-                    type: ID_MUTATION_SET_CURRENT_OPEN_FILE,
-                    payload: newFilePath,
-                });
-
-                // tslint:disable-next-line:no-unused-expression
-                expect(dispatches).to.be.empty;
-                expect(returnValue).to.equal(undefined);
             });
         });
     });

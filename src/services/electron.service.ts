@@ -13,17 +13,20 @@ import {
 } from 'electron';
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
+import { format as formatUrl } from 'url';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
 import { ElectronInterface } from '../common/interfaces/electron';
 import { Logger } from '../utils/logger';
+import { join } from 'path';
 
 @Injectable
 export class ElectronService implements ElectronInterface {
     private readonly defaultWindowSettings: BrowserWindowConstructorOptions = {
         webPreferences: {
             webSecurity: false,
+            nodeIntegration: true
         },
         useContentSize: true,
         title: 'Splitterino',
@@ -129,6 +132,8 @@ export class ElectronService implements ElectronInterface {
     }
 
     public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+
         Logger.debug({
             msg: 'Creating new window ...',
             settings,
@@ -141,11 +146,23 @@ export class ElectronService implements ElectronInterface {
                 ...settings,
             });
 
-            if (!process.env.IS_TEST) {
+            if (isDevelopment) {
                 win.webContents.openDevTools({ mode: 'detach' });
             }
 
-            win.loadURL(this.url + route);
+            let url: string;
+            if (isDevelopment) {
+                url = this.url + route;
+            } else {
+                url = formatUrl({
+                    pathname: join(__dirname, 'index.html'),
+                    protocol: 'file',
+                    slashes: true,
+                    hash: route
+                });
+            }
+
+            win.loadURL(url);
             win.show();
 
             Logger.debug({

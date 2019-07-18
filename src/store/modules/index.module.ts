@@ -6,6 +6,7 @@ import { getKeybindingsStoreModule } from './keybindings.module';
 import { getSettingsStoreModule } from './settings.module';
 import { getSplitsStoreModule } from './splits.module';
 import { getTimerStoreModule } from './timer.module';
+import { getMetaModule } from './meta.module';
 
 export function getSplitterinoStoreModules(injector: Injector) {
     return {
@@ -15,5 +16,6 @@ export function getSplitterinoStoreModules(injector: Injector) {
         settings: getSettingsStoreModule(),
         splits: getSplitsStoreModule(injector),
         timer: getTimerStoreModule(),
+        meta: getMetaModule()
     };
 }

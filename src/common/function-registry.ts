@@ -1,34 +1,12 @@
 import { Injector } from 'lightweight-di';
-
-import { IOService } from '../services/io.service';
-import {
-    ACTION_PAUSE,
-    ACTION_RESET,
-    ACTION_SKIP,
-    ACTION_SPLIT,
-    ACTION_UNDO,
-    ACTION_UNPAUSE,
-    ACTION_START,
-} from '../store/modules/splits.module';
-import {
-    CTX_MENU_KEYBINDINGS_OPEN,
-    CTX_MENU_SETTINGS_OPEN,
-    CTX_MENU_SPLITS_EDIT,
-    CTX_MENU_SPLITS_LOAD_FROM_FILE,
-    CTX_MENU_SPLITS_SAVE_TO_FILE,
-    CTX_MENU_WINDOW_CLOSE,
-    CTX_MENU_WINDOW_RELOAD,
-    KEYBINDING_SPLITS_RESET,
-    KEYBINDING_SPLITS_SKIP,
-    KEYBINDING_SPLITS_SPLIT,
-    KEYBINDING_SPLITS_TOGGLE_PAUSE,
-    KEYBINDING_SPLITS_UNDO,
-} from './constants';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { ACTION_PAUSE, ACTION_RESET, ACTION_SKIP, ACTION_SPLIT, ACTION_START, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
+import { RootState } from '../store/states/root.state';
+import { CTX_MENU_KEYBINDINGS_OPEN, CTX_MENU_SETTINGS_OPEN, CTX_MENU_SPLITS_EDIT, CTX_MENU_SPLITS_LOAD_FROM_FILE, CTX_MENU_SPLITS_SAVE_TO_FILE, CTX_MENU_WINDOW_CLOSE, CTX_MENU_WINDOW_RELOAD, KEYBINDING_SPLITS_RESET, KEYBINDING_SPLITS_SKIP, KEYBINDING_SPLITS_SPLIT, KEYBINDING_SPLITS_TOGGLE_PAUSE, KEYBINDING_SPLITS_UNDO } from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
-import { RootState } from '../store/states/root.state';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -63,9 +41,10 @@ export abstract class FunctionRegistry {
     }
 }
 
+// TODO: Defaults for new windows
 export function registerDefaultContextMenuFunctions(injector: Injector) {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
-    const io = injector.get(IOService);
+    const io = injector.get(IO_SERVICE_TOKEN);
 
     /*
      * Window Actions
@@ -98,16 +77,31 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Splits Editor',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
-                modal: true,
+                modal: true
             },
             '/splits-editor'
         );
     });
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params =>
-        io.loadSplitsFromFileToStore(params.vNode.context.$store)
-    );
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
+        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles.length === 0) {
+            io.loadSplitsFromFileToStore(params.vNode.context.$store);
+        } else {
+            electron.newWindow(
+                {
+                    title: 'Open Splits File',
+                    parent: electron.getCurrentWindow(),
+                    resizable: false,
+                    width: 440,
+                    height: 250,
+                    modal: true,
+                    webPreferences: {
+                        nodeIntegration: true
+                    }
+                },
+                '/open-splits'
+            );
+        }
+    });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
         io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
     );
@@ -120,11 +114,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Settings',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
                 width: 650,
                 height: 310,
-                modal: true,
+                modal: true
             },
             '/settings'
         );
@@ -138,11 +130,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Keybindings',
                 parent: electron.getCurrentWindow(),
-                minWidth: 440,
-                minHeight: 220,
                 width: 650,
                 height: 310,
-                modal: true,
+                modal: true
             },
             '/keybindings'
         );

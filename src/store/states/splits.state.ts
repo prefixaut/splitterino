@@ -24,8 +24,4 @@ export interface SplitsState {
      * Used to determine if the run was a PB or not.
      */
     previousIGTTotal: number;
-    /**
-     * Currently open .splits file
-     */
-    currentOpenFile: string;
 }
