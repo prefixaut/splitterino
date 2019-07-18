@@ -36,6 +36,7 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
+import { IOService } from '../services/io.service';
 
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {
@@ -95,6 +96,10 @@ export default class SplitsEditorView extends Vue {
             this.$store.dispatch(ACTION_SET_REGION, this.gameInfo.region),
         ]).then(() => {
             this.loadDataFromStore();
+            this.$services.get(IOService).saveSplitsFromStoreToFile(
+                this.$store,
+                (this.$store.state as RootState).splitterino.splits.currentOpenFile
+            );
         });
     }
 }
