@@ -60,7 +60,7 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 state.name = name;
             },
             [ID_MUTATION_SET_CATEGORY](state: GameInfoState, category: string) {
-                if (typeof name !== 'string') {
+                if (typeof category !== 'string') {
                     return;
                 }
 
@@ -74,7 +74,7 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 state.language = language;
             },
             [ID_MUTATION_SET_PLATFORM](state: GameInfoState, platform: string) {
-                if (typeof name !== 'string') {
+                if (typeof platform !== 'string') {
                     return;
                 }
 
@@ -90,7 +90,6 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
         },
         actions: {
             async [ID_ACTION_SET_GAME_NAME](context: ActionContext<GameInfoState, RootState>, name: string) {
-                console.log('action: set name -> ', name);
                 if (typeof name !== 'string') {
                     return false;
                 }
@@ -100,8 +99,7 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 return true;
             },
             async [ID_ACTION_SET_CATEGORY](context: ActionContext<GameInfoState, RootState>, category: string) {
-                console.log('action: set category -> ', category);
-                if (typeof name !== 'string') {
+                if (typeof category !== 'string') {
                     return false;
                 }
 
@@ -110,7 +108,6 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 return true;
             },
             async [ID_ACTION_SET_LANGUAGE](context: ActionContext<GameInfoState, RootState>, language: string) {
-                console.log('action: set language -> ', language);
                 if (!ISO6391.validate(language)) {
                     return false;
                 }
@@ -120,8 +117,7 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 return true;
             },
             async [ID_ACTION_SET_PLATFORM](context: ActionContext<GameInfoState, RootState>, platform: string) {
-                console.log('action: set platform -> ', platform);
-                if (typeof name !== 'string') {
+                if (typeof platform !== 'string') {
                     return false;
                 }
 
@@ -130,7 +126,6 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
                 return true;
             },
             async [ID_ACTION_SET_REGION](context: ActionContext<GameInfoState, RootState>, region: Region) {
-                console.log('action: set region -> ', region);
                 if (!allRegions.includes(region)) {
                     return false;
                 }
