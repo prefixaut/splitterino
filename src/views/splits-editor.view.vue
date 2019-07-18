@@ -52,20 +52,18 @@ export default class SplitsEditorView extends Vue {
         region: null,
     };
 
-    created() {
-        this.$nextTick(() => {
-            this.loadDataFromStore();
-        });
+    mounted() {
+        this.loadDataFromStore();
     }
 
     loadDataFromStore() {
+        const root: RootState = this.$store.state;
         // Create a copy of the current Segments to the component
         // They should not be reactive as editing it would be quite
         // a trouble.
-        this.segments = cloneDeep(
-            this.$store.state.splitterino.splits.segments || []);
+        this.segments = cloneDeep(root.splitterino.splits.segments || []);
         // Same here
-        this.gameInfo = cloneDeep((this.$store.state as RootState).splitterino.gameInfo);
+        this.gameInfo = cloneDeep(root.splitterino.gameInfo);
     }
 
     get haveSegmentsChanged() {
