@@ -3,7 +3,6 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
 import Vue from 'vue';
-import { OverlayHost } from 'vue-overlay-host';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
@@ -68,9 +67,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Draggable
     Vue.component('draggable', draggable);
-
-    // Overlay Host
-    Vue.component('vue-overlay-host', OverlayHost);
 
     // Select
     Vue.component('vue-select', VueSelect);
