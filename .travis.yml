@@ -8,8 +8,6 @@ matrix:
   include:
   - os: linux
   - os: osx
-    before_install:
-    - brew update > /dev/null
   - os: windows
 
 env:
@@ -37,7 +35,7 @@ before_script:
 script:
 - yarn test:unit:coverage
 - rm -rf dist_electron
-- yarn build
+- yarn build --publish=never
 
 after_script:
 - "./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT"

@@ -26,4 +26,4 @@ build:
    - node
   script:
   - yarn
-  - yarn build
+  - yarn build --publish=never
