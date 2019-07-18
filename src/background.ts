@@ -15,6 +15,7 @@ import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
+import { isDevelopment } from './utils/is-development';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -43,8 +44,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 (async () => {
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-    if (isDevelopment) {
+    if (isDevelopment()) {
         // Don't load any native (external) modules until the following line is run:
         // tslint:disable-next-line no-require-imports no-var-requires
         require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
@@ -101,7 +101,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     let splitsFile: string;
-    if (!isDevelopment) {
+    if (!isDevelopment()) {
         splitsFile = process.argv[1];
     }
 
@@ -152,7 +152,7 @@ process.on('unhandledRejection', (reason, promise) => {
     function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
 
-        if (isDevelopment) {
+        if (isDevelopment()) {
             // Load the url of the dev server if in development mode
             window.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
             if (!process.env.IS_TEST) {
@@ -207,7 +207,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // create main BrowserWindow when electron is ready
     app.on('ready', async () => {
-        if (isDevelopment && !process.env.IS_TEST) {
+        if (isDevelopment() && !process.env.IS_TEST) {
             // Install Vue Devtools
             await installVueDevtools();
         }
@@ -222,7 +222,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // Exit cleanly on request from parent process in development mode.
-    if (isDevelopment) {
+    if (isDevelopment()) {
         if (process.platform === 'win32') {
             process.on('message', data => {
                 if (data === 'graceful-exit') {
