@@ -2,7 +2,7 @@ import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { Segment, SegmentTime, TimingMethod, isSegment } from '../../common/interfaces/segment';
+import { Segment, SegmentTime, TimingMethod } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
 import { asCleanNumber } from '../../utils/converters';
 import { Logger } from '../../utils/logger';
@@ -10,6 +10,7 @@ import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
+import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 
 export const MODULE_PATH = 'splitterino/splits';
 
@@ -100,6 +101,7 @@ function resetSegment(segment: Segment): Segment {
 
 export function getSplitsStoreModule(injector: Injector): Module<SplitsState, RootState> {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const validator = injector.get(VALIDATOR_SERVICE_TOKEN);
 
     return {
         namespaced: true,
@@ -174,14 +176,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state.previousIGTTotal = asCleanNumber(newTime);
             },
             [ID_MUTATION_ADD_SEGMENT](state: SplitsState, segment: Segment) {
-                if (!isSegment(segment)) {
+                if (!validator.isSegment(segment)) {
                     return;
                 }
 
                 state.segments.push(segment);
             },
             [ID_MUTATION_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
-                if (!Array.isArray(segments) || segments.findIndex(segment => !isSegment(segment)) > -1) {
+                if (!Array.isArray(segments) || segments.findIndex(segment => !validator.isSegment(segment)) > -1) {
                     return;
                 }
 
@@ -191,7 +193,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 state: SplitsState,
                 payload: { index: number; segment: Segment }
             ) {
-                if (payload == null || typeof payload !== 'object' || !isSegment(payload.segment)) {
+                if (payload == null || typeof payload !== 'object' || !validator.isSegment(payload.segment)) {
                     return;
                 }
 

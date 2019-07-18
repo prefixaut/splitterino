@@ -2,7 +2,7 @@ import { BrowserWindowConstructorOptions } from 'electron';
 import { ActionKeybinding } from './keybindings';
 
 export interface ApplicationSettings {
-    window: BrowserWindowConstructorOptions;
+    windowOptions: BrowserWindowConstructorOptions;
     lastOpenedSplitsFile?: string;
     keybindings?: ActionKeybinding[];
 }

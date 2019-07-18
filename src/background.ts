@@ -1,11 +1,11 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, protocol, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
 import { merge } from 'lodash';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
-import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
+import { installVueDevtools, createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
@@ -20,13 +20,18 @@ import { RootState } from './store/states/root.state';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
         msg: 'Uncaught Exception in background process!',
         error: error,
     });
 
+    Logger.trace({
+        error: error.stack
+    });
+
     // exit the application safely
+    // FIXME: Does not actually quit app
     app.exit(1);
 
     // end the process
@@ -50,7 +55,7 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 
     // Standard scheme must be registered before the app is ready
-    protocol.registerStandardSchemes(['app'], { secure: true });
+    // protocol.registerStandardSchemes(['app'], { secure: true });
 
     /**
      * global reference of the main window.
@@ -100,7 +105,7 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
-    const appSettings = await io.loadApplicationSettingsFromFile(store);
+    const appSettings = await io.loadApplicationSettingsFromFile(store, process.argv[1]);
     await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions
@@ -145,8 +150,8 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     function createMainWindow() {
-        const loadedBrowserWindowOptions = appSettings.window;
-        const browserWindowOptions = merge({}, applicationSettingsDefaults.window, loadedBrowserWindowOptions);
+        const loadedBrowserWindowOptions = appSettings.windowOptions;
+        const browserWindowOptions = merge({}, applicationSettingsDefaults.windowOptions, loadedBrowserWindowOptions);
 
         const window = new BrowserWindow(browserWindowOptions);
 

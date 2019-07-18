@@ -14,4 +14,16 @@ module.exports = {
                 .end();
         }
     },
+    pluginOptions: {
+        electronBuilder: {
+            builderOptions: {
+                fileAssociations: [
+                    {
+                        ext: "splits",
+                        description: "Splits file"
+                    }
+                ]
+            }
+        }
+    }
 };

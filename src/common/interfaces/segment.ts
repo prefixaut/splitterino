@@ -1,26 +1,10 @@
-import * as SegmentSchema from '../../schemas/segment.schema.json';
-import { createValidator, validate } from '../../utils/schemas';
 import { asCleanNumber } from '../../utils/converters';
-
-const validatorFunction = createValidator(SegmentSchema);
-
-export function isSegment(data: any): data is Segment {
-    // Manual check until #37 is fixed
-    return data != null &&
-        typeof data === 'object' &&
-        typeof data.name === 'string' &&
-        typeof data.id === 'string' &&
-        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/.test(data.id);
-}
 
 export function getFinalTime(time: DetailedTime): number {
     return time == null ? 0 : Math.max(
         Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0),
         0);
 }
-
-export { SegmentSchema };
-export { validatorFunction as SegmentValidator };
 
 /**
  * Defines a single Segment in a Split.

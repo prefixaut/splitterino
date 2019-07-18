@@ -1,7 +1,7 @@
 import { ApplicationSettings } from './interfaces/application-settings';
 
 export const applicationSettingsDefaults: ApplicationSettings = {
-    window: {
+    windowOptions: {
         width: 800,
         height: 600,
         useContentSize: true,
@@ -11,6 +11,9 @@ export const applicationSettingsDefaults: ApplicationSettings = {
         maximizable: false,
         minWidth: 240,
         minHeight: 60,
-        center: true
+        center: true,
+        webPreferences: {
+            nodeIntegration: true
+        }
     }
 };

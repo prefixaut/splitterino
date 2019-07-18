@@ -7,7 +7,8 @@ import { Store } from 'vuex';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { isSplits, Splits } from '../common/interfaces/splits';
+import { Splits } from '../common/interfaces/splits';
+import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
     ACTION_SET_CATEGORY,
     ACTION_SET_GAME_NAME,
@@ -24,9 +25,15 @@ import { Logger } from '../utils/logger';
 
 @Injectable
 export class IOService {
-    constructor(@Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface) { }
+    constructor(
+        @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
+        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
+    ) {
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'ressources' : '..');
+    }
 
-    protected readonly assetDir = join(this.electron.getAppPath(), 'resources');
+    protected readonly assetDir;
     protected readonly appSettingsFileName = 'application-settings.json';
     protected readonly settingsFileName = 'settings.json';
 
@@ -46,8 +53,9 @@ export class IOService {
             file: filePath,
         });
 
+        let content: string = null;
         try {
-            return readFileSync(filePath, { encoding: 'utf8' });
+            content = readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
             Logger.error({
                 msg: 'Error loading file',
@@ -56,7 +64,7 @@ export class IOService {
             });
         }
 
-        return null;
+        return content;
     }
 
     public saveFile(path: string, data: string, basePath: string = this.assetDir): boolean {
@@ -152,7 +160,7 @@ export class IOService {
                 });
                 const loaded: { splits: Splits } = this.loadJSONFromFile(filePath, '');
 
-                if (loaded == null || typeof loaded !== 'object' || !isSplits(loaded.splits)) {
+                if (loaded == null || typeof loaded !== 'object' || !this.validator.isSplits(loaded.splits)) {
                     Logger.error({
                         msg: 'The loaded splits are not valid Splits!',
                         file: filePath,
@@ -288,16 +296,21 @@ export class IOService {
      * Loads application settings object from file if it exists
      * @param store Vuex store instance
      */
-    public async loadApplicationSettingsFromFile(store: Store<RootState>): Promise<ApplicationSettings> {
+    public async loadApplicationSettingsFromFile(
+        store: Store<RootState>,
+        splitsFile: string
+    ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (appSettings != null && typeof appSettings === 'object') {
+        if (splitsFile != null && typeof splitsFile === 'string') {
+            await this.loadSplitsFromFileToStore(store, splitsFile);
+        } else if (appSettings != null && typeof appSettings === 'object') {
             if (typeof appSettings.lastOpenedSplitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
             }
         }
 
-        return appSettings || { window: {} };
+        return appSettings || { windowOptions: {} };
     }
 
     /**
@@ -312,7 +325,7 @@ export class IOService {
         const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
-            window: {
+            windowOptions: {
                 width: windowSize[0],
                 height: windowSize[1],
                 x: windowPos[0],
