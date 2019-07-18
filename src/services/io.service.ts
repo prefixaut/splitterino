@@ -1,7 +1,7 @@
-import { BrowserWindow, FileFilter } from 'electron';
+import { BrowserWindow, FileFilter, app } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { Inject, Injectable, InjectionToken } from 'lightweight-di';
-import { set } from 'lodash';
+import { set, merge } from 'lodash';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
 
@@ -24,6 +24,7 @@ import { Settings } from '../store/states/settings.state';
 import { ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
 import { Logger } from '../utils/logger';
 import { RecentlyOpenedSplit } from '../store/states/meta.state';
+import { applicationSettingsDefaults } from '../common/application-settings-defaults';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -298,7 +299,6 @@ export class IOService {
         });
     }
 
-    // TODO: Add JSON schema validation for application settings
     /**
      * Loads application settings object from file if it exists
      * @param store Vuex store instance
@@ -307,21 +307,18 @@ export class IOService {
         store: Store<RootState>,
         splitsFile?: string
     ): Promise<ApplicationSettings> {
-        const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
+        const appSettings = this.loadJSONFromFile(this.appSettingsFileName);
 
         try {
             if (splitsFile != null && typeof splitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, splitsFile);
-            } else if (appSettings != null && typeof appSettings === 'object') {
+            } else if (this.validator.isApplicationSettings(appSettings)) {
                 let lastOpenedSplitsFiles: RecentlyOpenedSplit[] = [];
-                if (Array.isArray(appSettings.lastOpenedSplitsFiles)) {
+                if (appSettings.lastOpenedSplitsFiles != null) {
                     lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles
                         .filter(recentSplit => existsSync(recentSplit.path));
 
-                    if (
-                        lastOpenedSplitsFiles[0] != null &&
-                        typeof lastOpenedSplitsFiles[0].path === 'string'
-                    ) {
+                    if (lastOpenedSplitsFiles.length > 0) {
                         await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
                         await this.loadSplitsFromFileToStore(store, lastOpenedSplitsFiles[0].path);
                     }
@@ -331,10 +328,7 @@ export class IOService {
             // Ignore error since already being logged
         }
 
-        return appSettings ||
-            {
-                windowOptions: {}
-            };
+        return merge(appSettings, applicationSettingsDefaults);
     }
 
     /**
@@ -389,6 +383,11 @@ export class IOService {
         this.saveJSONToFile(this.settingsFileName, flattenedSettings);
     }
 
+    /**
+     * Loads settings that have a configuration registered into store.
+     * Sets a deault value if no value for configuration exists
+     * @param store Root store instance
+     */
     public async loadSettingsFromFileToStore(store: Store<RootState>) {
         const loadedSettings = this.loadJSONFromFile(this.settingsFileName);
         const parsedSettings: Settings = {

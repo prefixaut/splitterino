@@ -7,9 +7,12 @@ import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import GameInfoSchema from '../schemas/game-info.schema.json';
+import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
+import KeybindingSchema from '../schemas/keybinding.schema.json';
 import { Logger } from '../utils/logger';
 import { Splits } from '../common/interfaces/splits';
 import { Segment } from '../common/interfaces/segment';
+import { ApplicationSettings } from '../common/interfaces/application-settings.js';
 
 export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 
@@ -28,6 +31,8 @@ export class ValidatorService {
         this.ajv.addSchema(SplitsSchema, 'splits.schema.json');
         this.ajv.addSchema(TimingMethodSchema, 'timing-method.schema.json');
         this.ajv.addSchema(GameInfoSchema, 'game-info.schema.json');
+        this.ajv.addSchema(ApplicationSettingsSchema, 'application-settings.schema.json');
+        this.ajv.addSchema(KeybindingSchema, 'keybinding.schema.json');
     }
 
     /**
@@ -54,5 +59,9 @@ export class ValidatorService {
 
     public isSegment(data: any): data is Segment {
         return this.validate<Segment>('segment', data);
+    }
+
+    public isApplicationSettings(data: any): data is ApplicationSettings {
+        return this.validate<ApplicationSettings>('application-settings', data);
     }
 }

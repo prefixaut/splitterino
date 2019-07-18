@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "application-settings",
+    "title": "Application Settings",
+    "description": "Settings to persist over application sessions",
+    "type": "object",
+    "required": ["windowOptions"],
+    "properties": {
+        "windowOptions": {
+            "description": "Electron browser window constructor options",
+            "type": "object"
+        },
+        "lastOpenedSplitsFiles": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["gameName", "category", "path"],
+                "properties": {
+                    "gameName": {
+                        "$ref": "game-info.schema.json#/definitions/name"
+                    },
+                    "category": {
+                        "$ref": "game-info.schema.json#/definitions/category"
+                    },
+                    "platform": {
+                        "$ref": "game-info.schema.json#/definitions/platform"
+                    },
+                    "region": {
+                        "$ref": "game-info.schema.json#/definitions/region"
+                    },
+                    "path": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "keybindings": {
+            "type": "array",
+            "items": {
+                "$ref": "keybinding.schema.json"
+            }
+        }
+    }
+}

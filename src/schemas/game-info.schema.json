@@ -2,20 +2,15 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "game-info",
     "title": "Game Information",
-    "description": "Detailed information about the Game and run details",
+    "description": "Detailed information about the game and run details",
     "type": "object",
-    "required": ["name", "category"],
-    "properties": {
+    "definitions": {
         "name": {
             "description": "Name of the Game that is currently being run",
             "type": "string"
         },
         "category": {
             "description": "Category that is currently being run",
-            "type": "string"
-        },
-        "language": {
-            "description": "ISO-3166-1 Alpha 3 Language Code in which the game is being run",
             "type": "string"
         },
         "platform": {
@@ -26,6 +21,25 @@
             "description": "The Region format the game is run in",
             "type": "string",
             "enum": ["pal_eur", "pal_chn", "pal_bra", "ntsc_usa", "ntsc_jpn"]
+        }
+    },
+    "required": ["name", "category"],
+    "properties": {
+        "name": {
+            "$ref": "#/definitions/name"
+        },
+        "category": {
+            "$ref": "#/definitions/category"
+        },
+        "language": {
+            "description": "ISO-3166-1 Alpha 3 Language Code in which the game is being run",
+            "type": "string"
+        },
+        "platform": {
+            "$ref": "#/definitions/platform"
+        },
+        "region": {
+            "$ref": "#/definitions/region"
         }
     }
 }
