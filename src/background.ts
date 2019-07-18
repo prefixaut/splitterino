@@ -6,7 +6,6 @@ import * as pino from 'pino';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
 import { installVueDevtools, createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex from 'vuex';
 
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
@@ -85,7 +84,6 @@ process.on('unhandledRejection', (reason, promise) => {
     const store = new Vuex.Store<RootState>({
         ...getStoreConfig(injector),
         plugins: [
-            OverlayHostPlugin,
             storeInstance => {
                 storeInstance.subscribe(mutation => {
                     try {

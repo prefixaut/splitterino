@@ -1,6 +1,5 @@
 import { ipcRenderer, remote } from 'electron';
 import { Injector } from 'lightweight-di';
-import { OverlayHostPlugin } from 'vue-overlay-host';
 import Vuex, { DispatchOptions, Payload } from 'vuex';
 
 import { ActionResult } from '../common/interfaces/electron';
@@ -25,14 +24,8 @@ export function getClientStore(vueRef, injector: Injector) {
 
     const store = new Vuex.Store<RootState>({
         plugins: [
-            OverlayHostPlugin,
             events => {
                 events.subscribe(mutation => {
-                    // Ignore mutations of the overlay-host,
-                    // since these are window specific.
-                    if (mutation.type.includes('overlay-host')) {
-                        return;
-                    }
                     let payload: any;
                     let id = '';
 
