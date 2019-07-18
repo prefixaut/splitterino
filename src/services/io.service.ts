@@ -361,7 +361,7 @@ export class IOService {
 
         Logger.debug({
             msg: 'Saving applcation settings to file',
-            settings: newAppSettings,
+            values: newAppSettings,
         });
 
         this.saveJSONToFile(this.appSettingsFileName, newAppSettings);
@@ -373,7 +373,7 @@ export class IOService {
      */
     public saveSettingsToFile(store: Store<RootState>) {
         const flattenedSettings = {};
-        const settings = store.state.splitterino.settings.settings;
+        const settings = store.state.splitterino.settings.values;
 
         for (const [moduleKey, modulE] of Object.entries(settings)) {
             for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
@@ -415,7 +415,7 @@ export class IOService {
                 }
             }
 
-            await store.dispatch(ACTION_SET_ALL_SETTINGS, { settings: parsedSettings });
+            await store.dispatch(ACTION_SET_ALL_SETTINGS, { values: parsedSettings });
         }
     }
 }
