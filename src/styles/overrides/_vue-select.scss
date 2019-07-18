@@ -35,6 +35,10 @@ $vs-controls-color: $spl-color-off-white;
         border-color: $spl-color-dark-gray;
     }
 
+    &.outline {
+        border-color: $spl-color-dark-gray;
+    }
+
     &.vs--open {
         outline: none;
         border-color: $spl-color-primary !important;

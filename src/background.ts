@@ -5,14 +5,12 @@ import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
-import { installVueDevtools, createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import { OverlayHostPlugin } from 'vue-overlay-host';
+import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import Vuex from 'vuex';
-
 import { applicationSettingsDefaults } from './common/application-settings-defaults';
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { ActionResult } from './common/interfaces/electron';
-import { IOService } from './services/io.service';
+import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
 import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
@@ -76,7 +74,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Logger.initialize(injector);
 
     // Setting up a log-handler which logs the messages to a file
-    const io = injector.get(IOService);
+    const io = injector.get(IO_SERVICE_TOKEN);
     const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: 'trace' });
 
@@ -85,7 +83,6 @@ process.on('unhandledRejection', (reason, promise) => {
     const store = new Vuex.Store<RootState>({
         ...getStoreConfig(injector),
         plugins: [
-            OverlayHostPlugin,
             storeInstance => {
                 storeInstance.subscribe(mutation => {
                     try {

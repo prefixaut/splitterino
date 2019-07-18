@@ -6,6 +6,7 @@ import SegmentTimeSchema from '../schemas/segment-time.schema.json';
 import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
+import GameInfoSchema from '../schemas/game-info.schema.json';
 import { Logger } from '../utils/logger';
 import { Splits } from '../common/interfaces/splits';
 import { Segment } from '../common/interfaces/segment';
@@ -26,6 +27,7 @@ export class ValidatorService {
         this.ajv.addSchema(SegmentSchema, 'segment.schema.json');
         this.ajv.addSchema(SplitsSchema, 'splits.schema.json');
         this.ajv.addSchema(TimingMethodSchema, 'timing-method.schema.json');
+        this.ajv.addSchema(GameInfoSchema, 'game-info.schema.json');
     }
 
     /**

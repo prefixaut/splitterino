@@ -20,7 +20,7 @@ import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
 import SettingsEditorSidebarComponent from './components/settings-editor-sidebar.vue';
 import SettingsEditorComponent from './components/settings-editor.vue';
-import SplitsEditorComponent from './components/splits-editor.vue';
+import SegmentsEditorComponent from './components/segments-editor.vue';
 import SplitsComponent from './components/splits.vue';
 import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
@@ -84,7 +84,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-keybinding-editor', KeybindingEditorComponent);
     Vue.component('spl-keybinding-input', KeybindingInputComponent);
     Vue.component('spl-number-input', NumberInputComponent);
-    Vue.component('spl-splits-editor', SplitsEditorComponent);
+    Vue.component('spl-segments-editor', SegmentsEditorComponent);
     Vue.component('spl-splits', SplitsComponent);
     Vue.component('spl-text-input', TextInputComponent);
     Vue.component('spl-time-input', TimeInputComponent);

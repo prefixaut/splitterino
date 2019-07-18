@@ -26,7 +26,7 @@ import { set } from 'lodash';
 
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
 import { GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH, GETTER_SETTING_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
-import { IOService } from '../services/io.service';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -45,7 +45,7 @@ export default class SettingsEditorComponent extends Vue {
 
     public created() {
         this.$eventHub.$on('settings-changed', () => {
-            this.$services.get(IOService).saveSettingsToFile(this.$store);
+            this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
         });
     }
 

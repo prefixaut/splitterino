@@ -31,6 +31,7 @@ export const ID_MUTATION_SET_PREVIOUS_IGT_TIME = 'setPreviousIGTTime';
 export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
 export const ID_MUTATION_SAVING_RESET = 'savingReset';
 
+export const ID_ACTION_SET_TIMING = 'setTiming';
 export const ID_ACTION_START = 'start';
 export const ID_ACTION_SPLIT = 'split';
 export const ID_ACTION_SKIP = 'skip';
@@ -59,6 +60,7 @@ export const MUTATION_SET_PREVIOUS_IGT_TIME = `${MODULE_PATH}/${ID_MUTATION_SET_
 export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
 export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
 
+export const ACTION_SET_TIMING = `${MODULE_PATH}/${ID_ACTION_SET_TIMING}`;
 export const ACTION_START = `${MODULE_PATH}/${ID_ACTION_START}`;
 export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
 export const ACTION_SKIP = `${MODULE_PATH}/${ID_ACTION_SKIP}`;
@@ -266,6 +268,20 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
         },
         actions: {
+            async [ID_ACTION_SET_TIMING](
+                context: ActionContext<SplitsState, RootState>,
+                timing: TimingMethod
+            ): Promise<boolean> {
+                switch (timing) {
+                    case TimingMethod.IGT:
+                    case TimingMethod.RTA:
+                        context.commit(ID_MUTATION_SET_TIMING, timing);
+
+                        return true;
+                    default:
+                        return false;
+                }
+            },
             async [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;

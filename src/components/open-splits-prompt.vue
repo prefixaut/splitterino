@@ -17,14 +17,14 @@ import { Component, Vue } from 'vue-property-decorator';
 import { basename } from 'path';
 
 import { RootState } from '../store/states/root.state';
-import { IOService } from '../services/io.service';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 @Component({ name: 'spl-open-splits-prompt' })
 export default class OpenSplitsPromptComponent extends Vue {
     // TODO: Export to interface
     public recentSplitFiles: { path: string; name: string }[] = [];
-    private ioService = this.$services.get(IOService);
+    private ioService = this.$services.get(IO_SERVICE_TOKEN);
     private electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
 
     public created() {
