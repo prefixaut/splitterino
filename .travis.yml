@@ -33,8 +33,6 @@ before_script:
   fi
 
 script:
-  - yarn test:unit:coverage
-  - rm -rf dist_electron
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       docker run --rm \
@@ -43,9 +41,10 @@ script:
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         electronuserland/builder:wine \
-        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn build --publish=never --linux --win"
+        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn test:unit:coverage && yarn build --publish=never --linux --win"
     else
       yarn
+      yarn test:unit:coverage
       yarn build --publish=never
     fi
 
