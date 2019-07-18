@@ -1,18 +1,27 @@
 import { BrowserWindow, FileFilter } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { Inject, Injectable } from 'lightweight-di';
+import { set } from 'lodash';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
-import { set } from 'lodash';
 
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
-import { RootState } from '../store/states/root.state';
-import { Logger } from '../utils/logger';
-import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
-import { Settings } from '../store/states/settings.state';
+import { Splits } from '../common/interfaces/splits';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
+import {
+    ACTION_SET_CATEGORY,
+    ACTION_SET_GAME_NAME,
+    ACTION_SET_LANGUAGE,
+    ACTION_SET_PLATFORM,
+    ACTION_SET_REGION,
+} from '../store/modules/game-info.module';
+import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
+import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_CURRENT_OPEN_FILE, ACTION_SET_TIMING } from '../store/modules/splits.module';
+import { GameInfoState } from '../store/states/game-info.state';
+import { RootState } from '../store/states/root.state';
+import { Settings } from '../store/states/settings.state';
+import { Logger } from '../utils/logger';
 
 @Injectable
 export class IOService {
@@ -21,7 +30,7 @@ export class IOService {
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
     ) {
         const isDevelopment = process.env.NODE_ENV !== 'production';
-        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'ressources' : '..');
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'resources' : '..');
     }
 
     protected readonly assetDir;
@@ -46,7 +55,7 @@ export class IOService {
 
         let content: string = null;
         try {
-            content =  readFileSync(filePath, { encoding: 'utf8' });
+            content = readFileSync(filePath, { encoding: 'utf8' });
         } catch (e) {
             Logger.error({
                 msg: 'Error loading file',
@@ -149,7 +158,7 @@ export class IOService {
                     msg: 'Loading splits from File',
                     file: filePath
                 });
-                const loaded = this.loadJSONFromFile(filePath, '');
+                const loaded: { splits: Splits } = this.loadJSONFromFile(filePath, '');
 
                 if (loaded == null || typeof loaded !== 'object' || !this.validator.isSplits(loaded.splits)) {
                     Logger.error({
@@ -160,11 +169,35 @@ export class IOService {
                     throw new Error(`The loaded splits from "${filePath}" are not valid Splits!`);
                 }
 
+                const defaultGameInfo: GameInfoState = {
+                    name: null,
+                    category: null,
+                    language: null,
+                    platform: null,
+                    region: null,
+                };
+
+                if (loaded.splits.game == null) {
+                    loaded.splits.game = defaultGameInfo;
+                } else {
+                    loaded.splits.game = {
+                        ...defaultGameInfo,
+                        ...loaded.splits.game,
+                    };
+                }
+
                 Logger.debug('Loaded splits are valid! Applying to store ...');
 
-                await store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath);
-
-                return store.dispatch(ACTION_SET_ALL_SEGMENTS, [...loaded.splits.segments]);
+                return Promise.all([
+                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loaded.splits.segments),
+                    store.dispatch(ACTION_SET_TIMING, loaded.splits.timing),
+                    store.dispatch(ACTION_SET_CURRENT_OPEN_FILE, filePath),
+                    store.dispatch(ACTION_SET_GAME_NAME, loaded.splits.game.name),
+                    store.dispatch(ACTION_SET_CATEGORY, loaded.splits.game.category),
+                    store.dispatch(ACTION_SET_LANGUAGE, loaded.splits.game.language),
+                    store.dispatch(ACTION_SET_PLATFORM, loaded.splits.game.platform),
+                    store.dispatch(ACTION_SET_REGION, loaded.splits.game.region),
+                ]).then(values => values[0]);
             })
             .catch(error => {
                 Logger.error({
@@ -206,10 +239,12 @@ export class IOService {
                 file: fileToSave
             });
 
-            const fileContent = {
+            const fileContent: { splits: Splits } = {
                 // TODO: Saving the $schema definition as well?
                 splits: {
                     segments: store.state.splitterino.splits.segments,
+                    timing: store.state.splitterino.splits.timing,
+                    game: store.state.splitterino.gameInfo,
                 }
             };
 
@@ -267,12 +302,16 @@ export class IOService {
     ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (splitsFile != null && typeof splitsFile === 'string') {
-            await this.loadSplitsFromFileToStore(store, splitsFile);
-        } else if (appSettings != null && typeof appSettings === 'object') {
-            if (typeof appSettings.lastOpenedSplitsFile === 'string') {
-                await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+        try {
+            if (splitsFile != null && typeof splitsFile === 'string') {
+                await this.loadSplitsFromFileToStore(store, splitsFile);
+            } else if (appSettings != null && typeof appSettings === 'object') {
+                if (typeof appSettings.lastOpenedSplitsFile === 'string') {
+                    await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+                }
             }
+        } catch (error) {
+            // Ignore errors, logs are already printed
         }
 
         return appSettings || { windowOptions: {} };

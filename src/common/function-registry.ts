@@ -28,6 +28,7 @@ import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
+import { RootState } from '../store/states/root.state';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -75,7 +76,24 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
     /*
      * Split Actions
      */
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, () => {
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, async params => {
+        const store = params.vNode.context.$store;
+        const state: RootState = store.state;
+        const status = state.splitterino.timer.status;
+
+        if (status === TimerStatus.FINISHED) {
+            // Finish the run when attempting to edit the splits
+            await store.dispatch(ACTION_SPLIT);
+        } else if (status !== TimerStatus.STOPPED) {
+            electron.showMessageDialog(electron.getCurrentWindow(), {
+                title: 'Editing not allowed',
+                message: 'You can not edit the Splits while there is a run going!',
+                type: 'error',
+            });
+
+            return;
+        }
+
         electron.newWindow(
             {
                 title: 'Splits Editor',

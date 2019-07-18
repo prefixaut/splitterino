@@ -4,8 +4,17 @@
     "title": "Splits",
     "description": "Format in which splits are getting saved to file or should be transmitted",
     "type": "object",
-    "required": ["segments"],
+    "required": ["game", "timing", "segments"],
     "properties": {
+        "game": {
+            "description": "The Game Information about this run",
+            "$ref": "game-info.schema.json"
+        },
+        "startDelay": {
+            "description": "The delay of how much time the timer should wait when starting a new run in milliseconds",
+            "type": "integer",
+            "minimum": 0
+        },
         "segments": {
             "description": "An array of segments which are associated to these splits",
             "type": "array",

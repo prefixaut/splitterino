@@ -32,6 +32,8 @@ export const ID_MUTATION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_MUTATION_DISCARDING_RESET = 'discardingReset';
 export const ID_MUTATION_SAVING_RESET = 'savingReset';
 
+export const ID_ACTION_SET_TIMING = 'setTiming';
+export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 export const ID_ACTION_START = 'start';
 export const ID_ACTION_SPLIT = 'split';
 export const ID_ACTION_SKIP = 'skip';
@@ -42,7 +44,6 @@ export const ID_ACTION_RESET = 'reset';
 export const ID_ACTION_DISCARDING_RESET = 'discardingReset';
 export const ID_ACTION_SAVING_RESET = 'savingReset';
 export const ID_ACTION_SET_ALL_SEGMENTS = 'setAllSegments';
-export const ID_ACTION_SET_CURRENT_OPEN_FILE = 'setCurrentOpenFile';
 
 export const GETTER_PREVIOUS_SEGMENT = `${MODULE_PATH}/${ID_GETTER_PREVIOUS_SEGMENT}`;
 export const GETTER_CURRENT_SEGMENT = `${MODULE_PATH}/${ID_GETTER_CURRENT_SEGMENT}`;
@@ -62,6 +63,8 @@ export const MUTATION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_MUTATION_SET_
 export const MUTATION_DISCARDING_RESET = `${MODULE_PATH}/${ID_MUTATION_DISCARDING_RESET}`;
 export const MUTATION_SAVING_RESET = `${MODULE_PATH}/${ID_MUTATION_SAVING_RESET}`;
 
+export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
+export const ACTION_SET_TIMING = `${MODULE_PATH}/${ID_ACTION_SET_TIMING}`;
 export const ACTION_START = `${MODULE_PATH}/${ID_ACTION_START}`;
 export const ACTION_SPLIT = `${MODULE_PATH}/${ID_ACTION_SPLIT}`;
 export const ACTION_SKIP = `${MODULE_PATH}/${ID_ACTION_SKIP}`;
@@ -72,7 +75,6 @@ export const ACTION_RESET = `${MODULE_PATH}/${ID_ACTION_RESET}`;
 export const ACTION_DISCARDING_RESET = `${MODULE_PATH}/${ID_ACTION_DISCARDING_RESET}`;
 export const ACTION_SAVING_RESET = `${MODULE_PATH}/${ID_ACTION_SAVING_RESET}`;
 export const ACTION_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SEGMENTS}`;
-export const ACTION_SET_CURRENT_OPEN_FILE = `${MODULE_PATH}/${ID_ACTION_SET_CURRENT_OPEN_FILE}`;
 
 export interface PausePayload {
     igtOnly: boolean;
@@ -274,6 +276,26 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
         },
         actions: {
+            async [ID_ACTION_SET_CURRENT_OPEN_FILE](
+                context: ActionContext<SplitsState, RootState>,
+                filePath: string
+            ) {
+                context.commit(ID_MUTATION_SET_CURRENT_OPEN_FILE, filePath);
+            },
+            async [ID_ACTION_SET_TIMING](
+                context: ActionContext<SplitsState, RootState>,
+                timing: TimingMethod
+            ): Promise<boolean> {
+                switch (timing) {
+                    case TimingMethod.IGT:
+                    case TimingMethod.RTA:
+                        context.commit(ID_MUTATION_SET_TIMING, timing);
+
+                        return true;
+                    default:
+                        return false;
+                }
+            },
             async [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
@@ -665,12 +687,6 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 return true;
             },
-            async [ID_ACTION_SET_CURRENT_OPEN_FILE](
-                context: ActionContext<SplitsState, RootState>,
-                filePath: string
-            ) {
-                context.commit(ID_MUTATION_SET_CURRENT_OPEN_FILE, filePath);
-            }
         }
     };
 }
