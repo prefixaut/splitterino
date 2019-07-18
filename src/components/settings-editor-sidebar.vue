@@ -47,20 +47,26 @@ export default class SettingsEditorSidebarComponent extends Vue {
 
 .settings-editor-sidebar {
     .module-wrapper {
-        & > .module-label {
-            color: red;
+        margin-top: 10px;
+
+        .module-label {
+            padding: 5px 10px 5px 20px;
+            color: $spl-color-off-white;
         }
 
-        & > .namespace-wrapper {
-            color: lightblue;
+        .namespace-label {
+            padding: 5px 10px 5px 35px;
+            color: $spl-color-off-white;
+        }
 
-            & > .namespace-label {
-               margin-left: 20px;
-            }
+        .group-wrapper {
+            padding: 5px 10px 5px 50px;
+            color: $spl-color-off-white;
 
-            & > .group-wrapper {
-                margin-left: 40px;
-                color: greenyellow;
+            &:hover {
+                background: $spl-color-dark-gray;
+                transition: 200ms;
+                cursor: pointer;
             }
         }
     }

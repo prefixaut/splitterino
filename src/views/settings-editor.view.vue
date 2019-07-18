@@ -12,3 +12,9 @@ export default class SettingsEditorView extends Vue {
 }
 </script>
 
+<style lang="scss" scoped>
+.settings-editor-view {
+    height: 100%;
+}
+</style>
+

@@ -27,14 +27,14 @@ export const ACTION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_ACTION_SET_ALL_SETTI
 export const ACTION_BULK_SET_SETTINGS = `${MODULE_PATH}/${ID_ACTION_BULK_SET_SETTINGS}`;
 
 export interface SettingsPayload {
-    settings: Settings;
+    values: Settings;
 }
 
 export function getSettingsStoreModule(): Module<SettingsState, RootState> {
     return {
         namespaced: true,
         state: {
-            settings: {
+            values: {
                 splitterino: {
                     core: {},
                 },
@@ -98,21 +98,21 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
             },
             [ID_GETTER_GET_SETTING_BY_PATH](state: SettingsState) {
                 return (path: string | string[], defaultValue: any = null) => {
-                    return get(state.settings, path, defaultValue);
+                    return get(state.values, path, defaultValue);
                 };
             },
         },
         mutations: {
             [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, payload: SettingsPayload) {
-                state.settings = payload.settings;
+                state.values = payload.values;
             },
             [ID_MUTATION_BULK_SET_SETTINGS](state: SettingsState, payload: SettingsPayload) {
-                const newSettings = merge({}, state.settings, payload.settings);
-                const oldSettings = cloneDeep(state.settings);
+                const newSettings = merge({}, state.values, payload.values);
+                const oldSettings = cloneDeep(state.values);
 
-                state.settings = newSettings;
+                state.values = newSettings;
 
-                for (const [moduleKey, modulE] of Object.entries(payload.settings)) {
+                for (const [moduleKey, modulE] of Object.entries(payload.values)) {
                     for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
                         for (const [groupKey, group] of Object.entries(namespacE)) {
                             for (const [settingKey, setting] of Object.entries(group)) {

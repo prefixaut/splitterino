@@ -36,6 +36,7 @@ export default class TitleBarComponent extends Vue {
         this.maximizable = this.windowRef.isMaximizable();
         this.closeable = this.windowRef.isClosable();
         this.maximized = this.windowRef.isMaximized();
+        this.title = this.windowRef.getTitle() || 'Splitterino';
 
         this.windowRef.on('maximize', () => {
             this.maximized = true;

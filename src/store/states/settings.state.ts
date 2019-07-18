@@ -3,7 +3,7 @@ export interface SettingsState {
     /** Configuration for settings */
     configuration: SettingsConfiguration;
     /** Settings object with current values */
-    settings: Settings;
+    values: Settings;
 }
 
 export interface Settings {
