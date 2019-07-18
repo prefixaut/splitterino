@@ -30,7 +30,7 @@ export class IOService {
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
     ) {
         const isDevelopment = process.env.NODE_ENV !== 'production';
-        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'ressources' : '..');
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'resources' : '..');
     }
 
     protected readonly assetDir;
@@ -302,12 +302,16 @@ export class IOService {
     ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName) as ApplicationSettings;
 
-        if (splitsFile != null && typeof splitsFile === 'string') {
-            await this.loadSplitsFromFileToStore(store, splitsFile);
-        } else if (appSettings != null && typeof appSettings === 'object') {
-            if (typeof appSettings.lastOpenedSplitsFile === 'string') {
-                await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+        try {
+            if (splitsFile != null && typeof splitsFile === 'string') {
+                await this.loadSplitsFromFileToStore(store, splitsFile);
+            } else if (appSettings != null && typeof appSettings === 'object') {
+                if (typeof appSettings.lastOpenedSplitsFile === 'string') {
+                    await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFile);
+                }
             }
+        } catch (error) {
+            // Ignore errors, logs are already printed
         }
 
         return appSettings || { windowOptions: {} };

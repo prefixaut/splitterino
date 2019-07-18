@@ -73,15 +73,21 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
 
-import { Segment, isSegment } from '../common/interfaces/segment';
+import { Segment } from '../common/interfaces/segment';
+import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../services/validator.service';
 
 @Component({ name: 'spl-segments-editor' })
 export default class SegmentsEditorComponent extends Vue {
 
-    @Prop()
-    public value: Segment[] = [];
+    @Prop({ default: () => [] })
+    public value: Segment[];
 
     public segments: Segment[] = [];
+    private validator: ValidatorService = null;
+
+    created() {
+        this.validator = this.$services.get(VALIDATOR_SERVICE_TOKEN);
+    }
 
     addSegment() {
         this.segments.push({
@@ -105,7 +111,8 @@ export default class SegmentsEditorComponent extends Vue {
         if (!Array.isArray(newValue)) {
             newValue = [newValue];
         }
-        this.segments = cloneDeep(newValue).map(tmp => cloneDeep(tmp)).filter(tmp => isSegment(tmp));
+        this.segments = cloneDeep(newValue)
+            .filter(tmp => this.validator.isSegment(tmp));
     }
 }
 </script>

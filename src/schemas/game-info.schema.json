@@ -4,7 +4,7 @@
     "title": "Game Information",
     "description": "Detailed information about the Game and run details",
     "type": "object",
-    "required": ["name", "catergory"],
+    "required": ["name", "category"],
     "properties": {
         "name": {
             "description": "Name of the Game that is currently being run",
