@@ -1,7 +1,7 @@
-![Travis](https://img.shields.io/travis/prefixaut/splitterino.svg?style=for-the-badge)
-![Coverage](https://img.shields.io/codeclimate/coverage/prefixaut/splitterino.svg?style=for-the-badge)
-![Release Version](https://img.shields.io/github/release/prefixaut/splitterino.svg?style=for-the-badge)
-![License](https://img.shields.io/github/license/prefixaut/splitterino.svg?style=for-the-badge)
+[![Travis](https://img.shields.io/travis/prefixaut/splitterino.svg?style=for-the-badge)](https://travis-ci.org/prefixaut/splitterino)
+[![Coverage](https://img.shields.io/codeclimate/coverage/prefixaut/splitterino.svg?style=for-the-badge)](https://codeclimate.com/github/prefixaut/splitterino)
+[![Release Version](https://img.shields.io/github/release/prefixaut/splitterino.svg?style=for-the-badge)](https://github.com/prefixaut/splitterino/releases)
+[![License](https://img.shields.io/github/license/prefixaut/splitterino.svg?style=for-the-badge)](https://github.com/prefixaut/splitterino/blob/master/LICENSE)
 
 # Splitterino
 
