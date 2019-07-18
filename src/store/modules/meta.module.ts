@@ -1,8 +1,8 @@
 import { Module, ActionContext } from 'vuex';
-import { pull } from 'lodash';
+import { remove } from 'lodash';
 
 import { RootState } from '../states/root.state';
-import { MetaState } from '../states/meta.state';
+import { MetaState, RecentlyOpenedSplit } from '../states/meta.state';
 
 const MODULE_PATH = 'splitterino/meta';
 
@@ -27,11 +27,11 @@ export function getMetaModule(): Module<MetaState, RootState> {
         getters: {
         },
         mutations: {
-            [ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES](state: MetaState, lastOpenedSplitsFiles: string[]) {
+            [ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES](state: MetaState, lastOpenedSplitsFiles: RecentlyOpenedSplit[]) {
                 state.lastOpenedSplitsFiles = lastOpenedSplitsFiles;
             },
-            [ID_MUTATION_ADD_OPENED_SPLITS_FILE](state: MetaState, splitsFile: string) {
-                pull(state.lastOpenedSplitsFiles, splitsFile);
+            [ID_MUTATION_ADD_OPENED_SPLITS_FILE](state: MetaState, splitsFile: RecentlyOpenedSplit) {
+                remove(state.lastOpenedSplitsFiles, file => file.path === splitsFile.path);
 
                 state.lastOpenedSplitsFiles.unshift(splitsFile);
 
@@ -43,7 +43,7 @@ export function getMetaModule(): Module<MetaState, RootState> {
         actions: {
             [ID_ACTION_SET_LAST_OPENED_SPLITS_FILES](
                 context: ActionContext<MetaState, RootState>,
-                lastOpenedSplitsFiles: string[]
+                lastOpenedSplitsFiles: RecentlyOpenedSplit[]
             ) {
                 context.commit(ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
             },
@@ -51,7 +51,16 @@ export function getMetaModule(): Module<MetaState, RootState> {
                 context: ActionContext<MetaState, RootState>,
                 splitsFile: string
             ) {
-                context.commit(ID_MUTATION_ADD_OPENED_SPLITS_FILE, splitsFile);
+                const gameInfoState = context.rootState.splitterino.gameInfo;
+
+                const recentlyOpenedSplit: RecentlyOpenedSplit = {
+                    path: splitsFile,
+                    category: gameInfoState.category,
+                    gameName: gameInfoState.name,
+                    platform: gameInfoState.platform,
+                    region: gameInfoState.region
+                };
+                context.commit(ID_MUTATION_ADD_OPENED_SPLITS_FILE, recentlyOpenedSplit);
             },
         },
     };
