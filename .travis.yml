@@ -33,26 +33,12 @@ script:
         -v ~/.cache/electron:/root/.cache/electron \
         -v ~/.cache/electron-builder:/root/.cache/electron-builder \
         electronuserland/builder:wine \
-        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn test:unit:coverage && yarn build --publish=never --linux --win"
+        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn test:unit && yarn build --publish=onTag --linux --win"
     else
       yarn
-      yarn test:unit:coverage
-      yarn build --publish=never
+      yarn test:unit
+      yarn build --publish=onTag --mac
     fi
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
-
-deploy:
-- provider: releases
-  api_key:
-    secure: hwbcVPXYtau3D+UkEvYw46iLd4/+f3Fnh1KWQCo7GY3Z7QY3irp92rhn3W/7xFgSog5f4t1U/TrlzHSrwftTnH9I3xIw3Dth9Rky65OGE31f88b6FnZDZozAkoX3xWykQ8Lq09YmPSAGO8yJTGOwvnRHUUHFDADvYQIE9HQoIlXKebzzg/MDrgezSRhzzWU+vC34rM9rl3MrU4ejemO0BaIxYI6YGFxTHxCYfdbfkg7KFr12kbWBGOpDs66CYR8ucIew44wz4zXTAka5QHJT1JMB21G1Ddk7W2vc6WpxHtCJX1NS1zyBwfAwudR/ZKz9iHGpBnFOxUZo5Agl2xayGhz1HbItayE6nK6vAGkO4StBs7gkIgoltSvRIMx5Kx3iF575Is5qOtYYNjkrkdVxQfkdKdTTTV1efRxYM9cmmmIBiVqI0s/YR1NeksHNayp8B7+fa91YPZwinBPzP7+t6qhViqZh83TOkmFCKGtSWBttoYTYnMLWMO5HVX2OrQDaJy4JbZKmzDp/iL9Qi1JpsVyH02ObUtaPXDI3enQ7/CY/p1WlJF4CkepKIa4DXFBAUuV1k0piHrZ/GF7lQUxENCr5X4flkcuaAfZ1YqntsodmXxQ767gziFg1UE/RigNxMlaf6vvA6C5Hb9MBPZAkbN0FqZj1EL91QCGkFWv+k4s=
-  file_glob: true
-  file:
-    - dist_electron/*.exe
-    - dist_electron/*.dmg
-    - dist_electron/*.AppImage
-  skip_cleanup: true
-  on:
-    tags: true
-    condition: "$TRAVIS_TAG == release-*"

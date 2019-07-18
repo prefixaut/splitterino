@@ -22,7 +22,17 @@ module.exports = {
                         ext: "splits",
                         description: "Splits file"
                     }
-                ]
+                ],
+                build: {
+                    appId: "moe.prefixaut.splitterino",
+                    productName: "Splitterino",
+                    publish: {
+                        provider: "github",
+                        owner: "prefixaut",
+                        repo: "splitterino",
+                        releaseType: "release"
+                    },
+                }
             }
         }
     }
