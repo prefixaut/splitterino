@@ -77,7 +77,8 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
             {
                 title: 'Splits Editor',
                 parent: electron.getCurrentWindow(),
-                modal: true
+                modal: true,
+                minimizable: false
             },
             '/splits-editor'
         );
@@ -94,9 +95,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                     width: 440,
                     height: 250,
                     modal: true,
-                    webPreferences: {
-                        nodeIntegration: true
-                    }
+                    minimizable: false
                 },
                 '/open-splits'
             );
@@ -116,7 +115,8 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 parent: electron.getCurrentWindow(),
                 width: 650,
                 height: 310,
-                modal: true
+                modal: true,
+                minimizable: false
             },
             '/settings'
         );
@@ -132,7 +132,8 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                 parent: electron.getCurrentWindow(),
                 width: 650,
                 height: 310,
-                modal: true
+                modal: true,
+                minimizable: false
             },
             '/keybindings'
         );

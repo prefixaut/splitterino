@@ -20,6 +20,7 @@ import { ContextMenuItem } from '../common/interfaces/context-menu-item';
 import { ElectronInterface } from '../common/interfaces/electron';
 import { Logger } from '../utils/logger';
 import { join } from 'path';
+import { isDevelopment } from '../utils/is-development';
 
 @Injectable
 export class ElectronService implements ElectronInterface {
@@ -132,8 +133,6 @@ export class ElectronService implements ElectronInterface {
     }
 
     public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-
         Logger.debug({
             msg: 'Creating new window ...',
             settings,
@@ -146,12 +145,12 @@ export class ElectronService implements ElectronInterface {
                 ...settings,
             });
 
-            if (isDevelopment) {
+            if (isDevelopment()) {
                 win.webContents.openDevTools({ mode: 'detach' });
             }
 
             let url: string;
-            if (isDevelopment) {
+            if (isDevelopment()) {
                 url = this.url + route;
             } else {
                 url = formatUrl({

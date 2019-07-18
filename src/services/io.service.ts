@@ -25,6 +25,7 @@ import { ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_SPLITS_FILE } fr
 import { Logger } from '../utils/logger';
 import { RecentlyOpenedSplit } from '../store/states/meta.state';
 import { applicationSettingsDefaults } from '../common/application-settings-defaults';
+import { isDevelopment } from '../utils/is-development';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -34,8 +35,7 @@ export class IOService {
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
     ) {
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-        this.assetDir = join(this.electron.getAppPath(), isDevelopment ? 'resources' : '..');
+        this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
     }
 
     protected readonly assetDir;
