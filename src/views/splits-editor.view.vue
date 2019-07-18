@@ -98,7 +98,7 @@ export default class SplitsEditorView extends Vue {
             this.loadDataFromStore();
             this.$services.get(IO_SERVICE_TOKEN).saveSplitsFromStoreToFile(
                 this.$store,
-                (this.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles[0]
+                (this.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles[0].path
             );
         });
     }

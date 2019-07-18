@@ -23,6 +23,7 @@ import { RootState } from '../store/states/root.state';
 import { Settings } from '../store/states/settings.state';
 import { ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
 import { Logger } from '../utils/logger';
+import { RecentlyOpenedSplit } from '../store/states/meta.state';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -154,7 +155,7 @@ export class IOService {
                 if (filePath == null) {
                     Logger.debug('No files selected, skipping loading');
 
-                    return Promise.resolve(false);
+                    return false;
                 }
 
                 Logger.debug({
@@ -169,7 +170,7 @@ export class IOService {
                         file: filePath,
                     });
 
-                    throw new Error(`The loaded splits from "${filePath}" are not valid Splits!`);
+                    return false;
                 }
 
                 const defaultGameInfo: GameInfoState = {
@@ -191,16 +192,19 @@ export class IOService {
 
                 Logger.debug('Loaded splits are valid! Applying to store ...');
 
-                return Promise.all([
+                const values = await Promise.all([
                     store.dispatch(ACTION_SET_ALL_SEGMENTS, loaded.splits.segments),
                     store.dispatch(ACTION_SET_TIMING, loaded.splits.timing),
-                    store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath),
                     store.dispatch(ACTION_SET_GAME_NAME, loaded.splits.game.name),
                     store.dispatch(ACTION_SET_CATEGORY, loaded.splits.game.category),
                     store.dispatch(ACTION_SET_LANGUAGE, loaded.splits.game.language),
                     store.dispatch(ACTION_SET_PLATFORM, loaded.splits.game.platform),
                     store.dispatch(ACTION_SET_REGION, loaded.splits.game.region),
-                ]).then(values => values[0]);
+                ]);
+
+                await store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath);
+
+                return values[0];
             })
             .catch(error => {
                 Logger.error({
@@ -309,15 +313,17 @@ export class IOService {
             if (splitsFile != null && typeof splitsFile === 'string') {
                 await this.loadSplitsFromFileToStore(store, splitsFile);
             } else if (appSettings != null && typeof appSettings === 'object') {
-                let lastOpenedSplitsFiles: string[] = [];
+                let lastOpenedSplitsFiles: RecentlyOpenedSplit[] = [];
                 if (Array.isArray(appSettings.lastOpenedSplitsFiles)) {
-                    lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles.filter(file => existsSync(file));
+                    lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles
+                        .filter(recentSplit => existsSync(recentSplit.path));
 
                     if (
-                        typeof lastOpenedSplitsFiles[0] === 'string'
+                        lastOpenedSplitsFiles[0] != null &&
+                        typeof lastOpenedSplitsFiles[0].path === 'string'
                     ) {
-                        await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, appSettings.lastOpenedSplitsFiles);
-                        await this.loadSplitsFromFileToStore(store, appSettings.lastOpenedSplitsFiles[0]);
+                        await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
+                        await this.loadSplitsFromFileToStore(store, lastOpenedSplitsFiles[0].path);
                     }
                 }
             }
