@@ -1,0 +1,55 @@
+language: node_js
+
+node_js:
+- node
+- lts/*
+
+matrix:
+  include:
+  - os: linux
+  - os: osx
+    before_install:
+    - brew update > /dev/null
+  - os: windows
+
+env:
+  - CXX=g++-4.8
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+
+cache: yarn
+
+notifications:
+  email: false
+
+install: yarn
+
+before_script:
+- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+- chmod +x ./cc-test-reporter
+- "./cc-test-reporter before-build"
+
+script:
+- yarn test:unit:coverage
+- rm -rf dist_electron
+- yarn build
+
+after_script:
+- "./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT"
+
+deploy:
+- provider: releases
+  api_key:
+    secure: hwbcVPXYtau3D+UkEvYw46iLd4/+f3Fnh1KWQCo7GY3Z7QY3irp92rhn3W/7xFgSog5f4t1U/TrlzHSrwftTnH9I3xIw3Dth9Rky65OGE31f88b6FnZDZozAkoX3xWykQ8Lq09YmPSAGO8yJTGOwvnRHUUHFDADvYQIE9HQoIlXKebzzg/MDrgezSRhzzWU+vC34rM9rl3MrU4ejemO0BaIxYI6YGFxTHxCYfdbfkg7KFr12kbWBGOpDs66CYR8ucIew44wz4zXTAka5QHJT1JMB21G1Ddk7W2vc6WpxHtCJX1NS1zyBwfAwudR/ZKz9iHGpBnFOxUZo5Agl2xayGhz1HbItayE6nK6vAGkO4StBs7gkIgoltSvRIMx5Kx3iF575Is5qOtYYNjkrkdVxQfkdKdTTTV1efRxYM9cmmmIBiVqI0s/YR1NeksHNayp8B7+fa91YPZwinBPzP7+t6qhViqZh83TOkmFCKGtSWBttoYTYnMLWMO5HVX2OrQDaJy4JbZKmzDp/iL9Qi1JpsVyH02ObUtaPXDI3enQ7/CY/p1WlJF4CkepKIa4DXFBAUuV1k0piHrZ/GF7lQUxENCr5X4flkcuaAfZ1YqntsodmXxQ767gziFg1UE/RigNxMlaf6vvA6C5Hb9MBPZAkbN0FqZj1EL91QCGkFWv+k4s=
+  file_glob: true
+  file:
+    - dist_electron/**/*
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: "$TRAVIS_TAG == release-*"

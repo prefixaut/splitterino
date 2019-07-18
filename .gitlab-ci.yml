@@ -7,8 +7,7 @@ image: node:latest
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
 cache:
   paths:
-  - node_modules/
-  - .yarn
+  - node_modules
 
 stages:
   - test
@@ -18,6 +17,13 @@ unit_test:
   tags:
    - node
   script:
-   - yarn config set cache-folder .yarn
    - yarn
    - yarn test:unit:coverage
+
+build:
+  stage: test
+  tags:
+   - node
+  script:
+  - yarn
+  - yarn build
