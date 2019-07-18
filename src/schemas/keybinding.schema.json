@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "keybinding",
+    "title": "Keybinding",
+    "description": "Configuration to register a keybinding",
+    "type": "object",
+    "required": ["accelerator", "keys", "global", "action"],
+    "properties": {
+        "accelerator": {
+            "type": "string"
+        },
+        "keys": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "global": {
+            "type": "boolean"
+        },
+        "action": {
+            "type": "string"
+        }
+    }
+}
