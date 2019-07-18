@@ -24,14 +24,6 @@ cache:
 notifications:
   email: false
 
-before_script:
-- |
-  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-    chmod +x ./cc-test-reporter
-    ./cc-test-reporter before-build
-  fi
-
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
@@ -47,12 +39,6 @@ script:
       yarn test:unit:coverage
       yarn build --publish=never
     fi
-
-after_script:
-- |
-  if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-  fi
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
