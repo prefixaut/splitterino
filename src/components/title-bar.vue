@@ -85,7 +85,6 @@ export default class TitleBarComponent extends Vue {
         -webkit-app-region: drag;
         display: inline-block;
         flex: 1 1 auto;
-        text-align: center;
         padding: 1px 15px;
         font-size: 12px;
     }
