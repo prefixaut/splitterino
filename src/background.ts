@@ -50,6 +50,14 @@ process.on('unhandledRejection', (reason, promise) => {
         require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
     }
 
+    // prevent second instance from starting
+    const singleInstanceLock = app.requestSingleInstanceLock();
+    if (!singleInstanceLock) {
+        app.quit();
+
+        return;
+    }
+
     // Standard scheme must be registered before the app is ready
     // protocol.registerStandardSchemes(['app'], { secure: true });
 
@@ -187,6 +195,17 @@ process.on('unhandledRejection', (reason, promise) => {
 
         return window;
     }
+
+    // catch event in case second instance is started
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // ? Maybe handle file associations when instance alreay exists
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) {
+                mainWindow.restore();
+            }
+            mainWindow.focus();
+        }
+    });
 
     // quit application when all windows are closed
     app.on('window-all-closed', () => {
