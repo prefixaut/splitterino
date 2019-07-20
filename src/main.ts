@@ -30,8 +30,9 @@ import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
-import { Logger } from './utils/logger';
+import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
+import { ipcRenderer } from 'electron';
 
 process.on('uncaughtException', error => {
     Logger.fatal({
@@ -58,7 +59,8 @@ process.on('unhandledRejection', (reason, promise) => {
     const injector = createInjector();
 
     // Initialize the logger
-    Logger.initialize(injector);
+    const logLevel = ipcRenderer.sendSync('spl-log-level') as LogLevel;
+    Logger.initialize(injector, logLevel);
 
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
 

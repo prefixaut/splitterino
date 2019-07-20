@@ -4,6 +4,18 @@ import pino from 'pino';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 
 /**
+ * Enum to map log levels
+ */
+export enum LogLevel {
+    TRACE = 'trace',
+    DEBUG = 'debug',
+    INFO = 'info',
+    WARN = 'warn',
+    ERROR = 'error',
+    FATAL = 'fatal'
+}
+
+/**
  * Wrapper Class to nearly log all messages from Splitterino
  * and Plugins in one centralized and unified way.
  *
@@ -38,14 +50,13 @@ export class Logger {
         return data;
     }
 
-    public static initialize(injector: Injector) {
+    public static initialize(injector: Injector, logLevel: LogLevel) {
         if (this.isInitialized) {
             return;
         }
 
-        // TODO: Set level via cli flag
         this.logHandlers.push(pino({
-            level: 'debug',
+            level: logLevel,
             base: null,
             prettyPrint: {
                 colorize: true,

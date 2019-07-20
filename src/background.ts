@@ -1,5 +1,5 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMessageEvent, WebContents } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
@@ -13,9 +13,10 @@ import { getStoreConfig } from './store';
 import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { RootState } from './store/states/root.state';
+import { parseArguments } from './utils/arguments';
+import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { isDevelopment } from './utils/is-development';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -35,6 +36,7 @@ process.on('uncaughtException', (error: Error) => {
     process.exit(1);
 });
 
+// handle unhandled rejections in main thread
 process.on('unhandledRejection', (reason, promise) => {
     Logger.fatal({
         msg: 'There was an unhandled Rejection in the background process!',
@@ -76,13 +78,16 @@ process.on('unhandledRejection', (reason, promise) => {
     /** Instance of an injector with resolved services */
     const injector = createInjector();
 
+    /** Parsed command line arguments */
+    const args = parseArguments();
+
     // Initialize the logger
-    Logger.initialize(injector);
+    Logger.initialize(injector, args.logLevel);
 
     // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IO_SERVICE_TOKEN);
     const logFile = join(io.getAssetDirectory(), 'application.log');
-    Logger.registerHandler(pino.destination(logFile), { level: 'trace' });
+    Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
 
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
@@ -108,19 +113,16 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
-    let splitsFile: string;
-    if (!isDevelopment()) {
-        splitsFile = process.argv[1];
-    }
-
-    const appSettings = await io.loadApplicationSettingsFromFile(store, splitsFile);
+    // load application settings
+    const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
+    // load user settings
     await io.loadSettingsFromFileToStore(store);
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
 
     // Listener to transfer the current state of the store
-    ipcMain.on('vuex-connect', event => {
+    ipcMain.on('vuex-connect', (event: IpcMessageEvent) => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
         Logger.debug(`vuex-connect: ${windowId}`);
 
@@ -128,7 +130,8 @@ process.on('unhandledRejection', (reason, promise) => {
         event.returnValue = store.state;
     });
 
-    ipcMain.on('vuex-disconnect', event => {
+    // handle store disconnect on window close
+    ipcMain.on('vuex-disconnect', (event: IpcMessageEvent) => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
         Logger.debug(`vuex-disconnect ${windowId}`);
 
@@ -136,7 +139,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // Listener to perform a delegate mutation on the main store
-    ipcMain.on('vuex-dispatch', async (event, { type, payload, options }) => {
+    ipcMain.on('vuex-dispatch', async (event: IpcMessageEvent, { type, payload, options }) => {
         Logger.debug({
             msg: 'vuex-dispatch',
             type,
@@ -153,8 +156,14 @@ process.on('unhandledRejection', (reason, promise) => {
         }
     });
 
+    // call handlers to log from render process
     ipcMain.on('spl-log', (_, level: string, data: object) => {
         Logger._logToHandlers(level, data);
+    });
+
+    // callback to get log level from arguments
+    ipcMain.on('spl-log-level', (event: IpcMessageEvent) => {
+        event.returnValue = args.logLevel;
     });
 
     function createMainWindow() {
@@ -178,10 +187,12 @@ process.on('unhandledRejection', (reason, promise) => {
             );
         }
 
+        // save app settings before main window close
         window.on('close', () => {
             io.saveApplicationSettingsToFile(mainWindow, store);
         });
 
+        // free window variable after close to avoid usage afterwards
         window.on('closed', () => {
             mainWindow = null;
         });
