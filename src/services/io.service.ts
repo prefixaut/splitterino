@@ -1,10 +1,11 @@
-import { BrowserWindow, FileFilter, app } from 'electron';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
+import { BrowserWindow, FileFilter } from 'electron';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { Inject, Injectable, InjectionToken } from 'lightweight-di';
-import { set, merge } from 'lodash';
+import { cloneDeep, merge, set } from 'lodash';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
 
+import { applicationSettingsDefaults } from '../common/application-settings-defaults';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { Splits } from '../common/interfaces/splits';
@@ -16,16 +17,17 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION,
 } from '../store/modules/game-info.module';
+import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES } from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
+import { RecentlyOpenedSplit } from '../store/states/meta.state';
 import { RootState } from '../store/states/root.state';
 import { Settings } from '../store/states/settings.state';
-import { ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
-import { Logger } from '../utils/logger';
-import { RecentlyOpenedSplit } from '../store/states/meta.state';
-import { applicationSettingsDefaults } from '../common/application-settings-defaults';
+import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
+import { Logger } from '../utils/logger';
+import { TimingMethod } from '../common/interfaces/segment';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -65,7 +67,7 @@ export class IOService {
             Logger.warn({
                 msg: 'Could not load file',
                 file: filePath,
-                error: e
+                error: e,
             });
         }
 
@@ -87,7 +89,7 @@ export class IOService {
                 Logger.error({
                     msg: 'Error while creating directory structure',
                     directory: dirname(filePath),
-                    error: e
+                    error: e,
                 });
 
                 return false;
@@ -100,7 +102,7 @@ export class IOService {
             Logger.error({
                 msg: 'Error while writing file',
                 file: filePath,
-                error: e
+                error: e,
             });
 
             return false;
@@ -119,7 +121,7 @@ export class IOService {
             Logger.warn({
                 msg: 'Could not parse JSON from file',
                 string: loadedFile,
-                error: e
+                error: e,
             });
         }
 
@@ -161,7 +163,7 @@ export class IOService {
 
                 Logger.debug({
                     msg: 'Loading splits from File',
-                    file: filePath
+                    file: filePath,
                 });
                 const loaded: { splits: Splits } = this.loadJSONFromFile(filePath, '');
 
@@ -218,12 +220,14 @@ export class IOService {
             });
     }
 
-    // TODO: Add documentation
-    public saveSplitsFromStoreToFile(
-        store: Store<RootState>,
-        file?: string,
-        window?: BrowserWindow
-    ): Promise<boolean> {
+    /**
+     * Saves the splits from the store into a file.
+     *
+     * @param store The Store-Instance to get the data from
+     * @param file The File where the splits should be saved to. When left empty, it'll prompt the user to pick a file.
+     * @param window The window to use as parent. Defaults to the main window.
+     */
+    public saveSplitsFromStoreToFile(store: Store<RootState>, file?: string, window?: BrowserWindow): Promise<boolean> {
         let fileSelect: Promise<string>;
         if (file != null) {
             Logger.debug({
@@ -244,16 +248,25 @@ export class IOService {
 
             Logger.debug({
                 msg: 'Saving Splits to the File',
-                file: fileToSave
+                file: fileToSave,
+            });
+
+            const gameInfo = store.state.splitterino.gameInfo;
+            Object.keys(gameInfo).forEach(key => {
+                if (gameInfo[key] == null) {
+                    delete gameInfo[key];
+                }
             });
 
             const fileContent: { splits: Splits } = {
                 // TODO: Saving the $schema definition as well?
                 splits: {
-                    segments: store.state.splitterino.splits.segments,
-                    timing: store.state.splitterino.splits.timing,
-                    game: store.state.splitterino.gameInfo,
-                }
+                    segments: cloneDeep(store.state.splitterino.splits.segments).map(segment =>
+                        asSaveableSegment(segment)
+                    ),
+                    timing: store.state.splitterino.splits.timing || TimingMethod.RTA,
+                    game: gameInfo,
+                },
             };
 
             return this.saveJSONToFile(fileToSave, fileContent, '');
@@ -268,30 +281,36 @@ export class IOService {
     public askUserToOpenSplitsFile(): Promise<string> {
         Logger.debug('Asking user to select a Splits-File ...');
 
-        return this.electron.showOpenDialog(this.electron.getCurrentWindow(), {
-            title: 'Load Splits',
-            filters: [IOService.SPLITS_FILE_FILTER],
-            properties: ['openFile'],
-        }).then(filePaths => {
-            let singlePath: string;
-            if (Array.isArray(filePaths)) {
-                singlePath = filePaths.length === 0 ? null : filePaths[0];
-            } else if (filePaths === 'string') {
-                singlePath = filePaths;
-            } else {
-                singlePath = null;
-            }
+        return this.electron
+            .showOpenDialog(this.electron.getCurrentWindow(), {
+                title: 'Load Splits',
+                filters: [IOService.SPLITS_FILE_FILTER],
+                properties: ['openFile'],
+            })
+            .then(filePaths => {
+                let singlePath: string;
+                if (Array.isArray(filePaths)) {
+                    singlePath = filePaths.length === 0 ? null : filePaths[0];
+                } else if (filePaths === 'string') {
+                    singlePath = filePaths;
+                } else {
+                    singlePath = null;
+                }
 
-            Logger.debug({
-                msg: 'User has selected Splits-File',
-                file: singlePath,
+                Logger.debug({
+                    msg: 'User has selected Splits-File',
+                    file: singlePath,
+                });
+
+                return singlePath;
             });
-
-            return singlePath;
-        });
     }
 
-    // TODO: Add documentation
+    /**
+     * Helper function to ask the user to where the splits should be saved to.
+     *
+     * @param window The window which should be used as parent window. Default to main window.
+     */
     public askUserToSaveSplitsFile(window?: BrowserWindow): Promise<string> {
         return this.electron.showSaveDialog(window || this.electron.getCurrentWindow(), {
             title: 'Save Splits',
@@ -315,8 +334,9 @@ export class IOService {
             } else if (this.validator.isApplicationSettings(appSettings)) {
                 let lastOpenedSplitsFiles: RecentlyOpenedSplit[] = [];
                 if (appSettings.lastOpenedSplitsFiles != null) {
-                    lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles
-                        .filter(recentSplit => existsSync(recentSplit.path));
+                    lastOpenedSplitsFiles = appSettings.lastOpenedSplitsFiles.filter(recentSplit =>
+                        existsSync(recentSplit.path)
+                    );
 
                     if (lastOpenedSplitsFiles.length > 0) {
                         await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
@@ -347,7 +367,7 @@ export class IOService {
                 width: windowSize[0],
                 height: windowSize[1],
                 x: windowPos[0],
-                y: windowPos[1]
+                y: windowPos[1],
             },
             lastOpenedSplitsFiles,
             keybindings,
@@ -392,9 +412,9 @@ export class IOService {
         const loadedSettings = this.loadJSONFromFile(this.settingsFileName);
         const parsedSettings: Settings = {
             splitterino: {
-                core: {}
+                core: {},
             },
-            plugins: {}
+            plugins: {},
         };
 
         if (loadedSettings != null) {

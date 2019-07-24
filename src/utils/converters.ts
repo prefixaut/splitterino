@@ -1,3 +1,5 @@
+import { Segment } from '../common/interfaces/segment';
+
 export function convertToBoolean(
     value: any,
     defaultValue: boolean = false
@@ -44,4 +46,22 @@ export function convertToNumber(
 
 export function asCleanNumber(value: number, cleanValue: number = 0) {
     return (isNaN(value) || !isFinite(value)) ? cleanValue : value;
+}
+
+export function asSaveableSegment(segment: Segment): any {
+    const out: any = {
+        id: segment.id,
+        name: segment.name,
+        passed: !!segment.passed,
+        skipped: !!segment.skipped,
+    };
+
+    if (segment.personalBest != null) {
+        out.personalBest = segment.personalBest;
+    }
+    if (segment.overallBest != null) {
+        out.overallBest = segment.overallBest;
+    }
+
+    return out;
 }
