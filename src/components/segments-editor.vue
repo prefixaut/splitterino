@@ -37,17 +37,13 @@
                         <p>OB</p>
                     </td>
                     <td class="personal-best">
-                        <spl-time-input v-model="segment.personalBest" @change="segmentChanged()" />
+                        <spl-time-input v-model="segment.personalBest[timing].rawTime" @change="segmentChanged()" />
                     </td>
                     <td class="overall-best">
-                        <spl-time-input v-model="segment.overallBest" @change="segmentChanged()" />
+                        <spl-time-input v-model="segment.overallBest[timing].rawTime" @change="segmentChanged()" />
                     </td>
                     <td class="manage">
-                        <button
-                            class="remove-segment"
-                            title="Remove Segment"
-                            @click="removeSegment(index)"
-                        >
+                        <button class="remove-segment" title="Remove Segment" @click="removeSegment(index)">
                             <fa-icon icon="trash-alt" />
                         </button>
                     </td>
@@ -70,17 +66,46 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { namespace } from 'vuex-class';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
 
-import { Segment } from '../common/interfaces/segment';
+import { Segment, TimingMethod } from '../common/interfaces/segment';
 import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../services/validator.service';
+
+const splits = namespace('splitterino/splits');
+const defaultSplit = {
+    name: '',
+    personalBest: {
+        igt: {
+            pauseTime: 0,
+            rawTime: 0,
+        },
+        rta: {
+            pauseTime: 0,
+            rawTime: 0,
+        }
+    },
+    overallBest: {
+        igt: {
+            pauseTime: 0,
+            rawTime: 0,
+        },
+        rta: {
+            pauseTime: 0,
+            rawTime: 0,
+        }
+    },
+};
 
 @Component({ name: 'spl-segments-editor' })
 export default class SegmentsEditorComponent extends Vue {
 
     @Prop({ default: () => [] })
     public value: Segment[];
+
+    @splits.State('timing')
+    public timing: TimingMethod;
 
     public segments: Segment[] = [];
     private validator: ValidatorService = null;
@@ -92,7 +117,7 @@ export default class SegmentsEditorComponent extends Vue {
     addSegment() {
         this.segments.push({
             id: uuid(),
-            name: '',
+            ...defaultSplit,
         });
         this.segmentChanged();
     }
@@ -111,8 +136,10 @@ export default class SegmentsEditorComponent extends Vue {
         if (!Array.isArray(newValue)) {
             newValue = [newValue];
         }
-        this.segments = cloneDeep(newValue)
-            .filter(tmp => this.validator.isSegment(tmp));
+        this.segments = cloneDeep(newValue).map(value => ({
+            ...defaultSplit,
+            ...value,
+        })).filter(tmp => this.validator.isSegment(tmp));
     }
 }
 </script>

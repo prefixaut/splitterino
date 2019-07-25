@@ -37,6 +37,7 @@ import {
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {
@@ -53,8 +54,18 @@ export default class SplitsEditorView extends Vue {
         region: null,
     };
 
+    created() {
+        // Disable the bindings while in the editor
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, true);
+    }
+
     mounted() {
         this.loadDataFromStore();
+    }
+
+    beforeDestroy() {
+        // Enable the bindings again, as the editor is getting removed
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, false);
     }
 
     loadDataFromStore() {
@@ -96,10 +107,15 @@ export default class SplitsEditorView extends Vue {
             this.$store.dispatch(ACTION_SET_REGION, this.gameInfo.region),
         ]).then(() => {
             this.loadDataFromStore();
-            this.$services.get(IO_SERVICE_TOKEN).saveSplitsFromStoreToFile(
+
+            return this.$services.get(IO_SERVICE_TOKEN).saveSplitsFromStoreToFile(
                 this.$store,
                 (this.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles[0].path
             );
+        }).then(didSave => {
+            if (didSave) {
+                window.close();
+            }
         });
     }
 }

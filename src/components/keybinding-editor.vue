@@ -2,7 +2,7 @@
     <div class="keybinding-editor">
         <p>
             Edit the Keybindings for your actions!<br/>
-            <small><b>Note</b>: Keybindings will not trigger while this editor is open</small>
+            <small><b>Note</b>: Keybindings will not trigger when a modal is opened!</small>
         </p>
         <div class="bindings">
             <div class="binding" v-for="(binding, index) of bindings" :key="index">
@@ -40,7 +40,7 @@ import { Vue, Component } from 'vue-property-decorator';
 import { cloneDeep } from 'lodash';
 
 import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../common/interfaces/keybindings';
-import { ACTION_SET_BINDINGS, ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
+import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
@@ -48,17 +48,10 @@ export default class KeybindingEditorComponent extends Vue {
     public bindings: ActionKeybinding[] = [];
 
     created() {
-        // Disable the bindings while in the editor
-        this.$store.dispatch(ACTION_DISABLE_BINDINGS, true);
         this.actions = cloneDeep(
             this.$store.state.splitterino.keybindings.actions || []);
         this.bindings = cloneDeep(
             this.$store.state.splitterino.keybindings.bindings || []);
-    }
-
-    beforeDestroy() {
-        // Enable the bindings again, as the editor is getting removed
-        this.$store.dispatch(ACTION_DISABLE_BINDINGS, false);
     }
 
     getBindingAction(index: number) {
@@ -101,7 +94,11 @@ export default class KeybindingEditorComponent extends Vue {
     saveBindings() {
         const filteredBindings = this.bindings.slice(0).filter(isActionKeybinding);
         if (filteredBindings.length > 0) {
-            this.$store.dispatch(ACTION_SET_BINDINGS, filteredBindings);
+            this.$store.dispatch(ACTION_SET_BINDINGS, filteredBindings).then(didSave => {
+            if (didSave) {
+                window.close();
+            }
+        });
         }
     }
 }
