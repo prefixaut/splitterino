@@ -37,6 +37,7 @@ import {
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {
@@ -53,8 +54,18 @@ export default class SplitsEditorView extends Vue {
         region: null,
     };
 
+    created() {
+        // Disable the bindings while in the editor
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, true);
+    }
+
     mounted() {
         this.loadDataFromStore();
+    }
+
+    beforeDestroy() {
+        // Enable the bindings again, as the editor is getting removed
+        this.$store.dispatch(ACTION_DISABLE_BINDINGS, false);
     }
 
     loadDataFromStore() {
@@ -86,21 +97,27 @@ export default class SplitsEditorView extends Vue {
         this.gameInfo = gameInfo;
     }
 
-    saveSplits() {
-        Promise.all([
+    async saveSplits() {
+        await Promise.all([
             this.$store.dispatch(ACTION_SET_ALL_SEGMENTS, this.segments),
             this.$store.dispatch(ACTION_SET_GAME_NAME, this.gameInfo.name),
             this.$store.dispatch(ACTION_SET_CATEGORY, this.gameInfo.category),
             this.$store.dispatch(ACTION_SET_LANGUAGE, this.gameInfo.language),
             this.$store.dispatch(ACTION_SET_PLATFORM, this.gameInfo.platform),
             this.$store.dispatch(ACTION_SET_REGION, this.gameInfo.region),
-        ]).then(() => {
-            this.loadDataFromStore();
-            this.$services.get(IO_SERVICE_TOKEN).saveSplitsFromStoreToFile(
-                this.$store,
-                (this.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles[0].path
-            );
-        });
+        ]);
+
+        this.loadDataFromStore();
+        const meta = (this.$store.state as RootState).splitterino.meta;
+        let path: string = null;
+        if (meta.lastOpenedSplitsFiles != null && meta.lastOpenedSplitsFiles.length > 0) {
+            path = meta.lastOpenedSplitsFiles[0].path;
+        }
+        const didSave = await this.$services.get(IO_SERVICE_TOKEN)
+            .saveSplitsFromStoreToFile(this.$store, path);
+        if (didSave) {
+            window.close();
+        }
     }
 }
 </script>
