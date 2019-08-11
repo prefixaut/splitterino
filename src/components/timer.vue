@@ -104,3 +104,11 @@ export default class TimerComponent extends Vue {
     }
 }
 </script>
+
+<style lang="scss" scoped>
+.timer {
+    .content {
+        font-size: 1.75rem;
+    }
+}
+</style>
