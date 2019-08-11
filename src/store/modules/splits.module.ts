@@ -1,17 +1,17 @@
 import { Injector } from 'lightweight-di';
-import { ActionContext, Module } from 'vuex';
 import { cloneDeep } from 'lodash';
+import { ActionContext, Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { Segment, SegmentTime, TimingMethod } from '../../common/interfaces/segment';
+import { getFinalTime, Segment, TimingMethod } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
+import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 import { asCleanNumber } from '../../utils/converters';
 import { Logger } from '../../utils/logger';
 import { now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
-import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 
 export const MODULE_PATH = 'splitterino/splits';
 
@@ -238,8 +238,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 state.segments.forEach(segment => {
                     if (segment.passed) {
-                        newRTATotal += segment.currentTime.rta.rawTime;
-                        newIGTTotal += segment.currentTime.igt.rawTime;
+                        newRTATotal += getFinalTime(segment.currentTime.rta);
+                        newIGTTotal += getFinalTime(segment.currentTime.igt);
                     }
                 });
 
@@ -326,8 +326,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             async [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const currentTime = now();
 
-                const { status, igtPauseTotal, pauseTotal } = context.rootState.splitterino.timer;
-                switch (status) {
+                const currentStatus = context.rootState.splitterino.timer.status;
+                switch (currentStatus) {
                     case TimerStatus.FINISHED:
                         // Cleanup via reset
                         context.dispatch(ID_ACTION_RESET);
@@ -346,30 +346,29 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 // to modify it.
                 const currentSegment: Segment = cloneDeep(context.state.segments[currentIndex]);
                 const rawTime = currentTime - currentSegment.startTime;
-                const newTime: SegmentTime = {
-                    igt: {
-                        rawTime,
-                        pauseTime: igtPauseTotal,
-                    },
-                    rta: {
-                        rawTime,
-                        pauseTime: pauseTotal,
-                    },
-                };
+
+                if (currentSegment.currentTime == null) {
+                    currentSegment.currentTime = {
+                        rta: { rawTime: rawTime, pauseTime: 0 },
+                        igt: { rawTime: rawTime, pauseTime: 0 },
+                    };
+                } else {
+                    currentSegment.currentTime.rta.rawTime = rawTime;
+                    currentSegment.currentTime.igt.rawTime = rawTime;
+                }
 
                 currentSegment.passed = true;
                 currentSegment.skipped = false;
-                currentSegment.currentTime = newTime;
 
                 if (
                     currentSegment.overallBest == null ||
                     currentSegment.overallBest[timing] == null ||
                     currentSegment.overallBest[timing].rawTime === 0 ||
-                    currentSegment.overallBest[timing].rawTime > newTime[timing].rawTime
+                    currentSegment.overallBest[timing].rawTime > rawTime
                 ) {
                     // Backup of the previous time to be able to revert it
                     currentSegment.previousOverallBest = currentSegment.overallBest;
-                    currentSegment.overallBest = newTime;
+                    currentSegment.overallBest = currentSegment.currentTime;
                     currentSegment.hasNewOverallBest = true;
                 } else {
                     currentSegment.hasNewOverallBest = false;
@@ -577,8 +576,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalRTATime += segment.currentTime.rta.rawTime;
-                        totalIGTTime += segment.currentTime.igt.rawTime;
+                        totalRTATime += getFinalTime(segment.currentTime.rta);
+                        totalIGTTime += getFinalTime(segment.currentTime.igt);
                     }
                 });
 
