@@ -1,5 +1,6 @@
 import { Injector } from 'lightweight-di';
 import { ActionContext, Module } from 'vuex';
+import { cloneDeep } from 'lodash';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
 import { Segment, SegmentTime, TimingMethod } from '../../common/interfaces/segment';
@@ -343,9 +344,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 // Get the segment and spread it to create a copy to be able
                 // to modify it.
-                const currentSegment: Segment = {
-                    ...context.state.segments[currentIndex]
-                };
+                const currentSegment: Segment = cloneDeep(context.state.segments[currentIndex]);
                 const rawTime = currentTime - currentSegment.startTime;
                 const newTime: SegmentTime = {
                     igt: {
@@ -394,7 +393,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 const next: Segment = {
-                    ...context.state.segments[currentIndex + 1],
+                    ...cloneDeep(context.state.segments[currentIndex + 1]),
                     startTime: currentTime,
                     currentTime: null,
                     passed: false,
@@ -421,7 +420,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 const segment: Segment = {
-                    ...context.state.segments[index],
+                    ...cloneDeep(context.state.segments[index]),
                     currentTime: null,
                     skipped: true,
                     passed: false
@@ -441,7 +440,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
 
                 const segment: Segment = {
-                    ...context.state.segments[index],
+                    ...cloneDeep(context.state.segments[index]),
                     startTime: -1,
                     passed: false,
                     skipped: false
@@ -454,9 +453,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 }
                 segment.previousOverallBest = null;
 
-                const previous: Segment = {
-                    ...context.state.segments[index - 1],
-                };
+                const previous: Segment = cloneDeep(context.state.segments[index - 1]);
 
                 if (segment.currentTime != null) {
                     if (!previous.passed || previous.currentTime == null) {
@@ -527,7 +524,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 const index = context.state.current;
                 // Create a copy of the segment so it can be safely edited
-                const segment: Segment = { ...context.state.segments[index] };
+                const segment: Segment = cloneDeep(context.state.segments[index]);
 
                 if (segment.currentTime == null) {
                     segment.currentTime = {
