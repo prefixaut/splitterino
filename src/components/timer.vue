@@ -70,16 +70,23 @@ export default class TimerComponent extends Vue {
     }
 
     public statusChange(forceUpdate: boolean = false) {
-        if (this.status === TimerStatus.RUNNING) {
-            this.intervalId = window.setInterval(() => {
-                this.calculateCurrentTime();
-            }, 1);
+        if (
+            this.status === TimerStatus.RUNNING ||
+            (!this.igt && this.status === TimerStatus.RUNNING_IGT_PAUSE)
+        ) {
+            // It's already running, no need to start another interval
+            if (this.intervalId < 0) {
+                this.intervalId = window.setInterval(() => {
+                    this.calculateCurrentTime();
+                }, 1);
+            }
 
             return;
         }
 
         if (this.intervalId > -1) {
             window.clearInterval(this.intervalId);
+            this.intervalId = -1;
         }
 
         if (this.status === TimerStatus.FINISHED) {
