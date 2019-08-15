@@ -7,6 +7,8 @@ import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
+import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor } from '../utils/windows';
+import { Store } from 'vuex';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -56,49 +58,13 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      * Split Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, async params => {
-        const store = params.vNode.context.$store;
-        const state: RootState = store.state;
-        const status = state.splitterino.timer.status;
-
-        if (status === TimerStatus.FINISHED) {
-            // Finish the run when attempting to edit the splits
-            await store.dispatch(ACTION_SPLIT);
-        } else if (status !== TimerStatus.STOPPED) {
-            electron.showMessageDialog(electron.getCurrentWindow(), {
-                title: 'Editing not allowed',
-                message: 'You can not edit the Splits while there is a run going!',
-                type: 'error',
-            });
-
-            return;
-        }
-
-        electron.newWindow(
-            {
-                title: 'Splits Editor',
-                parent: electron.getCurrentWindow(),
-                modal: true,
-                minimizable: false
-            },
-            '/splits-editor'
-        );
+        openSplitsEditor(electron, params.vNode.context.$store as Store<RootState>);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
         if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles.length === 0) {
             io.loadSplitsFromFileToStore(params.vNode.context.$store);
         } else {
-            electron.newWindow(
-                {
-                    title: 'Open Splits File',
-                    parent: electron.getCurrentWindow(),
-                    resizable: false,
-                    width: 440,
-                    height: 250,
-                    modal: true,
-                    minimizable: false
-                },
-                '/open-splits'
-            );
+            openSplitsBrowser(electron);
         }
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
@@ -109,34 +75,14 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      * Setting Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SETTINGS_OPEN, () => {
-        electron.newWindow(
-            {
-                title: 'Settings',
-                parent: electron.getCurrentWindow(),
-                width: 650,
-                height: 310,
-                modal: true,
-                minimizable: false
-            },
-            '/settings'
-        );
+        openSettingsEditor(electron);
     });
 
     /*
      * Keybinding Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
-        electron.newWindow(
-            {
-                title: 'Keybindings',
-                parent: electron.getCurrentWindow(),
-                width: 650,
-                height: 310,
-                modal: true,
-                minimizable: false
-            },
-            '/keybindings'
-        );
+        openKeybindgsEditor(electron);
     });
 }
 
