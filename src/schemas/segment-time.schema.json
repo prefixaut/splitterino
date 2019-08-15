@@ -4,6 +4,7 @@
     "title": "Segment Time",
     "description": "Format for detailed times with multiple timing methods",
     "type": "object",
+    "required": ["igt", "rta"],
     "properties": {
         "igt": {
             "description": "The detailed time of a Segment for IGT",

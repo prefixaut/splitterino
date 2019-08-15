@@ -2,9 +2,10 @@ import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../src/common/interfaces/electron';
-import { IOService, IO_SERVICE_TOKEN } from '../src/services/io.service';
+import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
+import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
+import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';
 import { ElectronMockService } from './mocks/electron-mock.service';
-import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../src/services/validator.service';
 
 // Initialize the Dependency-Injection
 export function createMockInjector(): Injector {
@@ -12,6 +13,7 @@ export function createMockInjector(): Injector {
         // Overrides/custom providers
         { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronMockService },
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
+        { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: IO_SERVICE_TOKEN, useClass: IOService }
     ]);
 }
