@@ -39,7 +39,7 @@
         </template>
 
         <div v-else class="empty">
-            <p>No splits are currently set! Please load some or create new ones!</p>
+            <slot></slot>
         </div>
     </div>
 </template>
@@ -340,7 +340,7 @@ export default class SplitsComponent extends Vue {
 
             .comparisons {
                 display: flex;
-                font-size: 0.85rem;
+                font-size: 0.75rem;
                 flex-wrap: wrap;
                 flex: 1 1 auto;
 
@@ -349,7 +349,7 @@ export default class SplitsComponent extends Vue {
                     display: block;
                     flex: 1 1 100%;
                     text-align: right;
-                    margin: 3px 0;
+                    margin: 2px 0;
                 }
             }
 

@@ -12,7 +12,7 @@
         },
         "startDelay": {
             "description": "The delay of how much time the timer should wait when starting a new run in milliseconds",
-            "type": "integer",
+            "type": ["integer","null"],
             "minimum": 0
         },
         "segments": {

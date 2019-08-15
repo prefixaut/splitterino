@@ -8,7 +8,9 @@ import { Store } from 'vuex';
 import { applicationSettingsDefaults } from '../common/application-settings-defaults';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
+import { TimingMethod } from '../common/interfaces/segment';
 import { Splits } from '../common/interfaces/splits';
+import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../common/interfaces/splits-file';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
     ACTION_SET_CATEGORY,
@@ -27,7 +29,7 @@ import { Settings } from '../store/states/settings.state';
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
-import { TimingMethod } from '../common/interfaces/segment';
+import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -35,7 +37,8 @@ export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 export class IOService {
     constructor(
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
-        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService
+        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
+        @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
     }
@@ -165,9 +168,14 @@ export class IOService {
                     msg: 'Loading splits from File',
                     file: filePath,
                 });
-                const loaded: { splits: Splits } = this.loadJSONFromFile(filePath, '');
+                const loadedJSON: any = this.loadJSONFromFile(filePath, '');
+                let loadedSplits: SplitsFile;
 
-                if (loaded == null || typeof loaded !== 'object' || !this.validator.isSplits(loaded.splits)) {
+                if (loadedJSON != null && typeof loadedJSON === 'object' && typeof loadedJSON.version === 'string') {
+                    loadedSplits = this.transformer.upgradeSplitsFile(loadedJSON, loadedJSON.version);
+                }
+
+                if (loadedSplits == null || !this.validator.isSplits(loadedSplits.splits)) {
                     Logger.error({
                         msg: 'The loaded splits are not valid Splits!',
                         file: filePath,
@@ -184,25 +192,25 @@ export class IOService {
                     region: null,
                 };
 
-                if (loaded.splits.game == null) {
-                    loaded.splits.game = defaultGameInfo;
+                if (loadedSplits.splits.game == null) {
+                    loadedSplits.splits.game = defaultGameInfo;
                 } else {
-                    loaded.splits.game = {
+                    loadedSplits.splits.game = {
                         ...defaultGameInfo,
-                        ...loaded.splits.game,
+                        ...loadedSplits.splits.game,
                     };
                 }
 
                 Logger.debug('Loaded splits are valid! Applying to store ...');
 
                 const values = await Promise.all([
-                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loaded.splits.segments),
-                    store.dispatch(ACTION_SET_TIMING, loaded.splits.timing),
-                    store.dispatch(ACTION_SET_GAME_NAME, loaded.splits.game.name),
-                    store.dispatch(ACTION_SET_CATEGORY, loaded.splits.game.category),
-                    store.dispatch(ACTION_SET_LANGUAGE, loaded.splits.game.language),
-                    store.dispatch(ACTION_SET_PLATFORM, loaded.splits.game.platform),
-                    store.dispatch(ACTION_SET_REGION, loaded.splits.game.region),
+                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loadedSplits.splits.segments),
+                    store.dispatch(ACTION_SET_TIMING, loadedSplits.splits.timing),
+                    store.dispatch(ACTION_SET_GAME_NAME, loadedSplits.splits.game.name),
+                    store.dispatch(ACTION_SET_CATEGORY, loadedSplits.splits.game.category),
+                    store.dispatch(ACTION_SET_LANGUAGE, loadedSplits.splits.game.language),
+                    store.dispatch(ACTION_SET_PLATFORM, loadedSplits.splits.game.platform),
+                    store.dispatch(ACTION_SET_REGION, loadedSplits.splits.game.region),
                 ]);
 
                 await store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath);
@@ -213,6 +221,7 @@ export class IOService {
                 Logger.error({
                     msg: 'Error while loading splits',
                     error,
+                    errorMessage: error.message,
                 });
 
                 // Rethrow the error to be processed
@@ -258,8 +267,8 @@ export class IOService {
                 }
             });
 
-            const fileContent: { splits: Splits } = {
-                // TODO: Saving the $schema definition as well?
+            const fileContent: SplitsFile = {
+                version: MOST_RECENT_SPLITS_VERSION,
                 splits: {
                     segments: cloneDeep(store.state.splitterino.splits.segments).map(segment =>
                         asSaveableSegment(segment)
@@ -348,7 +357,7 @@ export class IOService {
             // Ignore error since already being logged
         }
 
-        return merge(appSettings, applicationSettingsDefaults);
+        return merge(applicationSettingsDefaults, appSettings);
     }
 
     /**

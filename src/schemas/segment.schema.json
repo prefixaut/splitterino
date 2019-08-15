@@ -17,19 +17,21 @@
         },
         "personalBest": {
             "description": "The time of the personal best in milliseconds",
-            "$ref": "segment-time.schema.json"
+            "$ref": "segment-time.schema.json",
+            "type": ["object", "null"]
         },
         "overallBest": {
             "description": "The time of the overall best in milliseconds",
-            "$ref": "segment-time.schema.json"
+            "$ref": "segment-time.schema.json",
+            "type": ["object", "null"]
         },
         "passed": {
             "description": "If the Segment has been passed successfully",
-            "type": "boolean"
+            "type": ["boolean", "null"]
         },
         "skipped": {
             "description": "If the Segment has been skipped",
-            "type": "boolean"
+            "type": ["boolean", "null"]
         }
     }
 }
