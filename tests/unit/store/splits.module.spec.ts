@@ -4,7 +4,7 @@ import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../../../src/common/interfaces/electron';
-import { Segment, SegmentTime, TimingMethod } from '../../../src/common/interfaces/segment';
+import { Segment, SegmentTime, TimingMethod, getFinalTime } from '../../../src/common/interfaces/segment';
 import { TimerStatus } from '../../../src/common/timer-status';
 import {
     ACTION_DISCARDING_RESET,
@@ -1202,10 +1202,10 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
+                expect(commits[0].payload.segment.personalBest).to.deep.equal(personalBest);
                 expect(commits[0].payload.segment.overallBest.rta.rawTime)
                     .to.be.within(segmentTimeMs, segmentTimeMs + 1);
-                expect(commits[0].payload.segment.previousOverallBest).to.equal(overallBest);
+                expect(commits[0].payload.segment.previousOverallBest).to.deep.equal(overallBest);
             });
 
             it('should not apply overall bests', async () => {
@@ -1280,9 +1280,9 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.personalBest).to.equal(personalBest);
+                expect(commits[0].payload.segment.personalBest).to.deep.equal(personalBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
-                expect(commits[0].payload.segment.overallBest).to.equal(overallBest);
+                expect(commits[0].payload.segment.overallBest).to.deep.equal(overallBest);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
             });
 
@@ -1524,8 +1524,9 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
-                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
-                expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
+                expect(commits[0].payload.segment.personalBest).to.deep.equal(segments[currentIndex].personalBest);
+                expect(commits[0].payload.segment.overallBest)
+                    .to.deep.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
@@ -1604,8 +1605,9 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
-                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
-                expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
+                expect(commits[0].payload.segment.personalBest).to.deep.equal(segments[currentIndex].personalBest);
+                expect(commits[0].payload.segment.overallBest)
+                    .to.deep.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
@@ -1681,8 +1683,9 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
                 expect(commits[0].payload.segment.passed).to.equal(false);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
-                expect(commits[0].payload.segment.personalBest).to.equal(segments[currentIndex].personalBest);
-                expect(commits[0].payload.segment.overallBest).to.equal(segments[currentIndex].previousOverallBest);
+                expect(commits[0].payload.segment.personalBest).to.deep.equal(segments[currentIndex].personalBest);
+                expect(commits[0].payload.segment.overallBest)
+                    .to.deep.equal(segments[currentIndex].previousOverallBest);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 

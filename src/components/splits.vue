@@ -23,15 +23,17 @@
                     ]"
                 >
                     <div class="name">{{ segment.name }}</div>
-                    <div
-                        class="time"
-                        v-show="(status === 'running' && index <= currentSegment) ||
-                            status === 'finished' || status === 'paused' || status === 'running_igt_pause'"
-                    >
+                    <div class="time" v-show="showTime(index)">
                         {{ getSegmentTime(index) | aevum }}
                     </div>
-                    <div class="personal-best">PB: {{ segment.personalBest | time(timing) | aevum }}</div>
-                    <div class="overall-best">OB: {{ segment.overallBest | time(timing) | aevum }}</div>
+                    <div class="comparisons" v-show="showTime(index)">
+                        <div class="personal-best">
+                            {{ getSegmentPersonalBestComparison(index) | aevum }}
+                        </div>
+                        <div class="overall-best">
+                            {{ getSegmentOverallBestComparison(index) | aevum }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -164,6 +166,15 @@ export default class SplitsComponent extends Vue {
         }
     }
 
+    public get showTime() {
+        return (index: number) => {
+            return (
+                (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
+                index <= this.currentSegment
+            ) || this.status === 'finished';
+        };
+    }
+
     public get visibleIndicies(): number[] {
         const current = this.scrollIndex < 0
             ? this.currentSegment < 0 ? 0 : this.currentSegment
@@ -216,6 +227,43 @@ export default class SplitsComponent extends Vue {
         }
 
         return this.currentSegmentTime;
+    }
+
+    public getSegmentPersonalBestComparison(index: number) {
+        const segment = this.segments[index];
+        if (
+            this.status !== TimerStatus.STOPPED &&
+            segment.personalBest != null &&
+            index <= this.currentSegment
+        ) {
+            const personalBestTime = getFinalTime(segment.personalBest[this.timing]);
+            if (index < this.currentSegment) {
+                return getFinalTime(segment.currentTime[this.timing]) - personalBestTime;
+            }
+
+            return this.currentSegmentTime - personalBestTime;
+        }
+
+        return null;
+    }
+
+    public getSegmentOverallBestComparison(index: number) {
+        const segment = this.segments[index];
+
+        if (
+            this.status !== TimerStatus.STOPPED &&
+            segment.overallBest != null &&
+            index <= this.currentSegment
+        ) {
+            const overallBestTime = getFinalTime(segment.overallBest[this.timing]);
+            if (index < this.currentSegment) {
+                return getFinalTime(segment.currentTime[this.timing]) - overallBestTime;
+            }
+
+            return this.currentSegmentTime - overallBestTime;
+        }
+
+        return null;
     }
 
     scrollSplits(event: WheelEvent) {
@@ -290,15 +338,29 @@ export default class SplitsComponent extends Vue {
                 display: flex;
             }
 
-            .personal-best,
-            .overall-best {
-                display: contents;
+            .comparisons {
+                display: flex;
                 font-size: 0.85rem;
+                flex-wrap: wrap;
+                flex: 1 1 auto;
+
+                > * {
+                    font-size: inherit;
+                    display: block;
+                    flex: 1 1 100%;
+                    text-align: right;
+                    margin: 3px 0;
+                }
+            }
+
+            .personal-best::before {
+                content: 'PB: ';
+                display: inline-block;
             }
 
             .overall-best::before {
-                display: block;
-                content: '';
+                content: 'OB: ';
+                display: inline-block;
             }
         }
     }
