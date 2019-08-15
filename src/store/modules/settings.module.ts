@@ -1,14 +1,20 @@
-import { get, set, merge, cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, get, isEqual, merge } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
-import { RootState } from '../states/root.state';
-import { Settings, SettingsState, SettingsConfigurationValue, SettingsConfigurationNamespace } from '../states/settings.state';
+import { CORE_SETTINGS } from '../../common/constants';
 import { eventHub } from '../../utils/event-hub';
+import { RootState } from '../states/root.state';
+import {
+    Settings,
+    SettingsConfigurationNamespace,
+    SettingsConfigurationValue,
+    SettingsState,
+} from '../states/settings.state';
 
 export const MODULE_PATH = 'splitterino/settings';
 
-const ID_GETTER_GET_SETTING_BY_PATH = 'getSettingByPath';
-const ID_GETTER_GET_SETTINGS_CONFIGURATION_VALUES_BY_PATH = 'getSettingsConfigurationValueByPath';
+const ID_GETTER_GET_VALUE_BY_PATH = 'getValueByPath';
+const ID_GETTER_GET_CONFIGURATIONS_BY_PATH = 'getConfigurationsByPath';
 
 const ID_MUTATION_SET_ALL_SETTINGS = 'setAllSettings';
 const ID_MUTATION_BULK_SET_SETTINGS = 'bulkSetSettings';
@@ -16,9 +22,8 @@ const ID_MUTATION_BULK_SET_SETTINGS = 'bulkSetSettings';
 const ID_ACTION_SET_ALL_SETTINGS = 'setAllSettings';
 const ID_ACTION_BULK_SET_SETTINGS = 'bulkSetSettings';
 
-export const GETTER_SETTING_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_SETTING_BY_PATH}`;
-export const GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH =
-    `${MODULE_PATH}/${ID_GETTER_GET_SETTINGS_CONFIGURATION_VALUES_BY_PATH}`;
+export const GETTER_VALUE_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_VALUE_BY_PATH}`;
+export const GETTER_CONFIGURATIONS_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_CONFIGURATIONS_BY_PATH}`;
 
 export const MUTATION_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_MUTATION_SET_ALL_SETTINGS}`;
 export const MUTATION_BULK_SET_SETTINGS = `${MODULE_PATH}/${ID_MUTATION_BULK_SET_SETTINGS}`;
@@ -41,32 +46,12 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
                 plugins: {},
             },
             configuration: {
-                splitterino: [
-                    {
-                        key: 'core',
-                        label: 'Core',
-                        groups: [
-                            {
-                                key: 'test',
-                                label: 'Test',
-                                settings: [
-                                    {
-                                        key: 'mysetting',
-                                        label: 'My Label',
-                                        component: 'spl-text-input',
-                                        componentProps: {},
-                                        defaultValue: 'hello'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ],
+                splitterino: [CORE_SETTINGS],
                 plugins: []
             },
         },
         getters: {
-            [ID_GETTER_GET_SETTINGS_CONFIGURATION_VALUES_BY_PATH](state: SettingsState) {
+            [ID_GETTER_GET_CONFIGURATIONS_BY_PATH](state: SettingsState) {
                 return (path: string): SettingsConfigurationValue[] => {
                     const splitPath = path.split('.');
 
@@ -96,7 +81,7 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
                     return group.settings;
                 };
             },
-            [ID_GETTER_GET_SETTING_BY_PATH](state: SettingsState) {
+            [ID_GETTER_GET_VALUE_BY_PATH](state: SettingsState) {
                 return (path: string | string[], defaultValue: any = null) => {
                     return get(state.values, path, defaultValue);
                 };

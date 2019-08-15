@@ -34,7 +34,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { set, isEqual, merge } from 'lodash';
 
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
-import { GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH, GETTER_SETTING_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
+import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { RootState } from '../store/states/root.state';
 import { createHash } from 'crypto';
@@ -51,7 +51,7 @@ export default class SettingsEditorComponent extends Vue {
     };
 
     public get settingsValue() {
-        return this.$store.getters[GETTER_SETTING_BY_PATH];
+        return this.$store.getters[GETTER_VALUE_BY_PATH];
     }
 
     public get haveSettingsChanged() {
@@ -70,7 +70,7 @@ export default class SettingsEditorComponent extends Vue {
 
     public onGroupSelected(group: string) {
         this.configPath = group;
-        this.activeSettingsConfig = this.$store.getters[GETTER_SETTINGS_CONFIGURATION_VALUES_BY_PATH](group);
+        this.activeSettingsConfig = this.$store.getters[GETTER_CONFIGURATIONS_BY_PATH](group);
     }
 
     public onValueChange(value: any, settingKey: string) {
@@ -78,7 +78,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public applySettings() {
-        this.$store.dispatch(ACTION_BULK_SET_SETTINGS, { settings: this.changesValues });
+        this.$store.dispatch(ACTION_BULK_SET_SETTINGS, { values: this.changesValues });
     }
 }
 </script>

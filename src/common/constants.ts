@@ -1,3 +1,5 @@
+import { SettingsConfigurationNamespace } from '../store/states/settings.state';
+
 /*
  * Context Menu
  */
@@ -20,3 +22,40 @@ export const KEYBINDING_SPLITS_SKIP = 'core.splits.skip';
 export const KEYBINDING_SPLITS_UNDO = 'core.splits.undo';
 export const KEYBINDING_SPLITS_TOGGLE_PAUSE = 'core.splits.toggle-pause';
 export const KEYBINDING_SPLITS_RESET = 'core.splits.reset';
+
+/*
+ * Settings
+ */
+export const CORE_SETTINGS: SettingsConfigurationNamespace = {
+    key: 'core',
+    label: 'Core',
+    groups: [
+        {
+            key: 'splits',
+            label: 'Splits',
+            settings: [
+                {
+                    key: 'pinLastSegment',
+                    label: 'Pin the last Segment',
+                    component: 'spl-checkbox',
+                    componentProps: {},
+                    defaultValue: false,
+                },
+                {
+                    key: 'visibleUpcomingSegments',
+                    label: 'Visible upcoming Segments',
+                    component: 'spl-number-input',
+                    componentProps: {},
+                    defaultValue: 2,
+                },
+                {
+                    key: 'visiblePreviousSegments',
+                    label: 'Visible previous Segments',
+                    component: 'spl-number-input',
+                    componentProps: {},
+                    defaultValue: 1,
+                },
+            ]
+        }
+    ]
+};
