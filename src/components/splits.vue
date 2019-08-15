@@ -23,23 +23,10 @@
                     ]"
                 >
                     <div class="name">{{ segment.name }}</div>
-                    <div
-                        class="time"
-                        v-show="
-                            (
-                                (status === 'running' || status === 'paused' || status === 'running_igt_pause') &&
-                                index <= currentSegment
-                            ) || status === 'finished'
-                        "
-                    >
+                    <div class="time" v-show="showTime(index)">
                         {{ getSegmentTime(index) | aevum }}
                     </div>
-                    <div class="comparisons" v-show="
-                            (
-                                (status === 'running' || status === 'paused' || status === 'running_igt_pause') &&
-                                index <= currentSegment
-                            ) || status === 'finished'
-                        ">
+                    <div class="comparisons" v-show="showTime(index)">
                         <div class="personal-best">
                             {{ getSegmentPersonalBestComparison(index) | aevum }}
                         </div>
@@ -177,6 +164,15 @@ export default class SplitsComponent extends Vue {
                 error,
             });
         }
+    }
+
+    public get showTime() {
+        return (index: number) => {
+            return (
+                (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
+                index <= this.currentSegment
+            ) || this.status === 'finished';
+        };
     }
 
     public get visibleIndicies(): number[] {
