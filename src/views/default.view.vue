@@ -4,7 +4,15 @@
         v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']"
         ref="splitsView"
     >
-        <spl-splits/>
+        <spl-splits>
+            <div class="container">
+                <p>No Splits are currently loaded! Please load some or create new ones</p>
+                <div class="button-wrapper">
+                    <spl-button class="select-button" outline @click="selectSplits()">Select Splits</spl-button>
+                    <spl-button class="create-button" outline @click="editSplits()">Create Splits</spl-button>
+                </div>
+            </div>
+        </spl-splits>
         <div class="container">
             <spl-timer/>
         </div>
@@ -16,6 +24,8 @@ import { Component, Vue } from 'vue-property-decorator';
 import { RootState } from '../store/states/root.state';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
+import { openSplitsBrowser, openSplitsEditor } from '../utils/windows';
+import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
@@ -44,11 +54,28 @@ export default class DefaultView extends Vue {
             });
         }
     }
+
+    selectSplits() {
+        openSplitsBrowser(this.$services.get(ELECTRON_INTERFACE_TOKEN));
+    }
+
+    editSplits() {
+        openSplitsEditor(this.$services.get(ELECTRON_INTERFACE_TOKEN), this.$store);
+    }
 }
 </script>
 
 <style lang="scss" scoped>
 .default-view {
     height: 100%;
+}
+
+.button-wrapper {
+    margin-left: -10px;
+}
+
+.select-button,
+.create-button {
+    margin: 10px;
 }
 </style>
