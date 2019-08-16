@@ -34,6 +34,12 @@
                 }
             }
         },
+        "lastOpenedTemplateFiles": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
         "keybindings": {
             "type": "array",
             "items": {

@@ -5,6 +5,7 @@ import { Aevum } from 'aevum';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
+import VRuntimeTemplate from 'v-runtime-template';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
@@ -73,6 +74,9 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Select
     Vue.component('vue-select', VueSelect);
+
+    // v-runtime-template
+    Vue.component('v-runtime-template', VRuntimeTemplate);
 
     // Register Components
     Vue.component('spl-button', ButtonComponent);

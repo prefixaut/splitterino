@@ -14,6 +14,7 @@ import {
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 import { format as formatUrl } from 'url';
+import { Subject } from 'rxjs';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
@@ -225,5 +226,17 @@ export class ElectronService implements ElectronInterface {
         } else {
             // Do nothing?
         }
+    }
+
+    public ipcReceive(channel: string): Subject<any> {
+        const subject = new Subject<any>();
+
+        if (this.isRenderProcess()) {
+            ipcRenderer.on(channel, (data: any) => {
+                subject.next(data);
+            });
+        }
+
+        return subject;
     }
 }

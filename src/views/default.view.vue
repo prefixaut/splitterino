@@ -1,24 +1,34 @@
 <template>
     <div
         class="default-view"
-        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']"
+        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'templates', 'def']"
         ref="splitsView"
     >
-        <spl-splits
-            :pinLastSegment="pinLastSegment"
-            :visibleUpcomingSegments="visibleUpcomingSegments"
-            :visiblePreviousSegments="visiblePreviousSegments"
-        >
-            <div class="container">
-                <p>No Splits are currently loaded! Please load some or create new ones</p>
-                <div class="button-wrapper">
-                    <spl-button class="select-button" outline @click="selectSplits()">Select Splits</spl-button>
-                    <spl-button class="create-button" outline @click="editSplits()">Create Splits</spl-button>
-                </div>
+        <div v-if="templateLoaded">
+            <div v-if="template != null">
+                <v-runtime-template :template="template"/>
+                <component :is="'style'" type="text/css">
+                    {{ templateStyle }}
+                </component>
             </div>
-        </spl-splits>
-        <div class="container">
-            <spl-timer/>
+            <template v-else>
+                <spl-splits
+                    :pinLastSegment="pinLastSegment"
+                    :visibleUpcomingSegments="visibleUpcomingSegments"
+                    :visiblePreviousSegments="visiblePreviousSegments"
+                >
+                    <div class="container">
+                        <p>No Splits are currently loaded! Please load some or create new ones</p>
+                        <div class="button-wrapper">
+                            <spl-button class="select-button" outline @click="selectSplits()">Select Splits</spl-button>
+                            <spl-button class="create-button" outline @click="editSplits()">Create Splits</spl-button>
+                        </div>
+                    </div>
+                </spl-splits>
+                <div class="container">
+                    <spl-timer/>
+                </div>
+            </template>
         </div>
     </div>
 </template>
@@ -30,12 +40,19 @@ import { RootState } from '../store/states/root.state';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
 import { openSplitsBrowser, openSplitsEditor } from '../utils/windows';
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
+import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
+import { Logger } from '../utils/logger';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
-    private ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
+    public templateLoaded: boolean = false;
+    public template: string = null;
+    public templateStyle: string = null;
+
+    private readonly ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
+    private readonly electron: ElectronInterface = this.$services.get(ELECTRON_INTERFACE_TOKEN);
 
     public get pinLastSegment() {
         return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.pinLastSegment');
@@ -49,7 +66,48 @@ export default class DefaultView extends Vue {
         return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
     }
 
+    public selectSplits() {
+        openSplitsBrowser(this.$services.get(ELECTRON_INTERFACE_TOKEN));
+    }
+
+    public editSplits() {
+        openSplitsEditor(this.$services.get(ELECTRON_INTERFACE_TOKEN), this.$store);
+    }
+
     public mounted() {
+        this.registerDragDropHandler();
+
+        this.loadTemplate();
+        this.$eventHub.$on('load-template', templateFile => {
+            this.loadTemplate(templateFile);
+        });
+    }
+
+    private async loadTemplate(templateFile?: string) {
+        const templateFiles = await this.ioService.loadTemplateFile(this.$store, templateFile);
+
+        if (templateFiles == null) {
+            Logger.warn({
+                msg: 'Could not load template file'
+            });
+
+            // Check if template is already loaded
+            // If not, fall back to default template
+            if (this.template == null) {
+                Logger.warn({
+                    msg: 'Falling back to default template'
+                });
+                this.template = null;
+            }
+        } else {
+            this.template = templateFiles.template;
+            this.templateStyle = templateFiles.styles;
+        }
+
+        this.templateLoaded = true;
+    }
+
+    private registerDragDropHandler() {
         if (this.$refs.splitsView != null) {
             (this.$refs.splitsView as HTMLElement).addEventListener('dragover', (event: DragEvent) => {
                 event.preventDefault();
@@ -71,14 +129,6 @@ export default class DefaultView extends Vue {
                 return false;
             });
         }
-    }
-
-    selectSplits() {
-        openSplitsBrowser(this.$services.get(ELECTRON_INTERFACE_TOKEN));
-    }
-
-    editSplits() {
-        openSplitsEditor(this.$services.get(ELECTRON_INTERFACE_TOKEN), this.$store);
     }
 }
 </script>

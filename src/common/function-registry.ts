@@ -1,8 +1,22 @@
 import { Injector } from 'lightweight-di';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { ACTION_PAUSE, ACTION_RESET, ACTION_SKIP, ACTION_SPLIT, ACTION_START, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
+import {ACTION_PAUSE, ACTION_RESET, ACTION_SKIP, ACTION_SPLIT, ACTION_START, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
-import { CTX_MENU_KEYBINDINGS_OPEN, CTX_MENU_SETTINGS_OPEN, CTX_MENU_SPLITS_EDIT, CTX_MENU_SPLITS_LOAD_FROM_FILE, CTX_MENU_SPLITS_SAVE_TO_FILE, CTX_MENU_WINDOW_CLOSE, CTX_MENU_WINDOW_RELOAD, KEYBINDING_SPLITS_RESET, KEYBINDING_SPLITS_SKIP, KEYBINDING_SPLITS_SPLIT, KEYBINDING_SPLITS_TOGGLE_PAUSE, KEYBINDING_SPLITS_UNDO } from './constants';
+import {
+    CTX_MENU_KEYBINDINGS_OPEN,
+    CTX_MENU_SETTINGS_OPEN,
+    CTX_MENU_SPLITS_EDIT,
+    CTX_MENU_SPLITS_LOAD_FROM_FILE,
+    CTX_MENU_SPLITS_SAVE_TO_FILE,
+    CTX_MENU_WINDOW_CLOSE,
+    CTX_MENU_WINDOW_RELOAD,
+    KEYBINDING_SPLITS_RESET,
+    KEYBINDING_SPLITS_SKIP,
+    KEYBINDING_SPLITS_SPLIT,
+    KEYBINDING_SPLITS_TOGGLE_PAUSE,
+    KEYBINDING_SPLITS_UNDO,
+    CTX_MENU_TEMPLATES_LOAD_FROM_FILE
+} from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
@@ -83,6 +97,29 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
         openKeybindgsEditor(electron);
+    });
+
+    /*
+     * Open Template File
+     */
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, params => {
+        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedTemplateFiles.length === 0) {
+            io.askUserToOpenTemplateFile(params.vNode.context.$eventHub);
+        } else {
+            // TODO: Open templates file
+            electron.newWindow(
+                {
+                    title: 'Open Templates File',
+                    parent: electron.getCurrentWindow(),
+                    resizable: false,
+                    width: 440,
+                    height: 250,
+                    modal: true,
+                    minimizable: false
+                },
+                '/open-templates'
+            );
+        }
     });
 }
 

@@ -10,6 +10,7 @@ import { InjectionToken } from 'lightweight-di';
 import { VNode } from 'vue';
 
 import { ContextMenuItem } from './context-menu-item';
+import { Subject } from 'rxjs';
 
 export interface ActionResult {
     result?: any;
@@ -29,6 +30,7 @@ export interface ElectronInterface {
     newWindow(settings: BrowserWindowConstructorOptions, route: string): BrowserWindow;
     createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu;
     ipcSend(channel: string, ...args: any[]): void;
+    ipcReceive(channel: string): Subject<any>;
 }
 
 export const ELECTRON_INTERFACE_TOKEN = new InjectionToken<ElectronInterface>('electron');

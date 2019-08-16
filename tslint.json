@@ -182,7 +182,7 @@
         ],
         "radix": true,
         "restrict-plus-operands": true,
-        "return-undefined": true,
+        "return-undefined": false,
         "semicolon": [
             true,
             "always"

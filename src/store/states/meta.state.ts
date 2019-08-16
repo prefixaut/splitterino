@@ -2,6 +2,7 @@ import { Region } from './game-info.state';
 
 export interface MetaState {
     lastOpenedSplitsFiles: RecentlyOpenedSplit[];
+    lastOpenedTemplateFiles: string[];
 }
 
 export interface RecentlyOpenedSplit {
