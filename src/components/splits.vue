@@ -1,5 +1,5 @@
 <template>
-    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }]">
+    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }, { 'pin-last-segment': pinLastSegment }]">
         <template v-if="segments != null && segments.length > 0">
             <div class="splits" @mousewheel="scrollSplits" @mouseleave="scrollIndex = -1">
                 <div
@@ -12,13 +12,14 @@
                         { current: index === currentSegment && status === 'running' },
                         { scroll: index === scrollIndex },
 
+                        { first: index === 0 },
                         { ['previous-' + (currentSegment - index)]: index < currentSegment },
                         { ['next-' + (index - currentSegment)]: index - currentSegment > 0 },
+                        { final: index === segments.length - 1 },
+                        { pinned: index === segments.length - 1 && pinLastSegment },
 
                         { skipped: segment.skipped },
-                        { first: index === 0 },
-                        { final: index === segments.length - 1 },
-                        { 'is-personal-best': segment.hasNewPersonalBest },
+                        { passed: segment.passed },
                         { 'is-overall-best': segment.hasNewOverallBest },
                     ]"
                 >
@@ -78,6 +79,12 @@ export default class SplitsComponent extends Vue {
         default: 1,
     })
     public visiblePreviousSegments: number;
+
+    @Prop({
+        type: Boolean,
+        default: false,
+    })
+    public pinLastSegment: boolean;
 
     @timer.State('status')
     public status: TimerStatus;
@@ -180,33 +187,38 @@ export default class SplitsComponent extends Vue {
             ? this.currentSegment < 0 ? 0 : this.currentSegment
             : this.scrollIndex;
 
-        const max = this.segments.length;
         const displayCount = Math.min(
-            this.visiblePreviousSegments + this.visibleUpcomingSegments + 1,
+            this.visiblePreviousSegments + 1 + this.visibleUpcomingSegments,
             this.segments.length
         );
+        const max = this.segments.length - displayCount;
 
         const start = clamp(
             current - clamp(
                 current,
                 0,
                 displayCount - clamp(
-                    max - current,
-                    1,
+                    current,
+                    this.visiblePreviousSegments,
                     this.visibleUpcomingSegments + 1
                 )
             ),
             0,
-            max + this.visibleUpcomingSegments
+            max
         );
 
         const arr = [];
         for (
             let i = start;
-            i < start + displayCount && i < this.segments.length;
+            i < (start + displayCount) - (this.pinLastSegment ? 1 : 0) &&
+            i < (this.segments.length - (this.pinLastSegment ? 1 : 0));
             i++
         ) {
             arr.push(i);
+        }
+
+        if (this.pinLastSegment) {
+            arr.push(this.segments.length - 1);
         }
 
         return arr;
@@ -334,7 +346,8 @@ export default class SplitsComponent extends Vue {
             }
 
             &.visible,
-            &.scroll {
+            &.scroll,
+            &.pinned {
                 display: flex;
             }
 

@@ -4,7 +4,11 @@
         v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'def']"
         ref="splitsView"
     >
-        <spl-splits>
+        <spl-splits
+            :pinLastSegment="pinLastSegment"
+            :visibleUpcomingSegments="visibleUpcomingSegments"
+            :visiblePreviousSegments="visiblePreviousSegments"
+        >
             <div class="container">
                 <p>No Splits are currently loaded! Please load some or create new ones</p>
                 <div class="button-wrapper">
@@ -21,15 +25,29 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+
 import { RootState } from '../store/states/root.state';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
 import { openSplitsBrowser, openSplitsEditor } from '../utils/windows';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
     private ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
+
+    public get pinLastSegment() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.pinLastSegment');
+    }
+
+    public get visibleUpcomingSegments() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visibleUpcomingSegments');
+    }
+
+    public get visiblePreviousSegments() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
+    }
 
     public mounted() {
         if (this.$refs.splitsView != null) {

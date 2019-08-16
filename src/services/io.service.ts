@@ -171,7 +171,7 @@ export class IOService {
                 const loadedJSON: any = this.loadJSONFromFile(filePath, '');
                 let loadedSplits: SplitsFile;
 
-                if (loadedJSON != null && typeof loadedJSON === 'object' && typeof loadedJSON.version === 'string') {
+                if (loadedJSON != null && typeof loadedJSON === 'object') {
                     loadedSplits = this.transformer.upgradeSplitsFile(loadedJSON, loadedJSON.version);
                 }
 

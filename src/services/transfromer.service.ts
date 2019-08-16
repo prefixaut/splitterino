@@ -18,8 +18,8 @@ export class TransformerService {
         { // Transformer to update unversioned alpha versions to 0.1
             from: undefined,
             toVersion: MOST_RECENT_SPLITS_VERSION,
-            upgradeTransformer: (data: any) => ({ ...data, version: '0.1' }),
-            downgradeTransformer: (data: any) => ({ ...data, version: '0.1' }),
+            upgradeTransformer: (data: any) => ({ ...data, version: MOST_RECENT_SPLITS_VERSION }),
+            downgradeTransformer: (data: any) => ({ ...data, version: MOST_RECENT_SPLITS_VERSION }),
         } as any,
     ];
 

@@ -15,7 +15,9 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Model, Prop } from 'vue-property-decorator';
+import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
+
+import { convertToBoolean } from '../utils/converters';
 
 @Component({ name: 'spl-checkbox' })
 export default class CheckboxComponent extends Vue {
@@ -28,7 +30,7 @@ export default class CheckboxComponent extends Vue {
     public internalValue: boolean = false;
 
     public inputChange(event) {
-        this.internalValue = event.target.checked;
+        this.internalValue = convertToBoolean(event.target.checked);
         this.$emit('change', this.internalValue);
     }
 
@@ -39,7 +41,13 @@ export default class CheckboxComponent extends Vue {
                 this.internalValue = !this.internalValue;
                 event.preventDefault();
                 event.stopPropagation();
+                this.$emit('change', this.internalValue);
         }
+    }
+
+    @Watch('value', { immediate: true })
+    onValueChange(newValue) {
+        this.internalValue = convertToBoolean(newValue);
     }
 }
 </script>
@@ -51,6 +59,7 @@ export default class CheckboxComponent extends Vue {
     position: relative;
     min-width: 35px;
     padding: 0 8px;
+    display: inline-block;
 
     > input {
         appearance: none;
