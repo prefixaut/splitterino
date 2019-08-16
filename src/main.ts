@@ -2,6 +2,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
+import { ipcRenderer } from 'electron';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
@@ -17,22 +18,22 @@ import GameInfoEditorComponent from './components/game-info-editor.vue';
 import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
+import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
+import SegmentsEditorComponent from './components/segments-editor.vue';
 import SettingsEditorSidebarComponent from './components/settings-editor-sidebar.vue';
 import SettingsEditorComponent from './components/settings-editor.vue';
-import SegmentsEditorComponent from './components/segments-editor.vue';
 import SplitsComponent from './components/splits.vue';
+import SummaryOfBestComponent from './components/summary-of-best.vue';
 import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
-import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
 import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
-import { ipcRenderer } from 'electron';
 
 process.on('uncaughtException', error => {
     Logger.fatal({
@@ -84,6 +85,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-number-input', NumberInputComponent);
     Vue.component('spl-segments-editor', SegmentsEditorComponent);
     Vue.component('spl-splits', SplitsComponent);
+    Vue.component('spl-summary-of-best', SummaryOfBestComponent);
     Vue.component('spl-text-input', TextInputComponent);
     Vue.component('spl-time-input', TimeInputComponent);
     Vue.component('spl-timer', TimerComponent);

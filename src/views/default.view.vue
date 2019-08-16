@@ -19,6 +19,7 @@
         </spl-splits>
         <div class="container">
             <spl-timer/>
+            <spl-summary-of-best/>
         </div>
     </div>
 </template>
