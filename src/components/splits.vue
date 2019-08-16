@@ -187,29 +187,25 @@ export default class SplitsComponent extends Vue {
             ? this.currentSegment < 0 ? 0 : this.currentSegment
             : this.scrollIndex;
 
-        const max = this.segments.length;
         const displayCount = Math.min(
             this.visiblePreviousSegments + 1 + this.visibleUpcomingSegments,
             this.segments.length
         );
+        const max = this.segments.length - displayCount;
 
-        let start = clamp(
+        const start = clamp(
             current - clamp(
                 current,
                 0,
                 displayCount - clamp(
-                    max - current,
+                    current,
                     this.visiblePreviousSegments,
                     this.visibleUpcomingSegments + 1
                 )
             ),
             0,
-            max + this.visibleUpcomingSegments
+            max
         );
-        const tmp = max - start;
-        if (tmp < displayCount) {
-            start -= displayCount - tmp;
-        }
 
         const arr = [];
         for (
@@ -220,6 +216,7 @@ export default class SplitsComponent extends Vue {
         ) {
             arr.push(i);
         }
+
         if (this.pinLastSegment) {
             arr.push(this.segments.length - 1);
         }
