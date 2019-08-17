@@ -11,6 +11,7 @@ import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
 import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
 import { getFinalTime, SegmentTime, TimingMethod } from './common/interfaces/segment';
+import BestPossibleTimeComponent from './components/best-possible-time.vue';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
 import ConfigurationEditorComponent from './components/configuration-editor.vue';
@@ -76,6 +77,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('vue-select', VueSelect);
 
     // Register Components
+    Vue.component('spl-best-possible-time', BestPossibleTimeComponent);
     Vue.component('spl-button', ButtonComponent);
     Vue.component('spl-checkbox', CheckboxComponent);
     Vue.component('spl-configuiration-editor', ConfigurationEditorComponent);

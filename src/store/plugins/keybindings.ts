@@ -27,28 +27,38 @@ export function getKeybindingsStorePlugin(injector: Injector) {
 
                 bindings.forEach((theBinding, index) => {
                     globalShortcut.register(theBinding.accelerator, () => {
-                        Logger.debug({
+                        Logger.trace({
                             msg: 'Keybinding pressed',
                             binding: theBinding
                         });
                         // TODO: Check if global and if the window is focused
 
                         const actionFn = FunctionRegistry.getKeybindingAction(theBinding.action);
-                        if (typeof actionFn === 'function' && !state.disableBindings) {
-                            Logger.debug({
-                                msg: 'Calling handler for action',
-                                binding: theBinding
-                            });
-                            actionFn({
-                                store: store,
-                                injector: injector,
-                            });
-                        } else {
+                        if (typeof actionFn !== 'function') {
                             Logger.debug({
                                 msg: 'No handler found for action',
                                 binding: theBinding
                             });
+
+                            return;
                         }
+
+                        if (state.disableBindings) {
+                            Logger.trace({
+                                msg: 'Keybindings are disabled, ignoring action'
+                            });
+
+                            return;
+                        }
+
+                        Logger.trace({
+                            msg: 'Calling handler for action',
+                            binding: theBinding
+                        });
+                        actionFn({
+                            store: store,
+                            injector: injector,
+                        });
                     });
                 });
             } catch (err) {
