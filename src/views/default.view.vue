@@ -20,6 +20,7 @@
         <div class="container">
             <spl-timer/>
             <spl-summary-of-best/>
+            <spl-best-possible-time/>
         </div>
     </div>
 </template>
