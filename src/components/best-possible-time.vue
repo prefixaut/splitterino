@@ -72,7 +72,7 @@ export default class BestPossibleTimeComponent extends Vue {
                         return previousValue + (segment.passed ? getFinalTime(segment.currentTime[this.timing]) : 0);
                     }, 0);
                 const bestPossibleUpcomingTime = segmentsWithOB
-                    .slice(this.currentSegment)
+                    .slice(this.currentSegment + 1)
                     .reduce((previousValue, segment) => {
                         return previousValue + getFinalTime(segment.overallBest[this.timing]);
                     }, 0);
@@ -111,6 +111,10 @@ export default class BestPossibleTimeComponent extends Vue {
             window.clearInterval(this.intervalId);
             this.intervalId = -1;
         }
+
+        if (this.status === TimerStatus.STOPPED) {
+            this.currentSegmentTime = 0;
+        }
     }
 
     private calculateCurrentTime() {
@@ -119,9 +123,9 @@ export default class BestPossibleTimeComponent extends Vue {
             const pauseTime = segment.currentTime != null && segment.currentTime[this.timing] != null ?
                 segment.currentTime[this.timing].pauseTime : 0;
             const currentTime = (now() - segment.startTime - pauseTime);
-            const pb = segment.overallBest != null ? getFinalTime(segment.overallBest[this.timing]) : null;
+            const best = segment.overallBest != null ? getFinalTime(segment.overallBest[this.timing]) : null;
 
-            this.currentSegmentTime = Math.max(currentTime, pb);
+            this.currentSegmentTime = Math.max(currentTime, best);
         } else {
             this.currentSegmentTime = 0;
         }
