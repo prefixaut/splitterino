@@ -1,7 +1,7 @@
 <template>
-    <div class="best-possible-time">
+    <div class="possible-time-save">
         <div class="label">{{ label }}</div>
-        <div class="time">{{ bestPossibleTime | aevum }}</div>
+        <div class="time">{{ possibleTimeSave | aevum }}</div>
     </div>
 </template>
 
@@ -17,9 +17,9 @@ import { now } from '../utils/time';
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
-@Component({ name: 'spl-best-possible-time' })
-export default class BestPossibleTimeComponent extends Vue {
-    @Prop({ type: String, default: 'Best possible Time' })
+@Component({ name: 'spl-possible-time-save' })
+export default class PossibleTimeSaveComponent extends Vue {
+    @Prop({ type: String, default: 'Possible Time Save' })
     public label: string;
 
     @timer.State('status')
@@ -59,34 +59,10 @@ export default class BestPossibleTimeComponent extends Vue {
         this.statusWatcher();
     }
 
-    public get bestPossibleTime() {
-        const segmentsWithOB = this.segments
-            .filter(segment => (
-                segment.overallBest != null &&
-                segment.overallBest[this.timing] != null &&
-                getFinalTime(segment.overallBest[this.timing])
-            ));
-
-        // Can only calculate the time when all OBs are set
-        if (segmentsWithOB.length === this.segments.length) {
-            if (this.currentSegment > -1) {
-                const currentPace = this.segments
-                    .slice(0, this.currentSegment)
-                    .reduce((previousValue, segment) => {
-                        return previousValue + (segment.passed ? getFinalTime(segment.currentTime[this.timing]) : 0);
-                    }, 0);
-                const bestPossibleUpcomingTime = segmentsWithOB
-                    .slice(this.currentSegment + 1)
-                    .reduce((previousValue, segment) => {
-                        return previousValue + getFinalTime(segment.overallBest[this.timing]);
-                    }, 0);
-
-                return currentPace + this.currentSegmentTime + bestPossibleUpcomingTime;
-            } else {
-                return segmentsWithOB.reduce((previousValue, segment) => {
-                    return previousValue + getFinalTime(segment.overallBest[this.timing]);
-                }, 0);
-            }
+    public get possibleTimeSave() {
+        const segment = this.segments[this.currentSegment];
+        if (segment != null && segment.overallBest != null && segment.overallBest[this.timing] != null) {
+            return this.currentSegmentTime - getFinalTime(segment.overallBest[this.timing]);
         }
 
         return null;
@@ -123,7 +99,7 @@ export default class BestPossibleTimeComponent extends Vue {
             const pauseTime = segment.currentTime != null && segment.currentTime[this.timing] != null ?
                 segment.currentTime[this.timing].pauseTime : 0;
             const currentTime = (now() - segment.startTime - pauseTime);
-            const best = segment.overallBest != null ? getFinalTime(segment.overallBest[this.timing]) : null;
+            const best = segment.personalBest != null ? getFinalTime(segment.personalBest[this.timing]) : null;
 
             this.currentSegmentTime = Math.max(currentTime, best);
         } else {
@@ -134,7 +110,7 @@ export default class BestPossibleTimeComponent extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.best-possible-time {
+.possible-time-save {
     display: flex;
     flex-wrap: nowrap;
 
