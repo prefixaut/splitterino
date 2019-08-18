@@ -27,6 +27,8 @@
                 </spl-splits>
                 <div class="container">
                     <spl-timer/>
+                    <spl-summary-of-best/>
+                    <spl-best-possible-time/>
                 </div>
             </template>
         </div>
@@ -39,17 +41,20 @@ import { Component, Vue } from 'vue-property-decorator';
 import { RootState } from '../store/states/root.state';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
-import { openSplitsBrowser, openSplitsEditor } from '../utils/windows';
+import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
 import { Logger } from '../utils/logger';
+import { Subscription } from 'rxjs';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
     public templateLoaded: boolean = false;
     public template: string = null;
     public templateStyle: string = null;
+
+    private subscriptions: Subscription[] = [];
 
     private readonly ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
     private readonly electron: ElectronInterface = this.$services.get(ELECTRON_INTERFACE_TOKEN);
@@ -67,7 +72,11 @@ export default class DefaultView extends Vue {
     }
 
     public selectSplits() {
-        openSplitsBrowser(this.$services.get(ELECTRON_INTERFACE_TOKEN));
+        openLoadSplits(
+            this.$services.get(ELECTRON_INTERFACE_TOKEN),
+            this.$services.get(IO_SERVICE_TOKEN),
+            this.$store
+        );
     }
 
     public editSplits() {
@@ -78,9 +87,16 @@ export default class DefaultView extends Vue {
         this.registerDragDropHandler();
 
         this.loadTemplate();
-        this.$eventHub.$on('load-template', templateFile => {
+        const sub = this.electron.listenEvent<string>('load-template').subscribe(templateFile => {
             this.loadTemplate(templateFile);
         });
+        this.subscriptions.push(sub);
+    }
+
+    public beforeDestroy() {
+        for (const sub of this.subscriptions) {
+            sub.unsubscribe();
+        }
     }
 
     private async loadTemplate(templateFile?: string) {

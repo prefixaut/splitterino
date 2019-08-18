@@ -4,6 +4,7 @@ import { ElectronInterface } from '../common/interfaces/electron';
 import { TimerStatus } from '../common/timer-status';
 import { ACTION_SPLIT } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
+import { IOService } from '../services/io.service';
 
 export function openKeybindgsEditor(electron: ElectronInterface) {
     electron.newWindow(
@@ -31,6 +32,14 @@ export function openSettingsEditor(electron: ElectronInterface) {
         },
         '/settings'
     );
+}
+
+export function openLoadSplits(electron: ElectronInterface, io: IOService, store: Store<RootState>) {
+    if (store.state.splitterino.meta.lastOpenedSplitsFiles.length === 0) {
+        io.loadSplitsFromFileToStore(store);
+    } else {
+        openSplitsBrowser(electron);
+    }
 }
 
 export function openSplitsBrowser(electron: ElectronInterface) {

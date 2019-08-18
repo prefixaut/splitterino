@@ -21,11 +21,11 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION,
 } from '../store/modules/game-info.module';
-import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES } from '../store/modules/meta.module';
+import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_TEMPLATE_FILE, ACTION_SET_LAST_OPENED_TEMPLATE_FILES } from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
-import { RecentlyOpenedSplit } from '../store/states/meta.state';
+import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../store/states/meta.state';
 import { RootState } from '../store/states/root.state';
 import { Settings } from '../store/states/settings.state';
 import { asSaveableSegment } from '../utils/converters';
@@ -325,7 +325,7 @@ export class IOService {
         // Get last opened template file from store if no file was given
         if (file == null && store.state.splitterino.meta.lastOpenedTemplateFiles.length > 0) {
             Logger.debug('Using last opened template file');
-            file = store.state.splitterino.meta.lastOpenedTemplateFiles[0];
+            file = store.state.splitterino.meta.lastOpenedTemplateFiles[0].path;
         }
 
         if (file != null) {
@@ -419,6 +419,11 @@ export class IOService {
                             }
                         }
 
+                        store.dispatch(ACTION_ADD_OPENED_TEMPLATE_FILE, {
+                            path: file,
+                            author: templateFiles.meta.author,
+                            name: templateFiles.meta.name
+                        });
                         resolve(templateFiles);
                     });
 
@@ -447,10 +452,10 @@ export class IOService {
      *
      * @returns A Promise which resolves to the path of the template-file.
      */
-    public askUserToOpenTemplateFile(eventHub: Vue) {
+    public async askUserToOpenTemplateFile(): Promise<boolean> {
         Logger.debug('Asking user to select a Template-File ...');
 
-        this.electron
+        return this.electron
             .showOpenDialog(this.electron.getCurrentWindow(), {
                 title: 'Load Template',
                 filters: [IOService.TEMPLATE_FILE_FILTER],
@@ -459,7 +464,7 @@ export class IOService {
             .then(filePaths=> {
                 let singlePath: string;
                 if (!Array.isArray(filePaths)) {
-                    return;
+                    return false;
                 }
 
                 singlePath = filePaths.length === 0 ? null : filePaths[0];
@@ -469,7 +474,9 @@ export class IOService {
                     file: singlePath,
                 });
 
-                eventHub.$emit('load-template', singlePath);
+                this.electron.broadcastEvent('load-template', singlePath);
+
+                return true;
             });
     }
 
@@ -510,6 +517,17 @@ export class IOService {
                         await this.loadSplitsFromFileToStore(store, lastOpenedSplitsFiles[0].path);
                     }
                 }
+
+                let lastOpenedTemplateFiles: RecentlyOpenedTemplate[] = [];
+                if (appSettings.lastOpenedTemplateFiles != null) {
+                    lastOpenedTemplateFiles = appSettings.lastOpenedTemplateFiles.filter(recentTemplate =>
+                        existsSync(recentTemplate.path)
+                    );
+
+                    if (lastOpenedTemplateFiles.length > 0) {
+                        await store.dispatch(ACTION_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
+                    }
+                }
             }
         } catch (error) {
             // Ignore error since already being logged
@@ -527,6 +545,7 @@ export class IOService {
         const windowSize = window.getSize();
         const windowPos = window.getPosition();
         const lastOpenedSplitsFiles = store.state.splitterino.meta.lastOpenedSplitsFiles;
+        const lastOpenedTemplateFiles = store.state.splitterino.meta.lastOpenedTemplateFiles;
         const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
@@ -537,6 +556,7 @@ export class IOService {
                 y: windowPos[1],
             },
             lastOpenedSplitsFiles,
+            lastOpenedTemplateFiles,
             keybindings,
         };
 

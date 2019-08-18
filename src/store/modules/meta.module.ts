@@ -1,8 +1,8 @@
 import { Module, ActionContext } from 'vuex';
-import { remove, pull } from 'lodash';
+import { remove } from 'lodash';
 
 import { RootState } from '../states/root.state';
-import { MetaState, RecentlyOpenedSplit } from '../states/meta.state';
+import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../states/meta.state';
 
 const MODULE_PATH = 'splitterino/meta';
 
@@ -48,11 +48,14 @@ export function getMetaModule(): Module<MetaState, RootState> {
                     state.lastOpenedSplitsFiles = state.lastOpenedSplitsFiles.slice(0, 10);
                 }
             },
-            [MUTATION_SET_LAST_OPENED_TEMPLATE_FILES](state: MetaState, lastOpenedTemplateFiles: string[]) {
+            [ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES](
+                state: MetaState,
+                lastOpenedTemplateFiles: RecentlyOpenedTemplate[]
+            ) {
                 state.lastOpenedTemplateFiles = lastOpenedTemplateFiles;
             },
-            [MUTATION_ADD_OPENED_TEMPLATE_FILE](state: MetaState, templateFile: string) {
-                pull(state.lastOpenedTemplateFiles, templateFile);
+            [ID_MUTATION_ADD_OPENED_TEMPLATE_FILE](state: MetaState, templateFile: RecentlyOpenedTemplate) {
+                remove(state.lastOpenedTemplateFiles, file => file.path === templateFile.path);
 
                 state.lastOpenedTemplateFiles.unshift(templateFile);
 
@@ -85,13 +88,13 @@ export function getMetaModule(): Module<MetaState, RootState> {
             },
             [ID_ACTION_SET_LAST_OPENED_TEMPLATE_FILES](
                 context: ActionContext<MetaState, RootState>,
-                lastOpenedTemplateFiles: string[]
+                lastOpenedTemplateFiles: RecentlyOpenedTemplate[]
             ) {
                 context.commit(ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
             },
             [ID_ACTION_ADD_OPENED_TEMPLATE_FILE](
                 context: ActionContext<MetaState, RootState>,
-                templateFile: string
+                templateFile: RecentlyOpenedTemplate
             ) {
                 context.commit(ID_MUTATION_ADD_OPENED_TEMPLATE_FILE, templateFile);
             },

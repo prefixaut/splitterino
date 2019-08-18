@@ -10,11 +10,14 @@ import {
     OpenDialogOptions,
     remote,
     SaveDialogOptions,
+    ipcMain,
+    IpcMessageEvent,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 import { format as formatUrl } from 'url';
-import { Subject } from 'rxjs';
+import { Observable } from 'rxjs';
+import { merge } from 'lodash';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
@@ -23,21 +26,21 @@ import { Logger } from '../utils/logger';
 import { join } from 'path';
 import { isDevelopment } from '../utils/is-development';
 
+export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
+    webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true
+    },
+    useContentSize: true,
+    title: 'Splitterino',
+    frame: false,
+    titleBarStyle: 'hidden',
+    minWidth: 440,
+    minHeight: 220,
+};
+
 @Injectable
 export class ElectronService implements ElectronInterface {
-    private readonly defaultWindowSettings: BrowserWindowConstructorOptions = {
-        webPreferences: {
-            webSecurity: false,
-            nodeIntegration: true
-        },
-        useContentSize: true,
-        title: 'Splitterino',
-        frame: false,
-        titleBarStyle: 'hidden',
-        minWidth: 440,
-        minHeight: 220,
-    };
-
     private readonly url = 'http://localhost:8080#';
 
     constructor() {
@@ -141,10 +144,7 @@ export class ElectronService implements ElectronInterface {
         });
 
         try {
-            const win = new remote.BrowserWindow({
-                ...this.defaultWindowSettings,
-                ...settings,
-            });
+            const win = new remote.BrowserWindow(merge({}, DEFAULT_WINDOW_SETTINGS, settings));
 
             if (isDevelopment()) {
                 win.webContents.openDevTools({ mode: 'detach' });
@@ -228,15 +228,45 @@ export class ElectronService implements ElectronInterface {
         }
     }
 
-    public ipcReceive(channel: string): Subject<any> {
-        const subject = new Subject<any>();
-
+    /**
+     * Send event to background process and all renderer processes
+     * @param event Event ID to send
+     * @param payload Optional payload to send with event
+     */
+    public broadcastEvent(event: string, payload?: any) {
         if (this.isRenderProcess()) {
-            ipcRenderer.on(channel, (data: any) => {
-                subject.next(data);
+            Logger.trace({
+                msg: 'Broadcast event sent',
+                event: event,
+                payload: payload
+            });
+
+            ipcRenderer.send('global-event', event, payload);
+        }
+    }
+
+    /**
+     * Listen for a global event from all processes
+     * @param event Event to listen to
+     */
+    public listenEvent<T>(event: string): Observable<T> {
+        if (this.isRenderProcess()) {
+            Logger.trace({
+                msg: 'Registering global event listener',
+                event: event
+            });
+
+            return new Observable<T>(function subscribe(subscriber) {
+                const callback = (_: IpcMessageEvent, data: T) => {
+                    subscriber.next(data);
+                };
+
+                ipcRenderer.on(event, callback);
+
+                return function unsubscribe() {
+                    ipcRenderer.removeListener(event, callback);
+                };
             });
         }
-
-        return subject;
     }
 }

@@ -1,7 +1,18 @@
 import { Injector } from 'lightweight-di';
+import { Store } from 'vuex';
+
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import {ACTION_PAUSE, ACTION_RESET, ACTION_SKIP, ACTION_SPLIT, ACTION_START, ACTION_UNDO, ACTION_UNPAUSE } from '../store/modules/splits.module';
+import {
+    ACTION_PAUSE,
+    ACTION_RESET,
+    ACTION_SKIP,
+    ACTION_SPLIT,
+    ACTION_START,
+    ACTION_UNDO,
+    ACTION_UNPAUSE,
+} from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
+import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -21,8 +32,6 @@ import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
 import { KeybindingActionFunction } from './interfaces/keybindings';
 import { TimerStatus } from './timer-status';
-import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor } from '../utils/windows';
-import { Store } from 'vuex';
 
 export abstract class FunctionRegistry {
     private static contextMenuStore: { [key: string]: ContextMenuItemActionFunction } = {};
@@ -75,11 +84,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
         openSplitsEditor(electron, params.vNode.context.$store as Store<RootState>);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
-        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles.length === 0) {
-            io.loadSplitsFromFileToStore(params.vNode.context.$store);
-        } else {
-            openSplitsBrowser(electron);
-        }
+        openLoadSplits(electron, io, params.vNode.context.$store);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
         io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
@@ -104,12 +109,11 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, params => {
         if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedTemplateFiles.length === 0) {
-            io.askUserToOpenTemplateFile(params.vNode.context.$eventHub);
+            io.askUserToOpenTemplateFile();
         } else {
-            // TODO: Open templates file
             electron.newWindow(
                 {
-                    title: 'Open Templates File',
+                    title: 'Open Template File',
                     parent: electron.getCurrentWindow(),
                     resizable: false,
                     width: 440,
@@ -117,7 +121,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
                     modal: true,
                     minimizable: false
                 },
-                '/open-templates'
+                '/open-template'
             );
         }
     });

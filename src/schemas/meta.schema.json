@@ -4,13 +4,21 @@
     "title": "Meta",
     "description": "Meta data for template",
     "type": "object",
-    "required": ["author", "name", "version", "splitterinoVersion"],
-    "properties": {
+    "definitions": {
         "author": {
             "type": "string"
         },
         "name": {
             "type": "string"
+        }
+    },
+    "required": ["author", "name", "version", "splitterinoVersion"],
+    "properties": {
+        "author": {
+            "$ref": "#/definitions/author"
+        },
+        "name": {
+            "$ref": "#/definitions/name"
         },
         "version": {
             "type": "string"

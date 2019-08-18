@@ -37,7 +37,19 @@
         "lastOpenedTemplateFiles": {
             "type": "array",
             "items": {
-                "type": "string"
+                "type": "object",
+                "required": ["path", "author", "name"],
+                "properties": {
+                    "author": {
+                        "$ref": "meta.schema.json#/definitions/author"
+                    },
+                    "name": {
+                        "$ref": "meta.schema.json#/definitions/name"
+                    },
+                    "path": {
+                        "type": "string"
+                    }
+                }
             }
         },
         "keybindings": {
