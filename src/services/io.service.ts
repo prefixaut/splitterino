@@ -1,15 +1,17 @@
 import { BrowserWindow, FileFilter } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, createReadStream, read } from 'fs';
 import { Inject, Injectable, InjectionToken } from 'lightweight-di';
-import { cloneDeep, merge, set } from 'lodash';
+import { cloneDeep, merge, set, isEqual } from 'lodash';
 import { dirname, join } from 'path';
 import { Store } from 'vuex';
+import Vue from 'vue';
+import { extract } from 'tar-stream';
+import gunzip from 'gunzip-maybe';
 
 import { applicationSettingsDefaults } from '../common/application-settings-defaults';
 import { ApplicationSettings } from '../common/interfaces/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { TimingMethod } from '../common/interfaces/segment';
-import { Splits } from '../common/interfaces/splits';
 import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../common/interfaces/splits-file';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
@@ -19,17 +21,18 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION,
 } from '../store/modules/game-info.module';
-import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES } from '../store/modules/meta.module';
+import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_TEMPLATE_FILE, ACTION_SET_LAST_OPENED_TEMPLATE_FILES } from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
-import { RecentlyOpenedSplit } from '../store/states/meta.state';
+import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../store/states/meta.state';
 import { RootState } from '../store/states/root.state';
 import { Settings } from '../store/states/settings.state';
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
+import { TemplateFiles } from '../common/interfaces/template-files';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -50,6 +53,11 @@ export class IOService {
     public static readonly SPLITS_FILE_FILTER: FileFilter = {
         name: 'Splitterino-Splits',
         extensions: ['splits'],
+    };
+
+    public static readonly TEMPLATE_FILE_FILTER: FileFilter = {
+        name: 'Splitterino-Template',
+        extensions: ['psplt']
     };
 
     public getAssetDirectory() {
@@ -300,8 +308,6 @@ export class IOService {
                 let singlePath: string;
                 if (Array.isArray(filePaths)) {
                     singlePath = filePaths.length === 0 ? null : filePaths[0];
-                } else if (filePaths === 'string') {
-                    singlePath = filePaths;
                 } else {
                     singlePath = null;
                 }
@@ -312,6 +318,165 @@ export class IOService {
                 });
 
                 return singlePath;
+            });
+    }
+
+    public async loadTemplateFile(store: Store<RootState>, file?: string): Promise<TemplateFiles | null> {
+        // Get last opened template file from store if no file was given
+        if (file == null && store.state.splitterino.meta.lastOpenedTemplateFiles.length > 0) {
+            Logger.debug('Using last opened template file');
+            file = store.state.splitterino.meta.lastOpenedTemplateFiles[0].path;
+        }
+
+        if (file != null) {
+            Logger.debug({
+                msg: 'Loading template from file',
+                file: file
+            });
+
+            return new Promise(resolve => {
+                // File contents go here
+                const templateFiles: TemplateFiles = {};
+                // List of files accepted
+                const acceptedFiles: string[] = ['meta.json', 'template.html', 'styles.css'];
+                const readStream = createReadStream(file);
+
+                readStream.on('open', () => {
+                    // Create extractor
+                    const extractor = extract();
+                    extractor.on('entry', (header, stream, next) => {
+                        let data = '';
+
+                        // Append chunks to data
+                        stream.on('data', chunk => {
+                            data += chunk;
+                            stream.resume();
+                        });
+
+                        // Check for error and close readStream
+                        stream.on('error', () => {
+                            Logger.error({
+                                msg: 'Error occured while extracting files from template archive',
+                                file: file
+                            });
+
+                            readStream.close();
+                        });
+
+                        // Check if file is accepted and handle correctly
+                        // Move to next file
+                        stream.on('end', () => {
+                            if (acceptedFiles.includes(header.name)) {
+                                if (header.name === 'meta.json') {
+                                    try {
+                                        templateFiles[header.name.split('.')[0]] = JSON.parse(data);
+                                    } catch (error) {
+                                        Logger.error({
+                                            msg: 'Could not parse meta file to JSON'
+                                        });
+
+                                        readStream.close();
+                                        resolve(null);
+
+                                        return;
+                                    }
+                                } else {
+                                    templateFiles[header.name.split('.')[0]] = data;
+                                }
+                            }
+                            next();
+                        });
+                    });
+
+                    // Close stream when extraction finished
+                    extractor.on('finish', () => {
+                        readStream.close();
+
+                        const requiredFiles = acceptedFiles.map(f => f.split('.')[0]);
+                        const loadedFiles = Object.keys(templateFiles);
+                        for (const requiredFile of requiredFiles) {
+                            if (!loadedFiles.includes(requiredFile)) {
+                                Logger.error({
+                                    msg: 'Missing required file in template',
+                                    missingFile: requiredFile
+                                });
+
+                                resolve(null);
+
+                                return;
+                            }
+
+                            if (requiredFile === 'meta') {
+                                if (!this.validator.isTemplateMetaFile(templateFiles.meta)) {
+                                    Logger.error({
+                                        msg: 'Meta file is not valid'
+                                    });
+
+                                    resolve(null);
+
+                                    return;
+                                }
+                            }
+                        }
+
+                        store.dispatch(ACTION_ADD_OPENED_TEMPLATE_FILE, {
+                            path: file,
+                            author: templateFiles.meta.author,
+                            name: templateFiles.meta.name
+                        });
+                        resolve(templateFiles);
+                    });
+
+                    // Try to unzip template file if it is zipped
+                    // Extract files from tar archive
+                    readStream.pipe(gunzip()).pipe(extractor);
+                });
+
+                readStream.on('error', error => {
+                    Logger.error({
+                        msg: 'Unable to create readstream for template',
+                        file: file
+                    });
+
+                    readStream.close();
+                    resolve(null);
+                });
+            });
+        }
+
+        return null;
+    }
+
+    /**
+     * Opens a File-Browser to select a single template-file.
+     *
+     * @returns A Promise which resolves to the path of the template-file.
+     */
+    public async askUserToOpenTemplateFile(): Promise<boolean> {
+        Logger.debug('Asking user to select a Template-File ...');
+
+        return this.electron
+            .showOpenDialog(this.electron.getCurrentWindow(), {
+                title: 'Load Template',
+                filters: [IOService.TEMPLATE_FILE_FILTER],
+                properties: ['openFile'],
+            })
+            .then(filePaths=> {
+                let singlePath: string;
+                if (!Array.isArray(filePaths)) {
+                    return false;
+                }
+
+                singlePath = filePaths.length === 0 ? null : filePaths[0];
+
+                Logger.debug({
+                    msg: 'User has selected Template-File',
+                    file: singlePath,
+                });
+
+                this.electron.broadcastEvent('load-template', singlePath);
+
+                return true;
             });
     }
 
@@ -352,6 +517,17 @@ export class IOService {
                         await this.loadSplitsFromFileToStore(store, lastOpenedSplitsFiles[0].path);
                     }
                 }
+
+                let lastOpenedTemplateFiles: RecentlyOpenedTemplate[] = [];
+                if (appSettings.lastOpenedTemplateFiles != null) {
+                    lastOpenedTemplateFiles = appSettings.lastOpenedTemplateFiles.filter(recentTemplate =>
+                        existsSync(recentTemplate.path)
+                    );
+
+                    if (lastOpenedTemplateFiles.length > 0) {
+                        await store.dispatch(ACTION_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
+                    }
+                }
             }
         } catch (error) {
             // Ignore error since already being logged
@@ -369,6 +545,7 @@ export class IOService {
         const windowSize = window.getSize();
         const windowPos = window.getPosition();
         const lastOpenedSplitsFiles = store.state.splitterino.meta.lastOpenedSplitsFiles;
+        const lastOpenedTemplateFiles = store.state.splitterino.meta.lastOpenedTemplateFiles;
         const keybindings = store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
@@ -379,6 +556,7 @@ export class IOService {
                 y: windowPos[1],
             },
             lastOpenedSplitsFiles,
+            lastOpenedTemplateFiles,
             keybindings,
         };
 

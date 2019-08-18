@@ -2,27 +2,36 @@ import { Module, ActionContext } from 'vuex';
 import { remove } from 'lodash';
 
 import { RootState } from '../states/root.state';
-import { MetaState, RecentlyOpenedSplit } from '../states/meta.state';
+import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../states/meta.state';
 
 const MODULE_PATH = 'splitterino/meta';
 
 const ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES = 'setLastOpenedSplitsFiles';
 const ID_MUTATION_ADD_OPENED_SPLITS_FILE = 'addOpenedSplitsFile';
+const ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES = 'setLastOpenedTemplateFiles';
+const ID_MUTATION_ADD_OPENED_TEMPLATE_FILE = 'addOpenedTemplateFile';
 
 const ID_ACTION_SET_LAST_OPENED_SPLITS_FILES = 'setLastOpenedSplitsFiles';
 const ID_ACTION_ADD_OPENED_SPLITS_FILE = 'addOpenedSplitsFile';
+const ID_ACTION_SET_LAST_OPENED_TEMPLATE_FILES = 'setLastOpenedTemplateFiles';
+const ID_ACTION_ADD_OPENED_TEMPLATE_FILE = 'addOpenedTemplateFile';
 
 export const MUTATION_SET_LAST_OPENED_SPLITS_FILES = `${MODULE_PATH}/${ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES}`;
 export const MUTATION_ADD_OPENED_SPLITS_FILE = `${MODULE_PATH}/${ID_MUTATION_ADD_OPENED_SPLITS_FILE}`;
+export const MUTATION_SET_LAST_OPENED_TEMPLATE_FILES = `${MODULE_PATH}/${ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES}`;
+export const MUTATION_ADD_OPENED_TEMPLATE_FILE = `${MODULE_PATH}/${ID_MUTATION_ADD_OPENED_TEMPLATE_FILE}`;
 
 export const ACTION_SET_LAST_OPENED_SPLITS_FILES = `${MODULE_PATH}/${ID_ACTION_SET_LAST_OPENED_SPLITS_FILES}`;
 export const ACTION_ADD_OPENED_SPLITS_FILE = `${MODULE_PATH}/${ID_ACTION_ADD_OPENED_SPLITS_FILE}`;
+export const ACTION_SET_LAST_OPENED_TEMPLATE_FILES = `${MODULE_PATH}/${ID_ACTION_SET_LAST_OPENED_TEMPLATE_FILES}`;
+export const ACTION_ADD_OPENED_TEMPLATE_FILE = `${MODULE_PATH}/${ID_ACTION_ADD_OPENED_TEMPLATE_FILE}`;
 
 export function getMetaModule(): Module<MetaState, RootState> {
     return {
         namespaced: true,
         state: {
-            lastOpenedSplitsFiles: []
+            lastOpenedSplitsFiles: [],
+            lastOpenedTemplateFiles: []
         },
         getters: {
         },
@@ -37,6 +46,21 @@ export function getMetaModule(): Module<MetaState, RootState> {
 
                 if (state.lastOpenedSplitsFiles.length >= 10) {
                     state.lastOpenedSplitsFiles = state.lastOpenedSplitsFiles.slice(0, 10);
+                }
+            },
+            [ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES](
+                state: MetaState,
+                lastOpenedTemplateFiles: RecentlyOpenedTemplate[]
+            ) {
+                state.lastOpenedTemplateFiles = lastOpenedTemplateFiles;
+            },
+            [ID_MUTATION_ADD_OPENED_TEMPLATE_FILE](state: MetaState, templateFile: RecentlyOpenedTemplate) {
+                remove(state.lastOpenedTemplateFiles, file => file.path === templateFile.path);
+
+                state.lastOpenedTemplateFiles.unshift(templateFile);
+
+                if (state.lastOpenedTemplateFiles.length >= 10) {
+                    state.lastOpenedTemplateFiles = state.lastOpenedTemplateFiles.slice(0, 10);
                 }
             },
         },
@@ -61,6 +85,18 @@ export function getMetaModule(): Module<MetaState, RootState> {
                     region: gameInfoState.region
                 };
                 context.commit(ID_MUTATION_ADD_OPENED_SPLITS_FILE, recentlyOpenedSplit);
+            },
+            [ID_ACTION_SET_LAST_OPENED_TEMPLATE_FILES](
+                context: ActionContext<MetaState, RootState>,
+                lastOpenedTemplateFiles: RecentlyOpenedTemplate[]
+            ) {
+                context.commit(ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
+            },
+            [ID_ACTION_ADD_OPENED_TEMPLATE_FILE](
+                context: ActionContext<MetaState, RootState>,
+                templateFile: RecentlyOpenedTemplate
+            ) {
+                context.commit(ID_MUTATION_ADD_OPENED_TEMPLATE_FILE, templateFile);
             },
         },
     };

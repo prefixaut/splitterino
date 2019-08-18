@@ -6,6 +6,7 @@ import { ipcRenderer } from 'electron';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
+import VRuntimeTemplate from 'v-runtime-template';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
@@ -30,6 +31,7 @@ import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
+import OpenTemplatePromptComponent from './components/open-template-prompt.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
@@ -77,6 +79,9 @@ process.on('unhandledRejection', (reason, promise) => {
     // Select
     Vue.component('vue-select', VueSelect);
 
+    // v-runtime-template
+    Vue.component('v-runtime-template', VRuntimeTemplate);
+
     // Register Components
     Vue.component('spl-best-possible-time', BestPossibleTimeComponent);
     Vue.component('spl-button', ButtonComponent);
@@ -97,6 +102,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-settings-editor', SettingsEditorComponent);
     Vue.component('spl-settings-editor-sidebar', SettingsEditorSidebarComponent);
     Vue.component('spl-open-splits-prompt', OpenSplitsPromptComponent);
+    Vue.component('spl-open-template-prompt', OpenTemplatePromptComponent);
 
     // Register Directives
     Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));

@@ -9,10 +9,12 @@ import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import GameInfoSchema from '../schemas/game-info.schema.json';
 import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
 import KeybindingSchema from '../schemas/keybinding.schema.json';
+import MetaSchema from '../schemas/meta.schema.json';
 import { Logger } from '../utils/logger';
 import { Splits } from '../common/interfaces/splits';
 import { Segment } from '../common/interfaces/segment';
 import { ApplicationSettings } from '../common/interfaces/application-settings.js';
+import { TemplateMetaFile } from '../common/interfaces/template-files.js';
 
 export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 
@@ -33,6 +35,7 @@ export class ValidatorService {
         this.ajv.addSchema(GameInfoSchema, 'game-info.schema.json');
         this.ajv.addSchema(ApplicationSettingsSchema, 'application-settings.schema.json');
         this.ajv.addSchema(KeybindingSchema, 'keybinding.schema.json');
+        this.ajv.addSchema(MetaSchema, 'meta.schema.json');
     }
 
     /**
@@ -63,5 +66,9 @@ export class ValidatorService {
 
     public isApplicationSettings(data: any): data is ApplicationSettings {
         return this.validate<ApplicationSettings>('application-settings', data);
+    }
+
+    public isTemplateMetaFile(data: any): data is TemplateMetaFile {
+        return this.validate<TemplateMetaFile>('meta.schema.json', data);
     }
 }

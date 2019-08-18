@@ -8,6 +8,7 @@ import {
     CTX_MENU_SPLITS_SAVE_TO_FILE,
     CTX_MENU_WINDOW_CLOSE,
     CTX_MENU_WINDOW_RELOAD,
+    CTX_MENU_TEMPLATES_LOAD_FROM_FILE,
 } from '../../common/constants';
 import { ContextMenuState } from '../states/context-menu.state';
 import { RootState } from '../states/root.state';
@@ -44,6 +45,12 @@ export function getContextMenuStoreModule(): Module<ContextMenuState, RootState>
                 {
                     label: 'Save Splits ...',
                     actions: [CTX_MENU_SPLITS_SAVE_TO_FILE],
+                },
+            ],
+            templates: [
+                {
+                    label: 'Load Templates ...',
+                    actions: [CTX_MENU_TEMPLATES_LOAD_FROM_FILE],
                 },
             ],
             settings: [

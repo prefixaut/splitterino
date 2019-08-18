@@ -14,6 +14,8 @@ export const CTX_MENU_SETTINGS_OPEN = 'core.settings.open';
 
 export const CTX_MENU_KEYBINDINGS_OPEN = 'core.keybindings.open';
 
+export const CTX_MENU_TEMPLATES_LOAD_FROM_FILE = 'core.templates.load-from-file';
+
 /*
  * Keybindings
  */

@@ -17,6 +17,7 @@ import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 import { format as formatUrl } from 'url';
 import { Observable } from 'rxjs';
+import { merge } from 'lodash';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
@@ -25,21 +26,21 @@ import { Logger } from '../utils/logger';
 import { join } from 'path';
 import { isDevelopment } from '../utils/is-development';
 
+export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
+    webPreferences: {
+        webSecurity: false,
+        nodeIntegration: true
+    },
+    useContentSize: true,
+    title: 'Splitterino',
+    frame: false,
+    titleBarStyle: 'hidden',
+    minWidth: 440,
+    minHeight: 220,
+};
+
 @Injectable
 export class ElectronService implements ElectronInterface {
-    private readonly defaultWindowSettings: BrowserWindowConstructorOptions = {
-        webPreferences: {
-            webSecurity: false,
-            nodeIntegration: true
-        },
-        useContentSize: true,
-        title: 'Splitterino',
-        frame: false,
-        titleBarStyle: 'hidden',
-        minWidth: 440,
-        minHeight: 220,
-    };
-
     private readonly url = 'http://localhost:8080#';
 
     constructor() {
@@ -143,10 +144,7 @@ export class ElectronService implements ElectronInterface {
         });
 
         try {
-            const win = new remote.BrowserWindow({
-                ...this.defaultWindowSettings,
-                ...settings,
-            });
+            const win = new remote.BrowserWindow(merge({}, DEFAULT_WINDOW_SETTINGS, settings));
 
             if (isDevelopment()) {
                 win.webContents.openDevTools({ mode: 'detach' });

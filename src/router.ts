@@ -6,6 +6,7 @@ import KeybindingsEditorView from './views/keybindings-editor.view.vue';
 import SettingsEditorView from './views/settings-editor.view.vue';
 import SplitsEditorView from './views/splits-editor.view.vue';
 import OpenSplitsView from './views/open-splits.view.vue';
+import OpenTemplateView from './views/open-template.view.vue';
 
 Vue.use(Router);
 
@@ -40,6 +41,11 @@ export const router = new Router({
             path: '/open-splits',
             name: 'open-splits',
             component: OpenSplitsView,
+        },
+        {
+            path: '/open-template',
+            name: 'open-template',
+            component: OpenTemplateView,
         },
     ]
 });

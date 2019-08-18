@@ -12,7 +12,7 @@ import {
     ACTION_UNPAUSE,
 } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
-import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor } from '../utils/windows';
+import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits, openLoadTemplate } from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -26,6 +26,7 @@ import {
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
+    CTX_MENU_TEMPLATES_LOAD_FROM_FILE
 } from './constants';
 import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
 import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
@@ -83,11 +84,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
         openSplitsEditor(electron, params.vNode.context.$store as Store<RootState>);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
-        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedSplitsFiles.length === 0) {
-            io.loadSplitsFromFileToStore(params.vNode.context.$store);
-        } else {
-            openSplitsBrowser(electron);
-        }
+        openLoadSplits(electron, io, params.vNode.context.$store);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
         io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
@@ -105,6 +102,17 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
         openKeybindgsEditor(electron);
+    });
+
+    /*
+     * Open Template File
+     */
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, params => {
+        openLoadTemplate(
+            electron,
+            io,
+            params.vNode.context.$store
+        );
     });
 }
 

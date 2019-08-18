@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "meta",
+    "title": "Meta",
+    "description": "Meta data for template",
+    "type": "object",
+    "definitions": {
+        "author": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        }
+    },
+    "required": ["author", "name", "version", "splitterinoVersion"],
+    "properties": {
+        "author": {
+            "$ref": "#/definitions/author"
+        },
+        "name": {
+            "$ref": "#/definitions/name"
+        },
+        "version": {
+            "type": "string"
+        },
+        "splitterinoVersion": {
+            "type": "string"
+        }
+    }
+}
