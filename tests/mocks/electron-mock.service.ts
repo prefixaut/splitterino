@@ -11,6 +11,7 @@ import { VNode } from 'vue';
 
 import { ContextMenuItem } from '../../src/common/interfaces/context-menu-item';
 import { ElectronInterface } from '../../src/common/interfaces/electron';
+import { Observable } from 'rxjs';
 
 @Injectable
 export class ElectronMockService implements ElectronInterface {
@@ -91,5 +92,13 @@ export class ElectronMockService implements ElectronInterface {
 
     ipcSend(channel: string, ...args: any[]): void {
         // Noop
+    }
+
+    broadcastEvent(event: string, payload?: any) {
+        // Noop
+    }
+
+    listenEvent<T>(event: string): Observable<T> {
+        return new Observable<T>();
     }
 }
