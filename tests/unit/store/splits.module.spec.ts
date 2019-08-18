@@ -926,8 +926,8 @@ describe('Splits Store-Module', () => {
                 let totalIGTTime = 0;
                 segments.forEach(segment => {
                     if (segment.passed) {
-                        totalRTATime += segment.personalBest.rta.rawTime;
-                        totalIGTTime += segment.personalBest.igt.rawTime;
+                        totalRTATime += getFinalTime(segment.personalBest.rta);
+                        totalIGTTime += getFinalTime(segment.personalBest.igt);
                     }
                 });
 

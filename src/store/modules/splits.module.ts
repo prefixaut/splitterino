@@ -302,8 +302,8 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 context.state.segments.forEach(segment => {
                     if (segment.passed) {
-                        totalRTATime += segment.personalBest.rta.rawTime;
-                        totalIGTTime += segment.personalBest.igt.rawTime;
+                        totalRTATime += getFinalTime(segment.personalBest.rta);
+                        totalIGTTime += getFinalTime(segment.personalBest.igt);
                     }
                 });
 
