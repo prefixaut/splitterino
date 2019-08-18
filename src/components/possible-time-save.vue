@@ -62,7 +62,7 @@ export default class PossibleTimeSaveComponent extends Vue {
     public get possibleTimeSave() {
         const segment = this.segments[this.currentSegment];
         if (segment != null && segment.overallBest != null && segment.overallBest[this.timing] != null) {
-            return this.currentSegmentTime - getFinalTime(segment.overallBest[this.timing]);
+            return Math.max(getFinalTime(segment.overallBest[this.timing]) - this.currentSegmentTime, 0);
         }
 
         return null;
@@ -101,7 +101,7 @@ export default class PossibleTimeSaveComponent extends Vue {
             const currentTime = (now() - segment.startTime - pauseTime);
             const best = segment.personalBest != null ? getFinalTime(segment.personalBest[this.timing]) : null;
 
-            this.currentSegmentTime = Math.max(currentTime, best);
+            this.currentSegmentTime = Math.max(currentTime, best > 0 ? best : null);
         } else {
             this.currentSegmentTime = 0;
         }
