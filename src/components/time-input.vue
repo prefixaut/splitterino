@@ -1,5 +1,5 @@
 <template>
-    <div class="time-input" :class="{ active: active }">
+    <div class="time-input" :class="{ active: active }" v-on:focusout="deactivate()" v-on:focusin="activate()">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
         <div class="content-wrapper">
@@ -9,8 +9,6 @@
                 :min="0"
                 :max="99999"
                 @change="onChange($event, 'hours')"
-                @focus="activate"
-                @blur="deactivate"
             />
 
             <span class="colon">:</span>
@@ -21,8 +19,6 @@
                 :min="0"
                 :max="59"
                 @change="onChange($event, 'minutes')"
-                @focus="activate"
-                @blur="deactivate"
             />
 
             <span class="colon">:</span>
@@ -33,8 +29,6 @@
                 :min="0"
                 :max="59"
                 @change="onChange($event, 'seconds')"
-                @focus="activate"
-                @blur="deactivate"
             />
 
             <span class="dot">.</span>
@@ -45,8 +39,6 @@
                 :min="0"
                 :max="999"
                 @change="onChange($event, 'milliseconds')"
-                @focus="activate"
-                @blur="deactivate"
             />
         </div>
     </div>

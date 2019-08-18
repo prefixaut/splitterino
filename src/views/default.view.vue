@@ -19,6 +19,7 @@
         </spl-splits>
         <div class="container">
             <spl-timer/>
+            <spl-possible-time-save/>
             <spl-summary-of-best/>
             <spl-best-possible-time/>
         </div>

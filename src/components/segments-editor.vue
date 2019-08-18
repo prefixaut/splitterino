@@ -37,10 +37,18 @@
                         <p>OB</p>
                     </td>
                     <td class="personal-best">
-                        <spl-time-input v-model="segment.personalBest[timing].rawTime" @change="segmentChanged()" />
+                        <spl-time-input
+                            v-model="segment.personalBest[timing].rawTime"
+                            @change="triggerSegmentsChange()"
+                            @blur="validateSegmentChange(index)"
+                        />
                     </td>
                     <td class="overall-best">
-                        <spl-time-input v-model="segment.overallBest[timing].rawTime" @change="segmentChanged()" />
+                        <spl-time-input
+                            v-model="segment.overallBest[timing].rawTime"
+                            @change="triggerSegmentsChange()"
+                            @blur="validateSegmentChange(index)"
+                        />
                     </td>
                     <td class="manage">
                         <button class="remove-segment" title="Remove Segment" @click="removeSegment(index)">
@@ -65,12 +73,12 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 import { v4 as uuid } from 'uuid';
 import { cloneDeep } from 'lodash';
 
-import { Segment, TimingMethod } from '../common/interfaces/segment';
+import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../services/validator.service';
 
 const splits = namespace('splitterino/splits');
@@ -110,25 +118,40 @@ export default class SegmentsEditorComponent extends Vue {
     public segments: Segment[] = [];
     private validator: ValidatorService = null;
 
-    created() {
+    public created() {
         this.validator = this.$services.get(VALIDATOR_SERVICE_TOKEN);
     }
 
-    addSegment() {
+    public addSegment() {
         this.segments.push({
             id: uuid(),
             ...defaultSplit,
         });
-        this.segmentChanged();
+        this.triggerSegmentsChange();
     }
 
-    removeSegment(index: number) {
+    public removeSegment(index: number) {
         this.segments.splice(index, 1);
-        this.segmentChanged();
+        this.triggerSegmentsChange();
     }
 
-    segmentChanged() {
-        this.$emit('change', this.segments);
+    public validateSegmentChange(index: number) {
+        const segment = this.segments[index];
+
+        if (getFinalTime(segment.personalBest.rta) > 0 &&
+            getFinalTime(segment.personalBest.rta) < getFinalTime(segment.overallBest.rta)) {
+            segment.overallBest.rta = segment.personalBest.rta;
+        }
+
+        if (getFinalTime(segment.personalBest.igt) > 0 &&
+            getFinalTime(segment.personalBest.igt) < getFinalTime(segment.overallBest.igt)) {
+            segment.overallBest.igt = segment.personalBest.igt;
+        }
+    }
+
+    @Emit('change')
+    public triggerSegmentsChange() {
+        return this.segments;
     }
 
     @Watch('value', { immediate: true, deep: true })

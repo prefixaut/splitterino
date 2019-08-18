@@ -19,6 +19,7 @@ import GameInfoEditorComponent from './components/game-info-editor.vue';
 import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
+import PossibleTimeSaveComponent from './components/possible-time-save.vue';
 import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
 import SegmentsEditorComponent from './components/segments-editor.vue';
 import SettingsEditorSidebarComponent from './components/settings-editor-sidebar.vue';
@@ -85,6 +86,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('spl-keybinding-editor', KeybindingEditorComponent);
     Vue.component('spl-keybinding-input', KeybindingInputComponent);
     Vue.component('spl-number-input', NumberInputComponent);
+    Vue.component('spl-possible-time-save', PossibleTimeSaveComponent);
     Vue.component('spl-segments-editor', SegmentsEditorComponent);
     Vue.component('spl-splits', SplitsComponent);
     Vue.component('spl-summary-of-best', SummaryOfBestComponent);
