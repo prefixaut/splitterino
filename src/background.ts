@@ -1,5 +1,5 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, IpcMessageEvent, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMessageEvent, WebContents, protocol } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
@@ -61,7 +61,13 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 
     // Standard scheme must be registered before the app is ready
-    // protocol.registerStandardSchemes(['app'], { secure: true });
+    protocol.registerSchemesAsPrivileged([{
+        scheme: 'app',
+        privileges: {
+            secure: true,
+            standard: true
+        }
+    }]);
 
     /**
      * global reference of the main window.
