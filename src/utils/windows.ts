@@ -57,6 +57,29 @@ export function openSplitsBrowser(electron: ElectronInterface) {
     );
 }
 
+export function openLoadTemplate(electron: ElectronInterface, io: IOService, store: Store<RootState>) {
+    if (store.state.splitterino.meta.lastOpenedTemplateFiles.length === 0) {
+        io.askUserToOpenTemplateFile();
+    } else {
+        openTemplateBrowser(electron);
+    }
+}
+
+export function openTemplateBrowser(electron: ElectronInterface) {
+    electron.newWindow(
+        {
+            title: 'Open Template File',
+            parent: electron.getCurrentWindow(),
+            resizable: false,
+            width: 440,
+            height: 250,
+            modal: true,
+            minimizable: false
+        },
+        '/open-template'
+    );
+}
+
 export async function openSplitsEditor(electron: ElectronInterface, store: Store<RootState>) {
     const state: RootState = store.state;
     const status = state.splitterino.timer.status;

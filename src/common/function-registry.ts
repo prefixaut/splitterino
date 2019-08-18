@@ -12,7 +12,7 @@ import {
     ACTION_UNPAUSE,
 } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';
-import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
+import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits, openLoadTemplate } from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -108,22 +108,11 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      * Open Template File
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, params => {
-        if ((params.vNode.context.$store.state as RootState).splitterino.meta.lastOpenedTemplateFiles.length === 0) {
-            io.askUserToOpenTemplateFile();
-        } else {
-            electron.newWindow(
-                {
-                    title: 'Open Template File',
-                    parent: electron.getCurrentWindow(),
-                    resizable: false,
-                    width: 440,
-                    height: 250,
-                    modal: true,
-                    minimizable: false
-                },
-                '/open-template'
-            );
-        }
+        openLoadTemplate(
+            electron,
+            io,
+            params.vNode.context.$store
+        );
     });
 }
 
