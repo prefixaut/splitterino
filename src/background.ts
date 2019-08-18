@@ -138,6 +138,24 @@ process.on('unhandledRejection', (reason, promise) => {
         delete clients[windowId];
     });
 
+    // listen for global events from other processes and broadcast them
+    ipcMain.on('global-event', (ipcEvent: IpcMessageEvent, event: string, payload: any) => {
+        try {
+            Object.keys(clients).forEach(id => {
+                clients[id].send(event, payload);
+            });
+
+            // Echo message back
+            ipcEvent.sender.send(event, payload);
+        } catch (error) {
+            Logger.error({
+                msg: 'Error while sending global event to other processes',
+                payload,
+                error,
+            });
+        }
+    });
+
     // Listener to perform a delegate mutation on the main store
     ipcMain.on('vuex-dispatch', async (event: IpcMessageEvent, { type, payload, options }) => {
         Logger.debug({

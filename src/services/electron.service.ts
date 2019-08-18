@@ -10,10 +10,13 @@ import {
     OpenDialogOptions,
     remote,
     SaveDialogOptions,
+    ipcMain,
+    IpcMessageEvent,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 import { format as formatUrl } from 'url';
+import { Observable } from 'rxjs';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../common/interfaces/context-menu-item';
@@ -224,6 +227,48 @@ export class ElectronService implements ElectronInterface {
             ipcRenderer.send(channel, ...args);
         } else {
             // Do nothing?
+        }
+    }
+
+    /**
+     * Send event to background process and all renderer processes
+     * @param event Event ID to send
+     * @param payload Optional payload to send with event
+     */
+    public broadcastEvent(event: string, payload?: any) {
+        if (this.isRenderProcess()) {
+            Logger.trace({
+                msg: 'Broadcast event sent',
+                event: event,
+                payload: payload
+            });
+
+            ipcRenderer.send('global-event', event, payload);
+        }
+    }
+
+    /**
+     * Listen for a global event from all processes
+     * @param event Event to listen to
+     */
+    public listenEvent<T>(event: string): Observable<T> {
+        if (this.isRenderProcess()) {
+            Logger.trace({
+                msg: 'Registering global event listener',
+                event: event
+            });
+
+            return new Observable<T>(function subscribe(subscriber) {
+                const callback = (_: IpcMessageEvent, data: T) => {
+                    subscriber.next(data);
+                };
+
+                ipcRenderer.on(event, callback);
+
+                return function unsubscribe() {
+                    ipcRenderer.removeListener(event, callback);
+                };
+            });
         }
     }
 }
