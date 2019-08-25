@@ -26,14 +26,12 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
-import { RootState } from '../store/states/root.state';
-
 @Component({ name: 'spl-settings-editor-sidebar' })
 export default class SettingsEditorSidebarComponent extends Vue {
     public readonly modules = ['splitterino', 'plugins'];
 
     public get configuration() {
-        return (this.$store.state as RootState).splitterino.settings.configuration;
+        return this.$store.state.splitterino.settings.configuration;
     }
 
     public onGroupClicked(moduleKey: string, namespaceKey: string, groupKey: string) {

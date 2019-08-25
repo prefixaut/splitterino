@@ -11,7 +11,6 @@ import { namespace } from 'vuex-class';
 
 import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 import { TimerStatus } from '../common/timer-status';
-import { RootState } from '../store/states/root.state';
 import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
@@ -47,7 +46,7 @@ export default class PossibleTimeSaveComponent extends Vue {
 
     public created() {
         this.statusWatcher = this.$store.watch(
-            (state: RootState) => state.splitterino.timer.status,
+            state => state.splitterino.timer.status,
             () => this.statusChange()
         );
 

@@ -28,7 +28,6 @@ import { isEqual, cloneDeep } from 'lodash';
 import { Segment } from '../common/interfaces/segment';
 import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
-import { RootState } from '../store/states/root.state';
 import {
     ACTION_SET_GAME_NAME,
     ACTION_SET_CATEGORY,
@@ -69,7 +68,7 @@ export default class SplitsEditorView extends Vue {
     }
 
     loadDataFromStore() {
-        const root: RootState = this.$store.state;
+        const root = this.$store.state;
         // Create a copy of the current Segments to the component
         // They should not be reactive as editing it would be quite
         // a trouble.
@@ -108,7 +107,7 @@ export default class SplitsEditorView extends Vue {
         ]);
 
         this.loadDataFromStore();
-        const meta = (this.$store.state as RootState).splitterino.meta;
+        const meta = this.$store.state.splitterino.meta;
         let path: string = null;
         if (meta.lastOpenedSplitsFiles != null && meta.lastOpenedSplitsFiles.length > 0) {
             path = meta.lastOpenedSplitsFiles[0].path;

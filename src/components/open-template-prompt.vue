@@ -28,7 +28,6 @@ import { Component, Vue } from 'vue-property-decorator';
 import { basename } from 'path';
 import { upperCase } from 'lodash';
 
-import { RootState } from '../store/states/root.state';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { RecentlyOpenedTemplate } from '../store/states/meta.state';
@@ -41,7 +40,7 @@ export default class OpenTemplatePromptComponent extends Vue {
     private electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
 
     public created() {
-        const lastTemplateFiles = (this.$store.state as RootState).splitterino.meta.lastOpenedTemplateFiles;
+        const lastTemplateFiles = this.$store.state.splitterino.meta.lastOpenedTemplateFiles;
         this.recentTemplateFiles = lastTemplateFiles
             .slice(0, 5)
             .map(file => {
