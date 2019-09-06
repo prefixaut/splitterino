@@ -30,6 +30,7 @@
                     <spl-possible-time-save/>
                     <spl-summary-of-best/>
                     <spl-best-possible-time/>
+                    <spl-previous-segment/>
                 </div>
             </template>
         </div>
