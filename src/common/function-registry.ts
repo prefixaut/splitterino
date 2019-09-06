@@ -11,7 +11,6 @@ import {
     ACTION_UNDO,
     ACTION_UNPAUSE,
 } from '../store/modules/splits.module';
-import { RootState } from '../store/states/root.state';
 import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits, openLoadTemplate } from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
@@ -81,7 +80,7 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      * Split Actions
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, async params => {
-        openSplitsEditor(electron, params.vNode.context.$store as Store<RootState>);
+        openSplitsEditor(electron, params.vNode.context.$store);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
         openLoadSplits(electron, io, params.vNode.context.$store);

@@ -81,7 +81,7 @@ export function openTemplateBrowser(electron: ElectronInterface) {
 }
 
 export async function openSplitsEditor(electron: ElectronInterface, store: Store<RootState>) {
-    const state: RootState = store.state;
+    const state = store.state;
     const status = state.splitterino.timer.status;
 
     if (status === TimerStatus.FINISHED) {

@@ -36,7 +36,6 @@ import { set, isEqual, merge } from 'lodash';
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { RootState } from '../store/states/root.state';
 import { createHash } from 'crypto';
 
 @Component({ name: 'spl-settings-editor' })
@@ -55,7 +54,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public get haveSettingsChanged() {
-        const state: RootState = this.$store.state;
+        const state = this.$store.state;
         const values = state.splitterino.settings.values;
         const mergedValues = merge({}, values, this.changesValues);
 
