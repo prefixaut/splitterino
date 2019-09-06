@@ -25,14 +25,14 @@
                 >
                     <div class="name">{{ segment.name }}</div>
                     <div class="time" v-show="showTime(index)">
-                        {{ getSegmentTime(index) | aevum }}
+                        {{ getSegmentTime(index) | aevum(segmentTimeFormat) }}
                     </div>
                     <div class="comparisons" v-show="showTime(index)">
                         <div class="personal-best">
-                            {{ getSegmentPersonalBestComparison(index) | aevum }}
+                            {{ getSegmentPersonalBestComparison(index) | aevum(comparisonTimeFormat) }}
                         </div>
                         <div class="overall-best">
-                            {{ getSegmentOverallBestComparison(index) | aevum }}
+                            {{ getSegmentOverallBestComparison(index) | aevum(comparisonTimeFormat) }}
                         </div>
                     </div>
                 </div>
@@ -56,6 +56,7 @@ import { now } from '../utils/time';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
+import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -85,6 +86,12 @@ export default class SplitsComponent extends Vue {
         default: false,
     })
     public pinLastSegment: boolean;
+
+    @Prop({ type: String, default: DEFAULT_TIMER_FORMAT })
+    public segmentTimeFormat: string;
+
+    @Prop({ type: String, default: DEFAULT_TIMER_FORMAT })
+    public comparisonTimeFormat: string;
 
     @timer.State('status')
     public status: TimerStatus;
@@ -133,44 +140,6 @@ export default class SplitsComponent extends Vue {
 
     public beforeDestroy() {
         this.statusWatcher();
-    }
-
-    public statusChange() {
-        if (this.status === TimerStatus.RUNNING) {
-            this.intervalId = window.setInterval(() => {
-                this.calculateCurrentSegmentTime();
-            }, 1);
-
-            return;
-        }
-
-        if (this.intervalId > -1) {
-            window.clearInterval(this.intervalId);
-        }
-
-        if (this.status === TimerStatus.STOPPED) {
-            this.currentSegmentTime = 0;
-        }
-    }
-
-    private calculateCurrentSegmentTime() {
-        try {
-            const segment = this.segments[this.currentSegment];
-            if (segment != null) {
-                let pauseTime = 0;
-                if (segment.currentTime != null && segment.currentTime[this.timing] != null) {
-                    pauseTime = segment.currentTime[this.timing].pauseTime;
-                }
-                this.currentSegmentTime = now() - segment.startTime - pauseTime;
-            }
-        } catch (error) {
-            // Clear the interval to not trigger billions of errors
-            window.clearInterval(this.intervalId);
-            Logger.error({
-                msg: 'Error in timer update-interval of splits-component!',
-                error,
-            });
-        }
     }
 
     public get showTime() {
@@ -222,6 +191,24 @@ export default class SplitsComponent extends Vue {
         }
 
         return arr;
+    }
+
+    public statusChange() {
+        if (this.status === TimerStatus.RUNNING) {
+            this.intervalId = window.setInterval(() => {
+                this.calculateCurrentSegmentTime();
+            }, 1);
+
+            return;
+        }
+
+        if (this.intervalId > -1) {
+            window.clearInterval(this.intervalId);
+        }
+
+        if (this.status === TimerStatus.STOPPED) {
+            this.currentSegmentTime = 0;
+        }
     }
 
     public getSegmentTime(index: number) {
@@ -278,7 +265,7 @@ export default class SplitsComponent extends Vue {
         return null;
     }
 
-    scrollSplits(event: WheelEvent) {
+    public scrollSplits(event: WheelEvent) {
         if (event.deltaY > 0) {
             this.scrollIndex++;
         } else {
@@ -289,6 +276,26 @@ export default class SplitsComponent extends Vue {
             this.scrollIndex,
             this.segments.length - 1
         ));
+    }
+
+    private calculateCurrentSegmentTime() {
+        try {
+            const segment = this.segments[this.currentSegment];
+            if (segment != null) {
+                let pauseTime = 0;
+                if (segment.currentTime != null && segment.currentTime[this.timing] != null) {
+                    pauseTime = segment.currentTime[this.timing].pauseTime;
+                }
+                this.currentSegmentTime = now() - segment.startTime - pauseTime;
+            }
+        } catch (error) {
+            // Clear the interval to not trigger billions of errors
+            window.clearInterval(this.intervalId);
+            Logger.error({
+                msg: 'Error in timer update-interval of splits-component!',
+                error,
+            });
+        }
     }
 }
 </script>

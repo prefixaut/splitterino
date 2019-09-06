@@ -1,7 +1,7 @@
 <template>
     <div class="possible-time-save">
         <div class="label">{{ label }}</div>
-        <div class="time">{{ possibleTimeSave | aevum }}</div>
+        <div class="time">{{ possibleTimeSave | aevum(format) }}</div>
     </div>
 </template>
 
@@ -13,11 +13,15 @@ import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segmen
 import { TimerStatus } from '../common/timer-status';
 import { RootState } from '../store/states/root.state';
 import { now } from '../utils/time';
+import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
-@Component({ name: 'spl-possible-time-save' })
+@Component({
+    name: 'spl-possible-time-save',
+    mixins: [AevumFormatMixin]
+})
 export default class PossibleTimeSaveComponent extends Vue {
     @Prop({ type: String, default: 'Possible Time Save' })
     public label: string;

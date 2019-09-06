@@ -1,6 +1,11 @@
 import { SettingsConfigurationNamespace } from '../store/states/settings.state';
 
 /*
+ * Default Values
+ */
+export const DEFAULT_TIMER_FORMAT = '(-)(h:#:)(m:#:)[s].[ddd]';
+
+/*
  * Context Menu
  */
 export const CTX_MENU_WINDOW_RELOAD = 'core.window.reload';
@@ -57,7 +62,47 @@ export const CORE_SETTINGS: SettingsConfigurationNamespace = {
                     componentProps: {},
                     defaultValue: 1,
                 },
+                {
+                    key: 'formatSegmentTime',
+                    label: 'Segment Time Format',
+                    component: 'spl-aevum-format-input',
+                    componentProps: {},
+                    defaultValue: DEFAULT_TIMER_FORMAT,
+                },
+                {
+                    key: 'formatComparisonTime',
+                    label: 'Segment Comparison Format',
+                    component: 'spl-aevum-format-input',
+                    componentProps: {},
+                    defaultValue: DEFAULT_TIMER_FORMAT,
+                },
             ]
-        }
+        },
+        {
+            key: 'timer',
+            label: 'Timer',
+            settings: [
+                {
+                    key: 'format',
+                    label: 'Format',
+                    component: 'spl-aevum-format-input',
+                    componentProps: {},
+                    defaultValue: DEFAULT_TIMER_FORMAT,
+                },
+            ]
+        },
+        {
+            key: 'app',
+            label: 'Application',
+            settings: [
+                {
+                    key: 'showTitleBar',
+                    label: 'Show Title Bar',
+                    component: 'spl-checkbox',
+                    componentProps: {},
+                    defaultValue: true,
+                },
+            ]
+        },
     ]
 };

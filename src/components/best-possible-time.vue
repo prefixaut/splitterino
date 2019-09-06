@@ -1,7 +1,7 @@
 <template>
     <div class="best-possible-time">
         <div class="label">{{ label }}</div>
-        <div class="time">{{ bestPossibleTime | aevum }}</div>
+        <div class="time">{{ bestPossibleTime | aevum(format) }}</div>
     </div>
 </template>
 
@@ -13,11 +13,15 @@ import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segmen
 import { TimerStatus } from '../common/timer-status';
 import { RootState } from '../store/states/root.state';
 import { now } from '../utils/time';
+import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
 
-@Component({ name: 'spl-best-possible-time' })
+@Component({
+    name: 'spl-best-possible-time',
+    mixins: [AevumFormatMixin]
+})
 export default class BestPossibleTimeComponent extends Vue {
     @Prop({ type: String, default: 'Best possible Time' })
     public label: string;

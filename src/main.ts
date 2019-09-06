@@ -3,15 +3,17 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Aevum } from 'aevum';
 import { ipcRenderer } from 'electron';
+import VRuntimeTemplate from 'v-runtime-template';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
-import VRuntimeTemplate from 'v-runtime-template';
 
 import App from './app.vue';
+import { DEFAULT_TIMER_FORMAT } from './common/constants';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
 import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
 import { getFinalTime, SegmentTime, TimingMethod } from './common/interfaces/segment';
+import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
 import ButtonComponent from './components/button.vue';
 import CheckboxComponent from './components/checkbox.vue';
@@ -20,8 +22,9 @@ import GameInfoEditorComponent from './components/game-info-editor.vue';
 import KeybindingEditorComponent from './components/keybinding-editor.vue';
 import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
-import PossibleTimeSaveComponent from './components/possible-time-save.vue';
 import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
+import OpenTemplatePromptComponent from './components/open-template-prompt.vue';
+import PossibleTimeSaveComponent from './components/possible-time-save.vue';
 import SegmentsEditorComponent from './components/segments-editor.vue';
 import SettingsEditorSidebarComponent from './components/settings-editor-sidebar.vue';
 import SettingsEditorComponent from './components/settings-editor.vue';
@@ -31,7 +34,6 @@ import TextInputComponent from './components/text-input.vue';
 import TimeInputComponent from './components/time-input.vue';
 import TimerComponent from './components/timer.vue';
 import TitleBarComponent from './components/title-bar.vue';
-import OpenTemplatePromptComponent from './components/open-template-prompt.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { router } from './router';
 import { getClientStore } from './store';
@@ -83,6 +85,7 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.component('v-runtime-template', VRuntimeTemplate);
 
     // Register Components
+    Vue.component('spl-aevum-format-input', AevumFormatInputComponent);
     Vue.component('spl-best-possible-time', BestPossibleTimeComponent);
     Vue.component('spl-button', ButtonComponent);
     Vue.component('spl-checkbox', CheckboxComponent);
@@ -108,10 +111,19 @@ process.on('unhandledRejection', (reason, promise) => {
     Vue.directive('spl-ctx-menu', getContextMenuDirective(injector));
 
     // Register Filters
-    const formatter = new Aevum('(-)(h:#:)(m:#:)[s].[ddd]');
-    Vue.filter('aevum', value => {
+    const formatterCache = {};
+
+    Vue.filter('aevum', (value: any, format?: string) => {
         if (value == null || !isFinite(value) || isNaN(value)) {
             return '';
+        }
+        if (typeof format !== 'string' || format.trim().length < 1) {
+            format = DEFAULT_TIMER_FORMAT;
+        }
+        let formatter = formatterCache[format];
+        if (formatter == null) {
+            formatter = new Aevum(format);
+            formatterCache[format] = formatter;
         }
 
         return formatter.format(value, { padding: true });

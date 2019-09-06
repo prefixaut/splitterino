@@ -1,5 +1,5 @@
 <template>
-    <div class="title-bar">
+    <div class="title-bar" :class="{ 'show-only-on-hover': showOnlyOnHover }">
         <div class="title">{{ title }}</div>
         <div class="controls">
             <div v-if="minimizable" class="control minimize" @click="minimize()">
@@ -16,12 +16,16 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
+import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { BrowserWindow } from 'electron';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {
+    @Prop({ type: Boolean, default: false })
+    public showOnlyOnHover: boolean;
+
     public minimizable = true;
     public maximizable = true;
     public closeable = true;
@@ -80,6 +84,15 @@ export default class TitleBarComponent extends Vue {
     background: $spl-color-off-black;
     display: flex;
     height: $spl-title-bar-height;
+    transition: 200ms;
+
+    &.show-only-on-hover {
+        opacity: 0;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
 
     .title {
         -webkit-app-region: drag;

@@ -1,7 +1,7 @@
 <template>
     <div class="summary-of-best">
         <div class="label">{{ label }}</div>
-        <div class="time">{{ summary | aevum }}</div>
+        <div class="time">{{ summary | aevum(format) }}</div>
     </div>
 </template>
 
@@ -10,10 +10,14 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
+import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
 const splits = namespace('splitterino/splits');
 
-@Component({ name: 'spl-summary-of-best' })
+@Component({
+    name: 'spl-summary-of-best',
+    mixins: [AevumFormatMixin],
+})
 export default class SummaryOfBestComponent extends Vue {
     @Prop({ type: String, default: 'Sum of Best' })
     public label: string;
