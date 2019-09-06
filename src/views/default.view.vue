@@ -32,6 +32,7 @@
                     <spl-possible-time-save/>
                     <spl-summary-of-best/>
                     <spl-best-possible-time/>
+                    <spl-previous-segment/>
                 </div>
             </template>
         </div>
@@ -41,7 +42,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import { RootState } from '../store/states/root.state';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
 import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
@@ -151,7 +151,7 @@ export default class DefaultView extends Vue {
                     // ? Maybe also warn user in general when splits file is corrupt/invalid
                     if (
                         filePath.endsWith('.splits') &&
-                        (this.$store.state as RootState).splitterino.timer.status === TimerStatus.STOPPED
+                        this.$store.state.splitterino.timer.status === TimerStatus.STOPPED
                     ) {
                         this.ioService.loadSplitsFromFileToStore(this.$store, filePath);
                     }

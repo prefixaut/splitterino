@@ -54,7 +54,6 @@ import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segmen
 import { TimerStatus } from '../common/timer-status';
 import { now } from '../utils/time';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
-import { RootState } from '../store/states/root.state';
 import { Logger } from '../utils/logger';
 import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 
@@ -130,7 +129,7 @@ export default class SplitsComponent extends Vue {
 
     public created() {
         this.statusWatcher = this.$store.watch(
-            (state: RootState) => state.splitterino.timer.status,
+            state => state.splitterino.timer.status,
             () => this.statusChange()
         );
 

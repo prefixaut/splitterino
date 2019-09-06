@@ -604,24 +604,30 @@ export class IOService {
             plugins: {},
         };
 
-        if (loadedSettings != null) {
-            for (const [moduleKey, modulE] of Object.entries(store.state.splitterino.settings.configuration)) {
-                for (const namespacE of modulE) {
-                    for (const group of namespacE.groups) {
-                        for (const setting of group.settings) {
-                            let value = setting.defaultValue;
-                            const path = `${moduleKey}.${namespacE.key}.${group.key}.${setting.key}`;
-                            if (loadedSettings[path] !== undefined) {
-                                value = loadedSettings[path];
-                            }
+        let usedDefaultValue = false;
 
-                            set<Settings>(parsedSettings, path, value);
+        for (const [moduleKey, modulE] of Object.entries(store.state.splitterino.settings.configuration)) {
+            for (const namespacE of modulE) {
+                for (const group of namespacE.groups) {
+                    for (const setting of group.settings) {
+                        let value = setting.defaultValue;
+                        const path = `${moduleKey}.${namespacE.key}.${group.key}.${setting.key}`;
+                        if (loadedSettings != null && loadedSettings[path] !== undefined) {
+                            value = loadedSettings[path];
+                        } else {
+                            usedDefaultValue = true;
                         }
+
+                        set<Settings>(parsedSettings, path, value);
                     }
                 }
             }
+        }
 
-            await store.dispatch(ACTION_SET_ALL_SETTINGS, { values: parsedSettings });
+        await store.dispatch(ACTION_SET_ALL_SETTINGS, { values: parsedSettings });
+
+        if (usedDefaultValue) {
+            this.saveSettingsToFile(store);
         }
     }
 }

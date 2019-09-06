@@ -9,7 +9,6 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
-import { RootState } from '../store/states/root.state';
 import { now } from '../utils/time';
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
@@ -61,7 +60,7 @@ export default class TimerComponent extends Vue {
 
     public created() {
         this.statusWatcher = this.$store.watch(
-            (state: RootState) => state.splitterino.timer.status,
+            state => state.splitterino.timer.status,
             () => this.statusChange()
         );
 
