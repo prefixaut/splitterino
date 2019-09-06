@@ -47,7 +47,6 @@ import { set, isEqual, merge } from 'lodash';
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { createHash } from 'crypto';
 import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 @Component({ name: 'spl-settings-editor' })
