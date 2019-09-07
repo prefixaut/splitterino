@@ -1,7 +1,7 @@
 <template>
     <div class="previous-segment">
         <div class="label">{{ label }}</div>
-        <div class="time">{{ previousSegmentTime | aevum }}</div>
+        <div class="time">{{ previousSegmentTime | aevum(format) }}</div>
     </div>
 </template>
 
@@ -10,10 +10,14 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
+import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
 const splits = namespace('splitterino/splits');
 
-@Component({ name: 'spl-previous-segment' })
+@Component({
+    name: 'spl-previous-segment',
+    mixins: [AevumFormatMixin],
+})
 export default class PreviousSegmentComponent extends Vue {
     @Prop({ type: String, default: 'Previous Segment' })
     public label: string;

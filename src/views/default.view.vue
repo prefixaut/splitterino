@@ -16,6 +16,8 @@
                     :pinLastSegment="pinLastSegment"
                     :visibleUpcomingSegments="visibleUpcomingSegments"
                     :visiblePreviousSegments="visiblePreviousSegments"
+                    :segmentTimeFormat="segmentTimeFormat"
+                    :comparisonTimeFormat="comparisonTimeFormat"
                 >
                     <div class="container">
                         <p>No Splits are currently loaded! Please load some or create new ones</p>
@@ -26,7 +28,7 @@
                     </div>
                 </spl-splits>
                 <div class="container">
-                    <spl-timer/>
+                    <spl-timer :format="timerFormat" />
                     <spl-possible-time-save/>
                     <spl-summary-of-best/>
                     <spl-best-possible-time/>
@@ -70,6 +72,18 @@ export default class DefaultView extends Vue {
 
     public get visiblePreviousSegments() {
         return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
+    }
+
+    public get segmentTimeFormat() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatSegmentTime');
+    }
+
+    public get comparisonTimeFormat() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatComparisonTime');
+    }
+
+    public get timerFormat() {
+        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.timer.format');
     }
 
     public selectSplits() {
