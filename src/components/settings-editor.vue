@@ -23,8 +23,19 @@
                 v-if="(activeSettingsConfig != null && activeSettingsConfig.length > 0) || haveSettingsChanged"
                 outline
                 theme="primary"
-                @click="applySettings"
+                @click="saveSettings"
             >Save Settings</spl-button>
+            <spl-button
+                v-if="(activeSettingsConfig != null && activeSettingsConfig.length > 0) || haveSettingsChanged"
+                outline
+                theme="primary"
+                @click="applySettings"
+            >Apply Settings</spl-button>
+            <spl-button
+                outline
+                theme="primary"
+                @click="close"
+            >Cancel</spl-button>
         </div>
     </div>
 </template>
@@ -36,7 +47,7 @@ import { set, isEqual, merge } from 'lodash';
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { createHash } from 'crypto';
+import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -78,6 +89,15 @@ export default class SettingsEditorComponent extends Vue {
 
     public applySettings() {
         this.$store.dispatch(ACTION_BULK_SET_SETTINGS, { values: this.changesValues });
+    }
+
+    public saveSettings() {
+        this.applySettings();
+        this.close();
+    }
+
+    public close() {
+        this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().close();
     }
 }
 </script>
