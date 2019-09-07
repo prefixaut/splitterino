@@ -13,14 +13,14 @@ import {
 
 export const MODULE_PATH = 'splitterino/settings';
 
-const ID_GETTER_GET_VALUE_BY_PATH = 'getValueByPath';
-const ID_GETTER_GET_CONFIGURATIONS_BY_PATH = 'getConfigurationsByPath';
+export const ID_GETTER_GET_VALUE_BY_PATH = 'getValueByPath';
+export const ID_GETTER_GET_CONFIGURATIONS_BY_PATH = 'getConfigurationsByPath';
 
-const ID_MUTATION_SET_ALL_SETTINGS = 'setAllSettings';
-const ID_MUTATION_BULK_SET_SETTINGS = 'bulkSetSettings';
+export const ID_MUTATION_SET_ALL_SETTINGS = 'setAllSettings';
+export const ID_MUTATION_BULK_SET_SETTINGS = 'bulkSetSettings';
 
-const ID_ACTION_SET_ALL_SETTINGS = 'setAllSettings';
-const ID_ACTION_BULK_SET_SETTINGS = 'bulkSetSettings';
+export const ID_ACTION_SET_ALL_SETTINGS = 'setAllSettings';
+export const ID_ACTION_BULK_SET_SETTINGS = 'bulkSetSettings';
 
 export const GETTER_VALUE_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_VALUE_BY_PATH}`;
 export const GETTER_CONFIGURATIONS_BY_PATH = `${MODULE_PATH}/${ID_GETTER_GET_CONFIGURATIONS_BY_PATH}`;
@@ -89,6 +89,7 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
         },
         mutations: {
             [ID_MUTATION_SET_ALL_SETTINGS](state: SettingsState, payload: SettingsPayload) {
+                // TODO: check if there is not conflict with interface so state stays conistent
                 state.values = payload.values;
             },
             [ID_MUTATION_BULK_SET_SETTINGS](state: SettingsState, payload: SettingsPayload) {
