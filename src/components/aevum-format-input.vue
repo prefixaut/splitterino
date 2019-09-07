@@ -78,8 +78,8 @@ export default class AevumFormatInputComponent extends Vue {
     }
 
     &.is-invalid input {
-        border-color: $spl-color-alert !important;
-        outline-color: $spl-color-alert !important;
+        border-color: $spl-color-danger !important;
+        outline-color: $spl-color-danger !important;
     }
 }
 </style>
