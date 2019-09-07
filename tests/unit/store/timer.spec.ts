@@ -17,6 +17,8 @@ import { randomInt } from '../../utils';
 
 Vue.use(Vuex);
 
+const maxTimeDeviation = 1;
+
 describe('Timer Store-Module', () => {
     const timerModule: Module<TimerState, RootState> = getTimerStoreModule();
 
@@ -179,7 +181,7 @@ describe('Timer Store-Module', () => {
 
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
-                expect(state.startTime).to.be.within(time, time + 1);
+                expect(state.startTime).to.be.within(time, time + maxTimeDeviation);
                 expect(state.pauseTime).to.equal(initialState.pauseTime);
                 expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
@@ -212,9 +214,9 @@ describe('Timer Store-Module', () => {
                 expect(state.pauseTime).to.equal(0);
                 expect(state.igtPauseTime).to.equal(0);
                 expect(state.pauseTotal).to.be.within(
-                    initialState.pauseTotal + pauseTime, initialState.pauseTotal + pauseTime + 1);
+                    initialState.pauseTotal + pauseTime, initialState.pauseTotal + pauseTime + maxTimeDeviation);
                 expect(state.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + pauseTime, initialState.igtPauseTotal + pauseTime + 1);
+                    initialState.igtPauseTotal + pauseTime, initialState.igtPauseTotal + pauseTime + maxTimeDeviation);
                 expect(state.finishTime).to.equal(initialState.finishTime);
             });
 
@@ -243,7 +245,7 @@ describe('Timer Store-Module', () => {
                 expect(state.igtPauseTime).to.equal(0);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + pauseTime, initialState.igtPauseTotal + pauseTime + 1);
+                    initialState.igtPauseTotal + pauseTime, initialState.igtPauseTotal + pauseTime + maxTimeDeviation);
                 expect(state.finishTime).to.equal(initialState.finishTime);
             });
 
@@ -339,7 +341,7 @@ describe('Timer Store-Module', () => {
                 expect(state.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
-                expect(state.pauseTime).to.be.within(time, time + 1);
+                expect(state.pauseTime).to.be.within(time, time + maxTimeDeviation);
                 expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
@@ -366,8 +368,8 @@ describe('Timer Store-Module', () => {
                 expect(state.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
-                expect(state.pauseTime).to.be.within(time, time + 1);
-                expect(state.igtPauseTime).to.be.within(time, time + 1);
+                expect(state.pauseTime).to.be.within(time, time + maxTimeDeviation);
+                expect(state.igtPauseTime).to.be.within(time, time + maxTimeDeviation);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
                 expect(state.finishTime).to.equal(initialState.finishTime);
@@ -440,7 +442,7 @@ describe('Timer Store-Module', () => {
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
                 expect(state.pauseTime).to.equal(initialState.pauseTime);
-                expect(state.igtPauseTime).to.be.within(time, time + 1);
+                expect(state.igtPauseTime).to.be.within(time, time + maxTimeDeviation);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
                 expect(state.finishTime).to.equal(initialState.finishTime);
@@ -467,7 +469,7 @@ describe('Timer Store-Module', () => {
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
                 expect(state.pauseTime).to.equal(initialState.pauseTime);
-                expect(state.igtPauseTime).to.be.within(time, time + 1);
+                expect(state.igtPauseTime).to.be.within(time, time + maxTimeDeviation);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
                 expect(state.finishTime).to.equal(initialState.finishTime);
@@ -497,7 +499,7 @@ describe('Timer Store-Module', () => {
                 expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                 expect(state.pauseTotal).to.be.within(
                     initialState.pauseTotal + (time - initialState.pauseTime),
-                    initialState.pauseTotal + (time - initialState.pauseTime) + 1
+                    initialState.pauseTotal + (time - initialState.pauseTime) + maxTimeDeviation
                 );
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
                 expect(state.finishTime).to.equal(initialState.finishTime);
@@ -573,13 +575,13 @@ describe('Timer Store-Module', () => {
                 expect(state.igtPauseTime).to.equal(0);
                 expect(state.pauseTotal).to.be.within(
                     initialState.pauseTotal + (time - initialState.pauseTime),
-                    initialState.pauseTotal + (time - initialState.pauseTime) + 1
+                    initialState.pauseTotal + (time - initialState.pauseTime) + maxTimeDeviation
                 );
                 expect(state.igtPauseTotal).to.be.within(
                     initialState.igtPauseTotal + (time - initialState.igtPauseTime),
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + 1
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + maxTimeDeviation
                 );
-                expect(state.finishTime).to.be.within(time, time + 1);
+                expect(state.finishTime).to.be.within(time, time + maxTimeDeviation);
             });
 
             it('should finish the paused IGT timer correctly [RUNNING_IGT_PAUSED => FINISHED]', () => {
@@ -607,9 +609,9 @@ describe('Timer Store-Module', () => {
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.be.within(
                     initialState.igtPauseTotal + (time - initialState.igtPauseTime),
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + 1
+                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + maxTimeDeviation
                 );
-                expect(state.finishTime).to.be.within(time, time + 1);
+                expect(state.finishTime).to.be.within(time, time + maxTimeDeviation);
             });
 
             it('should finish the running timer correctly [RUNNING => FINISHED]', () => {
@@ -636,7 +638,7 @@ describe('Timer Store-Module', () => {
                 expect(state.igtPauseTime).to.equal(initialState.igtPauseTime);
                 expect(state.pauseTotal).to.equal(initialState.pauseTotal);
                 expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
-                expect(state.finishTime).to.be.within(time, time + 1);
+                expect(state.finishTime).to.be.within(time, time + maxTimeDeviation);
             });
 
             it('should do nothing when switching from an invalid status to finished [* => FINISHED]', () => {
