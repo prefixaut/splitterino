@@ -147,7 +147,7 @@ describe('Splits Store-Module', () => {
         });
 
         describe(MUTATION_SET_TIMING, () => {
-            it('should apply the mutaiton correctly', () => {
+            it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
                     timing: TimingMethod.RTA,
