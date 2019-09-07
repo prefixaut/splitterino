@@ -2,10 +2,11 @@ import { MenuItem, BrowserWindow } from 'electron';
 import { VNode } from 'vue';
 
 export interface ContextMenuItem {
-    label: string;
+    label?: string;
     actions?: string[];
     enabled?: boolean;
     visible?: boolean;
+    type?: 'normal' | 'separator';
 }
 
 export interface ContextMenuItemActionFunctionParameters {
