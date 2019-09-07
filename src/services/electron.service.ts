@@ -194,11 +194,9 @@ export class ElectronService implements ElectronInterface {
     }
 
     private prepareMenuItemOptions(menuItem: ContextMenuItem, vNode: VNode): MenuItemConstructorOptions {
-        const options: MenuItemConstructorOptions = {
-            label: menuItem.label,
-            enabled: menuItem.enabled,
-            visible: menuItem.visible,
-        };
+        // Has some additional properties that are not really necessary
+        // Filtering out these properties is also not that useful
+        const options: MenuItemConstructorOptions = menuItem;
 
         if (Array.isArray(menuItem.actions)) {
             options.click = (electronMenuItem, browserWindow, event) => {

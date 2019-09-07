@@ -12,6 +12,7 @@ import {
 } from '../../common/constants';
 import { ContextMenuState } from '../states/context-menu.state';
 import { RootState } from '../states/root.state';
+import { ContextMenuItem } from '../../common/interfaces/context-menu-item';
 
 const MODULE_PATH = 'splitterino/contextMenu';
 
@@ -68,13 +69,18 @@ export function getContextMenuStoreModule(): Module<ContextMenuState, RootState>
         },
         getters: {
             [ID_GETTER_MENUES](state) {
-                return (menus: string[]): Object[] => {
-                    const ctxMenu: Object[] = [];
-                    menus.forEach((el: string) => {
+                return (menus: string[]): ContextMenuItem[] => {
+                    const ctxMenu: ContextMenuItem[] = [];
+                    menus.forEach((el, index) => {
                         if (!(el in state)) {
                             throw new Error(`Menu '${el}' does not exist in state`);
                         }
+
                         ctxMenu.push(...state[el]);
+
+                        if (index < menus.length - 1) {
+                            ctxMenu.push({ type: 'separator' });
+                        }
                     });
 
                     return ctxMenu;
