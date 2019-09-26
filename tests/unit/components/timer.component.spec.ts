@@ -9,7 +9,7 @@ import { getSplitterinoStoreModules } from '../../../src/store/modules/index.mod
 import { RootState } from '../../../src/store/states/root.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
-import { createMockInjector, wait } from '../../utils';
+import { createMockInjector, wait, randomInt } from '../../utils';
 import { Aevum } from 'aevum';
 import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
 import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
@@ -862,5 +862,115 @@ describe('Timer.vue', () => {
             secondValidTimes.push(formatter.format(offset + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
+    });
+
+    it('should pause the timer and display the final rta-time when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset + i));
+        }
+        expect(text).to.be.oneOf(validTimes);
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
+    });
+
+    it('should pause the timer and display the final rta-time (with pauses) when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const pauseTime = randomInt(300, 50);
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+            pauseTotal: pauseTime,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - pauseTime - maxPreTimeDeviation,
+            offset - pauseTime + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset - pauseTime + i));
+        }
+        expect(text).to.be.oneOf(validTimes, JSON.stringify(validTimes));
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time - pauseTime);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
     });
 });

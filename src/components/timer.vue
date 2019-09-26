@@ -93,11 +93,15 @@ export default class TimerComponent extends Vue {
         }
 
         if (this.status === TimerStatus.FINISHED) {
-            this.currentTime = this.finishTime - (this.startTime + this.startDelay);
+            this.currentTime = this.finishTime - (
+                this.startTime +
+                this.startDelay +
+                (this.igt ? this.igtPauseTotal : this.pauseTotal)
+            );
         }
 
         if (this.status === TimerStatus.STOPPED) {
-            this.currentTime = 0;
+            this.currentTime = this.startDelay * -1;
         }
     }
 
