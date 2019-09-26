@@ -1,4 +1,15 @@
 module.exports = {
     presets: ['@vue/app'],
-    plugins: ['babel-plugin-istanbul']
+    env: {
+        test: {
+            plugins: [
+                [
+                    'istanbul',
+                    {
+                        useInlineSourceMaps: false,
+                    },
+                ],
+            ],
+        },
+    },
 };
