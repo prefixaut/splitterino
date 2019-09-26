@@ -22,7 +22,12 @@ function setupVueInstance() {
     return localVue;
 }
 
-const maxTimeDeviation = 20;
+// Deviation times, as the rendering can be a bit delayed
+
+/** Allowed deviation that the timer is allowed to be in front of the time */
+const maxPreTimeDeviation = 5;
+/** Allowed deviation that the timer is allowed to be over of the time */
+const maxPostTimeDeviation = 20;
 
 describe('Timer.vue', () => {
     it('should be stopped on default', () => {
@@ -88,21 +93,27 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime).to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime).to.be.within(offset + waitTime, offset + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + waitTime) - maxPreTimeDeviation,
+            offset + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -136,23 +147,27 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset - pauseTime, (offset - pauseTime) + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset - pauseTime) - maxPreTimeDeviation,
+            (offset - pauseTime) + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format((offset - pauseTime) + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within((offset - pauseTime) + waitTime, (offset - pauseTime) + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset - pauseTime) + waitTime - maxPreTimeDeviation,
+            (offset - pauseTime) + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format((offset - pauseTime) + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -185,23 +200,27 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + waitTime, offset + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + waitTime) - maxPreTimeDeviation,
+            offset + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -234,21 +253,27 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime).to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime).to.be.within(offset + waitTime, offset + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + waitTime) - maxPreTimeDeviation,
+            offset + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -283,23 +308,27 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset - pauseTime, (offset - pauseTime) + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset - pauseTime) - maxPreTimeDeviation,
+            (offset - pauseTime) + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format((offset - pauseTime) + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within((offset - pauseTime) + waitTime, (offset - pauseTime) + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            ((offset - pauseTime) + waitTime) - maxPreTimeDeviation,
+            (offset - pauseTime) + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format((offset - pauseTime) + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -333,23 +362,27 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
 
         await wait(waitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + waitTime, offset + waitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + waitTime) - maxPreTimeDeviation,
+            offset + waitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + waitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -382,12 +415,14 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -399,11 +434,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + firstWaitTime, offset + firstWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + firstWaitTime) - maxPreTimeDeviation,
+            offset + firstWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + firstWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -437,12 +474,14 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -454,11 +493,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + totalWaitTime, offset + totalWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + totalWaitTime) - maxPreTimeDeviation,
+            offset + totalWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + totalWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -492,12 +533,14 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -509,11 +552,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + secondWaitTime, offset + secondWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + secondWaitTime) - maxPreTimeDeviation,
+            offset + secondWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + secondWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -547,12 +592,14 @@ describe('Timer.vue', () => {
             mocks: { $store: store },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -564,14 +611,19 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + secondWaitTime, offset + secondWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + secondWaitTime) - maxPreTimeDeviation,
+            offset + secondWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + secondWaitTime + i));
         }
-        expect(secondText).to.be.oneOf(secondValidTimes);
+        expect(secondText).to.be.oneOf(
+            secondValidTimes,
+            `expected ${secondText} to be one of ${JSON.stringify(secondValidTimes)}`
+        );
     });
 
     it('should stop updating when the igt timer changes to paused', async () => {
@@ -602,12 +654,14 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -619,11 +673,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + firstWaitTime, offset + firstWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + firstWaitTime) - maxPreTimeDeviation,
+            offset + firstWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + firstWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -657,12 +713,14 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -674,11 +732,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + firstWaitTime, offset + firstWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + firstWaitTime) - maxPreTimeDeviation,
+            offset + firstWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + firstWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -713,12 +773,14 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -730,11 +792,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset + secondWaitTime, offset + secondWaitTime + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            (offset + secondWaitTime) - maxPreTimeDeviation,
+            offset + secondWaitTime + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + secondWaitTime + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
@@ -769,12 +833,14 @@ describe('Timer.vue', () => {
             propsData: { igt: true },
         });
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const text = component.find('.content').text();
         const validTimes = [];
         const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             validTimes.push(formatter.format(offset + i));
         }
         expect(text).to.be.oneOf(validTimes);
@@ -786,11 +852,13 @@ describe('Timer.vue', () => {
 
         await wait(secondWaitTime);
 
-        expect(component.vm.$data.currentTime)
-            .to.be.within(offset, offset + maxTimeDeviation);
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
         const secondText = component.find('.content').text();
         const secondValidTimes = [];
-        for (let i = 0; i <= maxTimeDeviation; i++) {
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
             secondValidTimes.push(formatter.format(offset + i));
         }
         expect(secondText).to.be.oneOf(secondValidTimes);
