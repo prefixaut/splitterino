@@ -24,9 +24,16 @@ cache:
 notifications:
   email: false
 
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      yarn
+      yarn test:unit:coverage
       docker run --rm \
         --env-file <(env | grep -vE '\r|\n' | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
         -v ${PWD}:/project \
@@ -36,9 +43,12 @@ script:
         /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn test:unit && yarn build --publish=onTag --linux --win"
     else
       yarn
-      yarn test:unit
+      yarn test:unit:coverage
       yarn build --publish=onTag --mac
     fi
+
+after_script:
+  - ./cc-test-reporter after-build
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
