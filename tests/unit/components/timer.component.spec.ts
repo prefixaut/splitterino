@@ -1,18 +1,18 @@
 import { createLocalVue, mount } from '@vue/test-utils';
+import { Aevum } from 'aevum';
 import { expect } from 'chai';
-import Vuex, { Store } from 'vuex';
+import { Store } from 'vuex';
 
+import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
 import TimerComponent from '../../../src/components/timer.vue';
 import { aevumFilter } from '../../../src/filters/aevum.filter';
 import { getSplitterinoStoreModules } from '../../../src/store/modules/index.module';
+import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { RootState } from '../../../src/store/states/root.state';
 import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
-import { createMockInjector, wait, randomInt } from '../../utils';
-import { Aevum } from 'aevum';
-import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
-import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
+import { createMockInjector, randomInt, wait } from '../../utils';
 
 function setupVueInstance() {
     const localVue = createLocalVue();
@@ -968,6 +968,231 @@ describe('Timer.vue', () => {
         await wait(secondWaitTime);
 
         const finalTime = offset + (finishTime - time - pauseTime);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
+    });
+
+    it('should pause the timer and display the final rta-time (with delay) when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const delayTime = randomInt(300, 50);
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+            startDelay: delayTime,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - delayTime - maxPreTimeDeviation,
+            offset - delayTime + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset - delayTime + i));
+        }
+        expect(text).to.be.oneOf(validTimes, JSON.stringify(validTimes));
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time - delayTime);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
+    });
+
+    it('should pause the timer and display the final igt-time when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+            propsData: { igt: true },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - maxPreTimeDeviation,
+            offset + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset + i));
+        }
+        expect(text).to.be.oneOf(validTimes);
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
+    });
+
+    it('should pause the timer and display the final igt-time (with pauses) when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const pauseTime = randomInt(300, 50);
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+            igtPauseTotal: pauseTime,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+            propsData: { igt: true },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - pauseTime - maxPreTimeDeviation,
+            offset - pauseTime + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset - pauseTime + i));
+        }
+        expect(text).to.be.oneOf(validTimes, JSON.stringify(validTimes));
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time - pauseTime);
+        expect(component.vm.$data.currentTime).to.equal(finalTime);
+
+        const secondText = component.find('.content').text();
+        expect(secondText).to.equal(formatter.format(finalTime));
+    });
+
+    it('should pause the timer and display the final igt-time (with delay) when it changes to finished', async () => {
+        const time = now();
+        const offset = 2_000;
+        const delayTime = randomInt(300, 50);
+        const firstWaitTime = 50;
+        const secondWaitTime = 50;
+
+        const modules = getSplitterinoStoreModules(createMockInjector());
+        modules.timer.state = {
+            ...modules.timer.state as TimerState,
+            status: TimerStatus.RUNNING,
+            startTime: time - offset,
+            startDelay: delayTime,
+        };
+
+        const store = new Store<RootState>({
+            modules: {
+                splitterino: {
+                    namespaced: true,
+                    modules,
+                }
+            }
+        });
+
+        const component = mount(TimerComponent, {
+            localVue: setupVueInstance(),
+            mocks: { $store: store },
+            propsData: { igt: true },
+        });
+
+        expect(component.vm.$data.currentTime).to.be.within(
+            offset - delayTime - maxPreTimeDeviation,
+            offset - delayTime + maxPostTimeDeviation
+        );
+        const text = component.find('.content').text();
+        const validTimes = [];
+        const formatter = new Aevum(DEFAULT_TIMER_FORMAT);
+        for (let i = maxPreTimeDeviation * -1; i <= maxPostTimeDeviation; i++) {
+            validTimes.push(formatter.format(offset - delayTime + i));
+        }
+        expect(text).to.be.oneOf(validTimes, JSON.stringify(validTimes));
+
+        await wait(firstWaitTime);
+
+        // Pausing the timer
+        const finishTime = now();
+        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+
+        await wait(secondWaitTime);
+
+        const finalTime = offset + (finishTime - time - delayTime);
         expect(component.vm.$data.currentTime).to.equal(finalTime);
 
         const secondText = component.find('.content').text();
