@@ -24,16 +24,12 @@
                     ]"
                 >
                     <div class="name">{{ segment.name }}</div>
-                    <div class="time" v-show="showTime(index)">
+                    <div class="time" v-show="showTime(index, false)">
                         {{ getSegmentTime(index) | aevum(segmentTimeFormat) }}
                     </div>
-                    <div class="comparisons" v-show="showTime(index)">
-                        <div class="personal-best">
-                            {{ getSegmentPersonalBestComparison(index) | aevum(comparisonTimeFormat) }}
-                        </div>
-                        <div class="overall-best">
-                            {{ getSegmentOverallBestComparison(index) | aevum(comparisonTimeFormat) }}
-                        </div>
+                    <div class="comparisons" v-show="showTime(index, true)">
+                        <div class="personal-best">{{ getSegmentPersonalBestComparison(index) | aevum(comparisonTimeFormat) }}</div>
+                        <div class="overall-best">{{ getSegmentOverallBestComparison(index) | aevum(comparisonTimeFormat) }}</div>
                     </div>
                 </div>
             </div>
@@ -142,11 +138,11 @@ export default class SplitsComponent extends Vue {
     }
 
     public get showTime() {
-        return (index: number) => {
+        return (index: number, comparison: boolean) => {
             return (
                 (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
                 index <= this.currentSegment
-            ) || this.status === 'finished';
+            ) || this.status === 'finished' || (comparison && this.status === 'stopped');
         };
     }
 
@@ -230,9 +226,14 @@ export default class SplitsComponent extends Vue {
     public getSegmentPersonalBestComparison(index: number) {
         const segment = this.segments[index];
         if (
-            this.status !== TimerStatus.STOPPED &&
-            segment.personalBest != null &&
-            index <= this.currentSegment
+            (
+                this.status !== TimerStatus.RUNNING &&
+                this.status !== TimerStatus.RUNNING_IGT_PAUSE
+            ) ||
+            (
+                segment.personalBest != null &&
+                index <= this.currentSegment
+            )
         ) {
             const personalBestTime = getFinalTime(segment.personalBest[this.timing]);
             if (index < this.currentSegment) {
@@ -372,12 +373,12 @@ export default class SplitsComponent extends Vue {
                 }
             }
 
-            .personal-best::before {
+            .personal-best:not(:empty)::before {
                 content: 'PB: ';
                 display: inline-block;
             }
 
-            .overall-best::before {
+            .overall-best:not(:empty)::before {
                 content: 'OB: ';
                 display: inline-block;
             }

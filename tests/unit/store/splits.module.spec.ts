@@ -60,6 +60,7 @@ import { createMockInjector, randomInt, testAction } from '../../utils';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
+const maxTimeDeviation = 1;
 
 Vue.use(Vuex);
 
@@ -133,7 +134,7 @@ describe('Splits Store-Module', () => {
                     Infinity,
                     -Infinity,
                     -2,
-                    state.segments.length + 1,
+                    state.segments.length + maxTimeDeviation,
                     {},
                     [],
                     true,
@@ -939,7 +940,7 @@ describe('Splits Store-Module', () => {
                 // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.exist;
                 // Either current time or +1, as it may be a millisecond off
-                expect(commits[0].payload.time).to.be.within(startTime, startTime + 1);
+                expect(commits[0].payload.time).to.be.within(startTime, startTime + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_PREVIOUS_RTA_TIME);
@@ -953,7 +954,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[3].payload).to.exist;
                 expect(commits[3].payload.index).to.equal(0);
                 expect(commits[3].payload.segment.id).to.equal(segments[0].id);
-                expect(commits[3].payload.segment.startTime).to.be.within(startTime, startTime + 1);
+                expect(commits[3].payload.segment.startTime).to.be.within(startTime, startTime + maxTimeDeviation);
 
                 expect(commits[4]).to.deep.equal({ type: ID_MUTATION_SET_CURRENT, payload: 0 });
             });
@@ -1112,7 +1113,8 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload).to.exist;
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
-                expect(commits[0].payload.segment.currentTime.rta.rawTime).to.be.within(segmentTime, segmentTime + 1);
+                expect(commits[0].payload.segment.currentTime.rta.rawTime)
+                    .to.be.within(segmentTime, segmentTime + maxTimeDeviation);
                 expect(commits[0].payload.segment.passed).to.equal(true);
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
@@ -1120,14 +1122,14 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
                 // tslint:disable-next-line:no-unused-expression
                 expect(commits[1].payload).to.exist;
-                expect(commits[1].payload.index).to.equal(currentIndex + 1);
-                expect(commits[1].payload.segment.id).to.equal(segments[currentIndex + 1].id);
-                expect(commits[1].payload.segment.startTime).to.be.within(time, time + 1);
+                expect(commits[1].payload.index).to.equal(currentIndex + maxTimeDeviation);
+                expect(commits[1].payload.segment.id).to.equal(segments[currentIndex + maxTimeDeviation].id);
+                expect(commits[1].payload.segment.startTime).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.segment.passed).to.equal(false);
                 expect(commits[1].payload.segment.skipped).to.equal(false);
 
                 expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
-                expect(commits[2].payload).to.equal(currentIndex + 1);
+                expect(commits[2].payload).to.equal(currentIndex + maxTimeDeviation);
             });
 
             it('should apply overall bests correctly', async () => {
@@ -1204,7 +1206,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.personalBest).to.deep.equal(personalBest);
                 expect(commits[0].payload.segment.overallBest.rta.rawTime)
-                    .to.be.within(segmentTimeMs, segmentTimeMs + 1);
+                    .to.be.within(segmentTimeMs, segmentTimeMs + maxTimeDeviation);
                 expect(commits[0].payload.segment.previousOverallBest).to.deep.equal(overallBest);
             });
 
@@ -1391,7 +1393,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.passed).to.equal(false);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_CURRENT);
-                expect(commits[1].payload).to.equal(currentIndex + 1);
+                expect(commits[1].payload).to.equal(currentIndex + maxTimeDeviation);
             });
 
             it('should not skip when timer is not running', async () => {
@@ -1795,7 +1797,7 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(1);
                 expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
-                expect(commits[0].payload.time).to.be.within(time, time + 1);
+                expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.PAUSED);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -1864,7 +1866,7 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(1);
                 expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
-                expect(commits[0].payload.time).to.be.within(time, time + 1);
+                expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -1942,7 +1944,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
 
                 expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
-                expect(commits[1].payload.time).to.be.within(time, time + 1);
+                expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
                 // tslint:disable-next-line:no-unused-expression
@@ -2028,7 +2030,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
 
                 expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
-                expect(commits[1].payload.time).to.be.within(time, time + 1);
+                expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
                 // tslint:disable-next-line:no-unused-expression
@@ -2122,9 +2124,9 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
                 expect(commits[0].payload.segment.currentTime.rta.pauseTime)
-                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+                    .to.be.within(totalPauseTime, totalPauseTime + maxTimeDeviation);
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
-                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+                    .to.be.within(totalPauseTime, totalPauseTime + maxTimeDeviation);
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -2174,7 +2176,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.have.lengthOf(2);
                 expect(commits[0].payload.segment.currentTime.rta.pauseTime).to.equal(initialPauseTime);
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
-                    .to.be.within(totalPauseTime, totalPauseTime + 1);
+                    .to.be.within(totalPauseTime, totalPauseTime + maxTimeDeviation);
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -2219,9 +2221,9 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
                 expect(commits[0].payload.segment.currentTime.rta.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -2268,9 +2270,9 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
                 expect(commits[0].payload.segment.currentTime.rta.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
@@ -2317,9 +2319,9 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
                 expect(commits[0].payload.segment.currentTime.rta.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
-                    .to.be.within(pauseTime, pauseTime + 1);
+                    .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
                 // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;

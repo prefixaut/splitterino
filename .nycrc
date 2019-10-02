@@ -1,11 +1,13 @@
 {
     "check-coverage": false,
     "per-file": true,
+    "skip-full": true,
     "include": [
         "src/**/*.{js,vue,ts}"
     ],
     "exclude": [
-        "src/*.{js,ts}"
+        "src/*.{js,ts}",
+        "**/*.d.ts"
     ],
     "reporter": [
         "lcov",

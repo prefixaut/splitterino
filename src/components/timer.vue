@@ -1,5 +1,5 @@
 <template>
-    <div class="timer">
+    <div class="timer" :class="['status-' + status]">
         <span class="content">{{ currentTime | aevum(format) }}</span>
     </div>
 </template>
@@ -16,14 +16,14 @@ const timer = namespace('splitterino/timer');
 
 @Component({
     name: 'spl-timer',
-    mixins: [AevumFormatMixin]
+    mixins: [AevumFormatMixin],
 })
 export default class TimerComponent extends Vue {
     /**
      * If this timer should display the time in IGT Mode.
      */
-    @Prop(Boolean)
-    public igt = false;
+    @Prop({ type: Boolean, default: false })
+    public igt;
 
     @timer.State('status')
     public status: TimerStatus;
@@ -93,11 +93,15 @@ export default class TimerComponent extends Vue {
         }
 
         if (this.status === TimerStatus.FINISHED) {
-            this.currentTime = this.finishTime - (this.startTime + this.startDelay);
+            this.currentTime = this.finishTime - (
+                this.startTime +
+                this.startDelay +
+                (this.igt ? this.igtPauseTotal : this.pauseTotal)
+            );
         }
 
         if (this.status === TimerStatus.STOPPED) {
-            this.currentTime = 0;
+            this.currentTime = this.startDelay * -1;
         }
     }
 
