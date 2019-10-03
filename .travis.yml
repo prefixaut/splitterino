@@ -35,14 +35,15 @@ notifications:
   email: false
 
 before_script:
-  - if [ "$DO_COVERAGE" == "true" ]; then
+  - |
+    if [ "$DO_COVERAGE" = "true" ]; then
       ./ci/setup-coverage.sh
     fi
 
 script:
   - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      if [ "$IS_DOCKER" == "true" ]; then
+    if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      if [ "$IS_DOCKER" = "true" ]; then
         ./ci/build-docker.sh
       else
         ./ci/build-unix.sh
@@ -53,7 +54,7 @@ script:
 
 after_script:
   - |
-    if [ "$DO_COVERAGE" == "true" ]; then
+    if [ "$DO_COVERAGE" = "true" ]; then
       ./cc-test-reporter after-build
     fi
 
