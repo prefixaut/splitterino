@@ -1,3 +1,5 @@
+#!/bin/sh
+
 yarn
 if [ $? -ne 0 ]; then
     exit $0

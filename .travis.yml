@@ -35,9 +35,9 @@ notifications:
   email: false
 
 before_script:
-  - if [ "$DO_COVERAGE" == "true" ]; then curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter fi
-  - if [ "$DO_COVERAGE" == "true" ]; then chmod +x ./cc-test-reporter fi
-  - if [ "$DO_COVERAGE" == "true" ]; then ./cc-test-reporter before-build fi
+  - if [ "$DO_COVERAGE" == "true" ]; then
+      ./ci/setup-coverage.sh
+    fi
 
 script:
   - |
