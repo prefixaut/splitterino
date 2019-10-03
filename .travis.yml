@@ -35,33 +35,20 @@ notifications:
   email: false
 
 before_script:
-  - |
-    if [ "$DO_COVERAGE" == "true" ]; then
-      curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-      chmod +x ./cc-test-reporter
-      ./cc-test-reporter before-build
-    fi
+  - if [ "$DO_COVERAGE" == "true" ]; then curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter fi
+  - if [ "$DO_COVERAGE" == "true" ]; then chmod +x ./cc-test-reporter fi
+  - if [ "$DO_COVERAGE" == "true" ]; then ./cc-test-reporter before-build fi
 
 script:
   - |
     if [ "$TRAVIS_OS_NAME" == "linux" ]; then
       if [ "$IS_DOCKER" == "true" ]; then
-        docker run --rm \
-          --env-file <(env | grep -vE '\r|\n' | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS|APPVEYOR_|CSC_|_TOKEN|_KEY|AWS_|STRIP|BUILD_') \
-          -v ${PWD}:/project \
-          -v ~/.cache/electron:/root/.cache/electron \
-          -v ~/.cache/electron-builder:/root/.cache/electron-builder \
-          electronuserland/builder:wine \
-          /bin/bash -c "yarn install --link-duplicates --pure-lockfile && yarn test:unit && yarn build --publish=onTag --linux --win"
+        ./ci/build-docker.sh
       else
-        yarn
-        yarn test:unit:coverage
-        yarn build --publish=onTag --linux
+        ./ci/build-unix.sh
       fi
     else
-      yarn
-      yarn test:unit:coverage
-      yarn build --publish=onTag --mac
+      ./ci/build-mac.sh
     fi
 
 after_script:
