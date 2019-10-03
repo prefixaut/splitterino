@@ -1,5 +1,9 @@
 language: node_js
 
+env:
+  global:
+    - IS_DOCKER=false
+
 matrix:
   include:
     - os: osx
