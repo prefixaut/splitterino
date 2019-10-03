@@ -6,7 +6,7 @@ matrix:
       osx_image: xcode10.2
       language: node_js
       node_js: "10"
-      env: ELECTRON_CACHE=$HOME/.cache/electron ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder DO_COVERAGE=true
+      env: ELECTRON_CACHE=$HOME/.cache/electron ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder DO_COVERAGE=false
 
     - os: linux
       language: node_js
