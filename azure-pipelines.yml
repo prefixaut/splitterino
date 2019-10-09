@@ -1,0 +1,27 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  batch: true
+
+pool:
+  vmImage: 'windows-latest'
+
+jobs:
+  - job: test_unit
+    displayName: Performing Unit tests
+    steps:
+      - script: yarn
+        displayName: Installing packages
+      - script: yarn test:unit
+        displayName: Running the Unit tests
+  - job: build
+    displayName: Build the Application
+    dependsOn: test_unit
+    steps:
+      - script: yarn
+        displayName: Installing packages
+      - script: yarn build --publish=onTag --win
+        displayName: Building Application
