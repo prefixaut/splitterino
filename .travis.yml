@@ -1,28 +1,16 @@
 language: node_js
 
-env:
-  global:
-    - IS_DOCKER=false
-
 matrix:
   include:
     - os: osx
       osx_image: xcode10.2
       language: node_js
       node_js: "10"
-      env: ELECTRON_CACHE=$HOME/.cache/electron ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder DO_COVERAGE=false
+      env: ELECTRON_CACHE=$HOME/.cache/electron ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
 
     - os: linux
       language: node_js
       node_js: "10"
-      env: DO_COVERAGE=true
-
-    - os: linux
-      services: docker
-      language: generic
-      env: IS_DOCKER=true DO_COVERAGE=false
-  allow_failures:
-    - env: IS_DOCKER=true
 
 cache:
   yarn: true
@@ -35,28 +23,19 @@ notifications:
   email: false
 
 before_script:
-  - |
-    if [ "$DO_COVERAGE" == "true" ]; then
-      ./ci/setup-coverage.sh
-    fi
+  - yarn
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter; fi
+  - if [ "$TRAVIS_OS_NAME" != "linux" ]; then curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter; fi
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 script:
-  - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      if [ "$IS_DOCKER" == "true" ]; then
-        ./ci/build-docker.sh
-      else
-        ./ci/build-unix.sh
-      fi
-    else
-      ./ci/build-mac.sh
-    fi
+  - yarn test:unit
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then yarn build --publish=onTag --linux; fi
+  - if [ "$TRAVIS_OS_NAME" != "linux" ]; then yarn build --publish=onTag --mac; fi
 
 after_script:
-  - |
-    if [ "$DO_COVERAGE" == "true" ]; then
-      ./cc-test-reporter after-build
-    fi
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 before_cache:
   - rm -rf $HOME/.cache/electron-builder/wine
