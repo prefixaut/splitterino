@@ -1,5 +1,6 @@
-[![Travis](https://img.shields.io/travis/prefixaut/splitterino.svg?style=for-the-badge)](https://travis-ci.org/prefixaut/splitterino)
-[![Coverage](https://img.shields.io/codeclimate/coverage/prefixaut/splitterino.svg?style=for-the-badge)](https://codeclimate.com/github/prefixaut/splitterino)
+[![Travis](https://img.shields.io/travis/prefixaut/splitterino.svg?style=for-the-badge&label=Travis%20Build&logo=travis-ci&logoColor=white)](https://travis-ci.org/prefixaut/splitterino)
+[![Azure](https://img.shields.io/azure-devops/build/zwieback/7a11f53e-bc2c-478a-9378-dd40c708ead9/1?label=Azure%20Build&logo=azure-devops&style=for-the-badge&logoColor=white)](https://dev.azure.com/zwieback/splitterino/_build?definitionId=1)
+[![Coverage](https://img.shields.io/codeclimate/coverage/prefixaut/splitterino.svg?style=for-the-badge&logo=code-climate&logoColor=white)](https://codeclimate.com/github/prefixaut/splitterino)
 [![Release Version](https://img.shields.io/github/release/prefixaut/splitterino.svg?style=for-the-badge)](https://github.com/prefixaut/splitterino/releases)
 [![License](https://img.shields.io/github/license/prefixaut/splitterino.svg?style=for-the-badge)](https://github.com/prefixaut/splitterino/blob/master/LICENSE)
 
