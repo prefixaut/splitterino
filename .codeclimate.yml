@@ -9,17 +9,8 @@ plugins:
       allow_affero_copyleft: false
       allow_strong_copyleft: false
 exclude_patterns:
-  - ".github/"
-  - ".nyc_output/"
-  - ".vscode/"
-  - "coverage/"
-  - "dist_electron/"
-  - "node_modules/"
-  - "patches/"
-  - "public/"
-  - "sample/"
-  - "tests/"
   - "*"
+  - "!src/"
 checks:
   file-lines:
     config:
