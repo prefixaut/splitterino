@@ -1,0 +1,32 @@
+version: "2"         # required to adjust maintainability checks
+plugins:
+  tslint:
+    enabled: true
+    config: tslint.json
+  git-legal:
+    enabled: true
+    config:
+      allow_affero_copyleft: false
+      allow_strong_copyleft: false
+exclude_patterns:
+  - ".github/"
+  - ".nyc_output/"
+  - ".vscode/"
+  - "coverage/"
+  - "dist_electron/"
+  - "node_modules/"
+  - "patches/"
+  - "public/"
+  - "sample/"
+  - "tests/"
+  - "*"
+checks:
+  file-lines:
+    config:
+      threshold: 750
+  method-count:
+    config:
+      threshold: 30
+  method-lines:
+    config:
+      threshold: 300
