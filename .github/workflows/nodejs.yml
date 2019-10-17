@@ -1,0 +1,56 @@
+name: Node CI
+
+on:
+  push:
+  pull_request:
+  release:
+    types: [created]
+
+jobs:
+  test_unit:
+    name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+        runs-on: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - uses: sergioramos/yarn-actions/install@master
+      with:
+        frozen-lockfile: true
+    - name: Unit Tests & Code Coverage
+      uses: paambaati/codeclimate-action@v2.2.1
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      with:
+        coverageCommand: npm run coverage
+  build:
+    name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
+    needs: [ test_unit ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: [8.x, 10.x, 12.x]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - uses: sergioramos/yarn-actions/install@master
+      with:
+        frozen-lockfile: true
+    - name: Build the Application
+      run: yarn build --publish=never
+      if: github.event_name != "release"
+    - name: Build the Application and Publish
+      run: yarn build --publish=always
+      if: github.event_name == "release"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
