@@ -1,0 +1,15 @@
+win:
+  publish:
+    - provider: github
+      vPrefixedTagName: true
+      releaseType: draft
+linux:
+  publish:
+    - provider: github
+      vPrefixedTagName: true
+      releaseType: draft
+mac:
+  publish:
+    - provider: github
+      vPrefixedTagName: true
+      releaseType: draft
