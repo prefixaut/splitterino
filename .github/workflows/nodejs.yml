@@ -1,10 +1,6 @@
 name: Node CI
 
-on:
-  push:
-  pull_request:
-  release:
-    types: [created]
+on: [ push, pull_request, release ]
 
 jobs:
   test_unit:
@@ -47,10 +43,10 @@ jobs:
       with:
         frozen-lockfile: true
     - name: Build the Application
+      if: github.event_name != 'release'
       run: yarn build --publish=never
-      if: github.event_name != release
     - name: Build the Application and Publish
+      if: github.event_name == 'release'
       run: yarn build --publish=always
-      if: github.event_name == release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
