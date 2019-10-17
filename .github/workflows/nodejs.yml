@@ -48,9 +48,9 @@ jobs:
         frozen-lockfile: true
     - name: Build the Application
       run: yarn build --publish=never
-      if: github.event_name != "release"
+      if: github.event_name != release
     - name: Build the Application and Publish
       run: yarn build --publish=always
-      if: github.event_name == "release"
+      if: github.event_name == release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
