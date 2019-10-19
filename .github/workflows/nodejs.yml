@@ -16,9 +16,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
-    - uses: sergioramos/yarn-actions/install@master
-      with:
-        frozen-lockfile: true
     - name: Unit Tests & Code Coverage
       uses: paambaati/codeclimate-action@v2.2.1
       env:
