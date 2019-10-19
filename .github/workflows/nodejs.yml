@@ -5,10 +5,5 @@ on: push
 jobs:
   test_unit:
     name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node-version: [8, 10, 12]
-        runs-on: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v1
