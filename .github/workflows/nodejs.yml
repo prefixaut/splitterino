@@ -1,9 +1,6 @@
 name: Node CI
 
-on:
-  push:
-    branches:
-      - '**'
+on: push
 
 jobs:
   test_unit:
@@ -30,7 +27,7 @@ jobs:
         coverageCommand: npm run coverage
   build:
     name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
-    needs: [ test_unit ]
+    needs: [test_unit]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
