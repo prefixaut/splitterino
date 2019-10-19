@@ -5,13 +5,17 @@ on: push
 jobs:
   test_unit:
     name: test
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [8, 10, 12]
+        os: [ubuntu-latest, ubuntu-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
       with:
-        node-version: 10
+        node-version: ${{ matrix.node }}
     - uses: sergioramos/yarn-actions/install@master
       with:
         frozen-lockfile: true
@@ -20,4 +24,4 @@ jobs:
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
-        coverageCommand: npm run coverage
+        coverageCommand: npm run test:unitcoverage
