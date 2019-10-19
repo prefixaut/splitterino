@@ -8,3 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10
+    - uses: sergioramos/yarn-actions/install@master
+      with:
+        frozen-lockfile: true
+    - name: Unit Tests & Code Coverage
+      uses: paambaati/codeclimate-action@v2.2.1
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      with:
+        coverageCommand: npm run coverage
