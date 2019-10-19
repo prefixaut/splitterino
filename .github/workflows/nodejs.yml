@@ -4,6 +4,7 @@ on: push
 
 jobs:
   test_unit:
-    name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os }}
+    name: test
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
