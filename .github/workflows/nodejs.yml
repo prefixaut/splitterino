@@ -1,11 +1,6 @@
 name: Node CI
 
-on:
-  push:
-  pull_request:
-    types: [ created, edited ]
-  release:
-    types: [ created ]
+on: [push, pull_request, release ]
 
 jobs:
   test_unit:
