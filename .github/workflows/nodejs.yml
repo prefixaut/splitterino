@@ -4,7 +4,7 @@ on: push
 
 jobs:
   test_unit:
-    name: test
+    name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os }}
     strategy:
       matrix:
         node: [8, 10, 12]
@@ -25,3 +25,28 @@ jobs:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
         coverageCommand: npm run test:unitcoverage
+  build:
+    name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
+    needs: [test_unit]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node: [8, 10, 12]
+        os: [ubuntu-latest, ubuntu-latest, macOS-latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node }}
+    - uses: sergioramos/yarn-actions/install@master
+      with:
+        frozen-lockfile: true
+    - name: Build the Application
+      if: github.event_name != 'release'
+      run: yarn build --publish=never
+    - name: Build the Application and Publish
+      if: github.event_name == 'release'
+      run: yarn build --publish=always
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
