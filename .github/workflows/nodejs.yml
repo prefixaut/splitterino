@@ -1,21 +1,21 @@
 name: Node CI
 
-on: push
+on: [push, pull_request, release]
 
 jobs:
   test_unit:
     name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [8, 10, 12]
-        runs-on: [ubuntu-latest, windows-latest, macOS-latest]
+        node: [8, 10, 12]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ matrix.node }}
     - uses: sergioramos/yarn-actions/install@master
       with:
         frozen-lockfile: true
@@ -24,7 +24,7 @@ jobs:
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
-        coverageCommand: npm run coverage
+        coverageCommand: npm run test:unit:coverage
   build:
     name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
     needs: [test_unit]
@@ -38,7 +38,7 @@ jobs:
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ matrix.node }}
     - uses: sergioramos/yarn-actions/install@master
       with:
         frozen-lockfile: true
