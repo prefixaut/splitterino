@@ -16,9 +16,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
-    - uses: sergioramos/yarn-actions/install@master
-      with:
-        frozen-lockfile: true
+    - name: Install yarn
+      run: npm i -g yarn
+    - name: Install packages via yarn
+      run: yarn --non-interactive --frozen-lockfile
     - name: Unit Tests & Code Coverage
       uses: paambaati/codeclimate-action@v2.2.1
       env:
@@ -39,9 +40,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
-    - uses: sergioramos/yarn-actions/install@master
-      with:
-        frozen-lockfile: true
+    - name: Install yarn
+      run: npm i -g yarn
+    - name: Install packages via yarn
+      run: yarn --non-interactive --frozen-lockfile
     - name: Build the Application
       if: github.event_name != 'release'
       run: yarn build --publish=never
