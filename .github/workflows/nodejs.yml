@@ -24,7 +24,7 @@ jobs:
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
-        coverageCommand: npm run test:unitcoverage
+        coverageCommand: npm run test:unit:coverage
   build:
     name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
     needs: [test_unit]
