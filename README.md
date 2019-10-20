@@ -1,5 +1,4 @@
-[![Travis](https://img.shields.io/travis/prefixaut/splitterino.svg?style=for-the-badge&label=Travis%20Build&logo=travis-ci&logoColor=white)](https://travis-ci.org/prefixaut/splitterino)
-[![Azure](https://img.shields.io/azure-devops/build/zwieback/7a11f53e-bc2c-478a-9378-dd40c708ead9/1?label=Azure%20Build&logo=azure-devops&style=for-the-badge&logoColor=white)](https://dev.azure.com/zwieback/splitterino/_build?definitionId=1)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fprefixaut%2Fsplitterino%2Fbadge%3Fref%3Dmaster&style=for-the-badge)](https://actions-badge.atrox.dev/prefixaut/splitterino/goto?ref=master)
 [![Coverage](https://img.shields.io/codeclimate/coverage/prefixaut/splitterino.svg?style=for-the-badge&logo=code-climate&logoColor=white)](https://codeclimate.com/github/prefixaut/splitterino)
 [![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability-percentage/prefixaut/splitterino?logo=code-climate&logoColor=white&style=for-the-badge)](https://codeclimate.com/github/prefixaut/splitterino)
 [![Release Version](https://img.shields.io/github/release/prefixaut/splitterino.svg?style=for-the-badge)](https://github.com/prefixaut/splitterino/releases)
