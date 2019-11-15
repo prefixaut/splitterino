@@ -21,7 +21,7 @@ jobs:
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
     - name: Unit Tests & Code Coverage
-      uses: paambaati/codeclimate-action@v2.2.1
+      uses: paambaati/codeclimate-action@v2.3.0
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
