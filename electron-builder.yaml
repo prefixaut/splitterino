@@ -4,11 +4,15 @@ win:
       vPrefixedTagName: true
       releaseType: draft
 linux:
+  category: Utility
+  synopsis: Multi-Platform Splitting Software
   publish:
     - provider: github
       vPrefixedTagName: true
       releaseType: draft
 mac:
+  target: pkg
+  category: public.app-category.utilities
   publish:
     - provider: github
       vPrefixedTagName: true
