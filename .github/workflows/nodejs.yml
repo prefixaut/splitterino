@@ -16,8 +16,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
-    - name: Install yarn
-      run: npm i -g yarn
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
     - name: Unit Tests & Code Coverage (Unix & Mac)
@@ -44,8 +42,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
-    - name: Install yarn
-      run: npm i -g yarn
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
     - name: Build the Application
