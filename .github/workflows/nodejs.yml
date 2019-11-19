@@ -55,4 +55,4 @@ jobs:
       if: github.event_name == 'release'
       run: yarn build --publish=always
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
