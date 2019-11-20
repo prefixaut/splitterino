@@ -93,7 +93,7 @@
         "nyc": "^14.1.1",
         "patch-package": "^6.1.2",
         "postinstall-postinstall": "^2.0.0",
-        "sass-loader": "^7.1.0",
+        "sass-loader": "^8.0.0",
         "sasspect": "^1.1.0",
         "tslint": "^5.18.0",
         "typescript": "^3.5.3",
