@@ -1,6 +1,6 @@
 name: Node CI
 
-on: [push, pull_request, release]
+on: [push]
 
 jobs:
   test_unit:
@@ -11,7 +11,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout repository
+      uses: actions/checkout@v1
+
+    - name: Cache node_modules"
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-build-
+          ${{ runner.OS }}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
@@ -34,15 +45,39 @@ jobs:
       run: yarn test:unit:coverage
 
   build:
-    name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
+    name: Building Application with ${{ matrix.node }} on ${{ matrix.os.id }}
     needs: [test_unit]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.id }}
     strategy:
       matrix:
         node: [10, 12]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os:
+          - id: ubuntu-latest,
+            name: linux,
+            ext: .AppImage,
+            mime: application/x-appimage
+          - id: windows-latest
+            name: windows
+            ext: .exe
+            mime: application/vnd.microsoft.portable-executable
+          - id: macOS-latest
+            name: mac
+            ext: .pkg
+            mime: application/x-newton-compatible-pkg
+
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout repository
+      uses: actions/checkout@v1
+
+    - name: Cache node_modules"
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.OS }}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-build-
+          ${{ runner.OS }}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
@@ -55,35 +90,20 @@ jobs:
     - name: Build the Application
       run: yarn build --publish=never
 
-    - name: Upload builded Application Assets to Release (Linux)
-      uses: actions/upload-release-asset@v1.0.1
-      if: startsWith(matrix.os, 'ubuntu') && github.event_name == 'release' && matrix.node == 12
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+    - name: Uploaded builded installer
+      uses: actions/upload-artifact@v1
+      if: matrix.node == 12
       with:
-        upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
-        asset_path: ./dist_electron/*.AppImage
-        asset_name: splitterino-${{ github.ref }}-installer-linux.AppImage
-        asset_content_type: application/x-appimage
+        name: installer-${{ matrix.os.name }}${{ matrix.os.ext }}
+        path: ./dist_electron/*${{ matrix.os.ext }}
 
-    - name: Upload builded Application Assets to Release (Windows)
+    - name: Upload builded Application Assets to Release
       uses: actions/upload-release-asset@v1.0.1
-      if: startsWith(matrix.os, 'windows') && github.event_name == 'release' && matrix.node == 12
+      if: startsWith(github.ref, 'v') && matrix.node == 12
       env:
         GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
       with:
         upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
-        asset_path: ./dist_electron/*.exe
-        asset_name: splitterino-${{ github.ref }}-installer-windows.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
-
-    - name: Upload builded Application Assets to Release (MacOS)
-      uses: actions/upload-release-asset@v1.0.1
-      if: startsWith(matrix.os, 'macOS') && github.event_name == 'release' && matrix.node == 12
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
-      with:
-        upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
-        asset_path: ./dist_electron/*.pkg
-        asset_name: splitterino-${{ github.ref }}-installer-mac.pkg
-        asset_content_type: application/x-newton-compatible-pkg
+        asset_path: ./installer
+        asset_name: installer-${{ matrix.os.name }}${{ matrix.os.ext }}
+        asset_content_type: ${{ matrix.os.mime }}
