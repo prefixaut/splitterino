@@ -26,8 +26,7 @@ jobs:
         path: node_modules
         key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ env.cache-name }}-
-          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-
+          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
           ${{ matrix.os.name }}-node-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
@@ -38,16 +37,16 @@ jobs:
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
 
-    - name: Unit Tests & Code Coverage (Unix & Mac)
-      if: matrix.os != 'windows-latest'
+    - name: Unit Tests & Code Coverage (Linux & Mac)
+      if: matrix.os.id != 'windows-latest'
       uses: paambaati/codeclimate-action@v2.3.0
       env:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
         coverageCommand: yarn test:unit:coverage
 
-    - name: Unit Test & Code Coverafe (Windows)
-      if: matrix.os == 'windows-latest'
+    - name: Unit Test & Code Coverage (Windows)
+      if: matrix.os.id == 'windows-latest'
       run: yarn test:unit:coverage
 
   build:
@@ -80,8 +79,7 @@ jobs:
         path: node_modules
         key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ env.cache-name }}-
-          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-
+          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
           ${{ matrix.os.name }}-node-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
