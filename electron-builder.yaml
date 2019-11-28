@@ -1,3 +1,5 @@
+artifactName: installer.${ext}
+
 win:
   publish:
     - provider: github

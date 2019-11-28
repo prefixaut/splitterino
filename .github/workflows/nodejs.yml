@@ -14,15 +14,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v1
 
-    - name: Cache node_modules"
+    - name: Cache dependencies
       uses: actions/cache@v1
       with:
         path: node_modules
         key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.OS }}-build-${{ env.cache-name }}-
-          ${{ runner.OS }}-build-
-          ${{ runner.OS }}-
+          ${{ runner.OS }}-${{ matrix.node}}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-${{ matrix.node}}-build-
+          ${{ runner.OS }}-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
@@ -52,32 +52,32 @@ jobs:
       matrix:
         node: [10, 12]
         os:
-          - id: ubuntu-latest,
-            name: linux,
-            ext: .AppImage,
+          - id: ubuntu-latest
+            name: linux
+            ext: AppImage
             mime: application/x-appimage
           - id: windows-latest
             name: windows
-            ext: .exe
+            ext: exe
             mime: application/vnd.microsoft.portable-executable
           - id: macOS-latest
             name: mac
-            ext: .pkg
+            ext: pkg
             mime: application/x-newton-compatible-pkg
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v1
 
-    - name: Cache node_modules"
+    - name: Cache dependencies
       uses: actions/cache@v1
       with:
         path: node_modules
         key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.OS }}-build-${{ env.cache-name }}-
-          ${{ runner.OS }}-build-
-          ${{ runner.OS }}-
+          ${{ runner.OS }}-${{ matrix.node}}-build-${{ env.cache-name }}-
+          ${{ runner.OS }}-${{ matrix.node}}-build-
+          ${{ runner.OS }}-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
@@ -90,12 +90,12 @@ jobs:
     - name: Build the Application
       run: yarn build --publish=never
 
-    - name: Uploaded builded installer
+    - name: Upload builded installer
       uses: actions/upload-artifact@v1
       if: matrix.node == 12
       with:
-        name: installer-${{ matrix.os.name }}${{ matrix.os.ext }}
-        path: ./dist_electron/*${{ matrix.os.ext }}
+        name: installer-${{ matrix.os.name }}.${{ matrix.os.ext }}
+        path: ./dist_electron/installer.${{ matrix.os.ext }}
 
     - name: Upload builded Application Assets to Release
       uses: actions/upload-release-asset@v1.0.1
@@ -104,6 +104,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
       with:
         upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
-        asset_path: ./installer
-        asset_name: installer-${{ matrix.os.name }}${{ matrix.os.ext }}
+        asset_path: ./installer.${{ matrix.os.ext }}
+        asset_name: installer-${{ matrix.os.name }}.${{ matrix.os.ext }}
         asset_content_type: ${{ matrix.os.mime }}
