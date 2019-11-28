@@ -18,11 +18,11 @@ jobs:
       uses: actions/cache@v1
       with:
         path: node_modules
-        key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ matrix.os.name }}-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.OS }}-${{ matrix.node}}-build-${{ env.cache-name }}-
-          ${{ runner.OS }}-${{ matrix.node}}-build-
-          ${{ runner.OS }}-${{ matrix.node}}-
+          ${{ matrix.os.name }}-${{ matrix.node}}-build-${{ env.cache-name }}-
+          ${{ matrix.os.name }}-${{ matrix.node}}-build-
+          ${{ matrix.os.name }}-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
@@ -73,11 +73,11 @@ jobs:
       uses: actions/cache@v1
       with:
         path: node_modules
-        key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ matrix.os.name }}-${{ matrix.node}}-build-${{ hashFiles('**/yarn.lock') }}
         restore-keys: |
-          ${{ runner.OS }}-${{ matrix.node}}-build-${{ env.cache-name }}-
-          ${{ runner.OS }}-${{ matrix.node}}-build-
-          ${{ runner.OS }}-${{ matrix.node}}-
+          ${{ matrix.os.name }}-${{ matrix.node}}-build-${{ env.cache-name }}-
+          ${{ matrix.os.name }}-${{ matrix.node}}-build-
+          ${{ matrix.os.name }}-${{ matrix.node}}-
 
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
