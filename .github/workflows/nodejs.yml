@@ -12,12 +12,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v1
+
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
+
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
+
     - name: Unit Tests & Code Coverage (Unix & Mac)
       if: matrix.os != 'windows-latest'
       uses: paambaati/codeclimate-action@v2.3.0
@@ -25,9 +28,11 @@ jobs:
         CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
       with:
         coverageCommand: yarn test:unit:coverage
+
     - name: Unit Test & Code Coverafe (Windows)
       if: matrix.os == 'windows-latest'
       run: yarn test:unit:coverage
+
   build:
     name: Building Application with ${{ matrix.node }} on ${{ matrix.os }}
     needs: [test_unit]
@@ -38,17 +43,47 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v1
+
     - name: Use Node.js ${{ matrix.node }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node }}
+
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
+
     - name: Build the Application
-      if: github.event_name != 'release' || matrix.node == 10
       run: yarn build --publish=never
-    - name: Build the Application and Publish
-      if: github.event_name == 'release' && matrix.node == 12
-      run: yarn build --publish=always
+
+    - name: Upload builded Application Assets to Release (Linux)
+      uses: actions/upload-release-asset
+      if: startsWith(matrix.os, 'ubuntu') && github.event_name == 'release' && matrix.node == 12
       env:
-        GH_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+      with:
+        upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
+        asset_path: ./dist_electron/*.AppImage
+        asset_name: splitterino-${{ github.ref }}-installer-linux.AppImage
+        asset_content_type: application/x-appimage
+
+    - name: Upload builded Application Assets to Release (Windows)
+      uses: actions/upload-release-asset
+      if: startsWith(matrix.os, 'windows') && github.event_name == 'release' && matrix.node == 12
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+      with:
+        upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
+        asset_path: ./dist_electron/*.exe
+        asset_name: splitterino-${{ github.ref }}-installer-windows.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
+
+    - name: Upload builded Application Assets to Release (MacOS)
+      uses: actions/upload-release-asset
+      if: startsWith(matrix.os, 'macOS') && github.event_name == 'release' && matrix.node == 12
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_TOKEN }}
+      with:
+        upload_url: https://github.com/repos/${{ github.repository }}/releases/${{ github.ref }}/assets
+        asset_path: ./dist_electron/*.pkg
+        asset_name: splitterino-${{ github.ref }}-installer-mac.pkg
+        asset_content_type: application/x-newton-compatible-pkg
