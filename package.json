@@ -69,7 +69,8 @@
         "vue-select": "^3.1.0",
         "vuedraggable": "^2.23.0",
         "vuex": "^3.0.1",
-        "vuex-class": "^0.3.1"
+        "vuex-class": "^0.3.1",
+        "zeromq": "6.0.0-beta.5"
     },
     "devDependencies": {
         "@types/chai": "^4.1.7",

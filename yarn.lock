@@ -7012,6 +7012,11 @@ node-forge@0.7.5:
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.5.tgz#6c152c345ce11c52f465c2abd957e8639cd674df"
   integrity sha512-MmbQJ2MTESTjt3Gi/3yG1wGpIMhUfcIypUCGtTizFR9IiccFwxSpfp0vtIZlkFclEqERemxfnSdZEMR9VqqEFQ==
 
+node-gyp-build@^4.1.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.0.tgz#2c2b05f461f4178641a6ce2d7159f04094e9376d"
+  integrity sha512-4oiumOLhCDU9Rronz8PZ5S4IvT39H5+JEv/hps9V8s7RSLhsac0TCP78ulnHXOo8X1wdpPiTayGlM1jr4IbnaQ==
+
 node-gyp@^3.8.0:
   version "3.8.0"
   resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-3.8.0.tgz#540304261c330e80d0d5edce253a68cb3964218c"
@@ -11216,6 +11221,13 @@ yorkie@^2.0.0:
     is-ci "^1.0.10"
     normalize-path "^1.0.0"
     strip-indent "^2.0.0"
+
+zeromq@6.0.0-beta.5:
+  version "6.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/zeromq/-/zeromq-6.0.0-beta.5.tgz#098505fcb66beb78eeb0c541efe415d3e2090292"
+  integrity sha512-zsSbjfLjDxQq/Mp6NemNK/AVpm1NeafJRgz7nos1nV9MI/3w/P76pFdlqzxRTW4cuNqyFXJ4Q7g2tUhaZi4rcg==
+  dependencies:
+    node-gyp-build "^4.1.0"
 
 zip-stream@^1.2.0:
   version "1.2.0"
