@@ -1,14 +1,11 @@
-import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
-import { Publisher, Subscriber } from 'zeromq';
 
 import { RootState } from '../../store/states/root.state';
-import { Logger } from '../../utils/logger';
 import {
     APIVersion,
-    ApplyActionReqeust,
-    ApplyActionResponse,
+    DispatchActionReqeust,
+    DispatchActionResponse,
     GetAvailableVersionsResponse,
     Message,
     MessageType,
@@ -17,7 +14,10 @@ import {
     Response,
     UnregisterClientRequest,
     UnregisterClientResponse,
+    DispatchClientActionRequest,
+    DispatchClientActionResponse,
 } from '../interfaces/ipc';
+import { IPCHandler } from './handler';
 
 /**
  * Internal representation of a IPC Client.
@@ -41,61 +41,16 @@ interface Client {
     actions: string[];
 }
 
-export class IPCServer {
-    private address = 'tcp://127.0.0.1:3730';
-    private clients: Client[] = [];
+export class IPCServer extends IPCHandler {
+
+    private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string };
 
-    private sender: Publisher;
-    private listener: Observable<Message>;
-
-    private rxSubscription: Subscription;
-
-    constructor(private store: Store<RootState>) { }
-
-    public async initialize(): Promise<Subscription> {
-        this.sender = new Publisher();
-        await this.sender.bind(this.address);
-
-        this.listener = new Observable<Message>(rxSubscriber => {
-            const zmqSubscriber = new Subscriber();
-            let timeoutHandle;
-            zmqSubscriber.connect(this.address);
-
-            async function waitForNext() {
-                const data = await zmqSubscriber.receive();
-                timeoutHandle = setTimeout(() => waitForNext(), 10);
-                rxSubscriber.next(JSON.parse(data.toString()));
-            }
-            timeoutHandle = setTimeout(() => waitForNext(), 10);
-
-            return async () => {
-                clearTimeout(timeoutHandle);
-                await zmqSubscriber.unbind(this.address);
-                zmqSubscriber.close();
-            };
-        });
-
-        this.rxSubscription = this.listener.subscribe(message => this.handleMessage(message));
-
-        return this.rxSubscription;
+    constructor(protected store: Store<RootState>) {
+        super();
     }
 
-    private sendMessage(message: Message) {
-        Logger.debug({
-            msg: 'Sending IPC Message',
-            ipcMessage: message,
-        });
-
-        this.sender.send(JSON.stringify(message));
-    }
-
-    private async handleMessage(message: Message) {
-        Logger.debug({
-            msg: 'Received IPC Message',
-            ipcMessage: message,
-        });
-
+    public async handleIncomingMessage(message: Message) {
         switch (message.type) {
             case MessageType.REQUEST_GET_AVAILABLE_VERSIONS: {
                 const response: GetAvailableVersionsResponse = {
@@ -118,7 +73,7 @@ export class IPCServer {
                     actions: req.actions || [],
                 };
 
-                this.clients.push(client);
+                this.connectedClients.push(client);
                 client.actions.forEach(actionName => {
                     this.actionTable[actionName] = client.id;
                 });
@@ -136,13 +91,13 @@ export class IPCServer {
 
             case MessageType.REQUEST_UNREGISTER_CLIENT: {
                 const req = message as UnregisterClientRequest;
-                const index = this.clients.findIndex(client => client.id === req.clientId);
+                const index = this.connectedClients.findIndex(client => client.id === req.clientId);
                 if (index > -1) {
-                    this.clients.splice(index, 1);
+                    this.connectedClients.splice(index, 1);
 
                     // Repopulate the actions
                     this.actionTable = {};
-                    this.clients.forEach(client => {
+                    this.connectedClients.forEach(client => {
                         client.actions.forEach(actionName => {
                             this.actionTable[actionName] = client.id;
                         });
@@ -159,8 +114,8 @@ export class IPCServer {
                 break;
             }
 
-            case MessageType.REQUEST_APPLY_ACTION: {
-                const req = message as ApplyActionReqeust;
+            case MessageType.REQUEST_DISPATCH_ACTION: {
+                const req = message as DispatchActionReqeust;
 
                 // Check if a client should handle the request.
                 if (this.actionTable[req.action]) {
@@ -170,15 +125,16 @@ export class IPCServer {
                     // The mutations are then applied here in the main thread and synced to the
                     // clients via regular means.
                     // The action returnValue is returned as a response to this request.
+                    // this.forwardDispatchToClient(req);
                     break;
                 }
 
-                let response: ApplyActionResponse;
+                let response: DispatchActionResponse;
                 try {
                     const dispatchResult = await this.store.dispatch(req.action, req.payload, req.options);
                     response = {
                         id: uuid(),
-                        type: MessageType.RESPONSE_APPLY_ACTION,
+                        type: MessageType.RESPONSE_DISPATCH_ACTION,
                         successful: true,
                         respondsTo: req.id,
                         returnValue: dispatchResult,
@@ -186,7 +142,7 @@ export class IPCServer {
                 } catch (error) {
                     response = {
                         id: uuid(),
-                        type: MessageType.RESPONSE_APPLY_ACTION,
+                        type: MessageType.RESPONSE_DISPATCH_ACTION,
                         successful: false,
                         respondsTo: req.id,
                         error: error,
@@ -209,5 +165,42 @@ export class IPCServer {
                 this.sendMessage(response);
             }
         }
+    }
+
+    private async forwardDispatchToClient(initialReqeust: DispatchActionReqeust) {
+        const clientIdToFind = this.actionTable[initialReqeust.action];
+        // Loading the client to maybe check for the API Version in the future
+        const client = this.connectedClients.find(aClient => aClient.id === clientIdToFind);
+
+        const request: DispatchClientActionRequest = {
+            id: uuid(),
+            type: MessageType.REQUEST_DISPATCH_CLIENT_ACTION,
+            clientId: client.id,
+            action: initialReqeust.action,
+            payload: initialReqeust.payload,
+            options: initialReqeust.options,
+        };
+
+        const response = await this.sendRequestAwaitResponse(
+            request,
+            MessageType.RESPONSE_DISPATCH_CLIENT_ACTION,
+        ) as DispatchClientActionResponse;
+
+        if (response.successful) {
+            (response.commits || []).forEach(commit => {
+                this.store.commit(commit.name, commit.payload, commit.options);
+            });
+        }
+
+        const responseToIntialRequest: DispatchActionResponse = {
+            id: uuid(),
+            type: MessageType.RESPONSE_DISPATCH_ACTION,
+            respondsTo: initialReqeust.id,
+            successful: response.successful,
+            error: response.error,
+            returnValue: response.returnValue,
+        };
+
+        this.sendMessage(responseToIntialRequest);
     }
 }

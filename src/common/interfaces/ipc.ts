@@ -1,4 +1,5 @@
-import { DispatchOptions } from 'vuex';
+import { DispatchOptions, CommitOptions } from 'vuex';
+import { RootState } from '../../store/states/root.state';
 
 export enum MessageType {
     REQUEST_GET_AVAILABLE_VERSIONS = 'REQUEST_GET_AVAILABLE_VERSIONS',
@@ -9,9 +10,13 @@ export enum MessageType {
     RESPONSE_UNREGISTER_CLIENT = 'RESPONSE_UNREGISTER_CLIENT',
     REQUEST_USE_VERSION = 'REQUEST_USE_VERSION',
     RESPONSE_USE_VERSION = 'RESPONSE_USE_VERSION',
-    REQUEST_APPLY_ACTION = 'REQUEST_APPLY_ACTION',
-    RESPONSE_APPLY_ACTION = 'RESPONSE_APPLY_ACTION',
-    REQUEST_APPLY_MUTATION = 'REQUEST_APPLY_MUTATION',
+    REQUEST_STORE_STATE = 'REQUEST_STORE_STATE',
+    RESPONSE_STORE_STATE = 'RESPONSE_STORE_STATE',
+    REQUEST_DISPATCH_ACTION = 'REQUEST_DISPATCH_ACTION',
+    RESPONSE_DISPATCH_ACTION = 'RESPONSE_DISPATCH_ACTION',
+    REQUEST_DISPATCH_CLIENT_ACTION = 'REQUEST_DISPATCH_CLIENT_ACTION',
+    RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
+    REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
     INVALID_REQUEST_RESPONSE = 'INVALID_REQUEST_RESPONSE',
 }
 
@@ -50,8 +55,10 @@ export interface Request extends Message {
     | MessageType.REQUEST_REGISTER_CLIENT
     | MessageType.REQUEST_UNREGISTER_CLIENT
     | MessageType.REQUEST_USE_VERSION
-    | MessageType.REQUEST_APPLY_ACTION
-    | MessageType.REQUEST_APPLY_MUTATION
+    | MessageType.REQUEST_STORE_STATE
+    | MessageType.REQUEST_DISPATCH_ACTION
+    | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
+    | MessageType.REQUEST_COMMIT_MUTATION
     ;
 }
 
@@ -64,7 +71,9 @@ export interface Response extends Message {
     | MessageType.RESPONSE_REGISTER_CLIENT
     | MessageType.RESPONSE_UNREGISTER_CLIENT
     | MessageType.RESPONSE_USE_VERSION
-    | MessageType.RESPONSE_APPLY_ACTION
+    | MessageType.RESPONSE_STORE_STATE
+    | MessageType.RESPONSE_DISPATCH_ACTION
+    | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
     | MessageType.INVALID_REQUEST_RESPONSE
     ;
     /**
@@ -89,8 +98,7 @@ export interface GetAvailableVersionsRequest extends Request {
 }
 
 /**
- * Response for a `REQUEST_GET_AVAILABLE_VERSIONS`.
- * Contains the available versions of the API.
+ * Response which contains the available versions of the API.
  */
 export interface GetAvailableVersionsResponse extends Response {
     type: MessageType.RESPONSE_GET_AVAILABLE_VERSIONS;
@@ -120,8 +128,7 @@ export interface RegisterClientRequest extends Request {
 }
 
 /**
- * Response for a `REQUEST_REGISTER_CLIENT`.
- * If the Server successfully registered the client.
+ * Response if the Server successfully registered the client.
  */
 export interface RegisterClientResponse extends Response {
     type: MessageType.RESPONSE_REGISTER_CLIENT;
@@ -145,8 +152,7 @@ export interface UnregisterClientRequest extends Request {
 }
 
 /**
- * Response for a `REQUEST_UNREGISTER_CLIENT`.
- * If the Server successfully unregistered the client.
+ * Response if the Server successfully unregistered the client.
  */
 export interface UnregisterClientResponse extends Response {
     type: MessageType.RESPONSE_UNREGISTER_CLIENT;
@@ -168,7 +174,6 @@ export interface UseVersionRequest extends Request {
 }
 
 /**
- * Response for a `REQUEST_USE_VERSION`.
  * If the Server agrees on using the requested API Version.
  */
 export interface UseVersionResponse extends Response {
@@ -176,10 +181,28 @@ export interface UseVersionResponse extends Response {
 }
 
 /**
+ * Request to get the most recent version of the state.
+ */
+export interface StoreStateRequest extends Request {
+    type: MessageType.REQUEST_STORE_STATE;
+}
+
+/**
+ * Response which contains the most recent state of the store.
+ */
+export interface StoreStateResponse extends Response {
+    type: MessageType.RESPONSE_STORE_STATE;
+    /**
+     * The most recent state of the store.
+     */
+    state: RootState;
+}
+
+/**
  * Request to apply an action on the proper process.
  */
-export interface ApplyActionReqeust extends Request {
-    type: MessageType.REQUEST_APPLY_ACTION;
+export interface DispatchActionReqeust extends Request {
+    type: MessageType.REQUEST_DISPATCH_ACTION;
     /**
      * The action name that should be applied.
      */
@@ -188,24 +211,70 @@ export interface ApplyActionReqeust extends Request {
      * Payload for the action.
      */
     payload?: any;
+    /**
+     * Options for dispatching the action.
+     */
     options?: DispatchOptions;
 }
 
 /**
- * Response for a `REQUEST_APPLY_ACTION`.
- * If the Server successfully applied the Action,
+ * Response if the Server successfully applied the Action,
  * and the return value of the action.
  */
-export interface ApplyActionResponse extends Response {
-    type: MessageType.RESPONSE_APPLY_ACTION;
+export interface DispatchActionResponse extends Response {
+    type: MessageType.RESPONSE_DISPATCH_ACTION;
+    /**
+     * The value returned from the action after completion.
+     */
     returnValue?: any;
+}
+
+/**
+ * Request that an Action should be handled by a client in it's context.
+ */
+export interface DispatchClientActionRequest extends Request {
+    type: MessageType.REQUEST_DISPATCH_CLIENT_ACTION;
+    /**
+     * Which client should handle this dispatch action in it's context.
+     */
+    clientId: string;
+    /**
+     * The action name that should be applied.
+     */
+    action: string;
+    /**
+     * Payload for the action.
+     */
+    payload?: any;
+    /**
+     * Options for dispatching the action.
+     */
+    options?: DispatchOptions;
+}
+
+/**
+ * Response if the Server successfully applied the Action,
+ * and the return value of the action.
+ * Additionally also contains all commits the action attempted to perform.
+ */
+export interface DispatchClientActionResponse extends Response {
+    type: MessageType.RESPONSE_DISPATCH_CLIENT_ACTION;
+    /**
+     * The value returned from the action after completion.
+     */
+    returnValue?: any;
+    /**
+     * The commits that the action attempted to perform.
+     * These commits may not be handled by the client, but by the server.
+     */
+    commits?: { name: string; payload?: any; options?: CommitOptions }[];
 }
 
 /**
  * Request to apply a mutation to the store.
  */
-export interface ApplyMutationRequest extends Request {
-    type: MessageType.REQUEST_APPLY_MUTATION;
+export interface CommitMutationRequest extends Request {
+    type: MessageType.REQUEST_COMMIT_MUTATION;
     /**
      * The mutation that should be applied.
      */
@@ -214,4 +283,8 @@ export interface ApplyMutationRequest extends Request {
      * Payload for the mutation.
      */
     payload?: any;
+    /**
+     * Options for commiting the mutation.
+     */
+    options?: CommitOptions;
 }

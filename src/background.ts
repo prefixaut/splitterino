@@ -18,7 +18,7 @@ import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { createIPCServer, IPCServer } from './common/ipc/server';
+import { IPCServer } from './common/ipc/server';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({

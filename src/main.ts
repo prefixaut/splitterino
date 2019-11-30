@@ -10,6 +10,7 @@ import draggable from 'vuedraggable';
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
 import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
+import { IPCClient } from './common/ipc/client';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
 import ButtonComponent from './components/button.vue';
@@ -40,6 +41,7 @@ import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
 import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
+import { Injector } from 'lightweight-di';
 
 process.on('uncaughtException', error => {
     Logger.fatal({
@@ -69,8 +71,46 @@ process.on('unhandledRejection', (reason, promise) => {
     const logLevel = ipcRenderer.sendSync('spl-log-level') as LogLevel;
     Logger.initialize(injector, logLevel);
 
-    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    setupVueElements(injector);
+    // Register context-menu functions
+    registerDefaultContextMenuFunctions(injector);
 
+    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const windowRef = electron.getCurrentWindow();
+    const ipcClient = new IPCClient({
+        name: `renderer-${electron.getCurrentWindow().id}`,
+        actions: [],
+        windowId: electron.getCurrentWindow().id,
+    });
+
+    await ipcClient.initialize();
+    await ipcClient.register();
+
+    windowRef.on('close', async () => {
+        await ipcClient.unregister();
+    });
+
+    const store = await getClientStore(Vue, ipcClient, injector);
+
+    // Initialize the Application
+    const vue = new Vue({
+        render: h => h(App),
+        store: store,
+        router
+    }).$mount('#app');
+
+    // Only execute certain functionality if window is main window
+    if (electron.getCurrentWindow().id === 1) {
+        // loadSettings(vue);
+    }
+})().catch(err => {
+    Logger.fatal({
+        msg: 'Unknown Error in the render thread!',
+        error: err,
+    });
+});
+
+function setupVueElements(injector: Injector) {
     // FontAwesome Icons
     library.add(fas);
     Vue.component('fa-icon', FontAwesomeIcon);
@@ -120,24 +160,4 @@ process.on('unhandledRejection', (reason, promise) => {
     // Update the Prototype with an injector and event-hub
     Vue.prototype.$services = injector;
     Vue.prototype.$eventHub = eventHub;
-
-    // Register context-menu functions
-    registerDefaultContextMenuFunctions(injector);
-
-    // Initialize the Application
-    const vue = new Vue({
-        render: h => h(App),
-        store: getClientStore(Vue, injector),
-        router
-    }).$mount('#app');
-
-    // Only execute certain functionality if window is main window
-    if (electron.getCurrentWindow().id === 1) {
-        // loadSettings(vue);
-    }
-})().catch(err => {
-    Logger.fatal({
-        msg: 'Unknown Error in the render thread!',
-        error: err,
-    });
-});
+}
