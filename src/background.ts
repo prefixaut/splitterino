@@ -1,11 +1,12 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, IpcMessageEvent, WebContents, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMessageEvent, protocol, WebContents } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import Vuex from 'vuex';
+
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { ActionResult } from './common/interfaces/electron';
 import { IO_SERVICE_TOKEN } from './services/io.service';
@@ -17,6 +18,7 @@ import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
+import { createIPCServer, IPCServer } from './common/ipc/server';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -126,6 +128,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
+
+    // Setting up the IPC Server
+    const ipcServer = new IPCServer(store);
+    const ipcServerSubscription = await ipcServer.initialize();
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', (event: IpcMessageEvent) => {
@@ -247,6 +253,9 @@ process.on('unhandledRejection', (reason, promise) => {
         // on macOS it is common for applications to stay open
         // until the user explicitly quits
         if (process.platform !== 'darwin') {
+            // Close the IPC Server
+            ipcServerSubscription.unsubscribe();
+            // Close the app
             app.quit();
         }
     });
