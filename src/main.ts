@@ -77,20 +77,21 @@ process.on('unhandledRejection', (reason, promise) => {
 
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const windowRef = electron.getCurrentWindow();
-    const ipcClient = new IPCClient({
-        name: `renderer-${electron.getCurrentWindow().id}`,
-        actions: [],
-        windowId: electron.getCurrentWindow().id,
-    });
-
-    await ipcClient.initialize();
-    await ipcClient.register();
+    const ipcClient = new IPCClient();
 
     windowRef.on('close', async () => {
         await ipcClient.unregister();
     });
 
     const store = await getClientStore(Vue, ipcClient, injector);
+
+    // Initialize and register the ipc-client
+    await ipcClient.initialize(store, {
+        name: `renderer-${electron.getCurrentWindow().id}`,
+        actions: [],
+        windowId: electron.getCurrentWindow().id,
+    });
+    await ipcClient.register();
 
     // Initialize the Application
     const vue = new Vue({

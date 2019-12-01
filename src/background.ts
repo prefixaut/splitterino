@@ -244,7 +244,7 @@ process.on('unhandledRejection', (reason, promise) => {
         // until the user explicitly quits
         if (process.platform !== 'darwin') {
             // Close the IPC Server
-            ipcServerSubscription.unsubscribe();
+            ipcServer.close();
             // Close the app
             app.quit();
         }

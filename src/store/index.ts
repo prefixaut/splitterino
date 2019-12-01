@@ -49,8 +49,6 @@ export async function getClientStore(vueRef, client: IPCClient, injector: Inject
         ...getStoreConfig(injector)
     });
 
-    client.setStore(store);
-
     // * Probably fine if we don't do any heavy init stuff in state
     store.replaceState(await client.getStoreState());
 

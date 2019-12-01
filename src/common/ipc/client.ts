@@ -59,7 +59,7 @@ export class IPCClient {
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
     };
     private dealerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
-
+        [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
     };
 
     private clientId: string;
@@ -339,26 +339,17 @@ export class IPCClient {
         return response.returnValue;
     }
 
-    public async handleIncomingMessage(message: Message) {
-        switch (message.type) {
-
-            case MessageType.REQUEST_DISPATCH_CLIENT_ACTION: {
-                const request = message as DispatchClientActionRequest;
-                // Not a request for us
-                if (request.clientId !== this.clientId) {
-                    break;
-                }
-
-                // TODO: Find a way on how to call the actions with a patched
-                // action-context, so commits are not actually executed.
-                // Seems currently impossible, as only wrapped action-handlers
-                // are getting saved in the store.
-
-                break;
-            }
-
-            default:
-            // TODO: Handle erronous messages
+    protected async handleDispatchClientAction(request: DispatchClientActionRequest) {
+        // Not a request for us
+        if (request.clientId !== this.clientId) {
+            return;
         }
+
+        // TODO: Find a way on how to call the actions with a patched
+        // action-context, so commits are not actually executed.
+        // Seems currently impossible, as only wrapped action-handlers
+        // are getting saved in the store.
+
+        return;
     }
 }
