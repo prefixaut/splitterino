@@ -1,12 +1,13 @@
+import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
+import { Publisher, Pull, Router } from 'zeromq';
 
 import { RootState } from '../../store/states/root.state';
+import { createObservableFromReadable } from '../../utils/ipc';
 import {
-    APIVersion,
     DispatchActionReqeust,
     DispatchActionResponse,
-    GetAvailableVersionsResponse,
     Message,
     MessageType,
     RegisterClientRequest,
@@ -14,10 +15,8 @@ import {
     Response,
     UnregisterClientRequest,
     UnregisterClientResponse,
-    DispatchClientActionRequest,
-    DispatchClientActionResponse,
 } from '../interfaces/ipc';
-import { IPCHandler } from './handler';
+import { Logger } from '../../utils/logger';
 
 /**
  * Internal representation of a IPC Client.
@@ -32,141 +31,277 @@ interface Client {
      */
     id: string;
     /**
-     * The API Version to use when communicating with the client.
-     */
-    apiVersion: APIVersion;
-    /**
      * All actions that the client may handle in it's context.
      */
     actions: string[];
 }
 
-export class IPCServer extends IPCHandler {
+export class IPCServer {
+
+    private readonly publishAddress = 'tcp://127.0.0.1:3730';
+    private readonly routerAddress = 'tcp://127.0.0.1:3731';
+    private readonly pullAddress = 'tcp://127.0.0.1:3732';
+
+    private publisher: Publisher;
+    private router: Router;
+    private pull: Pull;
+    private store: Store<RootState>;
+
+    private routerMessages: Observable<Message>;
+    private routerMessageSubscription: Subscription;
+
+    private pullMessages: Observable<Message>;
+    private pullMessageSubscription: Subscription;
+
+    private isInitialized = false;
 
     private connectedClients: Client[] = [];
-    private actionTable: { [actionName: string]: string };
+    private actionTable: { [actionName: string]: string } = {};
+    private routerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
+        [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
+        [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
+        [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
+    };
+    private pullTable: { [message: string]: (message: Message) => any } = {};
 
-    constructor(protected store: Store<RootState>) {
-        super();
+    public async initialize(store: Store<RootState>) {
+        if (this.isInitialized) {
+            return;
+        }
+
+        this.store = store;
+
+        this.publisher = new Publisher();
+        await this.publisher.bind(this.publishAddress);
+
+        this.router = new Router();
+        await this.router.bind(this.routerAddress);
+
+        this.pull = new Pull();
+        await this.pull.bind(this.pullAddress);
+
+        this.routerMessages = createObservableFromReadable(this.router);
+
+        this.routerMessageSubscription = this.routerMessages.subscribe(message => {
+            this.handleIncomingRouterMessage(message);
+        });
+
+        this.pullMessages = createObservableFromReadable(this.pull);
+
+        this.pullMessageSubscription = this.pullMessages.subscribe(message => {
+            this.handleIncomingPullMessage(message);
+        });
+
+        this.isInitialized = true;
     }
 
-    public async handleIncomingMessage(message: Message) {
-        switch (message.type) {
-            case MessageType.REQUEST_GET_AVAILABLE_VERSIONS: {
-                const response: GetAvailableVersionsResponse = {
-                    id: uuid(),
-                    type: MessageType.RESPONSE_GET_AVAILABLE_VERSIONS,
-                    respondsTo: message.id,
-                    successful: true,
-                    versions: [APIVersion.V1],
-                };
-                this.sendMessage(response);
-                break;
+    public async close() {
+        if (!this.isInitialized) {
+            return;
+        }
+
+        this.store = null;
+
+        if (this.publisher) {
+            await this.publisher.unbind(this.publishAddress);
+            this.publisher.close();
+            this.publisher = null;
+        }
+
+        if (this.router) {
+            await this.router.unbind(this.routerAddress);
+            this.router.close();
+            this.router = null;
+        }
+
+        if (this.routerMessages) {
+            this.routerMessages = null;
+        }
+
+        if (this.routerMessageSubscription) {
+            this.routerMessageSubscription.unsubscribe();
+            this.routerMessageSubscription = null;
+        }
+
+        if (this.pull) {
+            await this.pull.unbind(this.pullAddress);
+            this.pull.close();
+            this.pull = null;
+        }
+
+        if (this.pullMessages) {
+            this.pullMessages = null;
+        }
+
+        if (this.pullMessageSubscription) {
+            this.pullMessageSubscription.unsubscribe();
+            this.pullMessageSubscription = null;
+        }
+
+        this.isInitialized = false;
+    }
+
+    public async publishMessage(message: Message) {
+        Logger.debug({
+            msg: 'Sending IPC Message',
+            direction: 'OUTGOING',
+            source: 'PUBLISHER',
+            ipcMessage: message,
+        });
+
+        return this.publisher.send(JSON.stringify(message));
+    }
+
+    public async sendRouterMessage(message: Message) {
+        Logger.debug({
+            msg: 'Sending IPC Message',
+            direction: 'OUTGOING',
+            source: 'ROUTER',
+            ipcMessage: message,
+        });
+
+        return this.router.send(JSON.stringify(message));
+    }
+
+    public async handleIncomingRouterMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'INCOMING',
+            source: 'ROUTER',
+            ipcMessage: message,
+        });
+
+        // The message is an response to a previously sent request
+        // These are handled seperately.
+        if (typeof (message as any).respondsTo === 'string') {
+            return;
+        }
+
+        const handlerFn = this.routerTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, message, true);
+
+            return;
+        }
+
+        const response: Response = {
+            id: uuid(),
+            type: MessageType.INVALID_REQUEST_RESPONSE,
+            respondsTo: message.id,
+            successful: false,
+            error: {
+                message: `The received Request Type "${message.type}" could not be processed by the server!`,
             }
+        };
 
-            case MessageType.REQUEST_REGISTER_CLIENT: {
-                const req = message as RegisterClientRequest;
-                const client: Client = {
-                    id: uuid(),
-                    name: req.name,
-                    apiVersion: APIVersion.V1,
-                    actions: req.actions || [],
-                };
+        await this.sendRouterMessage(response);
+    }
 
-                this.connectedClients.push(client);
+    public async handleIncomingPullMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'INCOMING',
+            source: 'PULL',
+            ipcMessage: message,
+        });
+
+        const handlerFn = this.pullTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, message, false);
+
+            return;
+        }
+
+        // As the server only pulls messages without responding, no response needed here.
+    }
+
+    protected async handleRegisterClient(request: RegisterClientRequest) {
+        const client: Client = {
+            id: uuid(),
+            name: request.name,
+            actions: request.actions || [],
+        };
+
+        this.connectedClients.push(client);
+        client.actions.forEach(actionName => {
+            this.actionTable[actionName] = client.id;
+        });
+
+        const response: RegisterClientResponse = {
+            id: uuid(),
+            type: MessageType.RESPONSE_REGISTER_CLIENT,
+            successful: true,
+            respondsTo: request.id,
+            clientId: client.id,
+        };
+
+        await this.sendRouterMessage(response);
+    }
+
+    protected async handleUnregisterClient(request: UnregisterClientRequest) {
+        const index = this.connectedClients.findIndex(client => client.id === request.clientId);
+        if (index > -1) {
+            this.connectedClients.splice(index, 1);
+
+            // Repopulate the actions
+            this.actionTable = {};
+            this.connectedClients.forEach(client => {
                 client.actions.forEach(actionName => {
                     this.actionTable[actionName] = client.id;
                 });
-
-                const response: RegisterClientResponse = {
-                    id: uuid(),
-                    type: MessageType.RESPONSE_REGISTER_CLIENT,
-                    successful: true,
-                    respondsTo: req.id,
-                    clientId: client.id,
-                };
-                this.sendMessage(response);
-                break;
-            }
-
-            case MessageType.REQUEST_UNREGISTER_CLIENT: {
-                const req = message as UnregisterClientRequest;
-                const index = this.connectedClients.findIndex(client => client.id === req.clientId);
-                if (index > -1) {
-                    this.connectedClients.splice(index, 1);
-
-                    // Repopulate the actions
-                    this.actionTable = {};
-                    this.connectedClients.forEach(client => {
-                        client.actions.forEach(actionName => {
-                            this.actionTable[actionName] = client.id;
-                        });
-                    });
-                }
-
-                const response: UnregisterClientResponse = {
-                    id: uuid(),
-                    type: MessageType.RESPONSE_UNREGISTER_CLIENT,
-                    respondsTo: req.id,
-                    successful: index > -1,
-                };
-                this.sendMessage(response);
-                break;
-            }
-
-            case MessageType.REQUEST_DISPATCH_ACTION: {
-                const req = message as DispatchActionReqeust;
-
-                // Check if a client should handle the request.
-                if (this.actionTable[req.action]) {
-                    // TODO: Send a request to the client to perform the action in it's process
-                    // The client then may send back a response with all commits that should
-                    // be performed, and the actions return value.
-                    // The mutations are then applied here in the main thread and synced to the
-                    // clients via regular means.
-                    // The action returnValue is returned as a response to this request.
-                    // this.forwardDispatchToClient(req);
-                    break;
-                }
-
-                let response: DispatchActionResponse;
-                try {
-                    const dispatchResult = await this.store.dispatch(req.action, req.payload, req.options);
-                    response = {
-                        id: uuid(),
-                        type: MessageType.RESPONSE_DISPATCH_ACTION,
-                        successful: true,
-                        respondsTo: req.id,
-                        returnValue: dispatchResult,
-                    };
-                } catch (error) {
-                    response = {
-                        id: uuid(),
-                        type: MessageType.RESPONSE_DISPATCH_ACTION,
-                        successful: false,
-                        respondsTo: req.id,
-                        error: error,
-                    };
-                }
-                this.sendMessage(response);
-                break;
-            }
-
-            default: {
-                const response: Response = {
-                    id: uuid(),
-                    type: MessageType.INVALID_REQUEST_RESPONSE,
-                    respondsTo: message.id,
-                    successful: false,
-                    error: {
-                        message: `The received Request Type "${message.type}" could not be processed by the server!`,
-                    }
-                };
-                this.sendMessage(response);
-            }
+            });
         }
+
+        const response: UnregisterClientResponse = {
+            id: uuid(),
+            type: MessageType.RESPONSE_UNREGISTER_CLIENT,
+            respondsTo: request.id,
+            successful: index > -1,
+        };
+
+        await this.sendRouterMessage(response);
     }
 
+    protected async handleDispatchAction(request: DispatchActionReqeust) {
+        // Check if a client should handle the request.
+        // if (this.actionTable[request.action]) {
+        // TODO: Send a request to the client to perform the action in it's process
+        // The client then may send back a response with all commits that should
+        // be performed, and the actions return value.
+        // The mutations are then applied here in the main thread and synced to the
+        // clients via regular means.
+        // The action returnValue is returned as a response to this request.
+        // this.forwardDispatchToClient(req);
+        return;
+        // }
+
+        let response: DispatchActionResponse;
+
+        try {
+            const dispatchResult = await this.store.dispatch(request.action, request.payload, request.options);
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_DISPATCH_ACTION,
+                successful: true,
+                respondsTo: request.id,
+                returnValue: dispatchResult,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_DISPATCH_ACTION,
+                successful: false,
+                respondsTo: request.id,
+                error: error,
+            };
+        }
+
+        this.sendRouterMessage(response);
+    }
+
+    /*
     private async forwardDispatchToClient(initialReqeust: DispatchActionReqeust) {
         const clientIdToFind = this.actionTable[initialReqeust.action];
         // Loading the client to maybe check for the API Version in the future
@@ -203,4 +338,5 @@ export class IPCServer extends IPCHandler {
 
         this.sendMessage(responseToIntialRequest);
     }
+    */
 }

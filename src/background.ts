@@ -19,6 +19,8 @@ import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
 import { IPCServer } from './common/ipc/server';
+import { CommitMutationRequest, MessageType } from './common/interfaces/ipc';
+import uuid from 'uuid';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -97,6 +99,9 @@ process.on('unhandledRejection', (reason, promise) => {
     const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
 
+    // Create the IPC Server
+    const ipcServer = new IPCServer();
+
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
     const store = new Vuex.Store<RootState>({
@@ -105,9 +110,13 @@ process.on('unhandledRejection', (reason, promise) => {
             storeInstance => {
                 storeInstance.subscribe(mutation => {
                     try {
-                        Object.keys(clients).forEach(id => {
-                            clients[id].send('vuex-apply-mutation', mutation);
-                        });
+                        const commitRequest: CommitMutationRequest = {
+                            id: uuid(),
+                            type: MessageType.REQUEST_COMMIT_MUTATION,
+                            mutation: mutation.type,
+                            payload: mutation.payload,
+                        };
+                        ipcServer.publishMessage(commitRequest);
                     } catch (error) {
                         Logger.error({
                             msg: 'Error while sending mutation to other processes',
@@ -121,6 +130,9 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
+    // Initialize the IPC Server with the store
+    await ipcServer.initialize(store);
+
     // load application settings
     const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
     // load user settings
@@ -128,10 +140,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
-
-    // Setting up the IPC Server
-    const ipcServer = new IPCServer(store);
-    const ipcServerSubscription = await ipcServer.initialize();
 
     // Listener to transfer the current state of the store
     ipcMain.on('vuex-connect', (event: IpcMessageEvent) => {
@@ -165,24 +173,6 @@ process.on('unhandledRejection', (reason, promise) => {
                 payload,
                 error,
             });
-        }
-    });
-
-    // Listener to perform a delegate mutation on the main store
-    ipcMain.on('vuex-dispatch', async (event: IpcMessageEvent, { type, payload, options }) => {
-        Logger.debug({
-            msg: 'vuex-dispatch',
-            type,
-            payload,
-            options,
-        });
-        try {
-            const dispatchResult = await store.dispatch(type, payload, options);
-            const eventResponse: ActionResult = { result: dispatchResult, error: null };
-            event.returnValue = eventResponse;
-        } catch (error) {
-            const eventResponse: ActionResult = { result: null, error };
-            event.returnValue = eventResponse;
         }
     });
 

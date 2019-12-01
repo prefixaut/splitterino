@@ -2,14 +2,10 @@ import { DispatchOptions, CommitOptions } from 'vuex';
 import { RootState } from '../../store/states/root.state';
 
 export enum MessageType {
-    REQUEST_GET_AVAILABLE_VERSIONS = 'REQUEST_GET_AVAILABLE_VERSIONS',
-    RESPONSE_GET_AVAILABLE_VERSIONS = 'RESPONSE_GET_AVAILABLE_VERSIONS',
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
     RESPONSE_REGISTER_CLIENT = 'RESPONSE_REGISTER_CLIENT',
     REQUEST_UNREGISTER_CLIENT = 'REQUEST_UNREGISTER_CLIENT',
     RESPONSE_UNREGISTER_CLIENT = 'RESPONSE_UNREGISTER_CLIENT',
-    REQUEST_USE_VERSION = 'REQUEST_USE_VERSION',
-    RESPONSE_USE_VERSION = 'RESPONSE_USE_VERSION',
     REQUEST_STORE_STATE = 'REQUEST_STORE_STATE',
     RESPONSE_STORE_STATE = 'RESPONSE_STORE_STATE',
     REQUEST_DISPATCH_ACTION = 'REQUEST_DISPATCH_ACTION',
@@ -18,13 +14,6 @@ export enum MessageType {
     RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
     REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
     INVALID_REQUEST_RESPONSE = 'INVALID_REQUEST_RESPONSE',
-}
-
-/**
- * All Versions that Clients/Server can use.
- */
-export enum APIVersion {
-    V1 = 'V1',
 }
 
 /**
@@ -51,10 +40,8 @@ export interface ResponseError {
  */
 export interface Request extends Message {
     type:
-    | MessageType.REQUEST_GET_AVAILABLE_VERSIONS
     | MessageType.REQUEST_REGISTER_CLIENT
     | MessageType.REQUEST_UNREGISTER_CLIENT
-    | MessageType.REQUEST_USE_VERSION
     | MessageType.REQUEST_STORE_STATE
     | MessageType.REQUEST_DISPATCH_ACTION
     | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
@@ -67,10 +54,8 @@ export interface Request extends Message {
  */
 export interface Response extends Message {
     type:
-    | MessageType.RESPONSE_GET_AVAILABLE_VERSIONS
     | MessageType.RESPONSE_REGISTER_CLIENT
     | MessageType.RESPONSE_UNREGISTER_CLIENT
-    | MessageType.RESPONSE_USE_VERSION
     | MessageType.RESPONSE_STORE_STATE
     | MessageType.RESPONSE_DISPATCH_ACTION
     | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
@@ -88,24 +73,6 @@ export interface Response extends Message {
      * The Error why the request couldn't be processed.
      */
     error?: ResponseError;
-}
-
-/**
- * Request to get all available Versions from the Server.
- */
-export interface GetAvailableVersionsRequest extends Request {
-    type: MessageType.REQUEST_GET_AVAILABLE_VERSIONS;
-}
-
-/**
- * Response which contains the available versions of the API.
- */
-export interface GetAvailableVersionsResponse extends Response {
-    type: MessageType.RESPONSE_GET_AVAILABLE_VERSIONS;
-    /**
-     * A list of available Version IDs that the Server accepts.
-     */
-    versions: APIVersion[];
 }
 
 /**
@@ -156,28 +123,6 @@ export interface UnregisterClientRequest extends Request {
  */
 export interface UnregisterClientResponse extends Response {
     type: MessageType.RESPONSE_UNREGISTER_CLIENT;
-}
-
-/**
- * Request to use a specific API Version when interacting with the server.
- */
-export interface UseVersionRequest extends Request {
-    type: MessageType.REQUEST_USE_VERSION;
-    /**
-     * The Version the Client wants to use
-     */
-    version: APIVersion;
-    /**
-     * The client's ID.
-     */
-    clientId: string;
-}
-
-/**
- * If the Server agrees on using the requested API Version.
- */
-export interface UseVersionResponse extends Response {
-    type: MessageType.RESPONSE_USE_VERSION;
 }
 
 /**

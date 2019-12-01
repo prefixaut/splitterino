@@ -1,22 +1,28 @@
+import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
+import { Dealer, Push, Subscriber } from 'zeromq';
 
 import { RootState } from '../../store/states/root.state';
+import { createObservableFromReadable } from '../../utils/ipc';
+import { Logger } from '../../utils/logger';
 import {
     CommitMutationRequest,
+    DispatchActionReqeust,
+    DispatchActionResponse,
+    DispatchClientActionRequest,
     Message,
     MessageType,
     RegisterClientRequest,
     RegisterClientResponse,
-    UnregisterClientRequest,
-    UnregisterClientResponse,
-    DispatchActionReqeust,
-    DispatchActionResponse,
+    Request,
+    Response,
     StoreStateRequest,
     StoreStateResponse,
-    DispatchClientActionRequest,
+    UnregisterClientRequest,
+    UnregisterClientResponse,
 } from '../interfaces/ipc';
-import { IPCHandler } from './handler';
+import { filter, first } from 'rxjs/operators';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {
@@ -24,46 +30,230 @@ export class ClientNotRegisteredError extends Error {
     }
 }
 
-export class IPCClient extends IPCHandler {
+export interface ClientInformation {
+    name: string;
+    actions?: string[];
+    windowId?: number;
+}
 
-    private clientId: string;
-    private name: string;
+export class IPCClient {
+
+    private readonly subscriberAddress = 'tcp://127.0.0.1:3730';
+    private readonly dealerAddress = 'tcp://127.0.0.1:3731';
+    private readonly pushAddress = 'tcp://127.0.0.1:3732';
+
+    private subscriber: Subscriber;
+    private dealer: Dealer;
+    private push: Push;
     private store: Store<RootState>;
 
-    private actions: string[] = [];
-    private windowId: number;
+    private subscriberMessages: Observable<Message>;
+    private subscriberMessageSubscription: Subscription;
 
-    constructor(options: { name: string; actions?: string[]; windowId?: number }) {
-        super();
-        const { name, actions, windowId } = options;
-        this.name = name;
-        this.actions = actions || [];
-        this.windowId = windowId;
-    }
+    private dealerMessages: Observable<Message>;
+    private dealerMessageSubscription: Subscription;
 
-    public isRegistered() {
-        return this.clientId != null;
-    }
+    private isInitialized = false;
 
-    public setStore(store: Store<RootState>) {
+    private subscriberTable: { [message: string]: (message: Message) => any } = {
+        [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
+    };
+    private dealerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
+
+    };
+
+    private clientId: string;
+    private clientInfo: ClientInformation;
+
+    public async initialize(store: Store<RootState>, clientInfo: ClientInformation) {
+        if (this.isInitialized) {
+            return;
+        }
+
         this.store = store;
+        this.clientInfo = clientInfo;
+
+        this.subscriber = new Subscriber();
+        await this.subscriber.bind(this.subscriberAddress);
+
+        this.subscriberMessages = createObservableFromReadable(this.subscriber);
+        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(message => {
+            this.handleIncomingSubscriberMessage(message);
+        });
+
+        this.dealer = new Dealer();
+        await this.dealer.bind(this.dealerAddress);
+
+        this.dealerMessages = createObservableFromReadable(this.dealer);
+        this.dealerMessageSubscription = this.dealerMessages.subscribe(message => {
+            this.handleIncomingDealerMessage(message);
+        });
+
+        this.push = new Push();
+        await this.push.bind(this.pushAddress);
+
+        this.isInitialized = true;
+    }
+
+    public async close() {
+        if (!this.isInitialized) {
+            return;
+        }
+
+        this.store = null;
+
+        if (this.subscriber) {
+            await this.subscriber.unbind(this.subscriberAddress);
+            this.subscriber.close();
+            this.subscriber = null;
+        }
+
+        if (this.subscriberMessages) {
+            this.subscriberMessages = null;
+        }
+
+        if (this.subscriberMessageSubscription) {
+            this.subscriberMessageSubscription.unsubscribe();
+            this.subscriberMessageSubscription = null;
+        }
+
+        if (this.dealer) {
+            await this.dealer.unbind(this.dealerAddress);
+            this.dealer.close();
+            this.dealer = null;
+        }
+
+        if (this.dealerMessages) {
+            this.dealerMessages = null;
+        }
+
+        if (this.dealerMessageSubscription) {
+            this.dealerMessageSubscription.unsubscribe();
+            this.dealerMessageSubscription = null;
+        }
+
+        if (this.push) {
+            await this.push.unbind(this.pushAddress);
+            this.push.close();
+            this.push = null;
+        }
+
+        this.isInitialized = false;
+    }
+
+    public async handleIncomingSubscriberMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'INBOUNDS',
+            source: 'SUBSCRIBER',
+            ipcMessage: message,
+        });
+
+        const handlerFn = this.subscriberTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, message, true);
+
+            return;
+        }
+    }
+
+    public async sendDealerMessage(message: Message) {
+        Logger.debug({
+            msg: 'Sending IPC Message',
+            direction: 'OUTBOUNDS',
+            source: 'DEALER',
+            ipcMessage: message,
+        });
+
+        return this.dealer.send(JSON.stringify(message));
+    }
+
+    public async handleIncomingDealerMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'INBOUNDS',
+            source: 'DEALER',
+            ipcMessage: message,
+        });
+
+        // The message is an response to a previously sent request
+        // These are handled seperately.
+        if (typeof (message as any).respondsTo === 'string') {
+            return;
+        }
+
+        const handlerFn = this.dealerTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, message, true);
+
+            return;
+        }
+
+        const response: Response = {
+            id: uuid(),
+            type: MessageType.INVALID_REQUEST_RESPONSE,
+            respondsTo: message.id,
+            successful: false,
+            error: {
+                message: `The received Request Type "${message.type}" could not be processed by the server!`,
+            }
+        };
+
+        await this.sendDealerMessage(response);
+    }
+
+    public async sendDealerRequestAwaitResponse(
+        request: Request,
+        responseType: MessageType
+    ): Promise<Response> {
+        this.sendDealerMessage(request);
+
+        const response = await this.dealerMessages.pipe(
+            filter(message => {
+                return message.type === responseType && (message as Response).respondsTo === request.id;
+            }),
+            first()
+        ).toPromise() as Response;
+
+        if (!response.successful) {
+            throw new Error(response.error.message);
+        }
+
+        return response;
+    }
+
+    public async sendPushMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'OUTBOUNDS',
+            source: 'PUSH',
+            ipcMessage: message,
+        });
+
+        return this.push.send(JSON.stringify(message));
+    }
+
+    protected async handleCommitMutation(request: CommitMutationRequest) {
+        this.store.commit(request.mutation, request.payload, request.options);
     }
 
     public async register(): Promise<boolean> {
-        if (this.isRegistered()) {
-            // Already registered, can't register again
+        // Already registered, can't register again
+        if (this.clientId != null) {
             return false;
         }
 
         const request: RegisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_REGISTER_CLIENT,
-            name: this.name,
-            actions: this.actions,
-            windowId: this.windowId,
+            name: this.clientInfo.name,
+            actions: this.clientInfo.actions,
+            windowId: this.clientInfo.windowId,
         };
 
-        const response = await this.sendRequestAwaitResponse(
+        const response = await this.sendDealerRequestAwaitResponse(
             request,
             MessageType.RESPONSE_REGISTER_CLIENT
         ) as RegisterClientResponse;
@@ -78,7 +268,7 @@ export class IPCClient extends IPCHandler {
     }
 
     public async unregister(): Promise<boolean> {
-        if (!this.isRegistered()) {
+        if (this.clientId == null) {
             // Already unregistered, can't register again
             return false;
         }
@@ -89,7 +279,7 @@ export class IPCClient extends IPCHandler {
             clientId: this.clientId,
         };
 
-        const response = await this.sendRequestAwaitResponse(
+        const response = await this.sendDealerRequestAwaitResponse(
             request,
             MessageType.RESPONSE_UNREGISTER_CLIENT
         ) as UnregisterClientResponse;
@@ -109,7 +299,7 @@ export class IPCClient extends IPCHandler {
             type: MessageType.REQUEST_STORE_STATE,
         };
 
-        const response = await this.sendRequestAwaitResponse(
+        const response = await this.sendDealerRequestAwaitResponse(
             request,
             MessageType.RESPONSE_STORE_STATE
         ) as StoreStateResponse;
@@ -126,7 +316,7 @@ export class IPCClient extends IPCHandler {
         payload?: any,
         options?: DispatchOptions
     ): Promise<any> {
-        if (!this.isRegistered()) {
+        if (this.clientId == null) {
             throw new ClientNotRegisteredError();
         }
 
@@ -137,7 +327,7 @@ export class IPCClient extends IPCHandler {
             payload: payload,
             options: options,
         };
-        const response = await this.sendRequestAwaitResponse(
+        const response = await this.sendDealerRequestAwaitResponse(
             request,
             MessageType.RESPONSE_DISPATCH_ACTION
         ) as DispatchActionResponse;
@@ -151,11 +341,6 @@ export class IPCClient extends IPCHandler {
 
     public async handleIncomingMessage(message: Message) {
         switch (message.type) {
-            case MessageType.REQUEST_COMMIT_MUTATION: {
-                const request = message as CommitMutationRequest;
-                this.store.commit(request.mutation, request.payload, request.options);
-                break;
-            }
 
             case MessageType.REQUEST_DISPATCH_CLIENT_ACTION: {
                 const request = message as DispatchClientActionRequest;
