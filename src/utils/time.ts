@@ -1,4 +1,5 @@
 import { Time } from 'aevum';
+
 import { DetailedTime } from '../models/segment';
 import { asCleanNumber } from './converters';
 

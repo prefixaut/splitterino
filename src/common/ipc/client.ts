@@ -1,11 +1,9 @@
 import { Observable, Subscription } from 'rxjs';
+import { filter, first } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
 import { Dealer, Push, Subscriber } from 'zeromq';
 
-import { RootState } from '../../store/states/root.state';
-import { createObservableFromReadable } from '../../utils/ipc';
-import { Logger } from '../../utils/logger';
 import {
     CommitMutationRequest,
     DispatchActionReqeust,
@@ -22,7 +20,9 @@ import {
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../../models/ipc';
-import { filter, first } from 'rxjs/operators';
+import { RootState } from '../../models/states/root.state';
+import { createObservableFromReadable } from '../../utils/ipc';
+import { Logger } from '../../utils/logger';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {

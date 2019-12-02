@@ -1,6 +1,8 @@
 import { Injector } from 'lightweight-di';
-import { Store } from 'vuex';
 
+import { ContextMenuItemActionFunction } from '../models/context-menu-item';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { KeybindingActionFunction } from '../models/keybindings';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import {
     ACTION_PAUSE,
@@ -11,13 +13,20 @@ import {
     ACTION_UNDO,
     ACTION_UNPAUSE,
 } from '../store/modules/splits.module';
-import { openKeybindgsEditor, openSettingsEditor, openSplitsBrowser, openSplitsEditor, openLoadSplits, openLoadTemplate } from '../utils/windows';
+import {
+    openKeybindgsEditor,
+    openLoadSplits,
+    openLoadTemplate,
+    openSettingsEditor,
+    openSplitsEditor,
+} from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_SETTINGS_OPEN,
     CTX_MENU_SPLITS_EDIT,
     CTX_MENU_SPLITS_LOAD_FROM_FILE,
     CTX_MENU_SPLITS_SAVE_TO_FILE,
+    CTX_MENU_TEMPLATES_LOAD_FROM_FILE,
     CTX_MENU_WINDOW_CLOSE,
     CTX_MENU_WINDOW_RELOAD,
     KEYBINDING_SPLITS_RESET,
@@ -25,11 +34,7 @@ import {
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
-    CTX_MENU_TEMPLATES_LOAD_FROM_FILE
 } from './constants';
-import { ContextMenuItemActionFunction } from '../models/context-menu-item';
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
-import { KeybindingActionFunction } from '../models/keybindings';
 import { TimerStatus } from './timer-status';
 
 export abstract class FunctionRegistry {

@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
+import { ContextMenuState } from '../../../src/models/states/context-menu.state';
+import { RootState } from '../../../src/models/states/root.state';
 import { getContextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
-import { ContextMenuState } from '../../../src/store/states/context-menu.state';
-import { RootState } from '../../../src/store/states/root.state';
 
 Vue.use(Vuex);
 

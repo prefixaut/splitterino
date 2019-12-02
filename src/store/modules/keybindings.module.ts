@@ -8,8 +8,8 @@ import {
     KEYBINDING_SPLITS_UNDO,
 } from '../../common/constants';
 import { ActionKeybinding, isActionKeybinding } from '../../models/keybindings';
-import { KeybindingsState } from '../states/keybindings.state';
-import { RootState } from '../states/root.state';
+import { KeybindingsState } from '../../models/states/keybindings.state';
+import { RootState } from '../../models/states/root.state';
 
 const MODULE_PATH = 'splitterino/keybindings';
 

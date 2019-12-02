@@ -3,6 +3,8 @@ import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
 import { TimerStatus } from '../../../src/common/timer-status';
+import { RootState } from '../../../src/models/states/root.state';
+import { TimerState } from '../../../src/models/states/timer.state';
 import {
     getTimerStoreModule,
     ID_MUTATION_SET_START_DELAY,
@@ -10,8 +12,6 @@ import {
     MUTATION_SET_START_DELAY,
     MUTATION_SET_STATUS,
 } from '../../../src/store/modules/timer.module';
-import { RootState } from '../../../src/store/states/root.state';
-import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { randomInt } from '../../utils';
 

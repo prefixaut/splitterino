@@ -5,12 +5,12 @@ import { ActionContext, Module } from 'vuex';
 import { TimerStatus } from '../../common/timer-status';
 import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
 import { Segment, TimingMethod } from '../../models/segment';
+import { RootState } from '../../models/states/root.state';
+import { SplitsState } from '../../models/states/splits.state';
 import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 import { asCleanNumber } from '../../utils/converters';
 import { Logger } from '../../utils/logger';
 import { getFinalTime, now } from '../../utils/time';
-import { RootState } from '../states/root.state';
-import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';
 
 export const MODULE_PATH = 'splitterino/splits';

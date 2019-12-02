@@ -1,10 +1,10 @@
 import { Store } from 'vuex';
 
-import { ElectronInterface } from '../models/electron';
 import { TimerStatus } from '../common/timer-status';
-import { ACTION_SPLIT } from '../store/modules/splits.module';
-import { RootState } from '../store/states/root.state';
+import { ElectronInterface } from '../models/electron';
+import { RootState } from '../models/states/root.state';
 import { IOService } from '../services/io.service';
+import { ACTION_SPLIT } from '../store/modules/splits.module';
 
 export function openKeybindgsEditor(electron: ElectronInterface) {
     electron.newWindow(

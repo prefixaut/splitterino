@@ -2,9 +2,9 @@ import { Injector } from 'lightweight-di';
 import Vuex, { DispatchOptions, Payload } from 'vuex';
 
 import { IPCClient } from '../common/ipc/client';
+import { RootState } from '../models/states/root.state';
 import { Logger } from '../utils/logger';
 import { getSplitterinoStoreModules } from './modules/index.module';
-import { RootState } from './states/root.state';
 
 export function getStoreConfig(injector: Injector) {
     return {

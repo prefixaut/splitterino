@@ -25,9 +25,10 @@
 import { Vue, Component } from 'vue-property-decorator';
 import { isEqual, cloneDeep } from 'lodash';
 
-import { Segment } from '../common/interfaces/segment';
+import { Segment } from '../models/segment';
+import { GameInfoState } from '../models/states/game-info.state';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
-import { GameInfoState } from '../store/states/game-info.state';
 import {
     ACTION_SET_GAME_NAME,
     ACTION_SET_CATEGORY,
@@ -35,7 +36,6 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
-import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-splits-editor-view' })

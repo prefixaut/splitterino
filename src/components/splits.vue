@@ -48,8 +48,8 @@ import { namespace } from 'vuex-class';
 
 import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
-import { Segment, TimingMethod } from '../models/segment';
 import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { Segment, TimingMethod } from '../models/segment';
 import { Logger } from '../utils/logger';
 import { now, getFinalTime } from '../utils/time';
 

@@ -50,7 +50,7 @@
 import ISO6391 from 'iso-639-1';
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
-import { Region, GameInfoState } from '../store/states/game-info.state';
+import { Region, GameInfoState } from '../models/states/game-info.state';
 import {
     ACTION_SET_GAME_NAME,
     ACTION_SET_CATEGORY,

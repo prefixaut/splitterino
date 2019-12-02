@@ -1,4 +1,4 @@
-import { SettingsConfigurationNamespace } from '../store/states/settings.state';
+import { SettingsConfigurationNamespace } from '../models/states/settings.state';
 
 /*
  * Default Values

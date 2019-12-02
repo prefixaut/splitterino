@@ -7,11 +7,11 @@ import {
     SaveDialogOptions,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
+import { Observable } from 'rxjs';
 import { VNode } from 'vue';
 
 import { ContextMenuItem } from '../../src/models/context-menu-item';
 import { ElectronInterface } from '../../src/models/electron';
-import { Observable } from 'rxjs';
 
 @Injectable
 export class ElectronMockService implements ElectronInterface {

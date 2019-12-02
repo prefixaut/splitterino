@@ -3,9 +3,9 @@ import { Injector } from 'lightweight-di';
 import { Store } from 'vuex';
 
 import { FunctionRegistry } from '../../common/function-registry';
+import { RootState } from '../../models/states/root.state';
 import { Logger } from '../../utils/logger';
 import { MUTATION_SET_BINDINGS } from '../modules/keybindings.module';
-import { RootState } from '../states/root.state';
 
 export function getKeybindingsStorePlugin(injector: Injector) {
     return (store: Store<RootState>) => {

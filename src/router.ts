@@ -3,10 +3,10 @@ import Router from 'vue-router';
 
 import DefaultView from './views/default.view.vue';
 import KeybindingsEditorView from './views/keybindings-editor.view.vue';
-import SettingsEditorView from './views/settings-editor.view.vue';
-import SplitsEditorView from './views/splits-editor.view.vue';
 import OpenSplitsView from './views/open-splits.view.vue';
 import OpenTemplateView from './views/open-template.view.vue';
+import SettingsEditorView from './views/settings-editor.view.vue';
+import SplitsEditorView from './views/splits-editor.view.vue';
 
 Vue.use(Router);
 

@@ -3,8 +3,6 @@ import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 import { Publisher, Pull, Router } from 'zeromq';
 
-import { RootState } from '../../store/states/root.state';
-import { createObservableFromReadable } from '../../utils/ipc';
 import {
     DispatchActionReqeust,
     DispatchActionResponse,
@@ -16,6 +14,8 @@ import {
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../../models/ipc';
+import { RootState } from '../../models/states/root.state';
+import { createObservableFromReadable } from '../../utils/ipc';
 import { Logger } from '../../utils/logger';
 
 /**

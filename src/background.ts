@@ -9,13 +9,13 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { CommitMutationRequest, MessageType } from './models/ipc';
 import { IPCServer } from './common/ipc/server';
+import { CommitMutationRequest, MessageType } from './models/ipc';
+import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
 import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
-import { RootState } from './store/states/root.state';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';

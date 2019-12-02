@@ -2,12 +2,25 @@ import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { getSettingsStoreModule, MUTATION_SET_ALL_SETTINGS, ID_MUTATION_SET_ALL_SETTINGS, MUTATION_BULK_SET_SETTINGS, ID_MUTATION_BULK_SET_SETTINGS, ACTION_SET_ALL_SETTINGS, ID_ACTION_SET_ALL_SETTINGS, ACTION_BULK_SET_SETTINGS, ID_ACTION_BULK_SET_SETTINGS, GETTER_VALUE_BY_PATH, ID_GETTER_GET_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ID_GETTER_GET_CONFIGURATIONS_BY_PATH } from '../../../src/store/modules/settings.module';
-import { RootState } from '../../../src/store/states/root.state';
-import { SettingsState, Settings } from '../../../src/store/states/settings.state';
-import { createMockInjector, testAction } from '../../utils';
+import { RootState } from '../../../src/models/states/root.state';
+import { Settings, SettingsState } from '../../../src/models/states/settings.state';
+import {
+    ACTION_BULK_SET_SETTINGS,
+    ACTION_SET_ALL_SETTINGS,
+    getSettingsStoreModule,
+    GETTER_CONFIGURATIONS_BY_PATH,
+    GETTER_VALUE_BY_PATH,
+    ID_ACTION_BULK_SET_SETTINGS,
+    ID_ACTION_SET_ALL_SETTINGS,
+    ID_GETTER_GET_CONFIGURATIONS_BY_PATH,
+    ID_GETTER_GET_VALUE_BY_PATH,
+    ID_MUTATION_BULK_SET_SETTINGS,
+    ID_MUTATION_SET_ALL_SETTINGS,
+    MUTATION_BULK_SET_SETTINGS,
+    MUTATION_SET_ALL_SETTINGS,
+} from '../../../src/store/modules/settings.module';
 import { eventHub } from '../../../src/utils/event-hub';
-import { ID_ACTION_SET_ALL_SEGMENTS } from '../../../src/store/modules/splits.module';
+import { createMockInjector, testAction } from '../../utils';
 
 const injector = createMockInjector();
 

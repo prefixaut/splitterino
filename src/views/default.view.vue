@@ -40,16 +40,16 @@
 </template>
 
 <script lang="ts">
+import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
 import { TimerStatus } from '../common/timer-status';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
-import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
-import { Subscription } from 'rxjs';
+import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {

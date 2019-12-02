@@ -2,14 +2,14 @@ import { cloneDeep, get, isEqual, merge } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
 import { CORE_SETTINGS } from '../../common/constants';
-import { eventHub } from '../../utils/event-hub';
-import { RootState } from '../states/root.state';
+import { RootState } from '../../models/states/root.state';
 import {
     Settings,
     SettingsConfigurationNamespace,
     SettingsConfigurationValue,
     SettingsState,
-} from '../states/settings.state';
+} from '../../models/states/settings.state';
+import { eventHub } from '../../utils/event-hub';
 
 export const MODULE_PATH = 'splitterino/settings';
 

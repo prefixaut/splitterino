@@ -10,7 +10,6 @@ import draggable from 'vuedraggable';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
-import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
 import { IPCClient } from './common/ipc/client';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
@@ -37,6 +36,7 @@ import TitleBarComponent from './components/title-bar.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { aevumFilter } from './filters/aevum.filter';
 import { timeFilter } from './filters/time.filter';
+import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
 import { router } from './router';
 import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';

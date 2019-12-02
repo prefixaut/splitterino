@@ -4,28 +4,26 @@ import {
     BrowserWindowConstructorOptions,
     dialog,
     ipcRenderer,
+    IpcRendererEvent,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
     OpenDialogOptions,
     remote,
     SaveDialogOptions,
-    ipcMain,
-    IpcMessageEvent,
-    IpcRendererEvent,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
-import { VNode } from 'vue';
-import { format as formatUrl } from 'url';
-import { Observable } from 'rxjs';
 import { merge } from 'lodash';
+import { join } from 'path';
+import { Observable } from 'rxjs';
+import { format as formatUrl } from 'url';
+import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../models/context-menu-item';
 import { ElectronInterface } from '../models/electron';
-import { Logger } from '../utils/logger';
-import { join } from 'path';
 import { isDevelopment } from '../utils/is-development';
+import { Logger } from '../utils/logger';
 
 export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
     webPreferences: {

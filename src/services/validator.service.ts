@@ -1,20 +1,20 @@
-import { Injectable, InjectionToken } from 'lightweight-di';
 import Ajv from 'ajv';
+import { Injectable, InjectionToken } from 'lightweight-di';
 
+import { ApplicationSettings } from '../models/application-settings';
+import { Segment } from '../models/segment';
+import { Splits } from '../models/splits';
+import { TemplateMetaFile } from '../models/template-files';
+import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
 import DetailedTimeSchema from '../schemas/detailed-time.schema.json';
+import GameInfoSchema from '../schemas/game-info.schema.json';
+import KeybindingSchema from '../schemas/keybinding.schema.json';
+import MetaSchema from '../schemas/meta.schema.json';
 import SegmentTimeSchema from '../schemas/segment-time.schema.json';
 import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
-import GameInfoSchema from '../schemas/game-info.schema.json';
-import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
-import KeybindingSchema from '../schemas/keybinding.schema.json';
-import MetaSchema from '../schemas/meta.schema.json';
 import { Logger } from '../utils/logger';
-import { Splits } from '../models/splits';
-import { Segment } from '../models/segment';
-import { ApplicationSettings } from '../models/application-settings.js.js.js';
-import { TemplateMetaFile } from '../models/template-files.js.js.js';
 
 export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 

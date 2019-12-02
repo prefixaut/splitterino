@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
+
 import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 
 @Component

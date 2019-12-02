@@ -1,18 +1,18 @@
 import { BrowserWindow, FileFilter } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, createReadStream, read } from 'fs';
-import { Inject, Injectable, InjectionToken } from 'lightweight-di';
-import { cloneDeep, merge, set, isEqual } from 'lodash';
-import { dirname, join } from 'path';
-import { Store } from 'vuex';
-import Vue from 'vue';
-import { extract } from 'tar-stream';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import gunzip from 'gunzip-maybe';
+import { Inject, Injectable, InjectionToken } from 'lightweight-di';
+import { cloneDeep, merge, set } from 'lodash';
+import { dirname, join } from 'path';
+import { extract } from 'tar-stream';
+import { Store } from 'vuex';
 
 import { applicationSettingsDefaults } from '../common/application-settings-defaults';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { TimingMethod } from '../models/segment';
-import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../models/splits-file';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
+import { TemplateFiles } from '../models/template-files';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
     ACTION_SET_CATEGORY,
@@ -21,7 +21,12 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION,
 } from '../store/modules/game-info.module';
-import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_TEMPLATE_FILE, ACTION_SET_LAST_OPENED_TEMPLATE_FILES } from '../store/modules/meta.module';
+import {
+    ACTION_ADD_OPENED_SPLITS_FILE,
+    ACTION_ADD_OPENED_TEMPLATE_FILE,
+    ACTION_SET_LAST_OPENED_SPLITS_FILES,
+    ACTION_SET_LAST_OPENED_TEMPLATE_FILES,
+} from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
@@ -32,7 +37,6 @@ import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
-import { TemplateFiles } from '../models/template-files';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -461,7 +465,7 @@ export class IOService {
                 filters: [IOService.TEMPLATE_FILE_FILTER],
                 properties: ['openFile'],
             })
-            .then(filePaths=> {
+            .then(filePaths => {
                 let singlePath: string;
                 if (!Array.isArray(filePaths)) {
                     return false;
