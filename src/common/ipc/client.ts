@@ -21,7 +21,7 @@ import {
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
-} from '../interfaces/ipc';
+} from '../../models/ipc';
 import { filter, first } from 'rxjs/operators';
 
 export class ClientNotRegisteredError extends Error {
@@ -56,10 +56,14 @@ export class IPCClient {
     private isInitialized = false;
 
     private subscriberTable: { [message: string]: (message: Message) => any } = {
+        /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
+        /* tslint:enable: no-unbound-method */
     };
     private dealerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
+        /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
+        /* tslint:enable: no-unbound-method */
     };
 
     private clientId: string;

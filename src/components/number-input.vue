@@ -12,8 +12,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
 import { clamp } from 'lodash';
+import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
 
 import { convertToBoolean } from '../utils/converters';
 import TextInputComponent from './text-input.vue';

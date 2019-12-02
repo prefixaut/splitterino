@@ -2,6 +2,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { ipcRenderer } from 'electron';
+import { Injector } from 'lightweight-di';
 import VRuntimeTemplate from 'v-runtime-template';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
@@ -9,7 +10,7 @@ import draggable from 'vuedraggable';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
-import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
 import { IPCClient } from './common/ipc/client';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
@@ -41,7 +42,6 @@ import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
 import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
-import { Injector } from 'lightweight-di';
 
 process.on('uncaughtException', error => {
     Logger.fatal({

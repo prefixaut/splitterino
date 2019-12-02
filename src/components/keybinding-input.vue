@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
-import { Keybinding } from '../common/interfaces/keybindings';
+import { Keybinding } from '../models/keybindings';
 import { keyToDisplayString, keyToAcceleratorString } from '../utils/keys';
 
 @Component({ name: 'spl-keybinding-input' })

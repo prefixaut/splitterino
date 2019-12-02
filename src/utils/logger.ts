@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import pino from 'pino';
 
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 
 /**
  * Enum to map log levels

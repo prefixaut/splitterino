@@ -1,7 +1,7 @@
 import { Injectable, InjectionToken } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 
-import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../common/interfaces/splits-file';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
 
 export const TRANSFORMER_SERVICE_TOKEN = new InjectionToken<TransformerService>('transformer');
 

@@ -16,10 +16,11 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { BrowserWindow } from 'electron';
+import { Vue, Component, Prop } from 'vue-property-decorator';
+
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
+import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {

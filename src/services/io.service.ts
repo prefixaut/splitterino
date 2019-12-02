@@ -9,10 +9,10 @@ import { extract } from 'tar-stream';
 import gunzip from 'gunzip-maybe';
 
 import { applicationSettingsDefaults } from '../common/application-settings-defaults';
-import { ApplicationSettings } from '../common/interfaces/application-settings';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { TimingMethod } from '../common/interfaces/segment';
-import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../common/interfaces/splits-file';
+import { ApplicationSettings } from '../models/application-settings';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { TimingMethod } from '../models/segment';
+import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../models/splits-file';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
     ACTION_SET_CATEGORY,
@@ -32,7 +32,7 @@ import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
-import { TemplateFiles } from '../common/interfaces/template-files';
+import { TemplateFiles } from '../models/template-files';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 

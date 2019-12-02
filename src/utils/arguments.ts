@@ -1,5 +1,5 @@
 import { options } from 'optimist';
-import { Arguments } from '../common/interfaces/arguments';
+import { Arguments } from '../models/arguments';
 import { LogLevel } from './logger';
 import { isDevelopment } from './is-development';
 

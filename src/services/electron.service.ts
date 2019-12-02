@@ -12,6 +12,7 @@ import {
     SaveDialogOptions,
     ipcMain,
     IpcMessageEvent,
+    IpcRendererEvent,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
@@ -20,8 +21,8 @@ import { Observable } from 'rxjs';
 import { merge } from 'lodash';
 
 import { FunctionRegistry } from '../common/function-registry';
-import { ContextMenuItem } from '../common/interfaces/context-menu-item';
-import { ElectronInterface } from '../common/interfaces/electron';
+import { ContextMenuItem } from '../models/context-menu-item';
+import { ElectronInterface } from '../models/electron';
 import { Logger } from '../utils/logger';
 import { join } from 'path';
 import { isDevelopment } from '../utils/is-development';
@@ -72,67 +73,65 @@ export class ElectronService implements ElectronInterface {
     }
 
     public showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "open-file" dialog ...');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                const paths = dialogToUse.showOpenDialog(browserWindow, options);
-                Logger.debug({
-                    msg: '"open-file" dialog closed',
-                    files: paths,
-                });
-                resolve(paths);
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "open-file" dialog',
-                    error: e
-                });
-                reject(e);
-            }
+        Logger.debug('Opening "open-file" dialog ...');
+        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+
+        return dialogToUse.showOpenDialog(browserWindow, options).then(result => {
+            Logger.debug({
+                msg: '"open-file" dialog closed',
+                result,
+            });
+
+            return result.filePaths;
+        }).catch(error => {
+            Logger.debug({
+                msg: 'Error while opening "open-file" dialog',
+                error,
+            });
+
+            throw error;
         });
     }
 
     public showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "save-file" dialog ...');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showSaveDialog(browserWindow, options, path => {
-                    Logger.debug({
-                        msg: '"save-file" dialog closed',
-                        file: path,
-                    });
-                    resolve(path);
-                });
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "save-file" dialog',
-                    error: e
-                });
-                reject(e);
-            }
+        Logger.debug('Opening "save-file" dialog ...');
+        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+
+        return dialogToUse.showSaveDialog(browserWindow, options).then(result => {
+            Logger.debug({
+                msg: '"save-file" dialog closed',
+                result,
+            });
+
+            return result.filePath;
+        }).catch(error => {
+            Logger.debug({
+                msg: 'Error while opening "save-file" dialog',
+                error,
+            });
+
+            throw error;
         });
     }
 
     public showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "message" dialog');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showMessageBox(browserWindow, options, response => {
-                    Logger.debug({
-                        msg: '"message" dialog closed',
-                        response,
-                    });
-                    resolve(response);
-                });
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "message" dialog',
-                    error: e
-                });
-                reject(e);
-            }
+        Logger.debug('Opening "message" dialog');
+        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+
+        return dialogToUse.showMessageBox(browserWindow, options).then(result => {
+            Logger.debug({
+                msg: '"message" dialog closed',
+                result,
+            });
+
+            return result.response;
+        }).catch(error => {
+            Logger.debug({
+                msg: 'Error while opening "message" dialog',
+                error,
+            });
+
+            throw error;
         });
     }
 
@@ -171,14 +170,14 @@ export class ElectronService implements ElectronInterface {
             });
 
             return win;
-        } catch (err) {
+        } catch (error) {
             Logger.error({
                 msg: 'Error while creating a new window!',
-                error: err,
+                error,
             });
 
             // Bubble the error up
-            throw err;
+            throw error;
         }
     }
 
@@ -255,7 +254,7 @@ export class ElectronService implements ElectronInterface {
             });
 
             return new Observable<T>(function subscribe(subscriber) {
-                const callback = (_: IpcMessageEvent, data: T) => {
+                const callback = (_: IpcRendererEvent, data: T) => {
                     subscriber.next(data);
                 };
 

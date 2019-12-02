@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Readable } from 'zeromq';
 
-import { Message } from '../common/interfaces/ipc';
+import { Message } from '../models/ipc';
 
 export function createObservableFromReadable(readable: Readable): Observable<Message> {
     return new Observable<Message>(subscriber => {

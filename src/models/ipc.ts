@@ -1,5 +1,5 @@
 import { DispatchOptions, CommitOptions } from 'vuex';
-import { RootState } from '../../store/states/root.state';
+import { RootState } from '../store/states/root.state';
 
 export enum MessageType {
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',

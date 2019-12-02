@@ -9,8 +9,8 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
-import { now } from '../utils/time';
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
+import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 

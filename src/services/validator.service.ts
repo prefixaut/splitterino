@@ -11,10 +11,10 @@ import ApplicationSettingsSchema from '../schemas/application-settings.schema.js
 import KeybindingSchema from '../schemas/keybinding.schema.json';
 import MetaSchema from '../schemas/meta.schema.json';
 import { Logger } from '../utils/logger';
-import { Splits } from '../common/interfaces/splits';
-import { Segment } from '../common/interfaces/segment';
-import { ApplicationSettings } from '../common/interfaces/application-settings.js';
-import { TemplateMetaFile } from '../common/interfaces/template-files.js';
+import { Splits } from '../models/splits';
+import { Segment } from '../models/segment';
+import { ApplicationSettings } from '../models/application-settings.js.js.js';
+import { TemplateMetaFile } from '../models/template-files.js.js.js';
 
 export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 

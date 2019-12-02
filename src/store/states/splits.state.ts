@@ -1,4 +1,4 @@
-import { Segment, TimingMethod } from '../../common/interfaces/segment';
+import { Segment, TimingMethod } from '../../models/segment';
 
 export interface SplitsState {
     /**

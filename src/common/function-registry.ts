@@ -27,9 +27,9 @@ import {
     KEYBINDING_SPLITS_UNDO,
     CTX_MENU_TEMPLATES_LOAD_FROM_FILE
 } from './constants';
-import { ContextMenuItemActionFunction } from './interfaces/context-menu-item';
-import { ELECTRON_INTERFACE_TOKEN } from './interfaces/electron';
-import { KeybindingActionFunction } from './interfaces/keybindings';
+import { ContextMenuItemActionFunction } from '../models/context-menu-item';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { KeybindingActionFunction } from '../models/keybindings';
 import { TimerStatus } from './timer-status';
 
 export abstract class FunctionRegistry {

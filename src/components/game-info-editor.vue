@@ -47,8 +47,8 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import ISO6391 from 'iso-639-1';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 import { Region, GameInfoState } from '../store/states/game-info.state';
 import {

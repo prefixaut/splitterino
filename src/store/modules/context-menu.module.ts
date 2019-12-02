@@ -12,7 +12,7 @@ import {
 } from '../../common/constants';
 import { ContextMenuState } from '../states/context-menu.state';
 import { RootState } from '../states/root.state';
-import { ContextMenuItem } from '../../common/interfaces/context-menu-item';
+import { ContextMenuItem } from '../../models/context-menu-item';
 
 const MODULE_PATH = 'splitterino/contextMenu';
 

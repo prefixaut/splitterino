@@ -1,4 +1,4 @@
-import { KeybindingDescriptor, ActionKeybinding } from '../../common/interfaces/keybindings';
+import { KeybindingDescriptor, ActionKeybinding } from '../../models/keybindings';
 
 export interface KeybindingsState {
     /** If the bindings should be disabled */

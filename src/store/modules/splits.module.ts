@@ -2,13 +2,13 @@ import { Injector } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../common/interfaces/electron';
-import { getFinalTime, Segment, TimingMethod } from '../../common/interfaces/segment';
 import { TimerStatus } from '../../common/timer-status';
+import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
+import { Segment, TimingMethod } from '../../models/segment';
 import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 import { asCleanNumber } from '../../utils/converters';
 import { Logger } from '../../utils/logger';
-import { now } from '../../utils/time';
+import { getFinalTime, now } from '../../utils/time';
 import { RootState } from '../states/root.state';
 import { SplitsState } from '../states/splits.state';
 import { MUTATION_SET_STATUS } from './timer.module';

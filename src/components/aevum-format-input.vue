@@ -15,8 +15,8 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
 import { Aevum } from 'aevum';
+import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
 
 @Component({ name: 'spl-aevum-format-input' })
 export default class AevumFormatInputComponent extends Vue {

@@ -1,6 +1,6 @@
 import { Injector } from 'lightweight-di';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { ElectronService } from '../services/electron.service';
 import { IO_SERVICE_TOKEN, IOService } from '../services/io.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../services/transfromer.service';

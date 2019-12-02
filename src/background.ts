@@ -1,14 +1,16 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, IpcMessageEvent, protocol, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcMainEvent, protocol, WebContents } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
+import uuid from 'uuid';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { ActionResult } from './common/interfaces/electron';
+import { CommitMutationRequest, MessageType } from './models/ipc';
+import { IPCServer } from './common/ipc/server';
 import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
 import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
@@ -18,9 +20,6 @@ import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger } from './utils/logger';
 import { createInjector } from './utils/services';
-import { IPCServer } from './common/ipc/server';
-import { CommitMutationRequest, MessageType } from './common/interfaces/ipc';
-import uuid from 'uuid';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -142,7 +141,7 @@ process.on('unhandledRejection', (reason, promise) => {
     registerDefaultKeybindingFunctions();
 
     // Listener to transfer the current state of the store
-    ipcMain.on('vuex-connect', (event: IpcMessageEvent) => {
+    ipcMain.on('vuex-connect', (event: IpcMainEvent) => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
         Logger.debug(`vuex-connect: ${windowId}`);
 
@@ -151,7 +150,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // handle store disconnect on window close
-    ipcMain.on('vuex-disconnect', (event: IpcMessageEvent) => {
+    ipcMain.on('vuex-disconnect', (event: IpcMainEvent) => {
         const windowId = BrowserWindow.fromWebContents(event.sender).id;
         Logger.debug(`vuex-disconnect ${windowId}`);
 
@@ -159,7 +158,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // listen for global events from other processes and broadcast them
-    ipcMain.on('global-event', (ipcEvent: IpcMessageEvent, event: string, payload: any) => {
+    ipcMain.on('global-event', (ipcEvent: IpcMainEvent, event: string, payload: any) => {
         try {
             Object.keys(clients).forEach(id => {
                 clients[id].send(event, payload);
@@ -182,7 +181,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // callback to get log level from arguments
-    ipcMain.on('spl-log-level', (event: IpcMessageEvent) => {
+    ipcMain.on('spl-log-level', (event: IpcMainEvent) => {
         event.returnValue = args.logLevel;
     });
 

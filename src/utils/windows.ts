@@ -1,6 +1,6 @@
 import { Store } from 'vuex';
 
-import { ElectronInterface } from '../common/interfaces/electron';
+import { ElectronInterface } from '../models/electron';
 import { TimerStatus } from '../common/timer-status';
 import { ACTION_SPLIT } from '../store/modules/splits.module';
 import { RootState } from '../store/states/root.state';

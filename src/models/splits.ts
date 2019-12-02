@@ -1,5 +1,5 @@
 import { Segment, TimingMethod } from './segment';
-import { GameInfoState } from '../../store/states/game-info.state';
+import { GameInfoState } from '../store/states/game-info.state';
 
 export interface Splits {
     segments: Segment[];

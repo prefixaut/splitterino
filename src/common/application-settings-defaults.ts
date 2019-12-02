@@ -1,4 +1,4 @@
-import { ApplicationSettings } from './interfaces/application-settings';
+import { ApplicationSettings } from '../models/application-settings';
 
 export const applicationSettingsDefaults: ApplicationSettings = {
     windowOptions: {

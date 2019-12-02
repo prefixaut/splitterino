@@ -1,6 +1,6 @@
 import { Store } from 'vuex';
 
-import { RootState } from '../../store/states/root.state';
+import { RootState } from '../store/states/root.state';
 import { Injector } from 'lightweight-di';
 
 /**

@@ -9,8 +9,8 @@ import {
 import { Injectable } from 'lightweight-di';
 import { VNode } from 'vue';
 
-import { ContextMenuItem } from '../../src/common/interfaces/context-menu-item';
-import { ElectronInterface } from '../../src/common/interfaces/electron';
+import { ContextMenuItem } from '../../src/models/context-menu-item';
+import { ElectronInterface } from '../../src/models/electron';
 import { Observable } from 'rxjs';
 
 @Injectable

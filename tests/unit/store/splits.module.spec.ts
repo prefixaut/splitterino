@@ -3,8 +3,8 @@ import { v4 as uuid } from 'uuid';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../../src/common/interfaces/electron';
-import { Segment, SegmentTime, TimingMethod, getFinalTime } from '../../../src/common/interfaces/segment';
+import { ELECTRON_INTERFACE_TOKEN } from '../../../src/models/electron';
+import { Segment, SegmentTime, TimingMethod, getFinalTime } from '../../../src/models/segment';
 import { TimerStatus } from '../../../src/common/timer-status';
 import {
     ACTION_DISCARDING_RESET,

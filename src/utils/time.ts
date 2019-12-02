@@ -1,4 +1,6 @@
 import { Time } from 'aevum';
+import { DetailedTime } from '../models/segment';
+import { asCleanNumber } from './converters';
 
 export function now() {
     return new Date().getTime();
@@ -12,4 +14,10 @@ export function timeToTimestamp(time: Time) {
     total += time.hours * 3600000;
 
     return total;
+}
+
+export function getFinalTime(time: DetailedTime): number {
+    return time == null ? 0 : Math.max(
+        Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0),
+        0);
 }

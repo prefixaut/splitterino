@@ -15,7 +15,7 @@ import {
     Response,
     UnregisterClientRequest,
     UnregisterClientResponse,
-} from '../interfaces/ipc';
+} from '../../models/ipc';
 import { Logger } from '../../utils/logger';
 
 /**
@@ -58,11 +58,16 @@ export class IPCServer {
     private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string } = {};
     private routerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
+        /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
         [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
+        /* tslint:enable: no-unbound-method */
     };
-    private pullTable: { [message: string]: (message: Message) => any } = {};
+    private pullTable: { [message: string]: (message: Message) => any } = {
+        /* tslint:disable: no-unbound-method */
+        /* tslint:enable: no-unbound-method */
+    };
 
     public async initialize(store: Store<RootState>) {
         if (this.isInitialized) {
