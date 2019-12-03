@@ -23,6 +23,7 @@ import {
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromReadable } from '../../utils/ipc';
 import { Logger } from '../../utils/logger';
+import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {
@@ -37,10 +38,6 @@ export interface ClientInformation {
 }
 
 export class IPCClient {
-
-    private readonly subscriberAddress = 'tcp://127.0.0.1:3730';
-    private readonly dealerAddress = 'tcp://127.0.0.1:3731';
-    private readonly pushAddress = 'tcp://127.0.0.1:3732';
 
     private subscriber: Subscriber;
     private dealer: Dealer;
@@ -78,7 +75,7 @@ export class IPCClient {
         this.clientInfo = clientInfo;
 
         this.subscriber = new Subscriber();
-        await this.subscriber.bind(this.subscriberAddress);
+        await this.subscriber.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.subscriberMessages = createObservableFromReadable(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(message => {
@@ -86,7 +83,7 @@ export class IPCClient {
         });
 
         this.dealer = new Dealer();
-        await this.dealer.bind(this.dealerAddress);
+        await this.dealer.bind(IPC_ROUTER_DEALER_ADDRESS);
 
         this.dealerMessages = createObservableFromReadable(this.dealer);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(message => {
@@ -94,7 +91,7 @@ export class IPCClient {
         });
 
         this.push = new Push();
-        await this.push.bind(this.pushAddress);
+        await this.push.bind(IPC_PULL_PUSH_ADDRESS);
 
         this.isInitialized = true;
     }
@@ -107,7 +104,7 @@ export class IPCClient {
         this.store = null;
 
         if (this.subscriber) {
-            await this.subscriber.unbind(this.subscriberAddress);
+            await this.subscriber.unbind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.subscriber.close();
             this.subscriber = null;
         }
@@ -122,7 +119,7 @@ export class IPCClient {
         }
 
         if (this.dealer) {
-            await this.dealer.unbind(this.dealerAddress);
+            await this.dealer.unbind(IPC_ROUTER_DEALER_ADDRESS);
             this.dealer.close();
             this.dealer = null;
         }
@@ -137,7 +134,7 @@ export class IPCClient {
         }
 
         if (this.push) {
-            await this.push.unbind(this.pushAddress);
+            await this.push.unbind(IPC_PULL_PUSH_ADDRESS);
             this.push.close();
             this.push = null;
         }

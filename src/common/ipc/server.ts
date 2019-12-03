@@ -17,6 +17,7 @@ import {
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromReadable } from '../../utils/ipc';
 import { Logger } from '../../utils/logger';
+import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
 
 /**
  * Internal representation of a IPC Client.
@@ -37,10 +38,6 @@ interface Client {
 }
 
 export class IPCServer {
-
-    private readonly publishAddress = 'tcp://127.0.0.1:3730';
-    private readonly routerAddress = 'tcp://127.0.0.1:3731';
-    private readonly pullAddress = 'tcp://127.0.0.1:3732';
 
     private publisher: Publisher;
     private router: Router;
@@ -77,13 +74,13 @@ export class IPCServer {
         this.store = store;
 
         this.publisher = new Publisher();
-        await this.publisher.bind(this.publishAddress);
+        await this.publisher.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.router = new Router();
-        await this.router.bind(this.routerAddress);
+        await this.router.bind(IPC_ROUTER_DEALER_ADDRESS);
 
         this.pull = new Pull();
-        await this.pull.bind(this.pullAddress);
+        await this.pull.bind(IPC_PULL_PUSH_ADDRESS);
 
         this.routerMessages = createObservableFromReadable(this.router);
 
@@ -108,13 +105,13 @@ export class IPCServer {
         this.store = null;
 
         if (this.publisher) {
-            await this.publisher.unbind(this.publishAddress);
+            await this.publisher.unbind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.publisher.close();
             this.publisher = null;
         }
 
         if (this.router) {
-            await this.router.unbind(this.routerAddress);
+            await this.router.unbind(IPC_ROUTER_DEALER_ADDRESS);
             this.router.close();
             this.router = null;
         }
@@ -129,7 +126,7 @@ export class IPCServer {
         }
 
         if (this.pull) {
-            await this.pull.unbind(this.pullAddress);
+            await this.pull.unbind(IPC_PULL_PUSH_ADDRESS);
             this.pull.close();
             this.pull = null;
         }

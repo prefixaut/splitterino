@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 import { extract } from 'tar-stream';
 import { Store } from 'vuex';
 
-import { applicationSettingsDefaults } from '../common/application-settings-defaults';
+import { DEFAULT_APPLICATION_SETTINGS } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { TimingMethod } from '../models/segment';
@@ -537,7 +537,7 @@ export class IOService {
             // Ignore error since already being logged
         }
 
-        return merge(applicationSettingsDefaults, appSettings);
+        return merge(DEFAULT_APPLICATION_SETTINGS, appSettings);
     }
 
     /**
