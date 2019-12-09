@@ -24,7 +24,7 @@ Required Software:
 * [yarn](https://yarnpkg.com/) as the Package-Manager (instead of `npm`)
 
 First, clone the repository to your local machine.
-Instead of cloning the repository from GitHub, you should see the [CONTRIBUTING](https://github.com/prefixaut/splitterino/blob/master/CONTRIBUTING.md) file to get access to the developing GitLab-server.
+The rules for contributing are specified in [CONTRIBUTING](https://github.com/prefixaut/splitterino/blob/master/.github/CONTRIBUTING.md)
 
 Then install all packages via `yarn` and then serve the application.
 
