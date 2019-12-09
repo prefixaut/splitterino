@@ -8,12 +8,12 @@
 
 Splitterino is an open-source multi-platform applications for speedrunners (gaming-speedrunners) to time their runs with! It's greatly insprired from existing splitters like [LiveSplit](http://livesplit.org/), but is build freshly from the ground up with customization in mind.
 
-Splitterino is built untop [Electron](https://electronjs.org/) and [Vue](https://vuejs.org/), using [TypeScript](https://www.typescriptlang.org/) as the language for a more reliable and stable application.
+Splitterino is built ontop [Electron](https://electronjs.org/) and [Vue](https://vuejs.org/), using [TypeScript](https://www.typescriptlang.org/) as the language for a more reliable and stable application.
 
 ## Usage
 
 To install Splitterino to use it, you should use the installer for your operating system.
-Download the appropiate installer from the [GitHub Releases](https://github.com/prefixaut/splitterino/releases) Page and follow the instructions.
+Download the appropriate installer from the [GitHub Releases](https://github.com/prefixaut/splitterino/releases) page and follow the instructions.
 
 ## Installation
 
@@ -24,7 +24,7 @@ Required Software:
 * [yarn](https://yarnpkg.com/) as the Package-Manager (instead of `npm`)
 
 First, clone the repository to your local machine.
-Instead of cloning the repository from GitHub, you should see the [CONTRIBUTING](https://github.com/prefixaut/splitterino/blob/master/CONTRIBUTING.md) File to get access to the developing GitLab-server.
+Instead of cloning the repository from GitHub, you should see the [CONTRIBUTING](https://github.com/prefixaut/splitterino/blob/master/CONTRIBUTING.md) file to get access to the developing GitLab-server.
 
 Then install all packages via `yarn` and then serve the application.
 
