@@ -18,7 +18,7 @@
                 handle=".handle"
                 direction="horizontal"
                 v-model="segments"
-                @change="segmentChanged()"
+                @change="triggerSegmentsChange()"
             >
                 <tr class="segment-row" v-for="(segment, index) of segments" :key="segment.id">
                     <td class="handle">
@@ -29,7 +29,7 @@
                             v-model="segment.name"
                             :required="false"
                             :minlength="1"
-                            @change="segmentChanged()"
+                            @change="triggerSegmentsChange()"
                         />
                     </td>
                     <td class="small-description">
