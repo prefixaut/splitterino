@@ -23,7 +23,7 @@
                     class="outline"
                     :value="language"
                     :options="allLanguages"
-                    @change="updateLanguage($event)"
+                    @input="updateLanguage($event)"
                 />
             </div>
             <spl-text-input
@@ -39,7 +39,7 @@
                     class="outline"
                     :value="region"
                     :options="allRegions"
-                    @change="updateRegion($event)"
+                    @input="updateRegion($event)"
                 />
             </div>
         </div>
