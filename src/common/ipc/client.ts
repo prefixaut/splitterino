@@ -1,5 +1,5 @@
 import { Observable, Subscription } from 'rxjs';
-import { filter, first } from 'rxjs/operators';
+import { filter, first, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
 import { Dealer, Push, Subscriber } from 'zeromq';
@@ -44,10 +44,10 @@ export class IPCClient {
     private push: Push;
     private store: Store<RootState>;
 
-    private subscriberMessages: Observable<Message>;
+    private subscriberMessages: Observable<[string, string, Message]>;
     private subscriberMessageSubscription: Subscription;
 
-    private dealerMessages: Observable<Message>;
+    private dealerMessages: Observable<[string, string, Message]>;
     private dealerMessageSubscription: Subscription;
 
     private isInitialized = false;
@@ -57,43 +57,56 @@ export class IPCClient {
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
         /* tslint:enable: no-unbound-method */
     };
-    private dealerTable: { [message: string]: (message: Message, respond?: boolean) => any } = {
+    private dealerTable: { [message: string]: (sender: string, message: Message, respond?: boolean) => any } = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
         /* tslint:enable: no-unbound-method */
     };
 
     private clientId: string;
+    private serverId: string;
     private clientInfo: ClientInformation;
 
-    public async initialize(store: Store<RootState>, clientInfo: ClientInformation) {
+    public async initialize(store: Store<RootState>, clientInfo: ClientInformation): Promise<boolean> {
+        // Close everything first
+        await this.close();
+
         if (this.isInitialized) {
             return;
         }
 
         this.store = store;
         this.clientInfo = clientInfo;
+        this.clientId = uuid();
 
         this.subscriber = new Subscriber();
         await this.subscriber.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.subscriberMessages = createObservableFromReadable(this.subscriber);
-        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(message => {
-            this.handleIncomingSubscriberMessage(message);
-        });
+        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(
+            ([/* sender */, /* receiver */, message]) => {
+                this.handleIncomingSubscriberMessage(message);
+            });
 
         this.dealer = new Dealer();
         await this.dealer.bind(IPC_ROUTER_DEALER_ADDRESS);
 
         this.dealerMessages = createObservableFromReadable(this.dealer);
-        this.dealerMessageSubscription = this.dealerMessages.subscribe(message => {
-            this.handleIncomingDealerMessage(message);
+        this.dealerMessageSubscription = this.dealerMessages.subscribe(([sender, /* receiver */, message]) => {
+            this.handleIncomingDealerMessage(sender, message);
         });
 
         this.push = new Push();
         await this.push.bind(IPC_PULL_PUSH_ADDRESS);
 
-        this.isInitialized = true;
+        try {
+            await this.register();
+            this.isInitialized = true;
+        } catch (error) {
+            Logger.error(error);
+        }
+
+        return this.isInitialized;
     }
 
     public async close() {
@@ -139,6 +152,12 @@ export class IPCClient {
             this.push = null;
         }
 
+        try {
+            await this.unregister();
+        } catch (error) {
+            Logger.error(error);
+        }
+
         this.isInitialized = false;
     }
 
@@ -159,7 +178,7 @@ export class IPCClient {
         }
     }
 
-    public async sendDealerMessage(message: Message) {
+    public async sendDealerMessage(message: Message, target?: string) {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUNDS',
@@ -167,10 +186,10 @@ export class IPCClient {
             ipcMessage: message,
         });
 
-        return this.dealer.send(JSON.stringify(message));
+        return this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
     }
 
-    public async handleIncomingDealerMessage(message: Message) {
+    public async handleIncomingDealerMessage(sender: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUNDS',
@@ -187,7 +206,7 @@ export class IPCClient {
         const handlerFn = this.dealerTable[message.type];
 
         if (typeof handlerFn === 'function') {
-            handlerFn.call(this, message, true);
+            handlerFn.call(this, sender, message, true);
 
             return;
         }
@@ -212,6 +231,7 @@ export class IPCClient {
         this.sendDealerMessage(request);
 
         const response = await this.dealerMessages.pipe(
+            map(([/* sender */, /* reveiver */, message]) => message),
             filter(message => {
                 return message.type === responseType && (message as Response).respondsTo === request.id;
             }),
@@ -240,7 +260,7 @@ export class IPCClient {
         this.store.commit(request.mutation, request.payload, request.options);
     }
 
-    public async register(): Promise<boolean> {
+    protected async register(): Promise<boolean> {
         // Already registered, can't register again
         if (this.clientId != null) {
             return false;
@@ -249,6 +269,7 @@ export class IPCClient {
         const request: RegisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_REGISTER_CLIENT,
+            clientId: this.clientId,
             name: this.clientInfo.name,
             actions: this.clientInfo.actions,
             windowId: this.clientInfo.windowId,
@@ -263,12 +284,12 @@ export class IPCClient {
             throw new Error(response.error.message);
         }
 
-        this.clientId = response.clientId;
+        this.serverId = response.serverId;
 
         return true;
     }
 
-    public async unregister(): Promise<boolean> {
+    protected async unregister(): Promise<boolean> {
         if (this.clientId == null) {
             // Already unregistered, can't register again
             return false;
@@ -340,7 +361,7 @@ export class IPCClient {
         return response.returnValue;
     }
 
-    protected async handleDispatchClientAction(request: DispatchClientActionRequest) {
+    protected async handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
         // Not a request for us
         if (request.clientId !== this.clientId) {
             return;

@@ -82,6 +82,10 @@ export interface Response extends Message {
 export interface RegisterClientRequest extends Request {
     type: MessageType.REQUEST_REGISTER_CLIENT;
     /**
+     * The id of the client, usually a UUID
+     */
+    clientId: string;
+    /**
      * Name of the client.
      */
     name: string;
@@ -101,11 +105,9 @@ export interface RegisterClientRequest extends Request {
 export interface RegisterClientResponse extends Response {
     type: MessageType.RESPONSE_REGISTER_CLIENT;
     /**
-     * A UUID which represents the registered client's ID.
-     * The client can discard all client-specific requests
-     * when the ID does not match.
+     * The ID of the Server
      */
-    clientId?: string;
+    serverId?: string;
 }
 
 /**

@@ -3,8 +3,11 @@ import { Readable } from 'zeromq';
 
 import { Message } from '../models/ipc';
 
-export function createObservableFromReadable(readable: Readable): Observable<Message> {
-    return new Observable<Message>(subscriber => {
+export function createObservableFromReadable(
+    readable: Readable,
+    target?: string
+): Observable<[string, string, Message]> {
+    return new Observable<[string, string, Message]>(subscriber => {
         let isClosed = false;
 
         function waitForNext() {
@@ -15,8 +18,14 @@ export function createObservableFromReadable(readable: Readable): Observable<Mes
                         return;
                     }
 
+                    const [sender, receiver, msg] = data;
+                    if (target != null && receiver.toString() !== target) {
+                        // Drop the message, this is not the target
+                        return;
+                    }
+
                     try {
-                        subscriber.next(JSON.parse(data.toString()));
+                        subscriber.next([sender.toString(), receiver.toString(), JSON.parse(msg.toString())]);
                         waitForNext();
                     } catch (err) {
                         subscriber.error(err);
