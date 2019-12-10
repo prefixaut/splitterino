@@ -83,7 +83,7 @@ export class IPCServer {
         this.pull = new Pull();
         await this.pull.bind(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createObservableFromReadable(this.router);
+        this.routerMessages = createObservableFromReadable(this.router, this.serverId);
 
         this.routerMessageSubscription = this.routerMessages.subscribe(([sender, /* receiver */, message]) => {
             this.handleIncomingRouterMessage(sender, message);

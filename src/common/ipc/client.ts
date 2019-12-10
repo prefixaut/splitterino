@@ -91,7 +91,7 @@ export class IPCClient {
         this.dealer = new Dealer();
         await this.dealer.bind(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.dealerMessages = createObservableFromReadable(this.dealer);
+        this.dealerMessages = createObservableFromReadable(this.dealer, this.clientId);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(([sender, /* receiver */, message]) => {
             this.handleIncomingDealerMessage(sender, message);
         });
@@ -253,7 +253,7 @@ export class IPCClient {
             ipcMessage: message,
         });
 
-        return this.push.send(JSON.stringify(message));
+        return this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
     }
 
     protected async handleCommitMutation(request: CommitMutationRequest) {
