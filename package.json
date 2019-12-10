@@ -48,7 +48,7 @@
         "@fortawesome/vue-fontawesome": "^0.1.8",
         "aevum": "^2.0.3",
         "ajv": "^6.10.2",
-        "electron": "7.1.2",
+        "electron": "^6.1.5",
         "gunzip-maybe": "^1.4.1",
         "iso-639-1": "^2.1.0",
         "keycode": "^2.2.0",
