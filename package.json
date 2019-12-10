@@ -1,6 +1,6 @@
 {
     "name": "splitterino",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "main": "background.js",
     "private": true,
     "license": "MIT",
