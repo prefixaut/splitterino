@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2019-12-10
+
+### Fixed
+
+- Editing Splits as well as Selects didn't trigger a proper change [SPL-26]
+
 ## [0.2.0] - 2019-11-28
 
 ### Added
