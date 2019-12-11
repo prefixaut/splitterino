@@ -2,7 +2,6 @@
     "vetur.format.defaultFormatter.ts": "vscode-typescript",
     "vetur.format.defaultFormatter.html": "prettier",
     "vetur.format.options.tabSize": 4,
-    "prettier.tslintIntegration": true,
     "prettier.tabWidth": 4,
     "json.schemas": [
         {
