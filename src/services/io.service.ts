@@ -12,6 +12,10 @@ import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { TimingMethod } from '../models/segment';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
+import { GameInfoState } from '../models/states/game-info.state';
+import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
+import { RootState } from '../models/states/root.state';
+import { Settings } from '../models/states/settings.state';
 import { TemplateFiles } from '../models/template-files';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
@@ -29,10 +33,6 @@ import {
 } from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
-import { GameInfoState } from '../store/states/game-info.state';
-import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../store/states/meta.state';
-import { RootState } from '../store/states/root.state';
-import { Settings } from '../store/states/settings.state';
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
