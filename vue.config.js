@@ -11,12 +11,6 @@ module.exports = {
                 ],
                 appId: "moe.prefixaut.splitterino",
                 productName: "Splitterino",
-                publish: {
-                    provider: "github",
-                    owner: "prefixaut",
-                    repo: "splitterino",
-                    releaseType: "release"
-                },
             }
         }
     }

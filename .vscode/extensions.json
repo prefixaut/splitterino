@@ -4,6 +4,7 @@
         "prograhammer.tslint-vue",
         "octref.vetur",
         "esbenp.prettier-vscode",
-        "rbbit.typescript-hero"
+        "rbbit.typescript-hero",
+        "msjsdiag.debugger-for-chrome"
     ]
 }

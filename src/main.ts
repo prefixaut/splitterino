@@ -80,7 +80,7 @@ process.on('unhandledRejection', (reason, promise) => {
     const ipcClient = new IPCClient();
 
     windowRef.on('close', async () => {
-        await ipcClient.unregister();
+        await ipcClient.close();
     });
 
     const store = await getClientStore(Vue, ipcClient, injector);
@@ -91,7 +91,6 @@ process.on('unhandledRejection', (reason, promise) => {
         actions: [],
         windowId: electron.getCurrentWindow().id,
     });
-    await ipcClient.register();
 
     // Initialize the Application
     const vue = new Vue({
