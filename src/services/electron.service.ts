@@ -10,7 +10,7 @@ import {
     remote,
     SaveDialogOptions,
 } from 'electron';
-import { Injectable, Injector } from 'lightweight-di';
+import { Inject, Injectable } from 'lightweight-di';
 import { merge } from 'lodash';
 import { join } from 'path';
 import { format as formatUrl } from 'url';
@@ -18,7 +18,7 @@ import { v4 as uuid } from 'uuid';
 import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
-import { IPC_CLIENT_SERVICE_TOKEN, IPCClient } from '../common/ipc/client';
+import { IPC_CLIENT_TOKEN, IPCClient } from '../common/ipc/client';
 import { ContextMenuItem } from '../models/context-menu-item';
 import { ElectronInterface } from '../models/electron';
 import { MessageType, PublishGlobalEventRequest } from '../models/ipc';
@@ -41,13 +41,8 @@ export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
 @Injectable
 export class ElectronService implements ElectronInterface {
     private readonly url = 'http://localhost:8080#';
-    private ipcClient: IPCClient;
 
-    constructor(injector: Injector) {
-        if (this.isRenderProcess()) {
-            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-        }
-    }
+    constructor(@Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClient) { }
 
     public isRenderProcess() {
         return !!remote;

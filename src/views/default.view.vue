@@ -45,7 +45,7 @@ import { filter, map } from 'rxjs/operators';
 import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../common/ipc/client';
+import { IPC_CLIENT_TOKEN } from '../common/ipc/client';
 import { TimerStatus } from '../common/timer-status';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
@@ -106,7 +106,7 @@ export default class DefaultView extends Vue {
         this.registerDragDropHandler();
 
         this.loadTemplate();
-        const sub = this.$services.get(IPC_CLIENT_SERVICE_TOKEN).listenToSubscriberSocket().pipe(
+        const sub = this.$services.get(IPC_CLIENT_TOKEN).listenToSubscriberSocket().pipe(
             // Trim out everything aside from the message itself
             map(data => data[2]),
             // Filter out messages which aren't "load-template" global events

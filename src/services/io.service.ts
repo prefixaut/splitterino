@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 
 import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
-import { IPC_CLIENT_SERVICE_TOKEN, IPCClient } from '../common/ipc/client';
+import { IPC_CLIENT_TOKEN, IPCClient } from '../common/ipc/client';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { MessageType, PublishGlobalEventRequest } from '../models/ipc';
@@ -45,18 +45,13 @@ export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
 @Injectable
 export class IOService {
-    private ipcClient: IPCClient;
-
     constructor(
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        injector: Injector,
+        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClient
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
-        if (electron.isRenderProcess()) {
-            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-        }
     }
 
     protected readonly assetDir;

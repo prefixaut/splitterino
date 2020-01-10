@@ -42,7 +42,7 @@ export interface RegistationResult {
     logLevel: LogLevel;
 }
 
-export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClient>('ipc-client');
+export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClient>('ipc-client');
 
 export class IPCClient {
 

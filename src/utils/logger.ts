@@ -2,7 +2,7 @@ import { Injector } from 'lightweight-di';
 import pino from 'pino';
 
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
-import { IPCClient, IPC_CLIENT_SERVICE_TOKEN } from '../common/ipc/client';
+import { IPCClient, IPC_CLIENT_TOKEN } from '../common/ipc/client';
 import { LogOnServerRequest, MessageType } from '../models/ipc';
 import uuid from 'uuid';
 
@@ -60,7 +60,7 @@ export class Logger {
         }
         this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
         if (this.electron.isRenderProcess()) {
-            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+            this.ipcClient = injector.get(IPC_CLIENT_TOKEN);
         }
 
         this.logHandlers.push(pino({
