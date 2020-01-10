@@ -2,6 +2,9 @@ import { Injector } from 'lightweight-di';
 import pino from 'pino';
 
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { IPCClient, IPC_CLIENT_SERVICE_TOKEN } from '../common/ipc/client';
+import { LogOnServerRequest, MessageType } from '../models/ipc';
+import uuid from 'uuid';
 
 /**
  * Enum to map log levels
@@ -28,6 +31,7 @@ export class Logger {
     private static isInitialized = false;
     private static windowId: number = null;
     private static electron: ElectronInterface;
+    private static ipcClient: IPCClient;
 
     private static enrichMessage(messageOrData: string | object): object {
         let data: object = {
@@ -54,6 +58,10 @@ export class Logger {
         if (this.isInitialized) {
             return;
         }
+        this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+        if (this.electron.isRenderProcess()) {
+            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+        }
 
         this.logHandlers.push(pino({
             level: logLevel,
@@ -64,7 +72,7 @@ export class Logger {
                 ignore: 'isMainThread,windowId'
             },
         }));
-        this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+
         const window = this.electron.getCurrentWindow();
         if (window != null && typeof window.id === 'number') {
             this.windowId = window.id;
@@ -83,42 +91,59 @@ export class Logger {
      * @param logFnName The logging function to call in the handlers
      * @param data The data which the handlers should receive
      */
-    public static _logToHandlers(logFnName: string, data: object) {
-        if (this.electron && this.electron.isRenderProcess()) {
-            this.electron.ipcSend('spl-log', logFnName, data);
+    public static _logToHandlers(logFnName: LogLevel, data: object) {
+        if (this.ipcClient && this.electron.isRenderProcess()) {
+            const message: LogOnServerRequest = {
+                id: uuid(),
+                type: MessageType.REQUEST_LOG_ON_SERVER,
+                level: logFnName,
+                message: data,
+            };
+            this.ipcClient.sendDealerMessage(message);
         }
+
         this.logHandlers.forEach(handler => {
             handler[logFnName](data);
         });
     }
 
+    /**
+     * Internal function! Do not use unless you know what you're doing.
+     * Updates the log-level of the initial logger (stdout).
+     *
+     * @param level The new log-level to use
+     */
+    public static _setInitialLogLevel(level: LogLevel) {
+        this.logHandlers[0].level = level;
+    }
+
     public static trace(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('trace', data);
+        this._logToHandlers(LogLevel.TRACE, data);
     }
 
     public static debug(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('debug', data);
+        this._logToHandlers(LogLevel.DEBUG, data);
     }
 
     public static info(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('info', data);
+        this._logToHandlers(LogLevel.INFO, data);
     }
 
     public static warn(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('warn', data);
+        this._logToHandlers(LogLevel.WARN, data);
     }
 
     public static error(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('error', data);
+        this._logToHandlers(LogLevel.ERROR, data);
     }
 
     public static fatal(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
-        this._logToHandlers('fatal', data);
+        this._logToHandlers(LogLevel.FATAL, data);
     }
 }

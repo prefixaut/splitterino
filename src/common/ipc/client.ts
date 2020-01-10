@@ -1,8 +1,9 @@
+import { InjectionToken } from 'lightweight-di';
 import { Observable, Subscription } from 'rxjs';
 import { filter, first, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
-import { Dealer, Push, Subscriber } from 'zeromq';
+import { Socket, socket } from 'zeromq';
 
 import {
     CommitMutationRequest,
@@ -21,8 +22,8 @@ import {
     UnregisterClientResponse,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
-import { createObservableFromReadable } from '../../utils/ipc';
-import { Logger } from '../../utils/logger';
+import { createObservableFromSocket } from '../../utils/ipc';
+import { Logger, LogLevel } from '../../utils/logger';
 import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
 
 export class ClientNotRegisteredError extends Error {
@@ -37,11 +38,17 @@ export interface ClientInformation {
     windowId?: number;
 }
 
+export interface RegistationResult {
+    logLevel: LogLevel;
+}
+
+export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClient>('ipc-client');
+
 export class IPCClient {
 
-    private subscriber: Subscriber;
-    private dealer: Dealer;
-    private push: Push;
+    private subscriber: Socket;
+    private dealer: Socket;
+    private push: Socket;
     private store: Store<RootState>;
 
     private subscriberMessages: Observable<[string, string, Message]>;
@@ -67,46 +74,51 @@ export class IPCClient {
     private serverId: string;
     private clientInfo: ClientInformation;
 
-    public async initialize(store: Store<RootState>, clientInfo: ClientInformation): Promise<boolean> {
+    public async initialize(
+        store: Store<RootState>,
+        clientInfo: ClientInformation
+    ): Promise<false | RegistationResult> {
         // Close everything first
         await this.close();
 
         if (this.isInitialized) {
-            return;
+            return false;
         }
 
         this.store = store;
         this.clientInfo = clientInfo;
         this.clientId = uuid();
 
-        this.subscriber = new Subscriber();
-        await this.subscriber.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+        this.subscriber = socket('sub');
+        this.subscriber.bindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
-        this.subscriberMessages = createObservableFromReadable(this.subscriber);
+        this.subscriberMessages = createObservableFromSocket(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(
             ([/* sender */, /* receiver */, message]) => {
                 this.handleIncomingSubscriberMessage(message);
             });
 
-        this.dealer = new Dealer();
-        await this.dealer.bind(IPC_ROUTER_DEALER_ADDRESS);
+        this.dealer = socket('dealer');
+        this.dealer.bindSync(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.dealerMessages = createObservableFromReadable(this.dealer, this.clientId);
+        this.dealerMessages = createObservableFromSocket(this.dealer, this.clientId);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(([sender, /* receiver */, message]) => {
             this.handleIncomingDealerMessage(sender, message);
         });
 
-        this.push = new Push();
-        await this.push.bind(IPC_PULL_PUSH_ADDRESS);
+        this.push = socket('push');
+        this.push.bindSync(IPC_PULL_PUSH_ADDRESS);
 
         try {
-            await this.register();
+            const response = await this.register();
             this.isInitialized = true;
+
+            return response;
         } catch (error) {
             Logger.error(error);
-        }
 
-        return this.isInitialized;
+            return false;
+        }
     }
 
     public async close() {
@@ -117,7 +129,7 @@ export class IPCClient {
         this.store = null;
 
         if (this.subscriber) {
-            await this.subscriber.unbind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+            this.subscriber.unbindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.subscriber.close();
             this.subscriber = null;
         }
@@ -132,7 +144,7 @@ export class IPCClient {
         }
 
         if (this.dealer) {
-            await this.dealer.unbind(IPC_ROUTER_DEALER_ADDRESS);
+            this.dealer.unbindSync(IPC_ROUTER_DEALER_ADDRESS);
             this.dealer.close();
             this.dealer = null;
         }
@@ -147,7 +159,7 @@ export class IPCClient {
         }
 
         if (this.push) {
-            await this.push.unbind(IPC_PULL_PUSH_ADDRESS);
+            this.push.unbindSync(IPC_PULL_PUSH_ADDRESS);
             this.push.close();
             this.push = null;
         }
@@ -186,7 +198,9 @@ export class IPCClient {
             ipcMessage: message,
         });
 
-        return this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
+        this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
+
+        return true;
     }
 
     public async handleIncomingDealerMessage(sender: string, message: Message) {
@@ -213,7 +227,7 @@ export class IPCClient {
 
         const response: Response = {
             id: uuid(),
-            type: MessageType.INVALID_REQUEST_RESPONSE,
+            type: MessageType.RESPONSE_INVALID_REQUEST,
             respondsTo: message.id,
             successful: false,
             error: {
@@ -253,14 +267,24 @@ export class IPCClient {
             ipcMessage: message,
         });
 
-        return this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
+        this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
+
+        return true;
+    }
+
+    public listenToSubscriberSocket() {
+        return createObservableFromSocket(this.subscriber);
+    }
+
+    public listenToDealerSocket() {
+        return createObservableFromSocket(this.dealer);
     }
 
     protected async handleCommitMutation(request: CommitMutationRequest) {
         this.store.commit(request.mutation, request.payload, request.options);
     }
 
-    protected async register(): Promise<boolean> {
+    protected async register(): Promise<false | RegistationResult> {
         // Already registered, can't register again
         if (this.clientId != null) {
             return false;
@@ -286,7 +310,9 @@ export class IPCClient {
 
         this.serverId = response.serverId;
 
-        return true;
+        return {
+            logLevel: response.logLevel,
+        };
     }
 
     protected async unregister(): Promise<boolean> {

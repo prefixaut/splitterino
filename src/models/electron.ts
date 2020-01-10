@@ -29,9 +29,7 @@ export interface ElectronInterface {
     showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number>;
     newWindow(settings: BrowserWindowConstructorOptions, route: string): BrowserWindow;
     createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu;
-    ipcSend(channel: string, ...args: any[]): void;
     broadcastEvent(event: string, payload?: any): void;
-    listenEvent<T>(event: string): Observable<T>;
 }
 
 export const ELECTRON_INTERFACE_TOKEN = new InjectionToken<ElectronInterface>('electron');

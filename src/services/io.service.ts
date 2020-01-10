@@ -1,15 +1,18 @@
 import { BrowserWindow, FileFilter } from 'electron';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import gunzip from 'gunzip-maybe';
-import { Inject, Injectable, InjectionToken } from 'lightweight-di';
+import { Inject, Injectable, InjectionToken, Injector } from 'lightweight-di';
 import { cloneDeep, merge, set } from 'lodash';
 import { dirname, join } from 'path';
 import { extract } from 'tar-stream';
+import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 
-import { DEFAULT_APPLICATION_SETTINGS } from '../common/constants';
+import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
+import { IPC_CLIENT_SERVICE_TOKEN, IPCClient } from '../common/ipc/client';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { TimingMethod } from '../models/segment';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
 import { GameInfoState } from '../models/states/game-info.state';
@@ -42,12 +45,18 @@ export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
 @Injectable
 export class IOService {
+    private ipcClient: IPCClient;
+
     constructor(
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
+        injector: Injector,
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
+        if (electron.isRenderProcess()) {
+            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+        }
     }
 
     protected readonly assetDir;
@@ -478,7 +487,14 @@ export class IOService {
                     file: singlePath,
                 });
 
-                this.electron.broadcastEvent('load-template', singlePath);
+                const message: PublishGlobalEventRequest = {
+                    id: uuid(),
+                    type: MessageType.REQUEST_PUBLISH_GLOBAL_EVENT,
+                    eventName: GLOBAL_EVENT_LOAD_TEMPLATE,
+                    payload: singlePath,
+                };
+
+                this.ipcClient.sendPushMessage(message);
 
                 return true;
             });
@@ -537,7 +553,17 @@ export class IOService {
             // Ignore error since already being logged
         }
 
-        return merge(DEFAULT_APPLICATION_SETTINGS, appSettings);
+        const finalSettings = merge(DEFAULT_APPLICATION_SETTINGS, appSettings);
+
+        // File couldn't be loaded, save it
+        if (appSettings == null) {
+            Logger.debug({
+                msg: "Application settings file wasn't loaded correctly, saving it",
+            });
+            this.saveJSONToFile(this.appSettingsFileName, finalSettings);
+        }
+
+        return finalSettings;
     }
 
     /**

@@ -1,7 +1,6 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { ipcRenderer } from 'electron';
 import { Injector } from 'lightweight-di';
 import VRuntimeTemplate from 'v-runtime-template';
 import Vue from 'vue';
@@ -65,11 +64,11 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 (async () => {
-    const injector = createInjector();
+    const ipcClient = new IPCClient();
+    const injector = createInjector(ipcClient);
 
     // Initialize the logger
-    const logLevel = ipcRenderer.sendSync('spl-log-level') as LogLevel;
-    Logger.initialize(injector, logLevel);
+    Logger.initialize(injector, LogLevel.DEBUG);
 
     setupVueElements(injector);
     // Register context-menu functions
@@ -77,7 +76,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const windowRef = electron.getCurrentWindow();
-    const ipcClient = new IPCClient();
 
     windowRef.on('close', async () => {
         await ipcClient.close();
@@ -86,11 +84,16 @@ process.on('unhandledRejection', (reason, promise) => {
     const store = await getClientStore(Vue, ipcClient, injector);
 
     // Initialize and register the ipc-client
-    await ipcClient.initialize(store, {
+    const response = await ipcClient.initialize(store, {
         name: `renderer-${electron.getCurrentWindow().id}`,
         actions: [],
         windowId: electron.getCurrentWindow().id,
     });
+
+    // Update the Logger log-level from the registration
+    if (response) {
+        Logger._setInitialLogLevel(response.logLevel);
+    }
 
     // Initialize the Application
     const vue = new Vue({

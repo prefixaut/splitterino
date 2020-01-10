@@ -90,15 +90,7 @@ export class ElectronMockService implements ElectronInterface {
         return null;
     }
 
-    ipcSend(channel: string, ...args: any[]): void {
-        // Noop
-    }
-
     broadcastEvent(event: string, payload?: any) {
         // Noop
-    }
-
-    listenEvent<T>(event: string): Observable<T> {
-        return new Observable<T>();
     }
 }

@@ -24,6 +24,11 @@ export const DEFAULT_APPLICATION_SETTINGS: ApplicationSettings = {
 };
 
 /*
+ * Global Event names
+ */
+export const GLOBAL_EVENT_LOAD_TEMPLATE = 'load-template';
+
+/*
  * Context Menu
  */
 export const CTX_MENU_WINDOW_RELOAD = 'core.window.reload';

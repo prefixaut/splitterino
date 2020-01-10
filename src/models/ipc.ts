@@ -1,6 +1,7 @@
 import { CommitOptions, DispatchOptions } from 'vuex';
 
 import { RootState } from './states/root.state';
+import { LogLevel } from '../utils/logger';
 
 export enum MessageType {
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
@@ -14,7 +15,10 @@ export enum MessageType {
     REQUEST_DISPATCH_CLIENT_ACTION = 'REQUEST_DISPATCH_CLIENT_ACTION',
     RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
     REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
-    INVALID_REQUEST_RESPONSE = 'INVALID_REQUEST_RESPONSE',
+    REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
+    BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
+    REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
+    RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
 }
 
 /**
@@ -47,6 +51,14 @@ export interface Request extends Message {
     | MessageType.REQUEST_DISPATCH_ACTION
     | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
     | MessageType.REQUEST_COMMIT_MUTATION
+    | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
+    | MessageType.REQUEST_LOG_ON_SERVER
+    ;
+}
+
+export interface Broadcast extends Message {
+    type:
+    | MessageType.BROADCAST_GLOBAL_EVENT
     ;
 }
 
@@ -60,7 +72,7 @@ export interface Response extends Message {
     | MessageType.RESPONSE_STORE_STATE
     | MessageType.RESPONSE_DISPATCH_ACTION
     | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
-    | MessageType.INVALID_REQUEST_RESPONSE
+    | MessageType.RESPONSE_INVALID_REQUEST
     ;
     /**
      * The Message ID that this Response is responding to.
@@ -108,6 +120,10 @@ export interface RegisterClientResponse extends Response {
      * The ID of the Server
      */
     serverId?: string;
+    /**
+     * The log-level to use for loggers
+     */
+    logLevel?: LogLevel;
 }
 
 /**
@@ -235,4 +251,49 @@ export interface CommitMutationRequest extends Request {
      * Options for commiting the mutation.
      */
     options?: CommitOptions;
+}
+
+/**
+ * Request to broadcast a global-event to all clients.
+ */
+export interface PublishGlobalEventRequest extends Request {
+    type: MessageType.REQUEST_PUBLISH_GLOBAL_EVENT;
+    /**
+     * The name of the event which is being published
+     */
+    eventName: string;
+    /**
+     * The payload that goes along with the event
+     */
+    payload?: any;
+}
+
+/**
+ * A broadcast for global events.
+ */
+export interface GlobalEventBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_GLOBAL_EVENT;
+    /**
+     * The name of the event which is being published
+     */
+    eventName: string;
+    /**
+     * The payload that goes along with the event
+     */
+    payload?: any;
+}
+
+/**
+ * Request to log a message on the server (into the file-stream)
+ */
+export interface LogOnServerRequest extends Request {
+    type: MessageType.REQUEST_LOG_ON_SERVER;
+    /**
+     * The Loglevel to use when logging the message
+     */
+    level: LogLevel;
+    /**
+     * The message that should be logged
+     */
+    message: object;
 }

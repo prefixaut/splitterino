@@ -3,8 +3,6 @@ import {
     BrowserWindow,
     BrowserWindowConstructorOptions,
     dialog,
-    ipcRenderer,
-    IpcRendererEvent,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
@@ -12,16 +10,18 @@ import {
     remote,
     SaveDialogOptions,
 } from 'electron';
-import { Injectable } from 'lightweight-di';
+import { Injectable, Injector } from 'lightweight-di';
 import { merge } from 'lodash';
 import { join } from 'path';
-import { Observable } from 'rxjs';
 import { format as formatUrl } from 'url';
+import { v4 as uuid } from 'uuid';
 import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
+import { IPC_CLIENT_SERVICE_TOKEN, IPCClient } from '../common/ipc/client';
 import { ContextMenuItem } from '../models/context-menu-item';
 import { ElectronInterface } from '../models/electron';
+import { MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 
@@ -41,9 +41,12 @@ export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
 @Injectable
 export class ElectronService implements ElectronInterface {
     private readonly url = 'http://localhost:8080#';
+    private ipcClient: IPCClient;
 
-    constructor() {
-        // No dependencies yet
+    constructor(injector: Injector) {
+        if (this.isRenderProcess()) {
+            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+        }
     }
 
     public isRenderProcess() {
@@ -215,14 +218,6 @@ export class ElectronService implements ElectronInterface {
         return options;
     }
 
-    public ipcSend(channel: string, ...args: any[]): void {
-        if (this.isRenderProcess()) {
-            ipcRenderer.send(channel, ...args);
-        } else {
-            // Do nothing?
-        }
-    }
-
     /**
      * Send event to background process and all renderer processes
      * @param event Event ID to send
@@ -236,32 +231,13 @@ export class ElectronService implements ElectronInterface {
                 payload: payload
             });
 
-            ipcRenderer.send('global-event', event, payload);
-        }
-    }
-
-    /**
-     * Listen for a global event from all processes
-     * @param event Event to listen to
-     */
-    public listenEvent<T>(event: string): Observable<T> {
-        if (this.isRenderProcess()) {
-            Logger.trace({
-                msg: 'Registering global event listener',
-                event: event
-            });
-
-            return new Observable<T>(function subscribe(subscriber) {
-                const callback = (_: IpcRendererEvent, data: T) => {
-                    subscriber.next(data);
-                };
-
-                ipcRenderer.on(event, callback);
-
-                return function unsubscribe() {
-                    ipcRenderer.removeListener(event, callback);
-                };
-            });
+            const message: PublishGlobalEventRequest = {
+                id: uuid(),
+                type: MessageType.REQUEST_PUBLISH_GLOBAL_EVENT,
+                eventName: event,
+                payload: payload
+            };
+            this.ipcClient.sendPushMessage(message);
         }
     }
 }

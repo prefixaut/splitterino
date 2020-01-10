@@ -1,43 +1,39 @@
 import { Observable } from 'rxjs';
-import { Readable } from 'zeromq';
+import { Socket } from 'zeromq';
 
 import { Message } from '../models/ipc';
 
-export function createObservableFromReadable(
-    readable: Readable,
+export function createObservableFromSocket(
+    socket: Socket,
     target?: string
 ): Observable<[string, string, Message]> {
     return new Observable<[string, string, Message]>(subscriber => {
         let isClosed = false;
 
-        function waitForNext() {
-            readable.receive()
-                .then(data => {
-                    // Discard the data and don't do anything any more
-                    if (isClosed) {
-                        return;
-                    }
+        function messageHandler(data: [string, string, Message]) {
+            // Discard the data and don't do anything any more
+            if (isClosed) {
+                return;
+            }
 
-                    const [sender, receiver, msg] = data;
-                    if (target != null && receiver.toString() !== target) {
-                        // Drop the message, this is not the target
-                        return;
-                    }
+            const [sender, receiver, msg] = data;
+            if (target != null && receiver.toString() !== target) {
+                // Drop the message, this is not the target
+                return;
+            }
 
-                    try {
-                        subscriber.next([sender.toString(), receiver.toString(), JSON.parse(msg.toString())]);
-                        waitForNext();
-                    } catch (err) {
-                        subscriber.error(err);
-                    }
-                }).catch(err => {
-                    subscriber.error(err);
-                });
+            try {
+                subscriber.next([sender.toString(), receiver.toString(), JSON.parse(msg.toString())]);
+            } catch (err) {
+                subscriber.error(err);
+            }
         }
-        waitForNext();
+
+        socket.on('message', messageHandler);
 
         return () => {
             isClosed = true;
+            socket.off('message', messageHandler);
         };
     });
 }

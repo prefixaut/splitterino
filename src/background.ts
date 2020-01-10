@@ -1,5 +1,5 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, IpcMainEvent, protocol, WebContents } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
@@ -18,7 +18,7 @@ import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
-import { Logger } from './utils/logger';
+import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
 
 process.on('uncaughtException', (error: Error) => {
@@ -78,12 +78,6 @@ process.on('unhandledRejection', (reason, promise) => {
      */
     let mainWindow: BrowserWindow;
 
-    /**
-     * List of all clients/windows that were created.
-     * The index in which they are put, is the corresponding BrowserWindow ID
-     */
-    const clients: WebContents[] = [];
-
     /** Instance of an injector with resolved services */
     const injector = createInjector();
 
@@ -130,7 +124,10 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // Initialize the IPC Server with the store
-    await ipcServer.initialize(store);
+    await ipcServer.initialize({
+        store: store,
+        logLevel: args.logLevel || LogLevel.INFO
+    });
 
     // load application settings
     const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
@@ -139,51 +136,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
-
-    // Listener to transfer the current state of the store
-    ipcMain.on('vuex-connect', (event: IpcMainEvent) => {
-        const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`vuex-connect: ${windowId}`);
-
-        clients[windowId] = event.sender;
-        event.returnValue = store.state;
-    });
-
-    // handle store disconnect on window close
-    ipcMain.on('vuex-disconnect', (event: IpcMainEvent) => {
-        const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`vuex-disconnect ${windowId}`);
-
-        delete clients[windowId];
-    });
-
-    // listen for global events from other processes and broadcast them
-    ipcMain.on('global-event', (ipcEvent: IpcMainEvent, event: string, payload: any) => {
-        try {
-            Object.keys(clients).forEach(id => {
-                clients[id].send(event, payload);
-            });
-
-            // Echo message back
-            ipcEvent.sender.send(event, payload);
-        } catch (error) {
-            Logger.error({
-                msg: 'Error while sending global event to other processes',
-                payload,
-                error,
-            });
-        }
-    });
-
-    // call handlers to log from render process
-    ipcMain.on('spl-log', (_, level: string, data: object) => {
-        Logger._logToHandlers(level, data);
-    });
-
-    // callback to get log level from arguments
-    ipcMain.on('spl-log-level', (event: IpcMainEvent) => {
-        event.returnValue = args.logLevel;
-    });
 
     function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
@@ -243,7 +195,7 @@ process.on('unhandledRejection', (reason, promise) => {
         // until the user explicitly quits
         if (process.platform !== 'darwin') {
             // Close the IPC Server
-            ipcServer.close();
+            // ipcServer.close();
             // Close the app
             app.quit();
         }
@@ -273,21 +225,23 @@ process.on('unhandledRejection', (reason, promise) => {
         mainWindow = createMainWindow();
     });
 
+    app.on('quit', (event, exitCode) => {
+        Logger.info({ msg: 'App will quit!', event, exitCode });
+    });
+
     // Exit cleanly on request from parent process in development mode.
-    if (isDevelopment()) {
-        if (process.platform === 'win32') {
-            process.on('message', data => {
-                if (data === 'graceful-exit') {
-                    Logger.info('Received message to shutdown! Closing app ...');
-                    app.quit();
-                }
-            });
-        } else {
-            process.on('SIGTERM', () => {
+    if (process.platform === 'win32') {
+        process.on('message', data => {
+            if (data === 'graceful-exit') {
                 Logger.info('Received message to shutdown! Closing app ...');
                 app.quit();
-            });
-        }
+            }
+        });
+    } else {
+        process.on('SIGTERM', () => {
+            Logger.info('Received message to shutdown! Closing app ...');
+            app.quit();
+        });
     }
 })().catch(err => {
     Logger.fatal({

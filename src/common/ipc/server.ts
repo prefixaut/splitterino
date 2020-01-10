@@ -1,7 +1,7 @@
 import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
-import { Publisher, Pull, Router } from 'zeromq';
+import { Socket, socket } from 'zeromq';
 
 import {
     DispatchActionReqeust,
@@ -13,10 +13,13 @@ import {
     Response,
     UnregisterClientRequest,
     UnregisterClientResponse,
+    PublishGlobalEventRequest,
+    GlobalEventBroadcast,
+    LogOnServerRequest,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
-import { createObservableFromReadable } from '../../utils/ipc';
-import { Logger } from '../../utils/logger';
+import { createObservableFromSocket } from '../../utils/ipc';
+import { Logger, LogLevel } from '../../utils/logger';
 import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
 
 /**
@@ -37,13 +40,19 @@ interface Client {
     actions: string[];
 }
 
+export interface InitializeOptions {
+    store: Store<RootState>;
+    logLevel: LogLevel;
+}
 export class IPCServer {
 
-    private publisher: Publisher;
-    private router: Router;
-    private pull: Pull;
+    private publisher: Socket;
+    private router: Socket;
+    private pull: Socket;
+
     private store: Store<RootState>;
     private serverId: string = 'server';
+    private logLevel: LogLevel;
 
     private routerMessages: Observable<[string, string, Message]>;
     private routerMessageSubscription: Subscription;
@@ -60,6 +69,8 @@ export class IPCServer {
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
         [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
+        [MessageType.REQUEST_PUBLISH_GLOBAL_EVENT]: this.handleGlobalEventPublish,
+        [MessageType.REQUEST_LOG_ON_SERVER]: this.handleLogToServer,
         /* tslint:enable: no-unbound-method */
     };
     private pullTable: { [message: string]: (message: Message) => any } = {
@@ -67,29 +78,30 @@ export class IPCServer {
         /* tslint:enable: no-unbound-method */
     };
 
-    public async initialize(store: Store<RootState>) {
+    public async initialize(options: InitializeOptions) {
         if (this.isInitialized) {
             return;
         }
 
-        this.store = store;
+        this.store = options.store;
+        this.logLevel = options.logLevel;
 
-        this.publisher = new Publisher();
-        await this.publisher.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+        this.publisher = socket('pub');
+        this.publisher.bindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
-        this.router = new Router();
-        await this.router.bind(IPC_ROUTER_DEALER_ADDRESS);
+        this.router = socket('router');
+        this.router.bindSync(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.pull = new Pull();
-        await this.pull.bind(IPC_PULL_PUSH_ADDRESS);
+        this.pull = socket('pull');
+        this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createObservableFromReadable(this.router, this.serverId);
+        this.routerMessages = createObservableFromSocket(this.router, this.serverId);
 
         this.routerMessageSubscription = this.routerMessages.subscribe(([sender, /* receiver */, message]) => {
             this.handleIncomingRouterMessage(sender, message);
         });
 
-        this.pullMessages = createObservableFromReadable(this.pull);
+        this.pullMessages = createObservableFromSocket(this.pull);
 
         this.pullMessageSubscription = this.pullMessages.subscribe(([/* sender */, /* receiver */, message]) => {
             this.handleIncomingPullMessage(message);
@@ -106,13 +118,13 @@ export class IPCServer {
         this.store = null;
 
         if (this.publisher) {
-            await this.publisher.unbind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+            this.publisher.unbindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.publisher.close();
             this.publisher = null;
         }
 
         if (this.router) {
-            await this.router.unbind(IPC_ROUTER_DEALER_ADDRESS);
+            this.router.unbindSync(IPC_ROUTER_DEALER_ADDRESS);
             this.router.close();
             this.router = null;
         }
@@ -127,7 +139,7 @@ export class IPCServer {
         }
 
         if (this.pull) {
-            await this.pull.unbind(IPC_PULL_PUSH_ADDRESS);
+            this.pull.unbindSync(IPC_PULL_PUSH_ADDRESS);
             this.pull.close();
             this.pull = null;
         }
@@ -152,7 +164,9 @@ export class IPCServer {
             ipcMessage: message,
         });
 
-        return this.publisher.send([null, this.serverId, JSON.stringify(message)]);
+        this.publisher.send([null, this.serverId, JSON.stringify(message)]);
+
+        return true;
     }
 
     public async sendRouterMessage(client: string, message: Message) {
@@ -163,7 +177,9 @@ export class IPCServer {
             ipcMessage: message,
         });
 
-        return this.router.send([client, this.serverId, JSON.stringify(message)]);
+        this.router.send([client, this.serverId, JSON.stringify(message)]);
+
+        return true;
     }
 
     public async handleIncomingRouterMessage(sender: string, message: Message) {
@@ -190,7 +206,7 @@ export class IPCServer {
 
         const response: Response = {
             id: uuid(),
-            type: MessageType.INVALID_REQUEST_RESPONSE,
+            type: MessageType.RESPONSE_INVALID_REQUEST,
             respondsTo: message.id,
             successful: false,
             error: {
@@ -240,6 +256,7 @@ export class IPCServer {
                 successful: true,
                 respondsTo: request.id,
                 serverId: this.serverId,
+                logLevel: this.logLevel,
             };
 
             await this.sendRouterMessage(sender, response);
@@ -315,6 +332,21 @@ export class IPCServer {
         }
 
         this.sendRouterMessage(sender, response);
+    }
+
+    private async handleGlobalEventPublish(sender: string, request: PublishGlobalEventRequest) {
+        const broadcast: GlobalEventBroadcast = {
+            id: uuid(),
+            type: MessageType.BROADCAST_GLOBAL_EVENT,
+            eventName: request.eventName,
+            payload: request.payload,
+        };
+
+        this.publishMessage(broadcast);
+    }
+
+    private async handleLogToServer(sender: string, request: LogOnServerRequest) {
+        Logger._logToHandlers(request.level, request.message);
     }
 
     /*
