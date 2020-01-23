@@ -1,27 +1,11 @@
 <template>
-    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }, { 'pin-last-segment': pinLastSegment }]">
+    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }, { 'pin-last-segment': cleanPinLastSegment }]">
         <template v-if="segments != null && segments.length > 0">
             <div class="splits" @mousewheel="scrollSplits" @mouseleave="scrollIndex = -1">
                 <div
                     v-for="(segment, index) in segments"
                     :key="index"
-                    :class="[
-                        'split',
-
-                        { visible: visibleIndicies.includes(index) },
-                        { current: index === currentSegment && status === 'running' },
-                        { scroll: index === scrollIndex },
-
-                        { first: index === 0 },
-                        { ['previous-' + (currentSegment - index)]: index < currentSegment },
-                        { ['next-' + (index - currentSegment)]: index - currentSegment > 0 },
-                        { final: index === segments.length - 1 },
-                        { pinned: index === segments.length - 1 && pinLastSegment },
-
-                        { skipped: segment.skipped },
-                        { passed: segment.passed },
-                        { 'is-overall-best': segment.hasNewOverallBest },
-                    ]"
+                    :class="segmentClass(segment, index)"
                 >
                     <div class="name">{{ segment.name }}</div>
                     <div class="time" v-show="showTime(index, false)">
@@ -42,16 +26,17 @@
 </template>
 
 <script lang="ts">
+import { clamp } from 'lodash';
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { clamp } from 'lodash';
 
-import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
-import { TimerStatus } from '../common/timer-status';
-import { now } from '../utils/time';
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
-import { Logger } from '../utils/logger';
 import { DEFAULT_TIMER_FORMAT } from '../common/constants';
+import { TimerStatus } from '../common/timer-status';
+import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
+import { Logger } from '../utils/logger';
+import { now } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');
@@ -61,31 +46,22 @@ export default class SplitsComponent extends Vue {
     /**
      * Amount of upcoming segments which should be visible
      */
-    @Prop({
-        type: Number,
-        default: 2,
-    })
+    @Prop({ type: Number, default: null })
     public visibleUpcomingSegments: number;
 
     /**
      * Amount of previous segments which should be visible
      */
-    @Prop({
-        type: Number,
-        default: 1,
-    })
+    @Prop({ type: Number, default: null })
     public visiblePreviousSegments: number;
 
-    @Prop({
-        type: Boolean,
-        default: false,
-    })
+    @Prop({ type: Boolean, default: null })
     public pinLastSegment: boolean;
 
-    @Prop({ type: String, default: DEFAULT_TIMER_FORMAT })
+    @Prop({ type: String, default: null })
     public segmentTimeFormat: string;
 
-    @Prop({ type: String, default: DEFAULT_TIMER_FORMAT })
+    @Prop({ type: String, default: null })
     public comparisonTimeFormat: string;
 
     @timer.State('status')
@@ -137,6 +113,46 @@ export default class SplitsComponent extends Vue {
         this.statusWatcher();
     }
 
+    public get cleanVisibleUpcomingSegments() {
+        if (this.visibleUpcomingSegments != null) {
+            return this.visibleUpcomingSegments;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visibleUpcomingSegments');
+        }
+    }
+
+    public get cleanVisiblePreviousSegments() {
+        if (this.visiblePreviousSegments != null) {
+            return this.visiblePreviousSegments;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
+        }
+    }
+
+    public get cleanPinLastSegment() {
+        if (this.pinLastSegment != null) {
+            return this.pinLastSegment;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.pinLastSegment');
+        }
+    }
+
+    public get cleanSegmentTimeFormat() {
+        if (this.segmentTimeFormat != null) {
+            return this.segmentTimeFormat;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatSegmentTime');
+        }
+    }
+
+    public get cleanComparisonTimeFormat() {
+        if (this.comparisonTimeFormat != null) {
+            return this.comparisonTimeFormat;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatComparisonTime');
+        }
+    }
+
     public get showTime() {
         return (index: number, comparison: boolean) => {
             return (
@@ -152,7 +168,7 @@ export default class SplitsComponent extends Vue {
             : this.scrollIndex;
 
         const displayCount = Math.min(
-            this.visiblePreviousSegments + 1 + this.visibleUpcomingSegments,
+            this.cleanVisiblePreviousSegments + 1 + this.cleanVisibleUpcomingSegments,
             this.segments.length
         );
         const max = this.segments.length - displayCount;
@@ -163,8 +179,8 @@ export default class SplitsComponent extends Vue {
                 0,
                 displayCount - clamp(
                     current,
-                    this.visiblePreviousSegments,
-                    this.visibleUpcomingSegments + 1
+                    this.cleanVisiblePreviousSegments,
+                    this.cleanVisibleUpcomingSegments + 1
                 )
             ),
             0,
@@ -174,18 +190,60 @@ export default class SplitsComponent extends Vue {
         const arr = [];
         for (
             let i = start;
-            i < (start + displayCount) - (this.pinLastSegment ? 1 : 0) &&
-            i < (this.segments.length - (this.pinLastSegment ? 1 : 0));
+            i < (start + displayCount) - (this.cleanPinLastSegment ? 1 : 0) &&
+            i < (this.segments.length - (this.cleanPinLastSegment ? 1 : 0));
             i++
         ) {
             arr.push(i);
         }
 
-        if (this.pinLastSegment) {
+        if (this.cleanPinLastSegment) {
             arr.push(this.segments.length - 1);
         }
 
         return arr;
+    }
+
+    public get segmentClass() {
+        return (segment: Segment, index: number) => {
+            const classes = ['split'];
+
+            if (this.visibleIndicies.includes(index)) {
+                classes.push('visible');
+            }
+            if (this.status === TimerStatus.RUNNING && this.currentSegment === index) {
+                classes.push('current');
+            }
+            if (this.scrollIndex === index) {
+                classes.push('scroll');
+            }
+            if (index === 0) {
+                classes.push('first');
+            }
+            if (index < this.currentSegment) {
+                classes.push(`previous-${this.currentSegment - index}`);
+            }
+            if (index - this.currentSegment > 0) {
+                classes.push(`next-${index - this.currentSegment}`);
+            }
+            if (index === this.segments.length) {
+                classes.push('final');
+            }
+            if (this.cleanPinLastSegment && index === this.segments.length - 1) {
+                classes.push('pinned');
+            }
+            if (segment.skipped) {
+                classes.push('skipped');
+            }
+            if (segment.passed) {
+                classes.push('passed');
+            }
+            if (segment.hasNewOverallBest) {
+                classes.push('is-overall-best');
+            }
+
+            return classes;
+        };
     }
 
     public statusChange() {

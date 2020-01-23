@@ -12,11 +12,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
 import { clamp } from 'lodash';
+import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
 
-import { convertToBoolean } from '../utils/converters';
 import TextInputComponent from './text-input.vue';
+import { convertToBoolean } from '../utils/converters';
 
 @Component({ name: 'spl-number-input' })
 export default class NumberInputComponent extends Vue {
@@ -29,16 +29,10 @@ export default class NumberInputComponent extends Vue {
     @Prop({ type: Number })
     public max: number;
 
-    @Prop({
-        type: Boolean,
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public decimals: boolean;
 
-    @Prop({
-        type: Boolean,
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public disabled: boolean;
 
     @Prop({ type: String })

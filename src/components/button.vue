@@ -17,19 +17,13 @@ import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
 @Component({ name: 'spl-button' })
 export default class ButtonComponent extends Vue {
-    @Prop({
-        type: Boolean,
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public autofocus: boolean;
 
     @Prop(String)
     public theme: string;
 
-    @Prop({
-        type: Boolean,
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public disabled: boolean;
 
     @Prop({
@@ -40,10 +34,7 @@ export default class ButtonComponent extends Vue {
     })
     public type: string;
 
-    @Prop({
-        type: Boolean,
-        default: false
-    })
+    @Prop({ type: Boolean, default: false })
     public outline: boolean;
 
     public internalTheme: string;

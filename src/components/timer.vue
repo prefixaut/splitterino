@@ -1,6 +1,6 @@
 <template>
     <div class="timer" :class="['status-' + status]">
-        <span class="content">{{ currentTime | aevum(format) }}</span>
+        <span class="content">{{ currentTime | aevum(cleanFormat) }}</span>
     </div>
 </template>
 
@@ -9,21 +9,21 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { now } from '../utils/time';
-import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 
 const timer = namespace('splitterino/timer');
 
-@Component({
-    name: 'spl-timer',
-    mixins: [AevumFormatMixin],
-})
+@Component({ name: 'spl-timer' })
 export default class TimerComponent extends Vue {
     /**
      * If this timer should display the time in IGT Mode.
      */
     @Prop({ type: Boolean, default: false })
     public igt;
+
+    @Prop({ type: String, default: null })
+    public format: string;
 
     @timer.State('status')
     public status: TimerStatus;
@@ -70,6 +70,14 @@ export default class TimerComponent extends Vue {
 
     public beforeDestroy() {
         this.statusWatcher();
+    }
+
+    public get cleanFormat() {
+        if (this.format != null) {
+            return this.format;
+        } else {
+            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.timer.format');
+        }
     }
 
     public statusChange(forceUpdate: boolean = false) {

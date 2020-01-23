@@ -9,8 +9,8 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
-import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
+import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 
 const splits = namespace('splitterino/splits');
 

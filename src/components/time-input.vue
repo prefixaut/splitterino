@@ -45,8 +45,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
 import { Time, toTime } from 'aevum';
+import { Component, Vue, Prop, Watch, Model } from 'vue-property-decorator';
 
 import { timeToTimestamp } from '../utils/time';
 

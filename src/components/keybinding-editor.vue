@@ -36,8 +36,8 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
 import { cloneDeep } from 'lodash';
+import { Vue, Component } from 'vue-property-decorator';
 
 import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../common/interfaces/keybindings';
 import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';

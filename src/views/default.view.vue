@@ -12,13 +12,7 @@
                 </component>
             </div>
             <template v-else>
-                <spl-splits
-                    :pinLastSegment="pinLastSegment"
-                    :visibleUpcomingSegments="visibleUpcomingSegments"
-                    :visiblePreviousSegments="visiblePreviousSegments"
-                    :segmentTimeFormat="segmentTimeFormat"
-                    :comparisonTimeFormat="comparisonTimeFormat"
-                >
+                <spl-splits>
                     <div class="container">
                         <p>No Splits are currently loaded! Please load some or create new ones</p>
                         <div class="button-wrapper">
@@ -28,7 +22,7 @@
                     </div>
                 </spl-splits>
                 <div class="container">
-                    <spl-timer :format="timerFormat" />
+                    <spl-timer/>
                     <spl-possible-time-save/>
                     <spl-summary-of-best/>
                     <spl-best-possible-time/>
@@ -40,19 +34,20 @@
 </template>
 
 <script lang="ts">
+import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
 import { TimerStatus } from '../common/timer-status';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
-import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
+import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
-import { Subscription } from 'rxjs';
+import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
+
     public templateLoaded: boolean = false;
     public template: string = null;
     public templateStyle: string = null;
@@ -61,42 +56,6 @@ export default class DefaultView extends Vue {
 
     private readonly ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
     private readonly electron: ElectronInterface = this.$services.get(ELECTRON_INTERFACE_TOKEN);
-
-    public get pinLastSegment() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.pinLastSegment');
-    }
-
-    public get visibleUpcomingSegments() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visibleUpcomingSegments');
-    }
-
-    public get visiblePreviousSegments() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
-    }
-
-    public get segmentTimeFormat() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatSegmentTime');
-    }
-
-    public get comparisonTimeFormat() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatComparisonTime');
-    }
-
-    public get timerFormat() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.timer.format');
-    }
-
-    public selectSplits() {
-        openLoadSplits(
-            this.$services.get(ELECTRON_INTERFACE_TOKEN),
-            this.$services.get(IO_SERVICE_TOKEN),
-            this.$store
-        );
-    }
-
-    public editSplits() {
-        openSplitsEditor(this.$services.get(ELECTRON_INTERFACE_TOKEN), this.$store);
-    }
 
     public mounted() {
         this.registerDragDropHandler();
@@ -112,6 +71,14 @@ export default class DefaultView extends Vue {
         for (const sub of this.subscriptions) {
             sub.unsubscribe();
         }
+    }
+
+    public selectSplits() {
+        openLoadSplits(this.electron, this.ioService, this.$store);
+    }
+
+    public editSplits() {
+        openSplitsEditor(this.electron, this.$store);
     }
 
     private async loadTemplate(templateFile?: string) {

@@ -41,13 +41,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
 import { set, isEqual, merge } from 'lodash';
+import { Component, Vue } from 'vue-property-decorator';
 
+import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 import { SettingsConfigurationValue, Settings } from '../store/states/settings.state';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -60,6 +60,12 @@ export default class SettingsEditorComponent extends Vue {
         plugins: {}
     };
 
+    public created() {
+        this.$eventHub.$on('settings-changed', () => {
+            this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
+        });
+    }
+
     public get settingsValue() {
         return this.$store.getters[GETTER_VALUE_BY_PATH];
     }
@@ -70,12 +76,6 @@ export default class SettingsEditorComponent extends Vue {
         const mergedValues = merge({}, values, this.changesValues);
 
         return !isEqual(values, mergedValues);
-    }
-
-    public created() {
-        this.$eventHub.$on('settings-changed', () => {
-            this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
-        });
     }
 
     public onGroupSelected(group: string) {

@@ -4,6 +4,29 @@ import { SettingsConfigurationNamespace } from '../store/states/settings.state';
  * Default Values
  */
 export const DEFAULT_TIMER_FORMAT = '(-)(h:#:)(m:#:)[s].[ddd]';
+export const DEFAULT_SPLIT = {
+    name: '',
+    personalBest: {
+        igt: {
+            pauseTime: 0,
+            rawTime: 0,
+        },
+        rta: {
+            pauseTime: 0,
+            rawTime: 0,
+        }
+    },
+    overallBest: {
+        igt: {
+            pauseTime: 0,
+            rawTime: 0,
+        },
+        rta: {
+            pauseTime: 0,
+            rawTime: 0,
+        }
+    },
+};
 
 /*
  * Context Menu

@@ -73,38 +73,16 @@
 </template>
 
 <script lang="ts">
+import { cloneDeep } from 'lodash';
+import { v4 as uuid } from 'uuid';
 import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
-import { v4 as uuid } from 'uuid';
-import { cloneDeep } from 'lodash';
 
+import { DEFAULT_SPLIT } from '../common/constants';
 import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
 import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../services/validator.service';
 
 const splits = namespace('splitterino/splits');
-const defaultSplit = {
-    name: '',
-    personalBest: {
-        igt: {
-            pauseTime: 0,
-            rawTime: 0,
-        },
-        rta: {
-            pauseTime: 0,
-            rawTime: 0,
-        }
-    },
-    overallBest: {
-        igt: {
-            pauseTime: 0,
-            rawTime: 0,
-        },
-        rta: {
-            pauseTime: 0,
-            rawTime: 0,
-        }
-    },
-};
 
 @Component({ name: 'spl-segments-editor' })
 export default class SegmentsEditorComponent extends Vue {
@@ -116,6 +94,7 @@ export default class SegmentsEditorComponent extends Vue {
     public timing: TimingMethod;
 
     public segments: Segment[] = [];
+
     private validator: ValidatorService = null;
 
     public created() {
@@ -125,7 +104,7 @@ export default class SegmentsEditorComponent extends Vue {
     public addSegment() {
         this.segments.push({
             id: uuid(),
-            ...defaultSplit,
+            ...DEFAULT_SPLIT,
         });
         this.triggerSegmentsChange();
     }
@@ -160,7 +139,7 @@ export default class SegmentsEditorComponent extends Vue {
             newValue = [newValue];
         }
         this.segments = cloneDeep(newValue).map(value => ({
-            ...defaultSplit,
+            ...DEFAULT_SPLIT,
             ...value,
         })).filter(tmp => this.validator.isSegment(tmp));
     }

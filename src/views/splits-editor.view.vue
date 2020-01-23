@@ -22,10 +22,11 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
 import { isEqual, cloneDeep } from 'lodash';
+import { Vue, Component } from 'vue-property-decorator';
 
 import { Segment } from '../common/interfaces/segment';
+    import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
 import { GameInfoState } from '../store/states/game-info.state';
 import {
@@ -35,7 +36,6 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
-import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ACTION_DISABLE_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-splits-editor-view' })

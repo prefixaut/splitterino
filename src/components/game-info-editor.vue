@@ -47,10 +47,9 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import ISO6391 from 'iso-639-1';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
-import { Region, GameInfoState } from '../store/states/game-info.state';
 import {
     ACTION_SET_GAME_NAME,
     ACTION_SET_CATEGORY,
@@ -58,6 +57,7 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION
 } from '../store/modules/game-info.module';
+import { Region, GameInfoState } from '../store/states/game-info.state';
 
 interface SingleLanguage {
     code: string;
