@@ -69,65 +69,67 @@ export class ElectronService implements ElectronInterface {
     }
 
     public showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
-        Logger.debug('Opening "open-file" dialog ...');
-        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-
-        return dialogToUse.showOpenDialog(browserWindow, options).then(result => {
-            Logger.debug({
-                msg: '"open-file" dialog closed',
-                result,
-            });
-
-            return result.filePaths;
-        }).catch(error => {
-            Logger.debug({
-                msg: 'Error while opening "open-file" dialog',
-                error,
-            });
-
-            throw error;
+        return new Promise((resolve, reject) => {
+            try {
+                Logger.debug('Opening "open-file" dialog ...');
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                const paths = dialogToUse.showOpenDialog(browserWindow, options);
+                Logger.debug({
+                    msg: '"open-file" dialog closed',
+                    files: paths,
+                });
+                resolve(paths);
+            } catch (e) {
+                Logger.debug({
+                    msg: 'Error while opening "open-file" dialog',
+                    error: e
+                });
+                reject(e);
+            }
         });
     }
 
     public showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
-        Logger.debug('Opening "save-file" dialog ...');
-        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-
-        return dialogToUse.showSaveDialog(browserWindow, options).then(result => {
-            Logger.debug({
-                msg: '"save-file" dialog closed',
-                result,
-            });
-
-            return result.filePath;
-        }).catch(error => {
-            Logger.debug({
-                msg: 'Error while opening "save-file" dialog',
-                error,
-            });
-
-            throw error;
+        return new Promise((resolve, reject) => {
+            try {
+                Logger.debug('Opening "save-file" dialog ...');
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                dialogToUse.showSaveDialog(browserWindow, options, path => {
+                    Logger.debug({
+                        msg: '"save-file" dialog closed',
+                        file: path,
+                    });
+                    resolve(path);
+                });
+            } catch (e) {
+                Logger.debug({
+                    msg: 'Error while opening "save-file" dialog',
+                    error: e
+                });
+                reject(e);
+            }
         });
     }
 
     public showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
-        Logger.debug('Opening "message" dialog');
-        const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-
-        return dialogToUse.showMessageBox(browserWindow, options).then(result => {
-            Logger.debug({
-                msg: '"message" dialog closed',
-                result,
-            });
-
-            return result.response;
-        }).catch(error => {
-            Logger.debug({
-                msg: 'Error while opening "message" dialog',
-                error,
-            });
-
-            throw error;
+        return new Promise((resolve, reject) => {
+            try {
+                Logger.debug('Opening "message" dialog');
+                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+                dialogToUse.showMessageBox(browserWindow, options, response => {
+                    Logger.debug({
+                        msg: '"message" dialog closed',
+                        response,
+                    });
+                    resolve(response);
+                });
+            } catch (e) {
+                Logger.debug({
+                    msg: 'Error while opening "message" dialog',
+                    error: e
+                });
+                reject(e);
+            }
         });
     }
 
