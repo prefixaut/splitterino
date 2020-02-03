@@ -90,6 +90,11 @@ process.on('unhandledRejection', (reason, promise) => {
         windowId: electron.getCurrentWindow().id,
     });
 
+    // Update the store state
+    store.replaceState(await ipcClient.getStoreState());
+
+    // TODO: Replay the actions from the queued/dropped actions here?
+
     // Update the Logger log-level from the registration
     if (response) {
         Logger._setInitialLogLevel(response.logLevel);

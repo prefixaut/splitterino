@@ -22,7 +22,7 @@ import {
     UnregisterClientResponse,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
-import { createObservableFromSocket } from '../../utils/ipc';
+import { createObservableFromSocket, resolveOrTimeout } from '../../utils/ipc';
 import { Logger, LogLevel } from '../../utils/logger';
 import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
 
@@ -57,7 +57,7 @@ export class IPCClient {
     private dealerMessages: Observable<[string, string, Message]>;
     private dealerMessageSubscription: Subscription;
 
-    private isInitialized = false;
+    private initialized = false;
 
     private subscriberTable: { [message: string]: (message: Message) => any } = {
         /* tslint:disable: no-unbound-method */
@@ -74,6 +74,10 @@ export class IPCClient {
     private serverId: string;
     private clientInfo: ClientInformation;
 
+    public isInitialized() {
+        return this.initialized;
+    }
+
     public async initialize(
         store: Store<RootState>,
         clientInfo: ClientInformation
@@ -81,7 +85,7 @@ export class IPCClient {
         // Close everything first
         await this.close();
 
-        if (this.isInitialized) {
+        if (this.initialized) {
             return false;
         }
 
@@ -90,7 +94,7 @@ export class IPCClient {
         this.clientId = uuid();
 
         this.subscriber = socket('sub');
-        this.subscriber.bindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+        this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.subscriberMessages = createObservableFromSocket(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(
@@ -99,7 +103,7 @@ export class IPCClient {
             });
 
         this.dealer = socket('dealer');
-        this.dealer.bindSync(IPC_ROUTER_DEALER_ADDRESS);
+        this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
 
         this.dealerMessages = createObservableFromSocket(this.dealer, this.clientId);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(([sender, /* receiver */, message]) => {
@@ -107,11 +111,11 @@ export class IPCClient {
         });
 
         this.push = socket('push');
-        this.push.bindSync(IPC_PULL_PUSH_ADDRESS);
+        this.push.connect(IPC_PULL_PUSH_ADDRESS);
 
         try {
             const response = await this.register();
-            this.isInitialized = true;
+            this.initialized = true;
 
             return response;
         } catch (error) {
@@ -122,14 +126,14 @@ export class IPCClient {
     }
 
     public async close() {
-        if (!this.isInitialized) {
+        if (!this.initialized) {
             return;
         }
 
         this.store = null;
 
         if (this.subscriber) {
-            this.subscriber.unbindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+            this.subscriber.disconnect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.subscriber.close();
             this.subscriber = null;
         }
@@ -144,7 +148,7 @@ export class IPCClient {
         }
 
         if (this.dealer) {
-            this.dealer.unbindSync(IPC_ROUTER_DEALER_ADDRESS);
+            this.dealer.disconnect(IPC_ROUTER_DEALER_ADDRESS);
             this.dealer.close();
             this.dealer = null;
         }
@@ -159,7 +163,7 @@ export class IPCClient {
         }
 
         if (this.push) {
-            this.push.unbindSync(IPC_PULL_PUSH_ADDRESS);
+            this.push.disconnect(IPC_PULL_PUSH_ADDRESS);
             this.push.close();
             this.push = null;
         }
@@ -170,7 +174,7 @@ export class IPCClient {
             Logger.error(error);
         }
 
-        this.isInitialized = false;
+        this.initialized = false;
     }
 
     public async handleIncomingSubscriberMessage(message: Message) {
@@ -190,17 +194,23 @@ export class IPCClient {
         }
     }
 
-    public async sendDealerMessage(message: Message, target?: string) {
-        Logger.debug({
-            msg: 'Sending IPC Message',
-            direction: 'OUTBOUNDS',
-            source: 'DEALER',
-            ipcMessage: message,
-        });
+    public async sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
+        if (quiet) {
+            Logger.debug({
+                msg: 'Sending IPC Message',
+                direction: 'OUTBOUNDS',
+                source: 'DEALER',
+                ipcMessage: message,
+            });
+        }
 
-        this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
+        if (this.dealer != null) {
+            this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
 
-        return true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public async handleIncomingDealerMessage(sender: string, message: Message) {
@@ -240,17 +250,23 @@ export class IPCClient {
 
     public async sendDealerRequestAwaitResponse(
         request: Request,
-        responseType: MessageType
+        responseType: MessageType,
+        timeout: number = 1000
     ): Promise<Response> {
-        this.sendDealerMessage(request);
-
-        const response = await this.dealerMessages.pipe(
+        const responsePromise = this.dealerMessages.pipe(
             map(([/* sender */, /* reveiver */, message]) => message),
             filter(message => {
                 return message.type === responseType && (message as Response).respondsTo === request.id;
             }),
             first()
-        ).toPromise() as Response;
+        ).toPromise();
+
+        const didSent = await this.sendDealerMessage(request);
+        if (!didSent) {
+            return Promise.reject(new Error('Dealer could not send the request!'));
+        }
+
+        const response: Response = await resolveOrTimeout(responsePromise, timeout) as Response;
 
         if (!response.successful) {
             throw new Error(response.error.message);
@@ -267,9 +283,13 @@ export class IPCClient {
             ipcMessage: message,
         });
 
-        this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
+        if (this.push != null) {
+            this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
 
-        return true;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public listenToSubscriberSocket() {
@@ -285,11 +305,6 @@ export class IPCClient {
     }
 
     protected async register(): Promise<false | RegistationResult> {
-        // Already registered, can't register again
-        if (this.clientId != null) {
-            return false;
-        }
-
         const request: RegisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_REGISTER_CLIENT,
@@ -316,11 +331,6 @@ export class IPCClient {
     }
 
     protected async unregister(): Promise<boolean> {
-        if (this.clientId == null) {
-            // Already unregistered, can't register again
-            return false;
-        }
-
         const request: UnregisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_UNREGISTER_CLIENT,

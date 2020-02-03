@@ -16,6 +16,8 @@ import {
     PublishGlobalEventRequest,
     GlobalEventBroadcast,
     LogOnServerRequest,
+    StoreStateRequest,
+    StoreStateResponse,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromSocket } from '../../utils/ipc';
@@ -71,6 +73,7 @@ export class IPCServer {
         [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
         [MessageType.REQUEST_PUBLISH_GLOBAL_EVENT]: this.handleGlobalEventPublish,
         [MessageType.REQUEST_LOG_ON_SERVER]: this.handleLogToServer,
+        [MessageType.REQUEST_STORE_STATE]: this.handleStoreFetch,
         /* tslint:enable: no-unbound-method */
     };
     private pullTable: { [message: string]: (message: Message) => any } = {
@@ -343,6 +346,18 @@ export class IPCServer {
         };
 
         this.publishMessage(broadcast);
+    }
+
+    private async handleStoreFetch(sender: string, request: StoreStateRequest) {
+        const response: StoreStateResponse = {
+            id: uuid(),
+            type: MessageType.RESPONSE_STORE_STATE,
+            respondsTo: request.id,
+            successful: true,
+            state: this.store.state,
+        };
+
+        this.sendRouterMessage(sender, response);
     }
 
     private async handleLogToServer(sender: string, request: LogOnServerRequest) {

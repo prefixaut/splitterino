@@ -49,9 +49,6 @@ export async function getClientStore(vueRef, client: IPCClient, injector: Inject
         ...getStoreConfig(injector)
     });
 
-    // * Probably fine if we don't do any heavy init stuff in state
-    store.replaceState(await client.getStoreState());
-
     // Override the dispatch function to delegate it to the main process instead
     // tslint:disable-next-line only-arrow-functions no-string-literal
     store['_dispatch'] = store.dispatch = function <P extends Payload>(
@@ -59,6 +56,12 @@ export async function getClientStore(vueRef, client: IPCClient, injector: Inject
         payloadOrOptions?: any | DispatchOptions,
         options?: DispatchOptions
     ) {
+        // Drop all actions which are done before init
+        // TODO: Queue them and replay them later?
+        if (!client.isInitialized()) {
+            return;
+        }
+
         let actualType: string;
         let actualPayload: any;
         let actualOptions: DispatchOptions;

@@ -92,14 +92,14 @@ export class Logger {
      * @param data The data which the handlers should receive
      */
     public static _logToHandlers(logFnName: LogLevel, data: object) {
-        if (this.ipcClient && this.electron.isRenderProcess()) {
+        if (this.ipcClient && this.ipcClient.isInitialized() && this.electron.isRenderProcess()) {
             const message: LogOnServerRequest = {
                 id: uuid(),
                 type: MessageType.REQUEST_LOG_ON_SERVER,
                 level: logFnName,
                 message: data,
             };
-            this.ipcClient.sendDealerMessage(message);
+            this.ipcClient.sendDealerMessage(message, null, true);
         }
 
         this.logHandlers.forEach(handler => {

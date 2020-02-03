@@ -37,3 +37,23 @@ export function createObservableFromSocket(
         };
     });
 }
+
+export function resolveOrTimeout<T>(promise: Promise<T>, timeout: number = 1000): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        let hasResolved = false;
+
+        setTimeout(() => {
+            if (!hasResolved) {
+                reject(new Error(`Timeout of ${timeout}ms reached!`));
+            }
+        }, timeout);
+
+        promise.then(value => {
+            hasResolved = true;
+            resolve(value);
+        }).catch(error => {
+            hasResolved = true;
+            reject(error);
+        });
+    });
+}
