@@ -10,13 +10,13 @@ export function createObservableFromSocket(
     return new Observable<[string, string, Message]>(subscriber => {
         let isClosed = false;
 
-        function messageHandler(data: [string, string, Message]) {
+        function messageHandler(_: never, ...data: Buffer[]) {
             // Discard the data and don't do anything any more
             if (isClosed) {
                 return;
             }
 
-            const [sender, receiver, msg] = data;
+            const [sender, receiver, msg] = data.map(d => d.toString());
             if (target != null && receiver.toString() !== target) {
                 // Drop the message, this is not the target
                 return;
