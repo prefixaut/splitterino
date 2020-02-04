@@ -108,7 +108,7 @@ export default class DefaultView extends Vue {
         this.loadTemplate();
         const sub = this.$services.get(IPC_CLIENT_TOKEN).listenToSubscriberSocket().pipe(
             // Trim out everything aside from the message itself
-            map(data => data[2]),
+            map(packet => packet.message),
             // Filter out messages which aren't "load-template" global events
             filter(message => {
                 return message.type === MessageType.BROADCAST_GLOBAL_EVENT

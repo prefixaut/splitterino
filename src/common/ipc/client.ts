@@ -20,6 +20,7 @@ import {
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
+    IPCPacket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromSocket, resolveOrTimeout } from '../../utils/ipc';
@@ -56,10 +57,10 @@ export class IPCClient {
     private push: Socket;
     private store: Store<RootState>;
 
-    private subscriberMessages: Observable<[string, string, Message]>;
+    private subscriberMessages: Observable<IPCPacket>;
     private subscriberMessageSubscription: Subscription;
 
-    private dealerMessages: Observable<[string, string, Message]>;
+    private dealerMessages: Observable<IPCPacket>;
     private dealerMessageSubscription: Subscription;
 
     private initialized = false;
@@ -101,17 +102,16 @@ export class IPCClient {
         this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.subscriberMessages = createObservableFromSocket(this.subscriber);
-        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(
-            ([/* receiver */, /* sender */, message]) => {
-                this.handleIncomingSubscriberMessage(message);
-            });
+        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(packet => {
+            this.handleIncomingSubscriberMessage(packet.message);
+        });
 
         this.dealer = socket('dealer');
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
 
         this.dealerMessages = createObservableFromSocket(this.dealer, this.clientId);
-        this.dealerMessageSubscription = this.dealerMessages.subscribe(([/* receiver */, sender, message]) => {
-            this.handleIncomingDealerMessage(sender, message);
+        this.dealerMessageSubscription = this.dealerMessages.subscribe(packet => {
+            this.handleIncomingDealerMessage(packet.sender, packet.message);
         });
 
         this.push = socket('push');
@@ -199,7 +199,7 @@ export class IPCClient {
     }
 
     public async sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
-        if (quiet) {
+        if (!quiet) {
             Logger.debug({
                 msg: 'Sending IPC Message',
                 direction: 'OUTBOUNDS',
@@ -223,7 +223,7 @@ export class IPCClient {
             msg: 'Received IPC Message',
             direction: 'INBOUNDS',
             socket: 'DEALER',
-            ipcMessage: message,
+            ipcMessage: message.type !== MessageType.RESPONSE_STORE_STATE ? message : { ...message, state: null },
         });
 
         // The message is an response to a previously sent request
@@ -258,26 +258,34 @@ export class IPCClient {
         responseType: MessageType,
         timeout: number = 1000
     ): Promise<Response> {
-        const responsePromise = this.dealerMessages.pipe(
-            map(([/* receiver */, /* sender */, message]) => message),
-            filter(message => {
-                return message.type === responseType && (message as Response).respondsTo === request.id;
-            }),
-            first()
-        ).toPromise();
+        return new Promise(async (resolve, reject) => {
+            const sub = this.dealerMessages.pipe(
+                map(packet => packet.message),
+                filter(message => {
+                    return message.type === responseType && (message as Response).respondsTo === request.id;
+                }),
+                first()
+            ).subscribe((response: Response) => {
+                if (!response.successful) {
+                    reject(response.error.message);
+                } else {
+                    resolve(response);
+                }
+            }, err => reject(err));
 
-        const didSend = await this.sendDealerMessage(request);
-        if (!didSend) {
-            return Promise.reject(new Error('Dealer could not send the request!'));
-        }
+            const didSend = await this.sendDealerMessage(request);
+            if (!didSend) {
+                sub.unsubscribe();
+                reject(new Error('Dealer could not send the request!'));
 
-        const response: Response = await resolveOrTimeout(responsePromise, timeout) as Response;
+                return;
+            }
 
-        if (!response.successful) {
-            throw new Error(response.error.message);
-        }
-
-        return response;
+            setTimeout(() => {
+                sub.unsubscribe();
+                reject(`Timeout of ${timeout}ms reached!`);
+            }, timeout);
+        });
     }
 
     public async sendPushMessage(message: Message) {
@@ -362,7 +370,8 @@ export class IPCClient {
 
         const response = await this.sendDealerRequestAwaitResponse(
             request,
-            MessageType.RESPONSE_STORE_STATE
+            MessageType.RESPONSE_STORE_STATE,
+            10_000
         ) as StoreStateResponse;
 
         if (!response.successful) {

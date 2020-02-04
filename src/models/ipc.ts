@@ -21,6 +21,13 @@ export enum MessageType {
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
 }
 
+export interface IPCPacket {
+    identity?: Buffer;
+    receiver: string;
+    sender: string;
+    message: Message;
+}
+
 /**
  * A basic Message which is being sent via IPC.
  */

@@ -18,6 +18,7 @@ import {
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
+    IPCPacket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromSocket } from '../../utils/ipc';
@@ -47,6 +48,8 @@ interface Client {
     actions: string[];
 }
 
+type RouterFn = (identity: Buffer, receivedFrom: string, message: Message, respond?: boolean) => any;
+
 export interface InitializeOptions {
     store: Store<RootState>;
     logLevel: LogLevel;
@@ -60,17 +63,17 @@ export class IPCServer {
     private store: Store<RootState>;
     private logLevel: LogLevel;
 
-    private routerMessages: Observable<[string, string, Message]>;
+    private routerMessages: Observable<IPCPacket>;
     private routerMessageSubscription: Subscription;
 
-    private pullMessages: Observable<[string, string, Message]>;
+    private pullMessages: Observable<IPCPacket>;
     private pullMessageSubscription: Subscription;
 
     private isInitialized = false;
 
     private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string } = {};
-    private routerTable: { [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any } = {
+    private routerTable: { [message: string]: RouterFn } = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
@@ -102,16 +105,16 @@ export class IPCServer {
         this.pull = socket('pull');
         this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createObservableFromSocket(this.router, IPC_SERVER_NAME);
+        this.routerMessages = createObservableFromSocket(this.router, IPC_SERVER_NAME, true);
 
-        this.routerMessageSubscription = this.routerMessages.subscribe(([/* receiver */, sender, message]) => {
-            this.handleIncomingRouterMessage(sender, message);
+        this.routerMessageSubscription = this.routerMessages.subscribe(packet => {
+            this.handleIncomingRouterMessage(packet.identity, packet.sender, packet.message);
         });
 
         this.pullMessages = createObservableFromSocket(this.pull);
 
-        this.pullMessageSubscription = this.pullMessages.subscribe(([/* receiver */, /* sender */, message]) => {
-            this.handleIncomingPullMessage(message);
+        this.pullMessageSubscription = this.pullMessages.subscribe(packet => {
+            this.handleIncomingPullMessage(packet.message);
         });
 
         this.isInitialized = true;
@@ -176,27 +179,29 @@ export class IPCServer {
         return true;
     }
 
-    public async sendRouterMessage(targetClient: string, message: Message) {
+    public async sendRouterMessage(identity: Buffer, targetClient: string, message: Message) {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTGOING',
             socket: 'ROUTER',
             destination: targetClient,
-            ipcMessage: message,
+            ipcMessage: message.type !== MessageType.RESPONSE_STORE_STATE ? message : { ...message, state: null },
         });
 
-        this.router.send([targetClient, IPC_SERVER_NAME, JSON.stringify(message)]);
+        this.router.send([identity, targetClient, IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return true;
     }
 
-    public async handleIncomingRouterMessage(receivedFrom: string, message: Message) {
-        Logger.debug({
-            msg: 'Received IPC Message',
-            direction: 'INCOMING',
-            socket: 'ROUTER',
-            ipcMessage: message,
-        });
+    public async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
+        if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
+            Logger.debug({
+                msg: 'Received IPC Message',
+                direction: 'INCOMING',
+                socket: 'ROUTER',
+                ipcMessage: message,
+            });
+        }
 
         // The message is an response to a previously sent request
         // These are handled seperately.
@@ -207,7 +212,7 @@ export class IPCServer {
         const handlerFn = this.routerTable[message.type];
 
         if (typeof handlerFn === 'function') {
-            handlerFn.call(this, receivedFrom, message, true);
+            handlerFn.call(this, identity, receivedFrom, message, true);
 
             return;
         }
@@ -223,7 +228,7 @@ export class IPCServer {
         };
 
         // Respond to the client
-        await this.sendRouterMessage(receivedFrom, response);
+        await this.sendRouterMessage(identity, receivedFrom, response);
     }
 
     public async handleIncomingPullMessage(message: Message) {
@@ -245,7 +250,7 @@ export class IPCServer {
         // As the server only pulls messages without responding, no response needed here.
     }
 
-    protected async handleRegisterClient(receivedFrom: string, request: RegisterClientRequest) {
+    protected async handleRegisterClient(identity: Buffer, receivedFrom: string, request: RegisterClientRequest) {
         try {
             const client: Client = {
                 id: request.clientId,
@@ -267,7 +272,7 @@ export class IPCServer {
                 logLevel: this.logLevel,
             };
 
-            await this.sendRouterMessage(receivedFrom, response);
+            await this.sendRouterMessage(identity, receivedFrom, response);
         } catch (error) {
             const response: RegisterClientResponse = {
                 id: uuid(),
@@ -277,11 +282,11 @@ export class IPCServer {
                 error: error,
             };
 
-            await this.sendRouterMessage(receivedFrom, response);
+            await this.sendRouterMessage(identity, receivedFrom, response);
         }
     }
 
-    protected async handleUnregisterClient(receivedFrom: string, request: UnregisterClientRequest) {
+    protected async handleUnregisterClient(identity: Buffer, receivedFrom: string, request: UnregisterClientRequest) {
         const index = this.connectedClients.findIndex(client => client.id === request.clientId);
         if (index > -1) {
             this.connectedClients.splice(index, 1);
@@ -302,10 +307,10 @@ export class IPCServer {
             successful: index > -1,
         };
 
-        await this.sendRouterMessage(receivedFrom, response);
+        await this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    protected async handleDispatchAction(receivedFrom: string, request: DispatchActionReqeust) {
+    protected async handleDispatchAction(identity: Buffer, receivedFrom: string, request: DispatchActionReqeust) {
         // Check if a client should handle the request.
         // if (this.actionTable[request.action]) {
         // TODO: Send a request to the client to perform the action in it's process
@@ -339,10 +344,10 @@ export class IPCServer {
             };
         }
 
-        this.sendRouterMessage(receivedFrom, response);
+        this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    private async handleGlobalEventPublish(_: never, request: PublishGlobalEventRequest) {
+    private async handleGlobalEventPublish(i: never, r: never, request: PublishGlobalEventRequest) {
         const broadcast: GlobalEventBroadcast = {
             id: uuid(),
             type: MessageType.BROADCAST_GLOBAL_EVENT,
@@ -353,7 +358,7 @@ export class IPCServer {
         this.publishMessage(broadcast);
     }
 
-    private async handleStoreFetch(receivedFrom: string, request: StoreStateRequest) {
+    private async handleStoreFetch(identity: Buffer, receivedFrom: string, request: StoreStateRequest) {
         const response: StoreStateResponse = {
             id: uuid(),
             type: MessageType.RESPONSE_STORE_STATE,
@@ -362,10 +367,10 @@ export class IPCServer {
             state: this.store.state,
         };
 
-        this.sendRouterMessage(receivedFrom, response);
+        this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    private async handleLogToServer(_: never, request: LogOnServerRequest) {
+    private async handleLogToServer(i: never, r: never, request: LogOnServerRequest) {
         Logger._logToHandlers(request.level, request.message);
     }
 
