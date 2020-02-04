@@ -6,23 +6,28 @@ import { Socket, socket } from 'zeromq';
 import {
     DispatchActionReqeust,
     DispatchActionResponse,
+    GlobalEventBroadcast,
+    LogOnServerRequest,
     Message,
     MessageType,
+    PublishGlobalEventRequest,
     RegisterClientRequest,
     RegisterClientResponse,
     Response,
-    UnregisterClientRequest,
-    UnregisterClientResponse,
-    PublishGlobalEventRequest,
-    GlobalEventBroadcast,
-    LogOnServerRequest,
     StoreStateRequest,
     StoreStateResponse,
+    UnregisterClientRequest,
+    UnregisterClientResponse,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromSocket } from '../../utils/ipc';
 import { Logger, LogLevel } from '../../utils/logger';
-import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
+import {
+    IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
+    IPC_PULL_PUSH_ADDRESS,
+    IPC_ROUTER_DEALER_ADDRESS,
+    IPC_SERVER_NAME,
+} from '../constants';
 
 /**
  * Internal representation of a IPC Client.
@@ -53,7 +58,6 @@ export class IPCServer {
     private pull: Socket;
 
     private store: Store<RootState>;
-    private serverId: string = 'server';
     private logLevel: LogLevel;
 
     private routerMessages: Observable<[string, string, Message]>;
@@ -66,7 +70,7 @@ export class IPCServer {
 
     private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string } = {};
-    private routerTable: { [message: string]: (sender: string, message: Message, respond?: boolean) => any } = {
+    private routerTable: { [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any } = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
@@ -98,15 +102,15 @@ export class IPCServer {
         this.pull = socket('pull');
         this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createObservableFromSocket(this.router, this.serverId);
+        this.routerMessages = createObservableFromSocket(this.router, IPC_SERVER_NAME);
 
-        this.routerMessageSubscription = this.routerMessages.subscribe(([sender, /* receiver */, message]) => {
+        this.routerMessageSubscription = this.routerMessages.subscribe(([/* receiver */, sender, message]) => {
             this.handleIncomingRouterMessage(sender, message);
         });
 
         this.pullMessages = createObservableFromSocket(this.pull);
 
-        this.pullMessageSubscription = this.pullMessages.subscribe(([/* sender */, /* receiver */, message]) => {
+        this.pullMessageSubscription = this.pullMessages.subscribe(([/* receiver */, /* sender */, message]) => {
             this.handleIncomingPullMessage(message);
         });
 
@@ -163,33 +167,34 @@ export class IPCServer {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTGOING',
-            source: 'PUBLISHER',
+            socket: 'PUBLISHER',
             ipcMessage: message,
         });
 
-        this.publisher.send([null, this.serverId, JSON.stringify(message)]);
+        this.publisher.send([null, IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return true;
     }
 
-    public async sendRouterMessage(client: string, message: Message) {
+    public async sendRouterMessage(targetClient: string, message: Message) {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTGOING',
-            source: 'ROUTER',
+            socket: 'ROUTER',
+            destination: targetClient,
             ipcMessage: message,
         });
 
-        this.router.send([client, this.serverId, JSON.stringify(message)]);
+        this.router.send([targetClient, IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return true;
     }
 
-    public async handleIncomingRouterMessage(sender: string, message: Message) {
+    public async handleIncomingRouterMessage(receivedFrom: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INCOMING',
-            source: 'ROUTER',
+            socket: 'ROUTER',
             ipcMessage: message,
         });
 
@@ -202,7 +207,7 @@ export class IPCServer {
         const handlerFn = this.routerTable[message.type];
 
         if (typeof handlerFn === 'function') {
-            handlerFn.call(this, sender, message, true);
+            handlerFn.call(this, receivedFrom, message, true);
 
             return;
         }
@@ -218,14 +223,14 @@ export class IPCServer {
         };
 
         // Respond to the client
-        await this.sendRouterMessage(sender, response);
+        await this.sendRouterMessage(receivedFrom, response);
     }
 
     public async handleIncomingPullMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INCOMING',
-            source: 'PULL',
+            socket: 'PULL',
             ipcMessage: message,
         });
 
@@ -240,7 +245,7 @@ export class IPCServer {
         // As the server only pulls messages without responding, no response needed here.
     }
 
-    protected async handleRegisterClient(sender: string, request: RegisterClientRequest) {
+    protected async handleRegisterClient(receivedFrom: string, request: RegisterClientRequest) {
         try {
             const client: Client = {
                 id: request.clientId,
@@ -258,11 +263,11 @@ export class IPCServer {
                 type: MessageType.RESPONSE_REGISTER_CLIENT,
                 successful: true,
                 respondsTo: request.id,
-                serverId: this.serverId,
+                serverId: IPC_SERVER_NAME,
                 logLevel: this.logLevel,
             };
 
-            await this.sendRouterMessage(sender, response);
+            await this.sendRouterMessage(receivedFrom, response);
         } catch (error) {
             const response: RegisterClientResponse = {
                 id: uuid(),
@@ -272,11 +277,11 @@ export class IPCServer {
                 error: error,
             };
 
-            await this.sendRouterMessage(sender, response);
+            await this.sendRouterMessage(receivedFrom, response);
         }
     }
 
-    protected async handleUnregisterClient(sender: string, request: UnregisterClientRequest) {
+    protected async handleUnregisterClient(receivedFrom: string, request: UnregisterClientRequest) {
         const index = this.connectedClients.findIndex(client => client.id === request.clientId);
         if (index > -1) {
             this.connectedClients.splice(index, 1);
@@ -297,10 +302,10 @@ export class IPCServer {
             successful: index > -1,
         };
 
-        await this.sendRouterMessage(sender, response);
+        await this.sendRouterMessage(receivedFrom, response);
     }
 
-    protected async handleDispatchAction(sender: string, request: DispatchActionReqeust) {
+    protected async handleDispatchAction(receivedFrom: string, request: DispatchActionReqeust) {
         // Check if a client should handle the request.
         // if (this.actionTable[request.action]) {
         // TODO: Send a request to the client to perform the action in it's process
@@ -334,10 +339,10 @@ export class IPCServer {
             };
         }
 
-        this.sendRouterMessage(sender, response);
+        this.sendRouterMessage(receivedFrom, response);
     }
 
-    private async handleGlobalEventPublish(sender: string, request: PublishGlobalEventRequest) {
+    private async handleGlobalEventPublish(_: never, request: PublishGlobalEventRequest) {
         const broadcast: GlobalEventBroadcast = {
             id: uuid(),
             type: MessageType.BROADCAST_GLOBAL_EVENT,
@@ -348,7 +353,7 @@ export class IPCServer {
         this.publishMessage(broadcast);
     }
 
-    private async handleStoreFetch(sender: string, request: StoreStateRequest) {
+    private async handleStoreFetch(receivedFrom: string, request: StoreStateRequest) {
         const response: StoreStateResponse = {
             id: uuid(),
             type: MessageType.RESPONSE_STORE_STATE,
@@ -357,10 +362,10 @@ export class IPCServer {
             state: this.store.state,
         };
 
-        this.sendRouterMessage(sender, response);
+        this.sendRouterMessage(receivedFrom, response);
     }
 
-    private async handleLogToServer(sender: string, request: LogOnServerRequest) {
+    private async handleLogToServer(_: never, request: LogOnServerRequest) {
         Logger._logToHandlers(request.level, request.message);
     }
 

@@ -24,7 +24,12 @@ import {
 import { RootState } from '../../models/states/root.state';
 import { createObservableFromSocket, resolveOrTimeout } from '../../utils/ipc';
 import { Logger, LogLevel } from '../../utils/logger';
-import { IPC_PUBLISHER_SUBSCRIBER_ADDRESS, IPC_PULL_PUSH_ADDRESS, IPC_ROUTER_DEALER_ADDRESS } from '../constants';
+import {
+    IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
+    IPC_PULL_PUSH_ADDRESS,
+    IPC_ROUTER_DEALER_ADDRESS,
+    IPC_SERVER_NAME,
+} from '../constants';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {
@@ -64,14 +69,13 @@ export class IPCClient {
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
         /* tslint:enable: no-unbound-method */
     };
-    private dealerTable: { [message: string]: (sender: string, message: Message, respond?: boolean) => any } = {
+    private dealerTable: { [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any } = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
         /* tslint:enable: no-unbound-method */
     };
 
     private clientId: string;
-    private serverId: string;
     private clientInfo: ClientInformation;
 
     public isInitialized() {
@@ -98,7 +102,7 @@ export class IPCClient {
 
         this.subscriberMessages = createObservableFromSocket(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(
-            ([/* sender */, /* receiver */, message]) => {
+            ([/* receiver */, /* sender */, message]) => {
                 this.handleIncomingSubscriberMessage(message);
             });
 
@@ -106,7 +110,7 @@ export class IPCClient {
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
 
         this.dealerMessages = createObservableFromSocket(this.dealer, this.clientId);
-        this.dealerMessageSubscription = this.dealerMessages.subscribe(([sender, /* receiver */, message]) => {
+        this.dealerMessageSubscription = this.dealerMessages.subscribe(([/* receiver */, sender, message]) => {
             this.handleIncomingDealerMessage(sender, message);
         });
 
@@ -181,7 +185,7 @@ export class IPCClient {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUNDS',
-            source: 'SUBSCRIBER',
+            socket: 'SUBSCRIBER',
             ipcMessage: message,
         });
 
@@ -199,13 +203,14 @@ export class IPCClient {
             Logger.debug({
                 msg: 'Sending IPC Message',
                 direction: 'OUTBOUNDS',
-                source: 'DEALER',
+                socket: 'DEALER',
+                target: target || IPC_SERVER_NAME,
                 ipcMessage: message,
             });
         }
 
         if (this.dealer != null) {
-            this.dealer.send([target || this.serverId, this.clientId, JSON.stringify(message)]);
+            this.dealer.send([target || IPC_SERVER_NAME, this.clientId, JSON.stringify(message)]);
 
             return true;
         } else {
@@ -213,11 +218,11 @@ export class IPCClient {
         }
     }
 
-    public async handleIncomingDealerMessage(sender: string, message: Message) {
+    public async handleIncomingDealerMessage(receivedFrom: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUNDS',
-            source: 'DEALER',
+            socket: 'DEALER',
             ipcMessage: message,
         });
 
@@ -230,7 +235,7 @@ export class IPCClient {
         const handlerFn = this.dealerTable[message.type];
 
         if (typeof handlerFn === 'function') {
-            handlerFn.call(this, sender, message, true);
+            handlerFn.call(this, receivedFrom, message, true);
 
             return;
         }
@@ -254,15 +259,15 @@ export class IPCClient {
         timeout: number = 1000
     ): Promise<Response> {
         const responsePromise = this.dealerMessages.pipe(
-            map(([/* sender */, /* reveiver */, message]) => message),
+            map(([/* receiver */, /* sender */, message]) => message),
             filter(message => {
                 return message.type === responseType && (message as Response).respondsTo === request.id;
             }),
             first()
         ).toPromise();
 
-        const didSent = await this.sendDealerMessage(request);
-        if (!didSent) {
+        const didSend = await this.sendDealerMessage(request);
+        if (!didSend) {
             return Promise.reject(new Error('Dealer could not send the request!'));
         }
 
@@ -279,12 +284,12 @@ export class IPCClient {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'OUTBOUNDS',
-            source: 'PUSH',
+            socket: 'PUSH',
             ipcMessage: message,
         });
 
         if (this.push != null) {
-            this.push.send([this.serverId, this.clientId, JSON.stringify(message)]);
+            this.push.send([IPC_SERVER_NAME, this.clientId, JSON.stringify(message)]);
 
             return true;
         } else {
@@ -322,8 +327,6 @@ export class IPCClient {
         if (!response.successful) {
             throw new Error(response.error.message);
         }
-
-        this.serverId = response.serverId;
 
         return {
             logLevel: response.logLevel,

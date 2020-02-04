@@ -16,14 +16,15 @@ export function createObservableFromSocket(
                 return;
             }
 
-            const [sender, receiver, msg] = data.map(d => d.toString());
-            if (target != null && receiver.toString() !== target) {
+            const [receiver, sender, msg] = data.map(part => part != null ? part.toString() : null);
+            console.log({ sender, receiver, target });
+            if (target != null && receiver != null && receiver !== target) {
                 // Drop the message, this is not the target
                 return;
             }
 
             try {
-                subscriber.next([sender.toString(), receiver.toString(), JSON.parse(msg.toString())]);
+                subscriber.next([receiver, sender, JSON.parse(msg)]);
             } catch (err) {
                 subscriber.error(err);
             }

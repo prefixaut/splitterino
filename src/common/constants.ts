@@ -1,6 +1,11 @@
 import { ApplicationSettings } from '../models/application-settings';
 import { SettingsConfigurationNamespace } from '../models/states/settings.state';
 
+/**
+ * IPC Constants
+ */
+export const IPC_SERVER_NAME = 'flamingo';
+
 /*
  * Default Values
  */
