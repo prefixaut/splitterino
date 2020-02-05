@@ -90,9 +90,6 @@ process.on('unhandledRejection', (reason, promise) => {
         windowId: electron.getCurrentWindow().id,
     });
 
-    // Update the store state
-    store.replaceState(await ipcClient.getStoreState());
-
     // TODO: Replay the actions from the queued/dropped actions here?
 
     // Update the Logger log-level from the registration
@@ -100,12 +97,17 @@ process.on('unhandledRejection', (reason, promise) => {
         Logger._setInitialLogLevel(response.logLevel);
     }
 
-    // Initialize the Application
-    const vue = new Vue({
-        render: h => h(App),
-        store: store,
-        router
-    }).$mount('#app');
+    // ? Do not use await here. await seems to block event queue (weird; maybe babel or ts?)
+    ipcClient.getStoreState().then(storestate => {
+        // Update the store state
+        store.replaceState(storestate);
+        // Initialize the Application
+        const vue = new Vue({
+            render: h => h(App),
+            store: store,
+            router
+        }).$mount('#app');
+    });
 
     // Only execute certain functionality if window is main window
     if (electron.getCurrentWindow().id === 1) {

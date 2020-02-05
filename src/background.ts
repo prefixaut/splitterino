@@ -226,6 +226,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     app.on('quit', (event, exitCode) => {
+        ipcServer.close();
         Logger.info({ msg: 'App will quit!', event, exitCode });
     });
 

@@ -21,7 +21,7 @@ import {
     IPCPacket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
-import { createObservableFromSocket } from '../../utils/ipc';
+import { createSharedObservableFromSocket } from '../../utils/ipc';
 import { Logger, LogLevel } from '../../utils/logger';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
@@ -105,13 +105,13 @@ export class IPCServer {
         this.pull = socket('pull');
         this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createObservableFromSocket(this.router, IPC_SERVER_NAME, true);
+        this.routerMessages = createSharedObservableFromSocket(this.router, IPC_SERVER_NAME, true);
 
         this.routerMessageSubscription = this.routerMessages.subscribe(packet => {
             this.handleIncomingRouterMessage(packet.identity, packet.sender, packet.message);
         });
 
-        this.pullMessages = createObservableFromSocket(this.pull);
+        this.pullMessages = createSharedObservableFromSocket(this.pull);
 
         this.pullMessageSubscription = this.pullMessages.subscribe(packet => {
             this.handleIncomingPullMessage(packet.message);

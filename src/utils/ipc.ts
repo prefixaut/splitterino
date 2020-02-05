@@ -1,14 +1,21 @@
 import { Observable } from 'rxjs';
+import { share } from 'rxjs/operators';
 import { Socket } from 'zeromq';
-
 import { IPCPacket } from '../models/ipc';
 
-export function createObservableFromSocket(
+// TODO: Fix use of filterAdditionalHeaders
+/**
+ * Creates a shared (multicast + refCount) observable for given socket
+ * @param socket Socket to wrap in observable
+ * @param target Only listen to messages for given target
+ * @param filterAdditionalHeaders Set to true if router socket
+ */
+export function createSharedObservableFromSocket(
     socket: Socket,
     target?: string,
     filterAdditionalHeaders: boolean = false
 ): Observable<IPCPacket> {
-    return new Observable(subscriber => {
+    const messageListener = new Observable<IPCPacket>(subscriber => {
         let isClosed = false;
 
         function messageHandler(...data: Buffer[]) {
@@ -40,23 +47,12 @@ export function createObservableFromSocket(
 
         return () => {
             isClosed = true;
-            socket.off('message', messageHandler);
+            socket.removeListener('message', messageHandler);
         };
     });
-}
 
-export function resolveOrTimeout<T>(promise: Promise<T>, timeout: number = 10_000): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-        const timer = setTimeout(() => {
-            reject(new Error(`Timeout of ${timeout}ms reached!`));
-        }, timeout);
-
-        promise.then(value => {
-            resolve(value);
-        }).catch(error => {
-            reject(error);
-        }).finally(() => {
-            clearTimeout(timer);
-        });
-    });
+    // Return shared (multicast + refCount) observable
+    // Will automatically unsubscribe from main observable (messageListener)
+    // when there every subscriber has unsubscribed. This preserves teardown logic
+    return messageListener.pipe(share());
 }

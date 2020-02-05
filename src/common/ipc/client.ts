@@ -1,6 +1,6 @@
 import { InjectionToken } from 'lightweight-di';
 import { Observable, Subscription } from 'rxjs';
-import { filter, first, map } from 'rxjs/operators';
+import { first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
 import { Socket, socket } from 'zeromq';
@@ -23,7 +23,7 @@ import {
     IPCPacket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
-import { createObservableFromSocket, resolveOrTimeout } from '../../utils/ipc';
+import { createSharedObservableFromSocket } from '../../utils/ipc';
 import { Logger, LogLevel } from '../../utils/logger';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
@@ -101,7 +101,7 @@ export class IPCClient {
         this.subscriber = socket('sub');
         this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
-        this.subscriberMessages = createObservableFromSocket(this.subscriber);
+        this.subscriberMessages = createSharedObservableFromSocket(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(packet => {
             this.handleIncomingSubscriberMessage(packet.message);
         });
@@ -109,7 +109,7 @@ export class IPCClient {
         this.dealer = socket('dealer');
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.dealerMessages = createObservableFromSocket(this.dealer, this.clientId);
+        this.dealerMessages = createSharedObservableFromSocket(this.dealer, this.clientId);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(packet => {
             this.handleIncomingDealerMessage(packet.sender, packet.message);
         });
@@ -198,7 +198,7 @@ export class IPCClient {
         }
     }
 
-    public async sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
+    public sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
         if (!quiet) {
             Logger.debug({
                 msg: 'Sending IPC Message',
@@ -218,7 +218,7 @@ export class IPCClient {
         }
     }
 
-    public async handleIncomingDealerMessage(receivedFrom: string, message: Message) {
+    public handleIncomingDealerMessage(receivedFrom: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUNDS',
@@ -250,21 +250,21 @@ export class IPCClient {
             }
         };
 
-        await this.sendDealerMessage(response);
+        this.sendDealerMessage(response);
     }
 
-    public async sendDealerRequestAwaitResponse(
+    public sendDealerRequestAwaitResponse(
         request: Request,
         responseType: MessageType,
-        timeout: number = 1000
+        timeoutMs: number = 1000
     ): Promise<Response> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const sub = this.dealerMessages.pipe(
                 map(packet => packet.message),
-                filter(message => {
+                first(message => {
                     return message.type === responseType && (message as Response).respondsTo === request.id;
                 }),
-                first()
+                timeout(timeoutMs)
             ).subscribe((response: Response) => {
                 if (!response.successful) {
                     reject(response.error.message);
@@ -273,22 +273,17 @@ export class IPCClient {
                 }
             }, err => reject(err));
 
-            const didSend = await this.sendDealerMessage(request);
+            const didSend = this.sendDealerMessage(request);
             if (!didSend) {
                 sub.unsubscribe();
                 reject(new Error('Dealer could not send the request!'));
 
                 return;
             }
-
-            setTimeout(() => {
-                sub.unsubscribe();
-                reject(`Timeout of ${timeout}ms reached!`);
-            }, timeout);
         });
     }
 
-    public async sendPushMessage(message: Message) {
+    public sendPushMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'OUTBOUNDS',
@@ -306,11 +301,11 @@ export class IPCClient {
     }
 
     public listenToSubscriberSocket() {
-        return createObservableFromSocket(this.subscriber);
+        return this.subscriberMessages;
     }
 
     public listenToDealerSocket() {
-        return createObservableFromSocket(this.dealer);
+        return this.dealerMessages;
     }
 
     protected async handleCommitMutation(request: CommitMutationRequest) {
