@@ -1,21 +1,27 @@
 import { Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
-import { Socket } from 'zeromq';
-import { IPCPacket } from '../models/ipc';
+import { IPCPacket, IPCSocket, IPCRouterSocket, IPCRouterPacket } from '../models/ipc';
 
-// TODO: Fix use of filterAdditionalHeaders
+export function createSharedObservableFromSocket<T extends IPCSocket>(
+    socket: IPCSocket,
+    target?: string
+): Observable<IPCPacket>;
+
+export function createSharedObservableFromSocket<T extends IPCRouterSocket>(
+    socket: IPCRouterSocket,
+    target?: string
+): Observable<IPCRouterPacket>;
+
 /**
  * Creates a shared (multicast + refCount) observable for given socket
  * @param socket Socket to wrap in observable
  * @param target Only listen to messages for given target
- * @param filterAdditionalHeaders Set to true if router socket
  */
-export function createSharedObservableFromSocket(
-    socket: Socket,
-    target?: string,
-    filterAdditionalHeaders: boolean = false
-): Observable<IPCPacket> {
-    const messageListener = new Observable<IPCPacket>(subscriber => {
+export function createSharedObservableFromSocket<T extends IPCPacket | IPCRouterPacket>(
+    socket: IPCSocket | IPCRouterSocket,
+    target?: string
+): Observable<T> {
+    const messageListener = new Observable<T>(subscriber => {
         let isClosed = false;
 
         function messageHandler(...data: Buffer[]) {
@@ -24,7 +30,8 @@ export function createSharedObservableFromSocket(
                 return;
             }
 
-            const [identity] = filterAdditionalHeaders ? data.splice(0, 1) : [];
+            // Shift is fast than splice and makes more sense
+            const identity = socket.type === 'router' ? data.shift() : undefined;
             const [receiver, sender, msg] = data.map(part => part != null ? part.toString() : null);
             if (target != null && receiver != null && receiver !== target) {
                 // Drop the message, this is not the target
@@ -37,7 +44,7 @@ export function createSharedObservableFromSocket(
                     receiver,
                     sender,
                     message: JSON.parse(msg)
-                });
+                } as any as T);
             } catch (err) {
                 subscriber.error(err);
             }

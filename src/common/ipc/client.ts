@@ -3,7 +3,7 @@ import { Observable, Subscription } from 'rxjs';
 import { first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
-import { Socket, socket } from 'zeromq';
+import { socket, ZMQ_IDENTITY } from 'zeromq';
 
 import {
     CommitMutationRequest,
@@ -21,6 +21,7 @@ import {
     UnregisterClientRequest,
     UnregisterClientResponse,
     IPCPacket,
+    IPCSocket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createSharedObservableFromSocket } from '../../utils/ipc';
@@ -52,9 +53,9 @@ export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClient>('ipc-client');
 
 export class IPCClient {
 
-    private subscriber: Socket;
-    private dealer: Socket;
-    private push: Socket;
+    private subscriber: IPCSocket;
+    private dealer: IPCSocket;
+    private push: IPCSocket;
     private store: Store<RootState>;
 
     private subscriberMessages: Observable<IPCPacket>;
@@ -98,7 +99,8 @@ export class IPCClient {
         this.clientInfo = clientInfo;
         this.clientId = uuid();
 
-        this.subscriber = socket('sub');
+        // Safe type assertion since type is missing in official typings
+        this.subscriber = socket('sub') as IPCSocket;
         this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
         this.subscriberMessages = createSharedObservableFromSocket(this.subscriber);
@@ -106,15 +108,17 @@ export class IPCClient {
             this.handleIncomingSubscriberMessage(packet.message);
         });
 
-        this.dealer = socket('dealer');
+        this.dealer = socket('dealer') as IPCSocket;
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
+        // Set identity to clientid
+        this.dealer.setsockopt(ZMQ_IDENTITY, Buffer.from(this.clientId));
 
         this.dealerMessages = createSharedObservableFromSocket(this.dealer, this.clientId);
         this.dealerMessageSubscription = this.dealerMessages.subscribe(packet => {
             this.handleIncomingDealerMessage(packet.sender, packet.message);
         });
 
-        this.push = socket('push');
+        this.push = socket('push') as IPCSocket;
         this.push.connect(IPC_PULL_PUSH_ADDRESS);
 
         try {

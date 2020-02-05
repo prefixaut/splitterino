@@ -1,7 +1,7 @@
 import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
-import { Socket, socket } from 'zeromq';
+import { socket } from 'zeromq';
 
 import {
     DispatchActionReqeust,
@@ -19,6 +19,9 @@ import {
     UnregisterClientRequest,
     UnregisterClientResponse,
     IPCPacket,
+    IPCRouterSocket,
+    IPCSocket,
+    IPCRouterPacket,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
 import { createSharedObservableFromSocket } from '../../utils/ipc';
@@ -56,14 +59,14 @@ export interface InitializeOptions {
 }
 export class IPCServer {
 
-    private publisher: Socket;
-    private router: Socket;
-    private pull: Socket;
+    private publisher: IPCSocket;
+    private router: IPCRouterSocket;
+    private pull: IPCSocket;
 
     private store: Store<RootState>;
     private logLevel: LogLevel;
 
-    private routerMessages: Observable<IPCPacket>;
+    private routerMessages: Observable<IPCRouterPacket>;
     private routerMessageSubscription: Subscription;
 
     private pullMessages: Observable<IPCPacket>;
@@ -96,16 +99,17 @@ export class IPCServer {
         this.store = options.store;
         this.logLevel = options.logLevel;
 
-        this.publisher = socket('pub');
+        // Safe type assertion since type is missing in official typings
+        this.publisher = socket('pub') as IPCSocket;
         this.publisher.bindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
-        this.router = socket('router');
+        this.router = socket('router') as IPCRouterSocket;
         this.router.bindSync(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.pull = socket('pull');
+        this.pull = socket('pull') as IPCSocket;
         this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
 
-        this.routerMessages = createSharedObservableFromSocket(this.router, IPC_SERVER_NAME, true);
+        this.routerMessages = createSharedObservableFromSocket(this.router, IPC_SERVER_NAME);
 
         this.routerMessageSubscription = this.routerMessages.subscribe(packet => {
             this.handleIncomingRouterMessage(packet.identity, packet.sender, packet.message);

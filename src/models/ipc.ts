@@ -2,6 +2,15 @@ import { CommitOptions, DispatchOptions } from 'vuex';
 
 import { RootState } from './states/root.state';
 import { LogLevel } from '../utils/logger';
+import { Socket } from 'zeromq';
+
+export interface IPCRouterSocket extends Socket {
+    type: 'router';
+}
+
+export interface IPCSocket extends Socket {
+    type: 'dealer' | 'sub' | 'pub' | 'push' | 'pull';
+}
 
 export enum MessageType {
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
@@ -22,10 +31,13 @@ export enum MessageType {
 }
 
 export interface IPCPacket {
-    identity?: Buffer;
     receiver: string;
     sender: string;
     message: Message;
+}
+
+export interface IPCRouterPacket extends IPCPacket {
+    identity: Buffer;
 }
 
 /**

@@ -102,7 +102,7 @@ process.on('unhandledRejection', (reason, promise) => {
         // Update the store state
         store.replaceState(storestate);
         // Initialize the Application
-        const vue = new Vue({
+        new Vue({
             render: h => h(App),
             store: store,
             router
