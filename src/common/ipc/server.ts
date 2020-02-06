@@ -173,7 +173,7 @@ export class IPCServer {
     public async publishMessage(message: Message) {
         Logger.debug({
             msg: 'Sending IPC Message',
-            direction: 'OUTGOING',
+            direction: 'OUTBOUND',
             socket: 'PUBLISHER',
             ipcMessage: message,
         });
@@ -186,7 +186,7 @@ export class IPCServer {
     public async sendRouterMessage(identity: Buffer, targetClient: string, message: Message) {
         Logger.debug({
             msg: 'Sending IPC Message',
-            direction: 'OUTGOING',
+            direction: 'OUTBOUND',
             socket: 'ROUTER',
             destination: targetClient,
             ipcMessage: message.type !== MessageType.RESPONSE_STORE_STATE ? message : { ...message, state: null },
@@ -201,7 +201,7 @@ export class IPCServer {
         if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
             Logger.debug({
                 msg: 'Received IPC Message',
-                direction: 'INCOMING',
+                direction: 'INBOUND',
                 socket: 'ROUTER',
                 ipcMessage: message,
             });
@@ -238,7 +238,7 @@ export class IPCServer {
     public async handleIncomingPullMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
-            direction: 'INCOMING',
+            direction: 'INBOUND',
             socket: 'PULL',
             ipcMessage: message,
         });
@@ -324,7 +324,7 @@ export class IPCServer {
         // clients via regular means.
         // The action returnValue is returned as a response to this request.
         // this.forwardDispatchToClient(req);
-        return;
+        // return;
         // }
 
         let response: DispatchActionResponse;

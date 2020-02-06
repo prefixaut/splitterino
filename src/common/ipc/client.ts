@@ -188,7 +188,7 @@ export class IPCClient {
     public async handleIncomingSubscriberMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
-            direction: 'INBOUNDS',
+            direction: 'INBOUND',
             socket: 'SUBSCRIBER',
             ipcMessage: message,
         });
@@ -206,7 +206,7 @@ export class IPCClient {
         if (!quiet) {
             Logger.debug({
                 msg: 'Sending IPC Message',
-                direction: 'OUTBOUNDS',
+                direction: 'OUTBOUND',
                 socket: 'DEALER',
                 target: target || IPC_SERVER_NAME,
                 ipcMessage: message,
@@ -225,7 +225,7 @@ export class IPCClient {
     public handleIncomingDealerMessage(receivedFrom: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
-            direction: 'INBOUNDS',
+            direction: 'INBOUND',
             socket: 'DEALER',
             ipcMessage: message.type !== MessageType.RESPONSE_STORE_STATE ? message : { ...message, state: null },
         });
@@ -290,7 +290,7 @@ export class IPCClient {
     public sendPushMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
-            direction: 'OUTBOUNDS',
+            direction: 'OUTBOUND',
             socket: 'PUSH',
             ipcMessage: message,
         });

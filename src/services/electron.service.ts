@@ -136,7 +136,6 @@ export class ElectronService implements ElectronInterface {
     public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {
         Logger.debug({
             msg: 'Creating new window ...',
-            settings,
             route
         });
 
@@ -164,7 +163,7 @@ export class ElectronService implements ElectronInterface {
 
             Logger.debug({
                 msg: 'Window successfully created',
-                window: win
+                window: win.id,
             });
 
             return win;
