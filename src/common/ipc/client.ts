@@ -102,6 +102,7 @@ export class IPCClient {
         // Safe type assertion since type is missing in official typings
         this.subscriber = socket('sub') as IPCSocket;
         this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+        this.subscriber.subscribe('');
 
         this.subscriberMessages = createSharedObservableFromSocket(this.subscriber);
         this.subscriberMessageSubscription = this.subscriberMessages.subscribe(packet => {

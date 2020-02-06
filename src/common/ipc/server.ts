@@ -178,7 +178,7 @@ export class IPCServer {
             ipcMessage: message,
         });
 
-        this.publisher.send([null, IPC_SERVER_NAME, JSON.stringify(message)]);
+        this.publisher.send(['', IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return true;
     }
