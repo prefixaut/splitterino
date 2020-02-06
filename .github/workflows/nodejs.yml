@@ -7,7 +7,7 @@ jobs:
     name: Unit Tests with ${{ matrix.node }} on ${{ matrix.os.name }}
     strategy:
       matrix:
-        node: [10, 12]
+        node: [12]
         os:
           - id: ubuntu-latest
             name: linux
@@ -54,7 +54,7 @@ jobs:
     needs: [test_unit]
     strategy:
       matrix:
-        node: [10, 12]
+        node: [12]
         os:
           - id: ubuntu-latest
             name: linux
