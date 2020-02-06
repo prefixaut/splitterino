@@ -38,11 +38,6 @@ export async function getClientStore(vueRef, client: IPCClientInterface, injecto
                     } else {
                         payload = mutation.payload;
                     }
-
-                    client.sendLocalMessage(
-                        `commit:${mutation.type}${id}`,
-                        payload
-                    );
                 });
             },
         ],

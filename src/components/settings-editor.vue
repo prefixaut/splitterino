@@ -42,14 +42,14 @@
 
 <script lang="ts">
 import { set, isEqual, merge } from 'lodash';
+import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { IPC_CLIENT_TOKEN } from '../models/ipc';
 import { SettingsConfigurationValue, Settings } from '../models/states/settings.state';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
-import { IPC_CLIENT_TOKEN } from '../models/ipc';
-import { Subscription } from 'rxjs';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
