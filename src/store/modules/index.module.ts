@@ -13,7 +13,7 @@ export function getSplitterinoStoreModules(injector: Injector) {
         contextMenu: getContextMenuStoreModule(),
         gameInfo: getGameInfoStoreModule(),
         keybindings: getKeybindingsStoreModule(),
-        settings: getSettingsStoreModule(),
+        settings: getSettingsStoreModule(injector),
         splits: getSplitsStoreModule(injector),
         timer: getTimerStoreModule(),
         meta: getMetaModule()

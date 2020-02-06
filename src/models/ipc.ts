@@ -19,6 +19,8 @@ export interface IPCClientInterface {
     listenToDealerSocket(): Observable<IPCPacket>;
     getStoreState(): Promise<RootState>;
     dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
+    listenForLocalMessage<T>(messageId: string): Observable<T>;
+    sendLocalMessage(messageId: string, data?: any): void;
 }
 
 export interface ClientInformation {
@@ -39,6 +41,13 @@ export interface IPCRouterSocket extends Socket {
     type: 'router';
 }
 
+export interface SubscriberTable {
+    [message: string]: (message: Message) => any;
+}
+
+export interface DealerTable {
+    [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any;
+}
 export enum MessageType {
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
     RESPONSE_REGISTER_CLIENT = 'RESPONSE_REGISTER_CLIENT',
@@ -342,4 +351,12 @@ export interface LogOnServerRequest extends Request {
      * The message that should be logged
      */
     message: object;
+}
+
+/**
+ * Internal message structure for local message bus in single process
+ */
+export interface LocalMessage {
+    messageId: string;
+    content: any;
 }

@@ -7,6 +7,7 @@ import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';
 import { ElectronMockService } from './mocks/electron-mock.service';
+import { IPCClientMockService } from './mocks/ipc-client-mock.service';
 
 // Initialize the Dependency-Injection
 export function createMockInjector(): Injector {
@@ -16,7 +17,7 @@ export function createMockInjector(): Injector {
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
         { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: IO_SERVICE_TOKEN, useClass: IOService },
-        { provide: IPC_CLIENT_TOKEN, useValue: null },
+        { provide: IPC_CLIENT_TOKEN, useClass: IPCClientMockService },
     ]);
 }
 

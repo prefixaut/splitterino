@@ -9,7 +9,8 @@ import {
     SettingsConfigurationValue,
     SettingsState,
 } from '../../models/states/settings.state';
-import { eventHub } from '../../utils/event-hub';
+import { Injector } from 'lightweight-di';
+import { IPC_CLIENT_TOKEN } from '../../models/ipc';
 
 export const MODULE_PATH = 'splitterino/settings';
 
@@ -35,7 +36,7 @@ export interface SettingsPayload {
     values: Settings;
 }
 
-export function getSettingsStoreModule(): Module<SettingsState, RootState> {
+export function getSettingsStoreModule(injector: Injector): Module<SettingsState, RootState> {
     return {
         namespaced: true,
         state: {
@@ -108,14 +109,16 @@ export function getSettingsStoreModule(): Module<SettingsState, RootState> {
                                     path
                                 );
                                 if (!isEqual(setting, oldValue)) {
-                                    eventHub.$emit(`setting-changed:${path}`, setting);
+                                    injector.get(IPC_CLIENT_TOKEN)
+                                        .sendLocalMessage(`setting-changed:${path}`, setting);
                                 }
                             }
                         }
                     }
                 }
 
-                eventHub.$emit('settings-changed');
+                injector.get(IPC_CLIENT_TOKEN)
+                    .sendLocalMessage('settings-changed');
             }
         },
         actions: {
