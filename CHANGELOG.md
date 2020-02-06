@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A completely custom implementation of IPC via ZeroMQ [SPL-26]
 
+### Changed
+
+- Segments in Split-Files now ommit the `personalBest` and `overallBest` it has no time set [SPL-33]
+- The Event-Hub has been reworked to use an inproc IPC socket [SPL-38]
+- Components which are configurable will take default values from store and are override-able via props [SPL-37]
+
 ## [0.2.1] - 2019-12-10
 
 ### Fixed
