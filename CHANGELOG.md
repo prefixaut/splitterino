@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- A completely custom implementation of IPC via ZeroMQ
+- A completely custom implementation of IPC via ZeroMQ [SPL-26]
 
 ## [0.2.1] - 2019-12-10
 
 ### Fixed
 
-- Editing Splits as well as Selects didn't trigger a proper change [SPL-26]
+- Editing Splits as well as Selects didn't trigger a proper change [SPL-35/SPL-36]
 
 ## [0.2.0] - 2019-11-28
 
