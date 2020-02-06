@@ -48,6 +48,8 @@ import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { SettingsConfigurationValue, Settings } from '../models/states/settings.state';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../store/modules/settings.module';
+import { IPC_CLIENT_TOKEN } from '../models/ipc';
+import { Subscription } from 'rxjs';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -59,11 +61,14 @@ export default class SettingsEditorComponent extends Vue {
         },
         plugins: {}
     };
+    private settingsSubscription: Subscription;
 
     public created() {
-        this.$eventHub.$on('settings-changed', () => {
-            this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
-        });
+        this.settingsSubscription = this.$services.get(IPC_CLIENT_TOKEN)
+            .listenForLocalMessage('settings-changed')
+            .subscribe(() => {
+                this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
+            });
     }
 
     public get settingsValue() {
@@ -98,6 +103,12 @@ export default class SettingsEditorComponent extends Vue {
 
     public close() {
         this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().close();
+    }
+
+    public beforeDestroy() {
+        if (this.settingsSubscription != null) {
+            this.settingsSubscription.unsubscribe();
+        }
     }
 }
 </script>

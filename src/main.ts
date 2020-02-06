@@ -38,7 +38,6 @@ import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
 import { IPC_CLIENT_TOKEN } from './models/ipc';
 import { router } from './router';
 import { getClientStore } from './store';
-import { eventHub } from './utils/event-hub';
 import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
 
@@ -169,5 +168,4 @@ function setupVueElements(injector: Injector) {
 
     // Update the Prototype with an injector and event-hub
     Vue.prototype.$services = injector;
-    Vue.prototype.$eventHub = eventHub;
 }

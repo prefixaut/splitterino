@@ -19,8 +19,9 @@ import {
     MUTATION_BULK_SET_SETTINGS,
     MUTATION_SET_ALL_SETTINGS,
 } from '../../../src/store/modules/settings.module';
-import { eventHub } from '../../../src/utils/event-hub';
 import { createMockInjector, testAction } from '../../utils';
+import { IPC_CLIENT_TOKEN } from '../../../src/models/ipc';
+import { Subscription } from 'rxjs';
 
 const injector = createMockInjector();
 
@@ -69,7 +70,7 @@ function generateDummyConfiguration(): SettingsState {
 }
 
 describe('Settings Store-Module', () => {
-    const settingsModule: Module<SettingsState, RootState> = getSettingsStoreModule();
+    const settingsModule: Module<SettingsState, RootState> = getSettingsStoreModule(injector);
 
     it('should be a valid module', () => {
         expect(settingsModule).to.be.an('object');
@@ -116,15 +117,23 @@ describe('Settings Store-Module', () => {
 
             it('should only emit events for changed settings', async () => {
                 const messages: string[] = [];
+                const ipcClient = injector.get(IPC_CLIENT_TOKEN);
+                const subscriptions: Subscription[] = [];
 
-                eventHub.$on('setting-changed:splitterino.core.test.mySetting', () => {
-                    messages.push('mySetting');
-                });
+                const mySettingSub = ipcClient
+                    .listenForLocalMessage('setting-changed:splitterino.core.test.mySetting')
+                    .subscribe(() => {
+                        messages.push('mySetting');
+                    });
+                subscriptions.push(mySettingSub);
 
                 // Dummy listener that should not fire
-                eventHub.$on('setting-changed:splitterino.core.test.doNotChange', () => {
-                    messages.push('doNotChange');
-                });
+                const doNotChangeSub = ipcClient
+                    .listenForLocalMessage('setting-changed:splitterino.core.test.doNotChange')
+                    .subscribe(() => {
+                        messages.push('doNotChange');
+                    });
+                subscriptions.push(doNotChangeSub);
 
                 const newSettings: Settings = {
                     splitterino: {
@@ -154,6 +163,9 @@ describe('Settings Store-Module', () => {
                             reject();
                         }
 
+                        for (const sub of subscriptions) {
+                            sub.unsubscribe();
+                        }
                         resolve();
                     }, 1);
                 });
@@ -162,9 +174,11 @@ describe('Settings Store-Module', () => {
             it('should emit the changed setting', async () => {
                 const messages: any[] = [];
 
-                eventHub.$on('setting-changed:splitterino.core.test.mySetting', setting => {
-                    messages.push(setting);
-                });
+                const mySettingSub = injector.get(IPC_CLIENT_TOKEN)
+                    .listenForLocalMessage('setting-changed:splitterino.core.test.mySetting')
+                    .subscribe((setting: any) => {
+                        messages.push(setting);
+                    });
 
                 const newSettings: Settings = {
                     splitterino: {
@@ -194,6 +208,7 @@ describe('Settings Store-Module', () => {
                             reject();
                         }
 
+                        mySettingSub.unsubscribe();
                         resolve();
                     }, 1);
                 });

@@ -39,7 +39,7 @@ export async function getClientStore(vueRef, client: IPCClientInterface, injecto
                         payload = mutation.payload;
                     }
 
-                    vueRef.prototype.$eventHub.$emit(
+                    client.sendLocalMessage(
                         `commit:${mutation.type}${id}`,
                         payload
                     );

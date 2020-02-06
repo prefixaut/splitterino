@@ -1,5 +1,5 @@
-import { Observable, Subscription } from 'rxjs';
-import { first, map, timeout } from 'rxjs/operators';
+import { Observable, Subscription, Subject } from 'rxjs';
+import { first, map, timeout, filter } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { DispatchOptions, Store } from 'vuex';
 import { socket, ZMQ_IDENTITY } from 'zeromq';
@@ -24,6 +24,9 @@ import {
     UnregisterClientResponse,
     ClientInformation,
     RegistationResult,
+    LocalMessage,
+    SubscriberTable,
+    DealerTable,
 } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
 import { createSharedObservableFromSocket } from '../utils/ipc';
@@ -58,12 +61,12 @@ export class IPCClient implements IPCClientInterface {
 
     private initialized = false;
 
-    private subscriberTable: { [message: string]: (message: Message) => any } = {
+    private readonly subscriberTable: SubscriberTable = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
         /* tslint:enable: no-unbound-method */
     };
-    private dealerTable: { [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any } = {
+    private readonly dealerTable: DealerTable = {
         /* tslint:disable: no-unbound-method */
         [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
         /* tslint:enable: no-unbound-method */
@@ -71,6 +74,7 @@ export class IPCClient implements IPCClientInterface {
 
     private clientId: string;
     private clientInfo: ClientInformation;
+    private readonly localMessageBus = new Subject<LocalMessage>();
 
     public isInitialized() {
         return this.initialized;
@@ -413,5 +417,16 @@ export class IPCClient implements IPCClientInterface {
         // are getting saved in the store.
 
         return;
+    }
+
+    public listenForLocalMessage<T>(messageId: string): Observable<T> {
+        return this.localMessageBus.pipe(
+            filter(message => message.messageId === messageId),
+            map(message => message.content)
+        );
+    }
+
+    public sendLocalMessage(messageId: string, data?: any) {
+        this.localMessageBus.next({ messageId, content: data });
     }
 }
