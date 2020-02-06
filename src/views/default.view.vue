@@ -6,7 +6,7 @@
     >
         <div v-if="templateLoaded">
             <div v-if="template != null">
-                <v-runtime-template :template="template"/>
+                <v-runtime-template :template="template" />
                 <component :is="'style'" type="text/css">
                     {{ templateStyle }}
                 </component>
@@ -35,10 +35,13 @@
 
 <script lang="ts">
 import { Subscription } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
+import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { IPC_CLIENT_TOKEN, MessageType, GlobalEventBroadcast } from '../models/ipc';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
 import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
@@ -61,9 +64,18 @@ export default class DefaultView extends Vue {
         this.registerDragDropHandler();
 
         this.loadTemplate();
-        const sub = this.electron.listenEvent<string>('load-template').subscribe(templateFile => {
-            this.loadTemplate(templateFile);
-        });
+        const sub = this.$services.get(IPC_CLIENT_TOKEN).listenToSubscriberSocket().pipe(
+            // Trim out everything aside from the message itself
+            map(packet => packet.message),
+            // Filter out messages which aren't "load-template" global events
+            filter(message => {
+                return message.type === MessageType.BROADCAST_GLOBAL_EVENT
+                    && (message as GlobalEventBroadcast).eventName === GLOBAL_EVENT_LOAD_TEMPLATE;
+            })
+        )
+            .subscribe((message: GlobalEventBroadcast) => {
+                this.loadTemplate(message.payload);
+            });
         this.subscriptions.push(sub);
     }
 

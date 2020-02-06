@@ -3,28 +3,26 @@ import {
     BrowserWindow,
     BrowserWindowConstructorOptions,
     dialog,
-    ipcRenderer,
     Menu,
     MenuItemConstructorOptions,
     MessageBoxOptions,
     OpenDialogOptions,
     remote,
     SaveDialogOptions,
-    ipcMain,
-    IpcMessageEvent,
 } from 'electron';
-import { Injectable } from 'lightweight-di';
-import { VNode } from 'vue';
-import { format as formatUrl } from 'url';
-import { Observable } from 'rxjs';
+import { Inject, Injectable } from 'lightweight-di';
 import { merge } from 'lodash';
+import { join } from 'path';
+import { format as formatUrl } from 'url';
+import { v4 as uuid } from 'uuid';
+import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
-import { ContextMenuItem } from '../common/interfaces/context-menu-item';
-import { ElectronInterface } from '../common/interfaces/electron';
-import { Logger } from '../utils/logger';
-import { join } from 'path';
+import { ContextMenuItem } from '../models/context-menu-item';
+import { ElectronInterface } from '../models/electron';
+import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { isDevelopment } from '../utils/is-development';
+import { Logger } from '../utils/logger';
 
 export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
     webPreferences: {
@@ -43,9 +41,7 @@ export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
 export class ElectronService implements ElectronInterface {
     private readonly url = 'http://localhost:8080#';
 
-    constructor() {
-        // No dependencies yet
-    }
+    constructor(@Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface) { }
 
     public isRenderProcess() {
         return !!remote;
@@ -139,7 +135,6 @@ export class ElectronService implements ElectronInterface {
     public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {
         Logger.debug({
             msg: 'Creating new window ...',
-            settings,
             route
         });
 
@@ -167,18 +162,18 @@ export class ElectronService implements ElectronInterface {
 
             Logger.debug({
                 msg: 'Window successfully created',
-                window: win
+                window: win.id,
             });
 
             return win;
-        } catch (err) {
+        } catch (error) {
             Logger.error({
                 msg: 'Error while creating a new window!',
-                error: err,
+                error,
             });
 
             // Bubble the error up
-            throw err;
+            throw error;
         }
     }
 
@@ -218,14 +213,6 @@ export class ElectronService implements ElectronInterface {
         return options;
     }
 
-    public ipcSend(channel: string, ...args: any[]): void {
-        if (this.isRenderProcess()) {
-            ipcRenderer.send(channel, ...args);
-        } else {
-            // Do nothing?
-        }
-    }
-
     /**
      * Send event to background process and all renderer processes
      * @param event Event ID to send
@@ -239,32 +226,13 @@ export class ElectronService implements ElectronInterface {
                 payload: payload
             });
 
-            ipcRenderer.send('global-event', event, payload);
-        }
-    }
-
-    /**
-     * Listen for a global event from all processes
-     * @param event Event to listen to
-     */
-    public listenEvent<T>(event: string): Observable<T> {
-        if (this.isRenderProcess()) {
-            Logger.trace({
-                msg: 'Registering global event listener',
-                event: event
-            });
-
-            return new Observable<T>(function subscribe(subscriber) {
-                const callback = (_: IpcMessageEvent, data: T) => {
-                    subscriber.next(data);
-                };
-
-                ipcRenderer.on(event, callback);
-
-                return function unsubscribe() {
-                    ipcRenderer.removeListener(event, callback);
-                };
-            });
+            const message: PublishGlobalEventRequest = {
+                id: uuid(),
+                type: MessageType.REQUEST_PUBLISH_GLOBAL_EVENT,
+                eventName: event,
+                payload: payload
+            };
+            this.ipcClient.sendPushMessage(message);
         }
     }
 }

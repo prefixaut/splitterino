@@ -1,4 +1,10 @@
-import { SettingsConfigurationNamespace } from '../store/states/settings.state';
+import { ApplicationSettings } from '../models/application-settings';
+import { SettingsConfigurationNamespace } from '../models/states/settings.state';
+
+/**
+ * IPC Constants
+ */
+export const IPC_SERVER_NAME = 'flamingo';
 
 /*
  * Default Values
@@ -27,6 +33,28 @@ export const DEFAULT_SPLIT = {
         }
     },
 };
+export const DEFAULT_APPLICATION_SETTINGS: ApplicationSettings = {
+    windowOptions: {
+        width: 800,
+        height: 600,
+        useContentSize: true,
+        title: 'Splitterino',
+        frame: false,
+        titleBarStyle: 'hidden',
+        maximizable: false,
+        minWidth: 240,
+        minHeight: 60,
+        center: true,
+        webPreferences: {
+            nodeIntegration: true
+        }
+    }
+};
+
+/*
+ * Global Event names
+ */
+export const GLOBAL_EVENT_LOAD_TEMPLATE = 'load-template';
 
 /*
  * Context Menu
@@ -52,6 +80,13 @@ export const KEYBINDING_SPLITS_SKIP = 'core.splits.skip';
 export const KEYBINDING_SPLITS_UNDO = 'core.splits.undo';
 export const KEYBINDING_SPLITS_TOGGLE_PAUSE = 'core.splits.toggle-pause';
 export const KEYBINDING_SPLITS_RESET = 'core.splits.reset';
+
+/*
+ * IPC (Inter Process Commuinication)
+ */
+export const IPC_PUBLISHER_SUBSCRIBER_ADDRESS = 'tcp://127.0.0.1:3730';
+export const IPC_ROUTER_DEALER_ADDRESS = 'tcp://127.0.0.1:3731';
+export const IPC_PULL_PUSH_ADDRESS = 'tcp://127.0.0.1:3732';
 
 /*
  * Settings

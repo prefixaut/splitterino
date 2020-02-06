@@ -7,11 +7,11 @@ import {
     SaveDialogOptions,
 } from 'electron';
 import { Injectable } from 'lightweight-di';
+import { Observable } from 'rxjs';
 import { VNode } from 'vue';
 
-import { ContextMenuItem } from '../../src/common/interfaces/context-menu-item';
-import { ElectronInterface } from '../../src/common/interfaces/electron';
-import { Observable } from 'rxjs';
+import { ContextMenuItem } from '../../src/models/context-menu-item';
+import { ElectronInterface } from '../../src/models/electron';
 
 @Injectable
 export class ElectronMockService implements ElectronInterface {
@@ -90,15 +90,7 @@ export class ElectronMockService implements ElectronInterface {
         return null;
     }
 
-    ipcSend(channel: string, ...args: any[]): void {
-        // Noop
-    }
-
     broadcastEvent(event: string, payload?: any) {
         // Noop
-    }
-
-    listenEvent<T>(event: string): Observable<T> {
-        return new Observable<T>();
     }
 }

@@ -7,9 +7,9 @@ import {
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
 } from '../../common/constants';
-import { ActionKeybinding, isActionKeybinding } from '../../common/interfaces/keybindings';
-import { KeybindingsState } from '../states/keybindings.state';
-import { RootState } from '../states/root.state';
+import { ActionKeybinding, isActionKeybinding } from '../../models/keybindings';
+import { KeybindingsState } from '../../models/states/keybindings.state';
+import { RootState } from '../../models/states/root.state';
 
 const MODULE_PATH = 'splitterino/keybindings';
 

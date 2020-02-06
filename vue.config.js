@@ -2,6 +2,7 @@ module.exports = {
     runtimeCompiler: true,
     pluginOptions: {
         electronBuilder: {
+            nodeIntegration: true,
             builderOptions: {
                 fileAssociations: [
                     {
@@ -11,12 +12,6 @@ module.exports = {
                 ],
                 appId: "moe.prefixaut.splitterino",
                 productName: "Splitterino",
-                publish: {
-                    provider: "github",
-                    owner: "prefixaut",
-                    repo: "splitterino",
-                    releaseType: "release"
-                },
             }
         }
     }

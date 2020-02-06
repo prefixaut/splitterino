@@ -6,13 +6,13 @@ import {
     CTX_MENU_SPLITS_EDIT,
     CTX_MENU_SPLITS_LOAD_FROM_FILE,
     CTX_MENU_SPLITS_SAVE_TO_FILE,
+    CTX_MENU_TEMPLATES_LOAD_FROM_FILE,
     CTX_MENU_WINDOW_CLOSE,
     CTX_MENU_WINDOW_RELOAD,
-    CTX_MENU_TEMPLATES_LOAD_FROM_FILE,
 } from '../../common/constants';
-import { ContextMenuState } from '../states/context-menu.state';
-import { RootState } from '../states/root.state';
-import { ContextMenuItem } from '../../common/interfaces/context-menu-item';
+import { ContextMenuItem } from '../../models/context-menu-item';
+import { ContextMenuState } from '../../models/states/context-menu.state';
+import { RootState } from '../../models/states/root.state';
 
 const MODULE_PATH = 'splitterino/contextMenu';
 

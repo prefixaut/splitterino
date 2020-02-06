@@ -1,18 +1,24 @@
 import { BrowserWindow, FileFilter } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, createReadStream, read } from 'fs';
-import { Inject, Injectable, InjectionToken } from 'lightweight-di';
-import { cloneDeep, merge, set, isEqual } from 'lodash';
-import { dirname, join } from 'path';
-import { Store } from 'vuex';
-import Vue from 'vue';
-import { extract } from 'tar-stream';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import gunzip from 'gunzip-maybe';
+import { Inject, Injectable, InjectionToken } from 'lightweight-di';
+import { cloneDeep, merge, set } from 'lodash';
+import { dirname, join } from 'path';
+import { extract } from 'tar-stream';
+import { v4 as uuid } from 'uuid';
+import { Store } from 'vuex';
 
-import { applicationSettingsDefaults } from '../common/application-settings-defaults';
-import { ApplicationSettings } from '../common/interfaces/application-settings';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../common/interfaces/electron';
-import { TimingMethod } from '../common/interfaces/segment';
-import { SplitsFile, MOST_RECENT_SPLITS_VERSION } from '../common/interfaces/splits-file';
+import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
+import { ApplicationSettings } from '../models/application-settings';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { TimingMethod } from '../models/segment';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
+import { GameInfoState } from '../models/states/game-info.state';
+import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
+import { RootState } from '../models/states/root.state';
+import { Settings } from '../models/states/settings.state';
+import { TemplateFiles } from '../models/template-files';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import {
     ACTION_SET_CATEGORY,
@@ -21,18 +27,18 @@ import {
     ACTION_SET_PLATFORM,
     ACTION_SET_REGION,
 } from '../store/modules/game-info.module';
-import { ACTION_ADD_OPENED_SPLITS_FILE, ACTION_SET_LAST_OPENED_SPLITS_FILES, ACTION_ADD_OPENED_TEMPLATE_FILE, ACTION_SET_LAST_OPENED_TEMPLATE_FILES } from '../store/modules/meta.module';
+import {
+    ACTION_ADD_OPENED_SPLITS_FILE,
+    ACTION_ADD_OPENED_TEMPLATE_FILE,
+    ACTION_SET_LAST_OPENED_SPLITS_FILES,
+    ACTION_SET_LAST_OPENED_TEMPLATE_FILES,
+} from '../store/modules/meta.module';
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
-import { GameInfoState } from '../store/states/game-info.state';
-import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../store/states/meta.state';
-import { RootState } from '../store/states/root.state';
-import { Settings } from '../store/states/settings.state';
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
-import { TemplateFiles } from '../common/interfaces/template-files';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -42,6 +48,7 @@ export class IOService {
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
+        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
     }
@@ -461,7 +468,7 @@ export class IOService {
                 filters: [IOService.TEMPLATE_FILE_FILTER],
                 properties: ['openFile'],
             })
-            .then(filePaths=> {
+            .then(filePaths => {
                 let singlePath: string;
                 if (!Array.isArray(filePaths)) {
                     return false;
@@ -474,7 +481,14 @@ export class IOService {
                     file: singlePath,
                 });
 
-                this.electron.broadcastEvent('load-template', singlePath);
+                const message: PublishGlobalEventRequest = {
+                    id: uuid(),
+                    type: MessageType.REQUEST_PUBLISH_GLOBAL_EVENT,
+                    eventName: GLOBAL_EVENT_LOAD_TEMPLATE,
+                    payload: singlePath,
+                };
+
+                this.ipcClient.sendPushMessage(message);
 
                 return true;
             });
@@ -533,7 +547,17 @@ export class IOService {
             // Ignore error since already being logged
         }
 
-        return merge(applicationSettingsDefaults, appSettings);
+        const finalSettings = merge(DEFAULT_APPLICATION_SETTINGS, appSettings);
+
+        // File couldn't be loaded, save it
+        if (appSettings == null) {
+            Logger.debug({
+                msg: "Application settings file wasn't loaded correctly, saving it",
+            });
+            this.saveJSONToFile(this.appSettingsFileName, finalSettings);
+        }
+
+        return finalSettings;
     }
 
     /**

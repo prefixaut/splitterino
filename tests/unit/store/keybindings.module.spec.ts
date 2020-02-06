@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
+import { KeybindingsState } from '../../../src/models/states/keybindings.state';
+import { RootState } from '../../../src/models/states/root.state';
 import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
-import { KeybindingsState } from '../../../src/store/states/keybindings.state';
-import { RootState } from '../../../src/store/states/root.state';
 
 Vue.use(Vuex);
 

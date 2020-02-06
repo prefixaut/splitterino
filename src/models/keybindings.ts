@@ -1,7 +1,7 @@
+import { Injector } from 'lightweight-di';
 import { Store } from 'vuex';
 
-import { RootState } from '../../store/states/root.state';
-import { Injector } from 'lightweight-di';
+import { RootState } from './states/root.state';
 
 /**
  * Interface to provide an easy and consistent way to store and

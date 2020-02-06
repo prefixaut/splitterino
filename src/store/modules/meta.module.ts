@@ -1,8 +1,8 @@
-import { Module, ActionContext } from 'vuex';
 import { remove } from 'lodash';
+import { ActionContext, Module } from 'vuex';
 
-import { RootState } from '../states/root.state';
-import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../states/meta.state';
+import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../models/states/meta.state';
+import { RootState } from '../../models/states/root.state';
 
 const MODULE_PATH = 'splitterino/meta';
 

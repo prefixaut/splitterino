@@ -1,7 +1,8 @@
 import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../src/common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN } from '../src/models/electron';
+import { IPC_CLIENT_TOKEN } from '../src/models/ipc';
 import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';
@@ -14,7 +15,8 @@ export function createMockInjector(): Injector {
         { provide: ELECTRON_INTERFACE_TOKEN, useClass: ElectronMockService },
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
         { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
-        { provide: IO_SERVICE_TOKEN, useClass: IOService }
+        { provide: IO_SERVICE_TOKEN, useClass: IOService },
+        { provide: IPC_CLIENT_TOKEN, useValue: null },
     ]);
 }
 

@@ -1,11 +1,10 @@
-import { ipcRenderer, remote } from 'electron';
 import { Injector } from 'lightweight-di';
 import Vuex, { DispatchOptions, Payload } from 'vuex';
 
-import { ActionResult } from '../common/interfaces/electron';
+import { IPCClientInterface } from '../models/ipc';
+import { RootState } from '../models/states/root.state';
 import { Logger } from '../utils/logger';
 import { getSplitterinoStoreModules } from './modules/index.module';
-import { RootState } from './states/root.state';
 
 export function getStoreConfig(injector: Injector) {
     return {
@@ -19,7 +18,7 @@ export function getStoreConfig(injector: Injector) {
     };
 }
 
-export function getClientStore(vueRef, injector: Injector) {
+export async function getClientStore(vueRef, client: IPCClientInterface, injector: Injector) {
     vueRef.use(Vuex);
 
     const store = new Vuex.Store<RootState>({
@@ -50,14 +49,6 @@ export function getClientStore(vueRef, injector: Injector) {
         ...getStoreConfig(injector)
     });
 
-    // * Probably fine if we don't do any heavy init stuff in state
-    store.replaceState(ipcRenderer.sendSync('vuex-connect'));
-
-    const windowRef = remote.getCurrentWindow();
-    windowRef.on('close', () => {
-        ipcRenderer.send('vuex-disconnect');
-    });
-
     // Override the dispatch function to delegate it to the main process instead
     // tslint:disable-next-line only-arrow-functions no-string-literal
     store['_dispatch'] = store.dispatch = function <P extends Payload>(
@@ -65,6 +56,12 @@ export function getClientStore(vueRef, injector: Injector) {
         payloadOrOptions?: any | DispatchOptions,
         options?: DispatchOptions
     ) {
+        // Drop all actions which are done before init
+        // TODO: Queue them and replay them later?
+        if (!client.isInitialized()) {
+            return;
+        }
+
         let actualType: string;
         let actualPayload: any;
         let actualOptions: DispatchOptions;
@@ -97,40 +94,8 @@ export function getClientStore(vueRef, injector: Injector) {
             options: actualOptions,
         });
 
-        return new Promise((resolve, reject) => {
-            try {
-                const actionResult: ActionResult = ipcRenderer.sendSync('vuex-dispatch', {
-                    type: actualType,
-                    payload: actualPayload,
-                    options: actualOptions
-                });
-                if (actionResult.error == null) {
-                    resolve(actionResult.result);
-                } else {
-                    reject(actionResult.error);
-                }
-            } catch (error) {
-                reject(error);
-            }
-        });
+        return client.dispatchAction(actualType, actualPayload, actualOptions);
     };
-
-    ipcRenderer.on('vuex-apply-mutation', (event, { type, payload }) => {
-        Logger.debug({
-            msg: 'vuex-apply-mutation',
-            type,
-            payload
-        });
-
-        try {
-            store.commit(type, payload);
-        } catch (err) {
-            Logger.error({
-                msg: 'Could not apply vuex-mutation!',
-                error: err,
-            });
-        }
-    });
 
     return store;
 }

@@ -39,7 +39,7 @@
 import { cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
-import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../common/interfaces/keybindings';
+import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../models/keybindings';
 import { ACTION_SET_BINDINGS } from '../store/modules/keybindings.module';
 
 @Component({ name: 'spl-keybinding-editor' })

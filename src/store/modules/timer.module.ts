@@ -1,9 +1,9 @@
 import { Module } from 'vuex';
 
 import { TimerStatus } from '../../common/timer-status';
+import { RootState } from '../../models/states/root.state';
+import { TimerState } from '../../models/states/timer.state';
 import { now } from '../../utils/time';
-import { RootState } from '../states/root.state';
-import { TimerState } from '../states/timer.state';
 
 export const MODULE_PATH = 'splitterino/timer';
 
@@ -84,7 +84,7 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
                         switch (from) {
                             case TimerStatus.RUNNING:
                                 state.igtPauseTime = time;
-                                // tslint:disable-next-line:no-switch-case-fall-through
+                            // tslint:disable-next-line:no-switch-case-fall-through
                             case TimerStatus.RUNNING_IGT_PAUSE:
                                 state.pauseTime = time;
                                 break;

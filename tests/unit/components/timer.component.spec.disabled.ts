@@ -7,10 +7,10 @@ import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
 import TimerComponent from '../../../src/components/timer.vue';
 import { aevumFilter } from '../../../src/filters/aevum.filter';
+import { RootState } from '../../../src/models/states/root.state';
+import { TimerState } from '../../../src/models/states/timer.state';
 import { getSplitterinoStoreModules } from '../../../src/store/modules/index.module';
 import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
-import { RootState } from '../../../src/store/states/root.state';
-import { TimerState } from '../../../src/store/states/timer.state';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, wait } from '../../utils';
 

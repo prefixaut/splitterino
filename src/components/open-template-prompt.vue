@@ -28,9 +28,9 @@ import { upperCase } from 'lodash';
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { RecentlyOpenedTemplate } from '../models/states/meta.state';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import { RecentlyOpenedTemplate } from '../store/states/meta.state';
 
 @Component({ name: 'spl-open-template-prompt' })
 export default class OpenTemplatePromptComponent extends Vue {

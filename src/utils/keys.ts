@@ -1,5 +1,5 @@
-import { type } from 'os';
 import * as keycode from 'keycode';
+import { type } from 'os';
 
 export function keyToDisplayString(keyCode: string) {
     switch (keyCode.toLowerCase()) {

@@ -25,10 +25,10 @@
 import { isEqual, cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
-import { Segment } from '../common/interfaces/segment';
-    import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { Segment } from '../models/segment';
+import { GameInfoState } from '../models/states/game-info.state';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
 import { ACTION_SET_ALL_SEGMENTS } from '../store/modules/splits.module';
-import { GameInfoState } from '../store/states/game-info.state';
 import {
     ACTION_SET_GAME_NAME,
     ACTION_SET_CATEGORY,

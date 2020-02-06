@@ -32,11 +32,11 @@ import { namespace } from 'vuex-class';
 
 import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
-import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { Segment, TimingMethod } from '../models/segment';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
-import { now } from '../utils/time';
+import { now, getFinalTime } from '../utils/time';
 
 const timer = namespace('splitterino/timer');
 const splits = namespace('splitterino/splits');

@@ -3,9 +3,11 @@ import { v4 as uuid } from 'uuid';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../../src/common/interfaces/electron';
-import { Segment, SegmentTime, TimingMethod, getFinalTime } from '../../../src/common/interfaces/segment';
 import { TimerStatus } from '../../../src/common/timer-status';
+import { ELECTRON_INTERFACE_TOKEN } from '../../../src/models/electron';
+import { Segment, SegmentTime, TimingMethod } from '../../../src/models/segment';
+import { RootState } from '../../../src/models/states/root.state';
+import { SplitsState } from '../../../src/models/states/splits.state';
 import {
     ACTION_DISCARDING_RESET,
     ACTION_PAUSE,
@@ -52,9 +54,7 @@ import {
     MUTATION_SET_TIMING,
 } from '../../../src/store/modules/splits.module';
 import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
-import { RootState } from '../../../src/store/states/root.state';
-import { SplitsState } from '../../../src/store/states/splits.state';
-import { now } from '../../../src/utils/time';
+import { getFinalTime, now } from '../../../src/utils/time';
 import { ElectronMockService } from '../../mocks/electron-mock.service';
 import { createMockInjector, randomInt, testAction } from '../../utils';
 
@@ -1422,9 +1422,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_SKIP], {
-                            state,
-                            rootState,
-                        });
+                        state,
+                        rootState,
+                    });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -1725,9 +1725,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_UNDO], {
-                            state,
-                            rootState,
-                        });
+                        state,
+                        rootState,
+                    });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -1827,9 +1827,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_PAUSE], {
-                            state,
-                            rootState,
-                        });
+                        state,
+                        rootState,
+                    });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -1896,9 +1896,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_PAUSE], {
-                            state,
-                            rootState,
-                        }, { igtOnly: true });
+                        state,
+                        rootState,
+                    }, { igtOnly: true });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -1983,9 +1983,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_UNPAUSE], {
-                            state,
-                            rootState,
-                        });
+                        state,
+                        rootState,
+                    });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -2019,9 +2019,9 @@ describe('Splits Store-Module', () => {
                 const time = now();
                 const { commits, dispatches, returnValue } = await testAction(
                     splitsModule.actions[ID_ACTION_UNPAUSE], {
-                        state,
-                        rootState,
-                    }, { igtOnly: true });
+                    state,
+                    rootState,
+                }, { igtOnly: true });
 
                 expect(commits).to.have.lengthOf(2);
 
@@ -2069,9 +2069,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_UNPAUSE], {
-                            state,
-                            rootState,
-                        }, { igtOnly: true });
+                        state,
+                        rootState,
+                    }, { igtOnly: true });
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -2696,9 +2696,9 @@ describe('Splits Store-Module', () => {
 
                 const { commits, dispatches, returnValue } = await testAction(
                     splitsModule.actions[ID_ACTION_DISCARDING_RESET], {
-                        state,
-                        rootState,
-                    });
+                    state,
+                    rootState,
+                });
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
@@ -2741,9 +2741,9 @@ describe('Splits Store-Module', () => {
 
                 const { commits, dispatches, returnValue } = await testAction(
                     splitsModule.actions[ID_ACTION_SAVING_RESET], {
-                        state,
-                        rootState,
-                    });
+                    state,
+                    rootState,
+                });
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
@@ -2784,9 +2784,9 @@ describe('Splits Store-Module', () => {
 
                 const { commits, dispatches, returnValue } = await testAction(
                     splitsModule.actions[ID_ACTION_SAVING_RESET], {
-                        state,
-                        rootState,
-                    }, { isNewPersonalBest: true });
+                    state,
+                    rootState,
+                }, { isNewPersonalBest: true });
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
@@ -2830,9 +2830,9 @@ describe('Splits Store-Module', () => {
 
                 const { commits, dispatches, returnValue } = await testAction(
                     splitsModule.actions[ID_ACTION_SET_ALL_SEGMENTS], {
-                        state,
-                        rootState,
-                    }, newSegments);
+                    state,
+                    rootState,
+                }, newSegments);
 
                 expect(commits).to.have.lengthOf(1);
                 expect(commits[0]).to.deep.equal({
@@ -2867,9 +2867,9 @@ describe('Splits Store-Module', () => {
                 for (const payload of invalidPayloads) {
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_SET_ALL_SEGMENTS], {
-                            state,
-                            rootState,
-                        }, payload);
+                        state,
+                        rootState,
+                    }, payload);
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
@@ -2908,9 +2908,9 @@ describe('Splits Store-Module', () => {
 
                     const { commits, dispatches, returnValue } = await testAction(
                         splitsModule.actions[ID_ACTION_SET_ALL_SEGMENTS], {
-                            state,
-                            rootState,
-                        }, newSegments);
+                        state,
+                        rootState,
+                    }, newSegments);
 
                     // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;

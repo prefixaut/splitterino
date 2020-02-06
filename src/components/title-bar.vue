@@ -19,7 +19,7 @@
 import { BrowserWindow } from 'electron';
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../common/interfaces/electron';
+import { ElectronInterface, ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 
 @Component({ name: 'spl-title-bar' })

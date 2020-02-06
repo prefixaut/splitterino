@@ -1,21 +1,24 @@
 'use strict';
-import { app, BrowserWindow, ipcMain, IpcMessageEvent, WebContents, protocol } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
 import { format as formatUrl } from 'url';
+import uuid from 'uuid';
 import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 import Vuex from 'vuex';
+
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { ActionResult } from './common/interfaces/electron';
+import { IPCServer } from './common/ipc-server';
+import { CommitMutationRequest, MessageType } from './models/ipc';
+import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
 import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
 import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
-import { RootState } from './store/states/root.state';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
-import { Logger } from './utils/logger';
+import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
 
 process.on('uncaughtException', (error: Error) => {
@@ -75,12 +78,6 @@ process.on('unhandledRejection', (reason, promise) => {
      */
     let mainWindow: BrowserWindow;
 
-    /**
-     * List of all clients/windows that were created.
-     * The index in which they are put, is the corresponding BrowserWindow ID
-     */
-    const clients: WebContents[] = [];
-
     /** Instance of an injector with resolved services */
     const injector = createInjector();
 
@@ -95,6 +92,9 @@ process.on('unhandledRejection', (reason, promise) => {
     const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
 
+    // Create the IPC Server
+    const ipcServer = new IPCServer();
+
     // Main instance of the Vuex-Store
     Vue.use(Vuex);
     const store = new Vuex.Store<RootState>({
@@ -103,9 +103,13 @@ process.on('unhandledRejection', (reason, promise) => {
             storeInstance => {
                 storeInstance.subscribe(mutation => {
                     try {
-                        Object.keys(clients).forEach(id => {
-                            clients[id].send('vuex-apply-mutation', mutation);
-                        });
+                        const commitRequest: CommitMutationRequest = {
+                            id: uuid(),
+                            type: MessageType.REQUEST_COMMIT_MUTATION,
+                            mutation: mutation.type,
+                            payload: mutation.payload,
+                        };
+                        ipcServer.publishMessage(commitRequest);
                     } catch (error) {
                         Logger.error({
                             msg: 'Error while sending mutation to other processes',
@@ -119,6 +123,12 @@ process.on('unhandledRejection', (reason, promise) => {
         ]
     });
 
+    // Initialize the IPC Server with the store
+    await ipcServer.initialize({
+        store: store,
+        logLevel: args.logLevel || LogLevel.INFO
+    });
+
     // load application settings
     const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
     // load user settings
@@ -126,69 +136,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
-
-    // Listener to transfer the current state of the store
-    ipcMain.on('vuex-connect', (event: IpcMessageEvent) => {
-        const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`vuex-connect: ${windowId}`);
-
-        clients[windowId] = event.sender;
-        event.returnValue = store.state;
-    });
-
-    // handle store disconnect on window close
-    ipcMain.on('vuex-disconnect', (event: IpcMessageEvent) => {
-        const windowId = BrowserWindow.fromWebContents(event.sender).id;
-        Logger.debug(`vuex-disconnect ${windowId}`);
-
-        delete clients[windowId];
-    });
-
-    // listen for global events from other processes and broadcast them
-    ipcMain.on('global-event', (ipcEvent: IpcMessageEvent, event: string, payload: any) => {
-        try {
-            Object.keys(clients).forEach(id => {
-                clients[id].send(event, payload);
-            });
-
-            // Echo message back
-            ipcEvent.sender.send(event, payload);
-        } catch (error) {
-            Logger.error({
-                msg: 'Error while sending global event to other processes',
-                payload,
-                error,
-            });
-        }
-    });
-
-    // Listener to perform a delegate mutation on the main store
-    ipcMain.on('vuex-dispatch', async (event: IpcMessageEvent, { type, payload, options }) => {
-        Logger.debug({
-            msg: 'vuex-dispatch',
-            type,
-            payload,
-            options,
-        });
-        try {
-            const dispatchResult = await store.dispatch(type, payload, options);
-            const eventResponse: ActionResult = { result: dispatchResult, error: null };
-            event.returnValue = eventResponse;
-        } catch (error) {
-            const eventResponse: ActionResult = { result: null, error };
-            event.returnValue = eventResponse;
-        }
-    });
-
-    // call handlers to log from render process
-    ipcMain.on('spl-log', (_, level: string, data: object) => {
-        Logger._logToHandlers(level, data);
-    });
-
-    // callback to get log level from arguments
-    ipcMain.on('spl-log-level', (event: IpcMessageEvent) => {
-        event.returnValue = args.logLevel;
-    });
 
     function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
@@ -247,6 +194,9 @@ process.on('unhandledRejection', (reason, promise) => {
         // on macOS it is common for applications to stay open
         // until the user explicitly quits
         if (process.platform !== 'darwin') {
+            // Close the IPC Server
+            // ipcServer.close();
+            // Close the app
             app.quit();
         }
     });
@@ -275,21 +225,24 @@ process.on('unhandledRejection', (reason, promise) => {
         mainWindow = createMainWindow();
     });
 
+    app.on('quit', (event, exitCode) => {
+        ipcServer.close();
+        Logger.info({ msg: 'App will quit!', event, exitCode });
+    });
+
     // Exit cleanly on request from parent process in development mode.
-    if (isDevelopment()) {
-        if (process.platform === 'win32') {
-            process.on('message', data => {
-                if (data === 'graceful-exit') {
-                    Logger.info('Received message to shutdown! Closing app ...');
-                    app.quit();
-                }
-            });
-        } else {
-            process.on('SIGTERM', () => {
+    if (process.platform === 'win32') {
+        process.on('message', data => {
+            if (data === 'graceful-exit') {
                 Logger.info('Received message to shutdown! Closing app ...');
                 app.quit();
-            });
-        }
+            }
+        });
+    } else {
+        process.on('SIGTERM', () => {
+            Logger.info('Received message to shutdown! Closing app ...');
+            app.quit();
+        });
     }
 })().catch(err => {
     Logger.fatal({

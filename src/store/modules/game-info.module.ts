@@ -1,8 +1,8 @@
-import { ActionContext, Module } from 'vuex';
 import ISO6391 from 'iso-639-1';
+import { ActionContext, Module } from 'vuex';
 
-import { GameInfoState, Region } from '../states/game-info.state';
-import { RootState } from '../states/root.state';
+import { GameInfoState, Region } from '../../models/states/game-info.state';
+import { RootState } from '../../models/states/root.state';
 
 export const MODULE_PATH = 'splitterino/gameInfo';
 

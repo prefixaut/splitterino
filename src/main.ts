@@ -1,7 +1,7 @@
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { ipcRenderer } from 'electron';
+import { Injector } from 'lightweight-di';
 import VRuntimeTemplate from 'v-runtime-template';
 import Vue from 'vue';
 import VueSelect from 'vue-select';
@@ -9,7 +9,6 @@ import draggable from 'vuedraggable';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
-import { ELECTRON_INTERFACE_TOKEN } from './common/interfaces/electron';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
 import ButtonComponent from './components/button.vue';
@@ -35,6 +34,8 @@ import TitleBarComponent from './components/title-bar.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { aevumFilter } from './filters/aevum.filter';
 import { timeFilter } from './filters/time.filter';
+import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
+import { IPC_CLIENT_TOKEN } from './models/ipc';
 import { router } from './router';
 import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
@@ -66,11 +67,60 @@ process.on('unhandledRejection', (reason, promise) => {
     const injector = createInjector();
 
     // Initialize the logger
-    const logLevel = ipcRenderer.sendSync('spl-log-level') as LogLevel;
-    Logger.initialize(injector, logLevel);
+    Logger.initialize(injector, LogLevel.DEBUG);
 
+    setupVueElements(injector);
+    // Register context-menu functions
+    registerDefaultContextMenuFunctions(injector);
+
+    const ipcClient = injector.get(IPC_CLIENT_TOKEN);
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const windowRef = electron.getCurrentWindow();
 
+    windowRef.on('close', async () => {
+        await ipcClient.close();
+    });
+
+    const store = await getClientStore(Vue, ipcClient, injector);
+
+    // Initialize and register the ipc-client
+    const response = await ipcClient.initialize(store, {
+        name: `renderer-${electron.getCurrentWindow().id}`,
+        actions: [],
+        windowId: electron.getCurrentWindow().id,
+    });
+
+    // TODO: Replay the actions from the queued/dropped actions here?
+
+    // Update the Logger log-level from the registration
+    if (response) {
+        Logger._setInitialLogLevel(response.logLevel);
+    }
+
+    // ? Do not use await here. await seems to block event queue (weird; maybe babel or ts?)
+    ipcClient.getStoreState().then(storestate => {
+        // Update the store state
+        store.replaceState(storestate);
+        // Initialize the Application
+        new Vue({
+            render: h => h(App),
+            store: store,
+            router
+        }).$mount('#app');
+    });
+
+    // Only execute certain functionality if window is main window
+    if (electron.getCurrentWindow().id === 1) {
+        // loadSettings(vue);
+    }
+})().catch(err => {
+    Logger.fatal({
+        msg: 'Unknown Error in the render thread!',
+        error: err,
+    });
+});
+
+function setupVueElements(injector: Injector) {
     // FontAwesome Icons
     library.add(fas);
     Vue.component('fa-icon', FontAwesomeIcon);
@@ -120,24 +170,4 @@ process.on('unhandledRejection', (reason, promise) => {
     // Update the Prototype with an injector and event-hub
     Vue.prototype.$services = injector;
     Vue.prototype.$eventHub = eventHub;
-
-    // Register context-menu functions
-    registerDefaultContextMenuFunctions(injector);
-
-    // Initialize the Application
-    const vue = new Vue({
-        render: h => h(App),
-        store: getClientStore(Vue, injector),
-        router
-    }).$mount('#app');
-
-    // Only execute certain functionality if window is main window
-    if (electron.getCurrentWindow().id === 1) {
-        // loadSettings(vue);
-    }
-})().catch(err => {
-    Logger.fatal({
-        msg: 'Unknown Error in the render thread!',
-        error: err,
-    });
-});
+}

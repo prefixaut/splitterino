@@ -1,4 +1,4 @@
-import { Segment } from '../common/interfaces/segment';
+import { Segment } from '../models/segment';
 
 export function convertToBoolean(
     value: any,

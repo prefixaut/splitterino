@@ -9,6 +9,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
+import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { now } from '../utils/time';
 

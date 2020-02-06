@@ -1,11 +1,3 @@
-import { asCleanNumber } from '../../utils/converters';
-
-export function getFinalTime(time: DetailedTime): number {
-    return time == null ? 0 : Math.max(
-        Math.max(asCleanNumber(time.rawTime), 0) - Math.max(asCleanNumber(time.pauseTime), 0),
-        0);
-}
-
 /**
  * Defines a single Segment in a Split.
  * Contains all basic information need to calculate

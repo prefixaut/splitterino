@@ -79,8 +79,9 @@ import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { DEFAULT_SPLIT } from '../common/constants';
-import { Segment, TimingMethod, getFinalTime } from '../common/interfaces/segment';
+import { Segment, TimingMethod } from '../models/segment';
 import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../services/validator.service';
+import { getFinalTime } from '../utils/time';
 
 const splits = namespace('splitterino/splits');
 
