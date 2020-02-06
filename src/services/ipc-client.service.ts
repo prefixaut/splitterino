@@ -1,4 +1,3 @@
-import { InjectionToken } from 'lightweight-di';
 import { Observable, Subscription } from 'rxjs';
 import { first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
@@ -10,6 +9,9 @@ import {
     DispatchActionReqeust,
     DispatchActionResponse,
     DispatchClientActionRequest,
+    IPCClientInterface,
+    IPCPacket,
+    IPCSocket,
     Message,
     MessageType,
     RegisterClientRequest,
@@ -20,18 +22,19 @@ import {
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
-    IPCPacket,
-    IPCSocket,
-} from '../../models/ipc';
-import { RootState } from '../../models/states/root.state';
-import { createSharedObservableFromSocket } from '../../utils/ipc';
-import { Logger, LogLevel } from '../../utils/logger';
+    ClientInformation,
+    RegistationResult,
+} from '../models/ipc';
+import { RootState } from '../models/states/root.state';
+import { createSharedObservableFromSocket } from '../utils/ipc';
+import { Logger } from '../utils/logger';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
     IPC_PULL_PUSH_ADDRESS,
     IPC_ROUTER_DEALER_ADDRESS,
     IPC_SERVER_NAME,
-} from '../constants';
+} from '../common/constants';
+import { Injectable } from 'lightweight-di';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {
@@ -39,19 +42,8 @@ export class ClientNotRegisteredError extends Error {
     }
 }
 
-export interface ClientInformation {
-    name: string;
-    actions?: string[];
-    windowId?: number;
-}
-
-export interface RegistationResult {
-    logLevel: LogLevel;
-}
-
-export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClient>('ipc-client');
-
-export class IPCClient {
+@Injectable
+export class IPCClient implements IPCClientInterface {
 
     private subscriber: IPCSocket;
     private dealer: IPCSocket;
@@ -186,7 +178,7 @@ export class IPCClient {
         this.initialized = false;
     }
 
-    public async handleIncomingSubscriberMessage(message: Message) {
+    private handleIncomingSubscriberMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUND',
@@ -223,7 +215,7 @@ export class IPCClient {
         }
     }
 
-    public handleIncomingDealerMessage(receivedFrom: string, message: Message) {
+    private handleIncomingDealerMessage(receivedFrom: string, message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUND',
@@ -313,11 +305,11 @@ export class IPCClient {
         return this.dealerMessages;
     }
 
-    protected async handleCommitMutation(request: CommitMutationRequest) {
+    private handleCommitMutation(request: CommitMutationRequest) {
         this.store.commit(request.mutation, request.payload, request.options);
     }
 
-    protected async register(): Promise<false | RegistationResult> {
+    private async register(): Promise<false | RegistationResult> {
         const request: RegisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_REGISTER_CLIENT,
@@ -341,7 +333,7 @@ export class IPCClient {
         };
     }
 
-    protected async unregister(): Promise<boolean> {
+    private async unregister(): Promise<boolean> {
         const request: UnregisterClientRequest = {
             id: uuid(),
             type: MessageType.REQUEST_UNREGISTER_CLIENT,
@@ -409,7 +401,7 @@ export class IPCClient {
         return response.returnValue;
     }
 
-    protected async handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
+    private async handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
         // Not a request for us
         if (request.clientId !== this.clientId) {
             return;

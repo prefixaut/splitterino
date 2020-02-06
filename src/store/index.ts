@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import Vuex, { DispatchOptions, Payload } from 'vuex';
 
-import { IPCClient } from '../common/ipc/client';
+import { IPCClientInterface } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
 import { Logger } from '../utils/logger';
 import { getSplitterinoStoreModules } from './modules/index.module';
@@ -18,7 +18,7 @@ export function getStoreConfig(injector: Injector) {
     };
 }
 
-export async function getClientStore(vueRef, client: IPCClient, injector: Injector) {
+export async function getClientStore(vueRef, client: IPCClientInterface, injector: Injector) {
     vueRef.use(Vuex);
 
     const store = new Vuex.Store<RootState>({

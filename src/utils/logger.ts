@@ -1,10 +1,9 @@
 import { Injector } from 'lightweight-di';
 import pino from 'pino';
+import uuid from 'uuid';
 
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
-import { IPCClient, IPC_CLIENT_TOKEN } from '../common/ipc/client';
-import { LogOnServerRequest, MessageType } from '../models/ipc';
-import uuid from 'uuid';
+import { IPC_CLIENT_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
 
 /**
  * Enum to map log levels
@@ -31,7 +30,7 @@ export class Logger {
     private static isInitialized = false;
     private static windowId: number = null;
     private static electron: ElectronInterface;
-    private static ipcClient: IPCClient;
+    private static ipcClient: IPCClientInterface;
 
     private static enrichMessage(messageOrData: string | object): object {
         let data: object = {

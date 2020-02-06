@@ -45,11 +45,10 @@ import { filter, map } from 'rxjs/operators';
 import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
-import { IPC_CLIENT_TOKEN } from '../common/ipc/client';
 import { TimerStatus } from '../common/timer-status';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
-import { MessageType, GlobalEventBroadcast } from '../models/ipc';
+import { MessageType, GlobalEventBroadcast, IPC_CLIENT_TOKEN } from '../models/ipc';
 import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
@@ -92,14 +91,14 @@ export default class DefaultView extends Vue {
 
     public selectSplits() {
         openLoadSplits(
-            this.$services.get(ELECTRON_INTERFACE_TOKEN),
-            this.$services.get(IO_SERVICE_TOKEN),
+            this.electron,
+            this.ioService,
             this.$store
         );
     }
 
     public editSplits() {
-        openSplitsEditor(this.$services.get(ELECTRON_INTERFACE_TOKEN), this.$store);
+        openSplitsEditor(this.electron, this.$store);
     }
 
     public mounted() {

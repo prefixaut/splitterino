@@ -9,7 +9,6 @@ import draggable from 'vuedraggable';
 
 import App from './app.vue';
 import { registerDefaultContextMenuFunctions } from './common/function-registry';
-import { IPCClient } from './common/ipc/client';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';
 import BestPossibleTimeComponent from './components/best-possible-time.vue';
 import ButtonComponent from './components/button.vue';
@@ -36,6 +35,7 @@ import { getContextMenuDirective } from './directives/context-menu.directive';
 import { aevumFilter } from './filters/aevum.filter';
 import { timeFilter } from './filters/time.filter';
 import { ELECTRON_INTERFACE_TOKEN } from './models/electron';
+import { IPC_CLIENT_TOKEN } from './models/ipc';
 import { router } from './router';
 import { getClientStore } from './store';
 import { eventHub } from './utils/event-hub';
@@ -64,8 +64,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 (async () => {
-    const ipcClient = new IPCClient();
-    const injector = createInjector(ipcClient);
+    const injector = createInjector();
 
     // Initialize the logger
     Logger.initialize(injector, LogLevel.DEBUG);
@@ -74,6 +73,7 @@ process.on('unhandledRejection', (reason, promise) => {
     // Register context-menu functions
     registerDefaultContextMenuFunctions(injector);
 
+    const ipcClient = injector.get(IPC_CLIENT_TOKEN);
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const windowRef = electron.getCurrentWindow();
 

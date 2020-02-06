@@ -9,7 +9,7 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { IPCServer } from './common/ipc/server';
+import { IPCServer } from './common/ipc-server';
 import { CommitMutationRequest, MessageType } from './models/ipc';
 import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';

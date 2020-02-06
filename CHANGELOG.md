@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A completely custom implementation of IPC via ZeroMQ
+
 ## [0.2.1] - 2019-12-10
 
 ### Fixed

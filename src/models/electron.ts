@@ -10,7 +10,6 @@ import { InjectionToken } from 'lightweight-di';
 import { VNode } from 'vue';
 
 import { ContextMenuItem } from './context-menu-item';
-import { Observable } from 'rxjs';
 
 export interface ActionResult {
     result?: any;

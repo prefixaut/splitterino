@@ -1,15 +1,42 @@
-import { CommitOptions, DispatchOptions } from 'vuex';
-
-import { RootState } from './states/root.state';
-import { LogLevel } from '../utils/logger';
+import { InjectionToken } from 'lightweight-di';
+import { CommitOptions, DispatchOptions, Store } from 'vuex';
 import { Socket } from 'zeromq';
 
-export interface IPCRouterSocket extends Socket {
-    type: 'router';
+import { LogLevel } from '../utils/logger';
+import { RootState } from './states/root.state';
+import { Observable } from 'rxjs';
+
+export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
+
+export interface IPCClientInterface {
+    isInitialized(): boolean;
+    initialize(store: Store<RootState>, clientInfo: ClientInformation): Promise<false | RegistationResult>;
+    close(): Promise<void>;
+    sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
+    sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
+    sendPushMessage(message: Message): boolean;
+    listenToSubscriberSocket(): Observable<IPCPacket>;
+    listenToDealerSocket(): Observable<IPCPacket>;
+    getStoreState(): Promise<RootState>;
+    dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
+}
+
+export interface ClientInformation {
+    name: string;
+    actions?: string[];
+    windowId?: number;
+}
+
+export interface RegistationResult {
+    logLevel: LogLevel;
 }
 
 export interface IPCSocket extends Socket {
     type: 'dealer' | 'sub' | 'pub' | 'push' | 'pull';
+}
+
+export interface IPCRouterSocket extends Socket {
+    type: 'router';
 }
 
 export enum MessageType {

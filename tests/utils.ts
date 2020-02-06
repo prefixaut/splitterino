@@ -1,8 +1,8 @@
 import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
-import { IPC_CLIENT_TOKEN } from '../src/common/ipc/client';
 import { ELECTRON_INTERFACE_TOKEN } from '../src/models/electron';
+import { IPC_CLIENT_TOKEN } from '../src/models/ipc';
 import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';

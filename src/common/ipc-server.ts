@@ -7,6 +7,10 @@ import {
     DispatchActionReqeust,
     DispatchActionResponse,
     GlobalEventBroadcast,
+    IPCPacket,
+    IPCRouterPacket,
+    IPCRouterSocket,
+    IPCSocket,
     LogOnServerRequest,
     Message,
     MessageType,
@@ -18,20 +22,16 @@ import {
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
-    IPCPacket,
-    IPCRouterSocket,
-    IPCSocket,
-    IPCRouterPacket,
-} from '../../models/ipc';
-import { RootState } from '../../models/states/root.state';
-import { createSharedObservableFromSocket } from '../../utils/ipc';
-import { Logger, LogLevel } from '../../utils/logger';
+} from '../models/ipc';
+import { RootState } from '../models/states/root.state';
+import { createSharedObservableFromSocket } from '../utils/ipc';
+import { Logger, LogLevel } from '../utils/logger';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
     IPC_PULL_PUSH_ADDRESS,
     IPC_ROUTER_DEALER_ADDRESS,
     IPC_SERVER_NAME,
-} from '../constants';
+} from './constants';
 
 /**
  * Internal representation of a IPC Client.

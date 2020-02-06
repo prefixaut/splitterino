@@ -1,7 +1,7 @@
 import { BrowserWindow, FileFilter } from 'electron';
 import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import gunzip from 'gunzip-maybe';
-import { Inject, Injectable, InjectionToken, Injector } from 'lightweight-di';
+import { Inject, Injectable, InjectionToken } from 'lightweight-di';
 import { cloneDeep, merge, set } from 'lodash';
 import { dirname, join } from 'path';
 import { extract } from 'tar-stream';
@@ -9,10 +9,9 @@ import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 
 import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
-import { IPC_CLIENT_TOKEN, IPCClient } from '../common/ipc/client';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
-import { MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { TimingMethod } from '../models/segment';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
 import { GameInfoState } from '../models/states/game-info.state';
@@ -49,7 +48,7 @@ export class IOService {
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClient
+        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
     }

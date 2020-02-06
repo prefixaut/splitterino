@@ -3,7 +3,6 @@ import Vue from 'vue';
 import { Store } from 'vuex';
 
 import { RootState } from '../models/states/root.state';
-import { IPCClient } from './ipc/client';
 
 declare module 'vue/types/vue' {
     interface Vue {
