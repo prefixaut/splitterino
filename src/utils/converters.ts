@@ -1,4 +1,5 @@
 import { Segment } from '../models/segment';
+import { getFinalTime } from './time';
 
 export function convertToBoolean(
     value: any,
@@ -56,10 +57,16 @@ export function asSaveableSegment(segment: Segment): any {
         skipped: !!segment.skipped,
     };
 
-    if (segment.personalBest != null) {
+    if (segment.personalBest != null && (
+        getFinalTime(segment.personalBest.rta) > 0 ||
+        getFinalTime(segment.personalBest.igt) > 0
+    )) {
         out.personalBest = segment.personalBest;
     }
-    if (segment.overallBest != null) {
+    if (segment.overallBest != null && (
+        getFinalTime(segment.overallBest.rta) > 0 ||
+        getFinalTime(segment.overallBest.igt) > 0
+    )) {
         out.overallBest = segment.overallBest;
     }
 
