@@ -1,5 +1,5 @@
 import { Injector } from 'lightweight-di';
-import Vuex, { DispatchOptions, Payload } from 'vuex';
+import Vuex, { DispatchOptions, Payload, Store } from 'vuex';
 
 import { IPCClientInterface } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
@@ -18,34 +18,13 @@ export function getStoreConfig(injector: Injector) {
     };
 }
 
-export async function getClientStore(vueRef, client: IPCClientInterface, injector: Injector) {
+export function getClientStore(vueRef, client: IPCClientInterface, injector: Injector): Promise<Store<RootState>> {
     vueRef.use(Vuex);
 
-    const store = new Vuex.Store<RootState>({
-        plugins: [
-            events => {
-                events.subscribe(mutation => {
-                    let payload: any;
-                    let id = '';
-
-                    if (
-                        typeof mutation.payload === 'object' &&
-                        'id' in mutation.payload &&
-                        'payload' in mutation.payload
-                    ) {
-                        payload = mutation.payload.payload;
-                        id = `:${mutation.payload.id}`;
-                    } else {
-                        payload = mutation.payload;
-                    }
-                });
-            },
-        ],
-        ...getStoreConfig(injector)
-    });
+    const store = new Vuex.Store<RootState>(getStoreConfig(injector));
 
     // Override the dispatch function to delegate it to the main process instead
-    // tslint:disable-next-line only-arrow-functions no-string-literal
+    // eslint-disable-next-line dot-notation
     store['_dispatch'] = store.dispatch = function <P extends Payload>(
         typeMaybeWithPayload: string | P,
         payloadOrOptions?: any | DispatchOptions,
@@ -76,7 +55,8 @@ export async function getClientStore(vueRef, client: IPCClientInterface, injecto
             const errorMsg = 'The type for the dispatch could not be determined';
             Logger.error({
                 msg: errorMsg,
-                arguments: arguments
+                // eslint-disable-next-line prefer-rest-params
+                arguments: arguments,
             });
 
             return Promise.reject(new Error(errorMsg));
@@ -92,5 +72,5 @@ export async function getClientStore(vueRef, client: IPCClientInterface, injecto
         return client.dispatchAction(actualType, actualPayload, actualOptions);
     };
 
-    return store;
+    return Promise.resolve(store);
 }

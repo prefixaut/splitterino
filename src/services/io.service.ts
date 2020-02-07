@@ -138,7 +138,7 @@ export class IOService {
         } catch (e) {
             Logger.warn({
                 msg: 'Could not parse JSON from file',
-                string: loadedFile,
+                data: loadedFile,
                 error: e,
             });
         }
@@ -439,7 +439,7 @@ export class IOService {
                     readStream.pipe(gunzip()).pipe(extractor);
                 });
 
-                readStream.on('error', error => {
+                readStream.on('error', () => {
                     Logger.error({
                         msg: 'Unable to create readstream for template',
                         file: file
@@ -469,12 +469,11 @@ export class IOService {
                 properties: ['openFile'],
             })
             .then(filePaths => {
-                let singlePath: string;
                 if (!Array.isArray(filePaths)) {
                     return false;
                 }
 
-                singlePath = filePaths.length === 0 ? null : filePaths[0];
+                const singlePath = filePaths.length === 0 ? null : filePaths[0];
 
                 Logger.debug({
                     msg: 'User has selected Template-File',
@@ -636,6 +635,7 @@ export class IOService {
                     for (const setting of group.settings) {
                         let value = setting.defaultValue;
                         const path = `${moduleKey}.${namespacE.key}.${group.key}.${setting.key}`;
+                        // eslint-disable-next-line id-blacklist
                         if (loadedSettings != null && loadedSettings[path] !== undefined) {
                             value = loadedSettings[path];
                         } else {

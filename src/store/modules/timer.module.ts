@@ -67,7 +67,7 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
                             case TimerStatus.PAUSED:
                                 state.pauseTotal += time - state.pauseTime;
                                 state.pauseTime = 0;
-                            // tslint:disable-next-line:no-switch-case-fall-through
+                            // eslint-disable-next-line no-fallthrough
                             case TimerStatus.RUNNING_IGT_PAUSE:
                                 state.igtPauseTotal += time - state.igtPauseTime;
                                 state.igtPauseTime = 0;
@@ -84,7 +84,7 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
                         switch (from) {
                             case TimerStatus.RUNNING:
                                 state.igtPauseTime = time;
-                            // tslint:disable-next-line:no-switch-case-fall-through
+                            // eslint-disable-next-line no-fallthrough
                             case TimerStatus.RUNNING_IGT_PAUSE:
                                 state.pauseTime = time;
                                 break;
@@ -113,7 +113,7 @@ export function getTimerStoreModule(): Module<TimerState, RootState> {
                             case TimerStatus.PAUSED:
                                 state.pauseTotal += time - state.pauseTime;
                                 state.pauseTime = 0;
-                            // tslint:disable-next-line:no-switch-case-fall-through
+                            // eslint-disable-next-line no-fallthrough
                             case TimerStatus.RUNNING_IGT_PAUSE:
                                 state.igtPauseTotal += time - state.igtPauseTime;
                                 state.igtPauseTime = 0;

@@ -51,7 +51,7 @@ process.on('unhandledRejection', (reason, promise) => {
 (async () => {
     if (isDevelopment()) {
         // Don't load any native (external) modules until the following line is run:
-        // tslint:disable-next-line no-require-imports no-var-requires
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
     }
 
@@ -179,7 +179,7 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 
     // catch event in case second instance is started
-    app.on('second-instance', (event, commandLine, workingDirectory) => {
+    app.on('second-instance', () => {
         // ? Maybe handle file associations when instance alreay exists
         if (mainWindow) {
             if (mainWindow.isMinimized()) {
@@ -210,7 +210,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', async () => {
+    app.on('ready', () => {
         if (isDevelopment() && !process.env.IS_TEST) {
             // Install Vue Devtools
             await installVueDevtools();

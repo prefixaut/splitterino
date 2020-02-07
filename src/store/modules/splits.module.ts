@@ -269,7 +269,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
             },
         },
         actions: {
-            async [ID_ACTION_SET_TIMING](
+            [ID_ACTION_SET_TIMING](
                 context: ActionContext<SplitsState, RootState>,
                 timing: TimingMethod
             ): Promise<boolean> {
@@ -278,17 +278,17 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     case TimingMethod.RTA:
                         context.commit(ID_MUTATION_SET_TIMING, timing);
 
-                        return true;
+                        return Promise.resolve(true);
                     default:
-                        return false;
+                        return Promise.resolve(false);
                 }
             },
-            async [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            [ID_ACTION_START](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const time = now();
                 const status = context.rootState.splitterino.timer.status;
 
                 if (status !== TimerStatus.STOPPED || context.state.segments.length < 1) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(
@@ -321,9 +321,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, 0);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            [ID_ACTION_SPLIT](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const currentTime = now();
 
                 const currentStatus = context.rootState.splitterino.timer.status;
@@ -332,12 +332,12 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         // Cleanup via reset
                         context.dispatch(ID_ACTION_RESET);
 
-                        return true;
+                        return Promise.resolve(true);
                     case TimerStatus.RUNNING:
                         break;
                     default:
                         // Ignore the split-event when it's not running
-                        return false;
+                        return Promise.resolve(false);
                 }
 
                 const { current: currentIndex, timing } = context.state;
@@ -388,7 +388,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         { root: true }
                     );
 
-                    return true;
+                    return Promise.resolve(true);
                 }
 
                 const next: Segment = {
@@ -405,9 +405,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, currentIndex + 1);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            [ID_ACTION_SKIP](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
@@ -415,7 +415,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     status !== TimerStatus.RUNNING ||
                     index >= context.state.segments.length - 1
                 ) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 const segment: Segment = {
@@ -428,14 +428,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context.commit(ID_MUTATION_SET_SEGMENT, { index, segment });
                 context.commit(ID_MUTATION_SET_CURRENT, index + 1);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            [ID_ACTION_UNDO](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 const status = context.rootState.splitterino.timer.status;
                 const index = context.state.current;
 
                 if (status !== TimerStatus.RUNNING || index < 1) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 const segment: Segment = {
@@ -479,9 +479,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context.commit(ID_MUTATION_SET_SEGMENT, { index: index - 1, segment: previous });
                 context.commit(ID_MUTATION_SET_CURRENT, index - 1);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_PAUSE](
+            [ID_ACTION_PAUSE](
                 context: ActionContext<SplitsState, RootState>,
                 payload: PausePayload
             ): Promise<boolean> {
@@ -493,7 +493,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     status === TimerStatus.RUNNING_IGT_PAUSE ||
                     status !== TimerStatus.RUNNING
                 ) : status !== TimerStatus.RUNNING) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 let toStatus = TimerStatus.PAUSED;
@@ -507,9 +507,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { root: true }
                 );
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_UNPAUSE](
+            [ID_ACTION_UNPAUSE](
                 context: ActionContext<SplitsState, RootState>,
                 payload: PausePayload
             ): Promise<boolean> {
@@ -518,7 +518,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 const igtOnly = payload && payload.igtOnly;
 
                 if (igtOnly ? status !== TimerStatus.RUNNING_IGT_PAUSE : status !== TimerStatus.PAUSED) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 const index = context.state.current;
@@ -556,9 +556,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     { root: true }
                 );
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_RESET](
+            [ID_ACTION_RESET](
                 context: ActionContext<SplitsState, RootState>,
                 payload: ResetPayload
             ): Promise<boolean> {
@@ -566,7 +566,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
 
                 // When the Timer is already stopped, nothing to do
                 if (status === TimerStatus.STOPPED) {
-                    return true;
+                    return Promise.resolve(true);
                 }
 
                 const previousRTAPB = Math.max(0, context.state.previousRTATotal);
@@ -591,7 +591,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 if (status === TimerStatus.FINISHED) {
                     context.dispatch(ID_ACTION_SAVING_RESET);
 
-                    return true;
+                    return Promise.resolve(true);
                 }
 
                 // We can safely discard when the run hasn't finished yet and no new OB is set yet
@@ -627,16 +627,16 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                     }
                 });
             },
-            async [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
+            [ID_ACTION_DISCARDING_RESET](context: ActionContext<SplitsState, RootState>): Promise<boolean> {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
                     root: true
                 });
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
                 context.commit(ID_MUTATION_DISCARDING_RESET);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SAVING_RESET](
+            [ID_ACTION_SAVING_RESET](
                 context: ActionContext<SplitsState, RootState>
             ): Promise<boolean> {
                 context.commit(MUTATION_SET_STATUS, TimerStatus.STOPPED, {
@@ -645,9 +645,9 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                 context.commit(ID_MUTATION_SET_CURRENT, -1);
                 context.commit(ID_MUTATION_SAVING_RESET);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SET_ALL_SEGMENTS](
+            [ID_ACTION_SET_ALL_SEGMENTS](
                 context: ActionContext<SplitsState, RootState>,
                 payload: Segment[]
             ): Promise<boolean> {
@@ -657,17 +657,17 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState, Ro
                         payload: payload
                     });
 
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 const status = context.rootState.splitterino.timer.status;
                 if (status !== TimerStatus.STOPPED) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_ALL_SEGMENTS, payload);
 
-                return true;
+                return Promise.resolve(true);
             }
         }
     };

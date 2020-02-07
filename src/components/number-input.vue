@@ -2,21 +2,18 @@
     <div class="number-input">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
         <spl-text-input
+            ref="input"
             :value="inputValue"
+            tabindex="1"
             @change="onValueChange($event)"
             @blur="defaultValueOnBlur($event)"
-            ref="input"
-            tabindex="1"
-        ></spl-text-input>
+        />
     </div>
 </template>
 
 <script lang="ts">
 import { clamp } from 'lodash';
-import { Component, Vue, Prop, Model, Watch, Constructor } from 'vue-property-decorator';
-
-import TextInputComponent from './text-input.vue';
-import { convertToBoolean } from '../utils/converters';
+import { Component, Vue, Prop, Model, Watch } from 'vue-property-decorator';
 
 @Component({ name: 'spl-number-input' })
 export default class NumberInputComponent extends Vue {
@@ -204,7 +201,7 @@ export default class NumberInputComponent extends Vue {
      * Watch for changes of value property and verify
      */
     @Watch('value', { immediate: true })
-    onValuePropertyChange(val, old) {
+    onValuePropertyChange(val) {
         if (val === this.internalValue) {
             return;
         }

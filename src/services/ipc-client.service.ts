@@ -62,14 +62,14 @@ export class IPCClient implements IPCClientInterface {
     private initialized = false;
 
     private readonly subscriberTable: SubscriberTable = {
-        /* tslint:disable: no-unbound-method */
+        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
         [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
-        /* tslint:enable: no-unbound-method */
+        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
     private readonly dealerTable: DealerTable = {
-        /* tslint:disable: no-unbound-method */
+        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
         [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
-        /* tslint:enable: no-unbound-method */
+        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
 
     private clientId: string;
@@ -262,9 +262,7 @@ export class IPCClient implements IPCClientInterface {
         return new Promise((resolve, reject) => {
             const sub = this.dealerMessages.pipe(
                 map(packet => packet.message),
-                first(message => {
-                    return message.type === responseType && (message as Response).respondsTo === request.id;
-                }),
+                first(message => message.type === responseType && (message as Response).respondsTo === request.id),
                 timeout(timeoutMs)
             ).subscribe((response: Response) => {
                 if (!response.successful) {
@@ -405,7 +403,7 @@ export class IPCClient implements IPCClientInterface {
         return response.returnValue;
     }
 
-    private async handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
+    private handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
         // Not a request for us
         if (request.clientId !== this.clientId) {
             return;

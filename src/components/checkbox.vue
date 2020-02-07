@@ -1,11 +1,11 @@
 <template>
     <div class="checkbox" :class="{checked: internalValue}">
         <input
-            type="checkbox"
             :id="'spl-checkbox-' + _uid"
             :value="internalValue"
+            type="checkbox"
             @change="inputChange($event)"
-        />
+        >
         <label
             tabindex="0"
             :for="'spl-checkbox-' + _uid"

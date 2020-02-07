@@ -1,8 +1,8 @@
 <template>
     <div
-        class="default-view"
-        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'templates', 'def']"
         ref="splitsView"
+        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'templates', 'def']"
+        class="default-view"
     >
         <div v-if="templateLoaded">
             <div v-if="template != null">
@@ -22,11 +22,11 @@
                     </div>
                 </spl-splits>
                 <div class="container">
-                    <spl-timer/>
-                    <spl-possible-time-save/>
-                    <spl-summary-of-best/>
-                    <spl-best-possible-time/>
-                    <spl-previous-segment/>
+                    <spl-timer />
+                    <spl-possible-time-save />
+                    <spl-summary-of-best />
+                    <spl-best-possible-time />
+                    <spl-previous-segment />
                 </div>
             </template>
         </div>
@@ -43,10 +43,8 @@ import { TimerStatus } from '../common/timer-status';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IPC_CLIENT_TOKEN, MessageType, GlobalEventBroadcast } from '../models/ipc';
 import { IOService, IO_SERVICE_TOKEN } from '../services/io.service';
-import { MUTATION_ADD_OPENED_TEMPLATE_FILE } from '../store/modules/meta.module';
-import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
-import { openSplitsBrowser, openSplitsEditor, openLoadSplits } from '../utils/windows';
+import { openSplitsEditor, openLoadSplits } from '../utils/windows';
 
 @Component({ name: 'spl-default-view' })
 export default class DefaultView extends Vue {
@@ -57,8 +55,13 @@ export default class DefaultView extends Vue {
 
     private subscriptions: Subscription[] = [];
 
-    private readonly ioService: IOService = this.$services.get(IO_SERVICE_TOKEN);
-    private readonly electron: ElectronInterface = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+    private ioService: IOService;
+    private electron: ElectronInterface;
+
+    public created() {
+        this.ioService = this.$services.get(IO_SERVICE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+    }
 
     public mounted() {
         this.registerDragDropHandler();
@@ -68,10 +71,9 @@ export default class DefaultView extends Vue {
             // Trim out everything aside from the message itself
             map(packet => packet.message),
             // Filter out messages which aren't "load-template" global events
-            filter(message => {
-                return message.type === MessageType.BROADCAST_GLOBAL_EVENT
-                    && (message as GlobalEventBroadcast).eventName === GLOBAL_EVENT_LOAD_TEMPLATE;
-            })
+            filter(message => message.type === MessageType.BROADCAST_GLOBAL_EVENT
+                && (message as GlobalEventBroadcast).eventName === GLOBAL_EVENT_LOAD_TEMPLATE
+            )
         )
             .subscribe((message: GlobalEventBroadcast) => {
                 this.loadTemplate(message.payload);

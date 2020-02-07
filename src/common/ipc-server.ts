@@ -77,23 +77,23 @@ export class IPCServer {
     private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string } = {};
     private routerTable: { [message: string]: RouterFn } = {
-        /* tslint:disable: no-unbound-method */
+        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
         [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
         [MessageType.REQUEST_PUBLISH_GLOBAL_EVENT]: this.handleGlobalEventPublish,
         [MessageType.REQUEST_LOG_ON_SERVER]: this.handleLogToServer,
         [MessageType.REQUEST_STORE_STATE]: this.handleStoreFetch,
-        /* tslint:enable: no-unbound-method */
+        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
     private pullTable: { [message: string]: (message: Message) => any } = {
-        /* tslint:disable: no-unbound-method */
-        /* tslint:enable: no-unbound-method */
+        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
+        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
 
-    public async initialize(options: InitializeOptions) {
+    public initialize(options: InitializeOptions): Promise<void> {
         if (this.isInitialized) {
-            return;
+            return Promise.resolve();
         }
 
         this.store = options.store;
@@ -122,11 +122,13 @@ export class IPCServer {
         });
 
         this.isInitialized = true;
+
+        return Promise.resolve();
     }
 
-    public async close() {
+    public close(): Promise<void> {
         if (!this.isInitialized) {
-            return;
+            return Promise.resolve();
         }
 
         this.store = null;
@@ -168,9 +170,11 @@ export class IPCServer {
         }
 
         this.isInitialized = false;
+
+        return Promise.resolve();
     }
 
-    public async publishMessage(message: Message) {
+    public publishMessage(message: Message): Promise<boolean> {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUND',
@@ -180,10 +184,10 @@ export class IPCServer {
 
         this.publisher.send(['', IPC_SERVER_NAME, JSON.stringify(message)]);
 
-        return true;
+        return Promise.resolve(true);
     }
 
-    public async sendRouterMessage(identity: Buffer, targetClient: string, message: Message) {
+    public sendRouterMessage(identity: Buffer, targetClient: string, message: Message): Promise<boolean> {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUND',
@@ -194,7 +198,7 @@ export class IPCServer {
 
         this.router.send([identity, targetClient, IPC_SERVER_NAME, JSON.stringify(message)]);
 
-        return true;
+        return Promise.resolve(true);
     }
 
     public async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
@@ -235,7 +239,7 @@ export class IPCServer {
         await this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    public async handleIncomingPullMessage(message: Message) {
+    public handleIncomingPullMessage(message: Message) {
         Logger.debug({
             msg: 'Received IPC Message',
             direction: 'INBOUND',
@@ -351,7 +355,7 @@ export class IPCServer {
         this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    private async handleGlobalEventPublish(i: never, r: never, request: PublishGlobalEventRequest) {
+    private handleGlobalEventPublish(i: never, r: never, request: PublishGlobalEventRequest) {
         const broadcast: GlobalEventBroadcast = {
             id: uuid(),
             type: MessageType.BROADCAST_GLOBAL_EVENT,
@@ -362,7 +366,7 @@ export class IPCServer {
         this.publishMessage(broadcast);
     }
 
-    private async handleStoreFetch(identity: Buffer, receivedFrom: string, request: StoreStateRequest) {
+    private handleStoreFetch(identity: Buffer, receivedFrom: string, request: StoreStateRequest) {
         const response: StoreStateResponse = {
             id: uuid(),
             type: MessageType.RESPONSE_STORE_STATE,
@@ -374,7 +378,8 @@ export class IPCServer {
         this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    private async handleLogToServer(i: never, r: never, request: LogOnServerRequest) {
+    private handleLogToServer(i: never, r: never, request: LogOnServerRequest) {
+        // eslint-disable-next-line no-underscore-dangle
         Logger._logToHandlers(request.level, request.message);
     }
 

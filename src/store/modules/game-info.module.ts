@@ -89,50 +89,62 @@ export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
             },
         },
         actions: {
-            async [ID_ACTION_SET_GAME_NAME](context: ActionContext<GameInfoState, RootState>, name: string) {
+            [ID_ACTION_SET_GAME_NAME](
+                context: ActionContext<GameInfoState, RootState>,
+                name: string
+            ): Promise<boolean> {
                 if (typeof name !== 'string') {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_GAME_NAME, name);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SET_CATEGORY](context: ActionContext<GameInfoState, RootState>, category: string) {
+            [ID_ACTION_SET_CATEGORY](
+                context: ActionContext<GameInfoState, RootState>,
+                category: string
+            ): Promise<boolean> {
                 if (typeof category !== 'string') {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_CATEGORY, category);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SET_LANGUAGE](context: ActionContext<GameInfoState, RootState>, language: string) {
+            [ID_ACTION_SET_LANGUAGE](
+                context: ActionContext<GameInfoState, RootState>,
+                language: string
+            ): Promise<boolean> {
                 if (!ISO6391.validate(language)) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_LANGUAGE, language);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SET_PLATFORM](context: ActionContext<GameInfoState, RootState>, platform: string) {
+            [ID_ACTION_SET_PLATFORM](
+                context: ActionContext<GameInfoState, RootState>,
+                platform: string
+            ): Promise<boolean> {
                 if (typeof platform !== 'string') {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_PLATFORM, platform);
 
-                return true;
+                return Promise.resolve(true);
             },
-            async [ID_ACTION_SET_REGION](context: ActionContext<GameInfoState, RootState>, region: Region) {
+            [ID_ACTION_SET_REGION](context: ActionContext<GameInfoState, RootState>, region: Region): Promise<boolean> {
                 if (!allRegions.includes(region)) {
-                    return false;
+                    return Promise.resolve(false);
                 }
 
                 context.commit(ID_MUTATION_SET_REGION, region);
 
-                return true;
+                return Promise.resolve(true);
             },
         },
     };

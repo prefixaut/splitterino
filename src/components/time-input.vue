@@ -1,5 +1,5 @@
 <template>
-    <div class="time-input" :class="{ active: active }" v-on:focusout="deactivate()" v-on:focusin="activate()">
+    <div class="time-input" :class="{ active: active }" @focusout="deactivate()" @focusin="activate()">
         <label v-if="label != null && label.trim() !== ''">{{ label }}</label>
 
         <div class="content-wrapper">

@@ -38,9 +38,10 @@ export default class SummaryOfBestComponent extends Vue {
             ));
 
         if (segmentsWithOB.length === this.segments.length) {
-            return segmentsWithOB.reduce((previousValue, segment) => {
-                return previousValue + getFinalTime(segment.overallBest[this.timing]);
-            }, 0);
+            return segmentsWithOB.reduce(
+                (previousValue, segment) => previousValue + getFinalTime(segment.overallBest[this.timing]),
+                0
+            );
         }
 
         return null;

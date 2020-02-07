@@ -90,6 +90,7 @@ export class Logger {
      * @param logFnName The logging function to call in the handlers
      * @param data The data which the handlers should receive
      */
+    // eslint-disable-next-line no-underscore-dangle
     public static _logToHandlers(logFnName: LogLevel, data: object) {
         if (this.ipcClient && this.ipcClient.isInitialized() && this.electron.isRenderProcess()) {
             const message: LogOnServerRequest = {
@@ -112,37 +113,44 @@ export class Logger {
      *
      * @param level The new log-level to use
      */
+    // eslint-disable-next-line no-underscore-dangle
     public static _setInitialLogLevel(level: LogLevel) {
         this.logHandlers[0].level = level;
     }
 
     public static trace(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.TRACE, data);
     }
 
     public static debug(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.DEBUG, data);
     }
 
     public static info(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.INFO, data);
     }
 
     public static warn(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.WARN, data);
     }
 
     public static error(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.ERROR, data);
     }
 
     public static fatal(messageOrData: string | object) {
         const data = this.enrichMessage(messageOrData);
+        // eslint-disable-next-line no-underscore-dangle
         this._logToHandlers(LogLevel.FATAL, data);
     }
 }

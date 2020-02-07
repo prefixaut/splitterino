@@ -13,14 +13,14 @@
             </thead>
 
             <draggable
+                v-model="segments"
                 element="tbody"
                 draggable=".segment-row"
                 handle=".handle"
                 direction="horizontal"
-                v-model="segments"
                 @change="triggerSegmentsChange()"
             >
-                <tr class="segment-row" v-for="(segment, index) of segments" :key="segment.id">
+                <tr v-for="(segment, index) of segments" :key="segment.id" class="segment-row">
                     <td class="handle">
                         <fa-icon icon="grip-lines" />
                     </td>
@@ -139,10 +139,12 @@ export default class SegmentsEditorComponent extends Vue {
         if (!Array.isArray(newValue)) {
             newValue = [newValue];
         }
-        this.segments = cloneDeep(newValue).map(value => ({
-            ...DEFAULT_SPLIT,
-            ...value,
-        })).filter(tmp => this.validator.isSegment(tmp));
+        this.segments = cloneDeep(newValue).map(value => {
+            return {
+                ...DEFAULT_SPLIT,
+                ...value,
+            };
+        }).filter(tmp => this.validator.isSegment(tmp));
     }
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div class="settings-editor">
-        <spl-settings-editor-sidebar @groupSelected="onGroupSelected($event)"/>
+        <spl-settings-editor-sidebar @groupSelected="onGroupSelected($event)" />
 
         <div class="settings-editor-main">
             <div class="settings-wrapper">
@@ -13,8 +13,8 @@
                     <component
                         :is="setting.component"
                         v-bind="setting.componentProps"
-                        @change="onValueChange($event, setting.key)"
                         :value="settingsValue(configPath + '.' + setting.key)"
+                        @change="onValueChange($event, setting.key)"
                     />
                 </div>
             </div>

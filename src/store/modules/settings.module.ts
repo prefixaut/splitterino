@@ -65,16 +65,12 @@ export function getSettingsStoreModule(injector: Injector): Module<SettingsState
                         return [];
                     }
 
-                    const namespacE = modulE.find(value => {
-                        return value.key === splitPath[1];
-                    });
+                    const namespacE = modulE.find(value => value.key === splitPath[1]);
                     if (namespacE == null) {
                         return [];
                     }
 
-                    const group = namespacE.groups.find(value => {
-                        return value.key === splitPath[2];
-                    });
+                    const group = namespacE.groups.find(value => value.key === splitPath[2]);
                     if (group == null) {
                         return [];
                     }
@@ -83,9 +79,7 @@ export function getSettingsStoreModule(injector: Injector): Module<SettingsState
                 };
             },
             [ID_GETTER_GET_VALUE_BY_PATH](state: SettingsState) {
-                return (path: string | string[], defaultValue: any = null) => {
-                    return get(state.values, path, defaultValue);
-                };
+                return (path: string | string[], defaultValue: any = null) => get(state.values, path, defaultValue);
             },
         },
         mutations: {

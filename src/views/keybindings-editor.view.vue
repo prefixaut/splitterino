@@ -1,5 +1,5 @@
 <template>
-    <div class="keybindings-editor-view" v-spl-ctx-menu="['def']">
+    <div v-spl-ctx-menu="['def']" class="keybindings-editor-view">
         <h1>Keybindings</h1>
 
         <spl-keybinding-editor />

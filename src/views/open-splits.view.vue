@@ -1,6 +1,6 @@
 <template>
-    <div class="open-splits-view" v-spl-ctx-menu="['def']">
-        <spl-open-splits-prompt/>
+    <div v-spl-ctx-menu="['def']" class="open-splits-view">
+        <spl-open-splits-prompt />
     </div>
 </template>
 

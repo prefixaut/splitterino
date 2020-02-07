@@ -1,6 +1,6 @@
 <template>
     <div id="app" :class="{ 'is-main-window': isMainWindow, 'show-title-bar': showTitleBar }">
-        <spl-title-bar :showOnlyOnHover="isMainWindow && !showTitleBar" />
+        <spl-title-bar :show-only-on-hover="isMainWindow && !showTitleBar" />
 
         <div class="app-content">
             <router-view />

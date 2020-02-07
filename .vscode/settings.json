@@ -1,8 +1,7 @@
 {
-    "vetur.format.defaultFormatter.ts": "vscode-typescript",
-    "vetur.format.defaultFormatter.html": "prettier",
-    "vetur.format.options.tabSize": 4,
-    "prettier.tabWidth": 4,
+    "files.associations": {
+        "*.splits": "json"
+    },
     "json.schemas": [
         {
             "fileMatch": [
@@ -11,9 +10,10 @@
             "url": "http://splitterino.prefix.moe/splits.schema.json"
         }
     ],
-    "files.associations": {
-        "*.splits": "json"
-    },
+    "prettier.tabWidth": 4,
     "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.tsdk": "node_modules\\typescript\\lib"
+    "typescript.tsdk": "node_modules\\typescript\\lib",
+    "vetur.format.defaultFormatter.html": "prettier",
+    "vetur.format.defaultFormatter.ts": "vscode-typescript",
+    "vetur.format.options.tabSize": 4
 }

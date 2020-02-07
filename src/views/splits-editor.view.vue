@@ -1,5 +1,5 @@
 <template>
-    <div class="splits-editor-view" v-spl-ctx-menu="['def']">
+    <div v-spl-ctx-menu="['def']" class="splits-editor-view">
         <main>
             <h1>Game Information</h1>
             <spl-game-info-editor :value="gameInfo" @change="updateGameInfo($event)" />

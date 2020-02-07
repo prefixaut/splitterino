@@ -1,14 +1,14 @@
 <template>
     <div class="keybinding-input">
         <div
-            contenteditable
             ref="content"
+            contenteditable
             class="content"
             tabindex="0"
-            v-html="displayString"
             @keydown="handleKey($event)"
             @keyup="handleKeyUp($event)"
-        ></div>
+            v-html="displayString"
+        />
 
         <spl-checkbox
             class="global"

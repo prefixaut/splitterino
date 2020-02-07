@@ -1,11 +1,11 @@
 <template>
     <div class="keybinding-editor">
         <p>
-            Edit the Keybindings for your actions!<br/>
+            Edit the Keybindings for your actions!<br>
             <small><b>Note</b>: Keybindings will not trigger when a modal is opened!</small>
         </p>
         <div class="bindings">
-            <div class="binding" v-for="(binding, index) of bindings" :key="index">
+            <div v-for="(binding, index) of bindings" :key="index" class="binding">
                 <vue-select
                     class="action-select"
                     label="label"

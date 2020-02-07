@@ -9,7 +9,6 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../common/timer-status';
-import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { now } from '../utils/time';
 
@@ -57,7 +56,7 @@ export default class TimerComponent extends Vue {
 
     private statusWatcher = () => {
         // noop
-    }
+    };
 
     public created() {
         this.statusWatcher = this.$store.watch(
@@ -81,7 +80,7 @@ export default class TimerComponent extends Vue {
         }
     }
 
-    public statusChange(forceUpdate: boolean = false) {
+    public statusChange() {
         if (
             this.status === TimerStatus.RUNNING ||
             (!this.igt && this.status === TimerStatus.RUNNING_IGT_PAUSE)

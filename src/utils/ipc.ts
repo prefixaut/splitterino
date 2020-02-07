@@ -31,6 +31,7 @@ export function createSharedObservableFromSocket<T extends IPCPacket | IPCRouter
             }
 
             // Shift is fast than splice and makes more sense
+            // eslint-disable-next-line id-blacklist
             const identity = socket.type === 'router' ? data.shift() : undefined;
             const [receiver, sender, msg] = data.map(part => part != null ? part.toString() : null);
             if (target != null && receiver != null && receiver !== target) {

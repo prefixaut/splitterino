@@ -84,15 +84,15 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
     /*
      * Split Actions
      */
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, async params => {
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, params => {
         openSplitsEditor(electron, params.vNode.context.$store);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
         openLoadSplits(electron, io, params.vNode.context.$store);
     });
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params =>
-        io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow)
-    );
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params => {
+        io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow);
+    });
 
     /*
      * Setting Actions

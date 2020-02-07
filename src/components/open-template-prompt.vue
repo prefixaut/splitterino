@@ -16,30 +16,29 @@
                 </div>
             </div>
         </div>
-        <spl-button
-            class="browse-button"
-            @click="loadFile()"
-        >Bruhwse</spl-button>
+        <spl-button class="browse-button" @click="loadFile()">Bruhwse</spl-button>
     </div>
 </template>
 
 <script lang="ts">
-import { upperCase } from 'lodash';
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { RecentlyOpenedTemplate } from '../models/states/meta.state';
-import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { IO_SERVICE_TOKEN, IOService } from '../services/io.service';
 
 @Component({ name: 'spl-open-template-prompt' })
 export default class OpenTemplatePromptComponent extends Vue {
     // TODO: Export to interface
     public recentTemplateFiles: (RecentlyOpenedTemplate & { fileName: string })[] = [];
-    private ioService = this.$services.get(IO_SERVICE_TOKEN);
-    private electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+    private ioService: IOService;
+    private electron: ElectronInterface;
 
     public created() {
+        this.ioService = this.$services.get(IO_SERVICE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+
         const lastTemplateFiles = this.$store.state.splitterino.meta.lastOpenedTemplateFiles;
         this.recentTemplateFiles = lastTemplateFiles
             .slice(0, 5)

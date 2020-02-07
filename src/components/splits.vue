@@ -1,26 +1,29 @@
 <template>
-    <div class="splits-root" :class="['state-' + status, { scrolling: scrollIndex > -1 }, { 'pin-last-segment': cleanPinLastSegment }]">
+    <div
+        class="splits-root"
+        :class="['state-' + status, { scrolling: scrollIndex > -1 }, { 'pin-last-segment': cleanPinLastSegment }]"
+    >
         <template v-if="segments != null && segments.length > 0">
             <div class="splits" @mousewheel="scrollSplits" @mouseleave="scrollIndex = -1">
-                <div
-                    v-for="(segment, index) in segments"
-                    :key="index"
-                    :class="segmentClass(segment, index)"
-                >
+                <div v-for="(segment, index) in segments" :key="index" :class="segmentClass(segment, index)">
                     <div class="name">{{ segment.name }}</div>
-                    <div class="time" v-show="showTime(index, false)">
+                    <div v-show="showTime(index, false)" class="time">
                         {{ getSegmentTime(index) | aevum(segmentTimeFormat) }}
                     </div>
-                    <div class="comparisons" v-show="showTime(index, true)">
-                        <div class="personal-best">{{ getSegmentPersonalBestComparison(index) | aevum(comparisonTimeFormat) }}</div>
-                        <div class="overall-best">{{ getSegmentOverallBestComparison(index) | aevum(comparisonTimeFormat) }}</div>
+                    <div v-show="showTime(index, true)" class="comparisons">
+                        <div class="personal-best">
+                            {{ getSegmentPersonalBestComparison(index) | aevum(comparisonTimeFormat) }}
+                        </div>
+                        <div class="overall-best">
+                            {{ getSegmentOverallBestComparison(index) | aevum(comparisonTimeFormat) }}
+                        </div>
                     </div>
                 </div>
             </div>
         </template>
 
         <div v-else class="empty">
-            <slot></slot>
+            <slot />
         </div>
     </div>
 </template>
@@ -30,9 +33,7 @@ import { clamp } from 'lodash';
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
-import { DEFAULT_TIMER_FORMAT } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { Segment, TimingMethod } from '../models/segment';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 import { Logger } from '../utils/logger';
@@ -97,7 +98,7 @@ export default class SplitsComponent extends Vue {
 
     private statusWatcher = () => {
         // noop
-    }
+    };
 
     public created() {
         this.statusWatcher = this.$store.watch(
@@ -113,7 +114,7 @@ export default class SplitsComponent extends Vue {
         this.statusWatcher();
     }
 
-    public get cleanVisibleUpcomingSegments() {
+    public get cleanVisibleUpcomingSegments(): number {
         if (this.visibleUpcomingSegments != null) {
             return this.visibleUpcomingSegments;
         } else {
@@ -121,7 +122,7 @@ export default class SplitsComponent extends Vue {
         }
     }
 
-    public get cleanVisiblePreviousSegments() {
+    public get cleanVisiblePreviousSegments(): number {
         if (this.visiblePreviousSegments != null) {
             return this.visiblePreviousSegments;
         } else {
@@ -129,7 +130,7 @@ export default class SplitsComponent extends Vue {
         }
     }
 
-    public get cleanPinLastSegment() {
+    public get cleanPinLastSegment(): boolean {
         if (this.pinLastSegment != null) {
             return this.pinLastSegment;
         } else {
@@ -154,12 +155,10 @@ export default class SplitsComponent extends Vue {
     }
 
     public get showTime() {
-        return (index: number, comparison: boolean) => {
-            return (
-                (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
-                index <= this.currentSegment
-            ) || this.status === 'finished' || (comparison && this.status === 'stopped');
-        };
+        return (index: number, comparison: boolean) => (
+            (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
+            index <= this.currentSegment
+        ) || this.status === 'finished' || (comparison && this.status === 'stopped');
     }
 
     public get visibleIndicies(): number[] {

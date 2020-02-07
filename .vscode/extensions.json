@@ -1,8 +1,7 @@
 {
     "recommendations": [
-        "ms-vscode.vscode-typescript-tslint-plugin",
-        "prograhammer.tslint-vue",
         "octref.vetur",
+        "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "rbbit.typescript-hero",
         "msjsdiag.debugger-for-chrome"

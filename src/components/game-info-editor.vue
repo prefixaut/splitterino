@@ -51,13 +51,6 @@ import ISO6391 from 'iso-639-1';
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 import { Region, GameInfoState } from '../models/states/game-info.state';
-import {
-    ACTION_SET_GAME_NAME,
-    ACTION_SET_CATEGORY,
-    ACTION_SET_LANGUAGE,
-    ACTION_SET_PLATFORM,
-    ACTION_SET_REGION
-} from '../store/modules/game-info.module';
 
 interface SingleLanguage {
     code: string;

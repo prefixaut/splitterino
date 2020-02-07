@@ -46,7 +46,7 @@ export default class PossibleTimeSaveComponent extends Vue {
 
     private statusWatcher = () => {
         // noop
-    }
+    };
 
     public created() {
         this.statusWatcher = this.$store.watch(
@@ -71,7 +71,7 @@ export default class PossibleTimeSaveComponent extends Vue {
         return null;
     }
 
-    public statusChange(forceUpdate: boolean = false) {
+    public statusChange() {
         if (
             this.status === TimerStatus.RUNNING ||
             (this.timing !== TimingMethod.IGT && this.status === TimerStatus.RUNNING_IGT_PAUSE)

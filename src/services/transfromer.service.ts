@@ -15,11 +15,17 @@ export interface SplitsVersionTransformer {
 @Injectable
 export class TransformerService {
     private splitsVersionTransformers: SplitsVersionTransformer[] = [
-        { // Transformer to update unversioned alpha versions to 0.1
+        // Transformer to update unversioned alpha versions to 0.1
+        {
+            // eslint-disable-next-line id-blacklist
             from: undefined,
             toVersion: MOST_RECENT_SPLITS_VERSION,
-            upgradeTransformer: (data: any) => ({ ...data, version: MOST_RECENT_SPLITS_VERSION }),
-            downgradeTransformer: (data: any) => ({ ...data, version: MOST_RECENT_SPLITS_VERSION }),
+            upgradeTransformer: (data: any) => {
+                return { ...data, version: MOST_RECENT_SPLITS_VERSION };
+            },
+            downgradeTransformer: (data: any) => {
+                return { ...data, version: MOST_RECENT_SPLITS_VERSION };
+            },
         } as any,
     ];
 

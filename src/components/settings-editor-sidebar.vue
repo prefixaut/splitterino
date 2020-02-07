@@ -24,7 +24,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 
 @Component({ name: 'spl-settings-editor-sidebar' })
 export default class SettingsEditorSidebarComponent extends Vue {

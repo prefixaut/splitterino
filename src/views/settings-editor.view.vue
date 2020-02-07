@@ -1,6 +1,6 @@
 <template>
-    <div class="settings-editor-view" v-spl-ctx-menu="['def']">
-        <spl-settings-editor/>
+    <div v-spl-ctx-menu="['def']" class="settings-editor-view">
+        <spl-settings-editor />
     </div>
 </template>
 

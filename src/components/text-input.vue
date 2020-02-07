@@ -13,14 +13,12 @@
             :class="{ outline: outline }"
             @input="onValueInputChange($event)"
             @blur="blurHandler($event)"
-        />
+        >
     </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Model, Prop, Watch } from 'vue-property-decorator';
-
-import { convertToBoolean,convertToNumber } from '../utils/converters';
 
 @Component({ name: 'spl-text-input' })
 export default class TextInputComponent extends Vue {

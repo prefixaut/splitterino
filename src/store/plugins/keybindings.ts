@@ -25,7 +25,7 @@ export function getKeybindingsStorePlugin(injector: Injector) {
                     return;
                 }
 
-                bindings.forEach((theBinding, index) => {
+                bindings.forEach(theBinding => {
                     globalShortcut.register(theBinding.accelerator, () => {
                         Logger.trace({
                             msg: 'Keybinding pressed',

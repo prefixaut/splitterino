@@ -76,8 +76,8 @@ process.on('unhandledRejection', (reason, promise) => {
     const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
     const windowRef = electron.getCurrentWindow();
 
-    windowRef.on('close', async () => {
-        await ipcClient.close();
+    windowRef.on('close', () => {
+        ipcClient.close();
     });
 
     const store = await getClientStore(Vue, ipcClient, injector);
@@ -93,6 +93,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Update the Logger log-level from the registration
     if (response) {
+        // eslint-disable-next-line no-underscore-dangle
         Logger._setInitialLogLevel(response.logLevel);
     }
 

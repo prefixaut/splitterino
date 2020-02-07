@@ -46,7 +46,7 @@ export default class BestPossibleTimeComponent extends Vue {
 
     private statusWatcher = () => {
         // noop
-    }
+    };
 
     public created() {
         this.statusWatcher = this.$store.watch(
@@ -75,27 +75,31 @@ export default class BestPossibleTimeComponent extends Vue {
             if (this.currentSegment > -1) {
                 const currentPace = this.segments
                     .slice(0, this.currentSegment)
-                    .reduce((previousValue, segment) => {
-                        return previousValue + (segment.passed ? getFinalTime(segment.currentTime[this.timing]) : 0);
-                    }, 0);
+                    .reduce(
+                        (previousValue, segment) => previousValue +
+                            (segment.passed ? getFinalTime(segment.currentTime[this.timing]) : 0),
+                        0
+                    );
                 const bestPossibleUpcomingTime = segmentsWithOB
                     .slice(this.currentSegment + 1)
-                    .reduce((previousValue, segment) => {
-                        return previousValue + getFinalTime(segment.overallBest[this.timing]);
-                    }, 0);
+                    .reduce(
+                        (previousValue, segment) => previousValue + getFinalTime(segment.overallBest[this.timing]),
+                        0
+                    );
 
                 return currentPace + this.currentSegmentTime + bestPossibleUpcomingTime;
             } else {
-                return segmentsWithOB.reduce((previousValue, segment) => {
-                    return previousValue + getFinalTime(segment.overallBest[this.timing]);
-                }, 0);
+                return segmentsWithOB.reduce(
+                    (previousValue, segment) => previousValue + getFinalTime(segment.overallBest[this.timing]),
+                    0
+                );
             }
         }
 
         return null;
     }
 
-    public statusChange(forceUpdate: boolean = false) {
+    public statusChange() {
         if (
             this.status === TimerStatus.RUNNING ||
             (this.timing !== TimingMethod.IGT && this.status === TimerStatus.RUNNING_IGT_PAUSE)
