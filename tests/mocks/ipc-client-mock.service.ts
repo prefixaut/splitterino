@@ -12,7 +12,7 @@ export class IPCClientMockService implements IPCClientInterface {
         // noop
     }
 
-    public async initialize() {
+    public initialize() {
         return {} as any;
     }
 
@@ -20,7 +20,7 @@ export class IPCClientMockService implements IPCClientInterface {
         // noop
     }
 
-    public async getStoreState() {
+    public getStoreState() {
         return {} as any;
     }
 
@@ -40,7 +40,7 @@ export class IPCClientMockService implements IPCClientInterface {
         return false;
     }
 
-    public async sendDealerRequestAwaitResponse() {
+    public sendDealerRequestAwaitResponse() {
         return {} as any;
     }
 

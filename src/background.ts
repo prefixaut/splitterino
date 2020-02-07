@@ -210,7 +210,7 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', () => {
+    app.on('ready', () => async () => {
         if (isDevelopment() && !process.env.IS_TEST) {
             // Install Vue Devtools
             await installVueDevtools();
