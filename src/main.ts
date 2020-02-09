@@ -210,19 +210,14 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', () => async () => {
-        if (isDevelopment() && !process.env.IS_TEST) {
-            // Install Vue Devtools
-            await installVueDevtools();
-        }
-
+    app.on('ready', () => {
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
             store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
         }
 
-        mainWindow = createMainWindow();
+        createMainWindow();
     });
 
     app.on('quit', (event, exitCode) => {
