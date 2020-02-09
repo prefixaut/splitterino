@@ -5,8 +5,8 @@ import { Store } from 'vuex';
 
 import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
-import TimerComponent from '../../../src/components/timer.vue';
-import { aevumFilter } from '../../../src/filters/aevum.filter';
+import TimerComponent from '../../../src/app/components/timer.vue';
+import { aevumFilter } from '../../../src/app/filters/aevum.filter';
 import { RootState } from '../../../src/models/states/root.state';
 import { TimerState } from '../../../src/models/states/timer.state';
 import { getSplitterinoStoreModules } from '../../../src/store/modules/index.module';
