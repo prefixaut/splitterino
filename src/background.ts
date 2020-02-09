@@ -137,8 +137,13 @@ process.on('unhandledRejection', (reason, promise) => {
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
 
-    function createMainWindow() {
+    async function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
+
+        if (isDevelopment() && !process.env.IS_TEST) {
+            // Install Vue Devtools
+            await installVueDevtools();
+        }
 
         if (isDevelopment()) {
             // Load the url of the dev server if in development mode
@@ -175,7 +180,7 @@ process.on('unhandledRejection', (reason, promise) => {
             });
         });
 
-        return window;
+        mainWindow = window;
     }
 
     // catch event in case second instance is started
@@ -205,24 +210,19 @@ process.on('unhandledRejection', (reason, promise) => {
         // on macOS it is common to re-create a window
         // even after all windows have been closed
         if (mainWindow === null) {
-            mainWindow = createMainWindow();
+            createMainWindow();
         }
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', () => async () => {
-        if (isDevelopment() && !process.env.IS_TEST) {
-            // Install Vue Devtools
-            await installVueDevtools();
-        }
-
+    app.on('ready', () => {
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
             store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
         }
 
-        mainWindow = createMainWindow();
+        createMainWindow();
     });
 
     app.on('quit', (event, exitCode) => {
