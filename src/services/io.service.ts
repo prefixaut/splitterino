@@ -1,5 +1,5 @@
 import { BrowserWindow, FileFilter } from 'electron';
-import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync, Dirent, readdirSync } from 'fs';
 import gunzip from 'gunzip-maybe';
 import { Inject, Injectable, InjectionToken } from 'lightweight-di';
 import { cloneDeep, merge, set } from 'lodash';
@@ -8,7 +8,7 @@ import { extract } from 'tar-stream';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 
-import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../common/constants';
+import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE, RUNTIME_ENVIRONMENT_TOKEN } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
@@ -36,9 +36,10 @@ import {
 import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
-import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
+import { homedir } from 'os';
+import { RuntimeEnvironment } from '../utils/services';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
@@ -48,12 +49,17 @@ export class IOService {
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface
+        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface,
+        @Inject(RUNTIME_ENVIRONMENT_TOKEN) protected runtimeEnv: RuntimeEnvironment,
     ) {
-        this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
+        this.assetDir = join(homedir(), '.splitterino');
+
+        if (runtimeEnv === RuntimeEnvironment.BACKGROUND) {
+            this.initializeFolderStructure();
+        }
     }
 
-    protected readonly assetDir;
+    protected readonly assetDir: string;
     protected readonly appSettingsFileName = 'application-settings.json';
     protected readonly settingsFileName = 'settings.json';
 
@@ -67,8 +73,23 @@ export class IOService {
         extensions: ['psplt']
     };
 
+    private initializeFolderStructure() {
+        if (!existsSync(this.assetDir)) {
+            mkdirSync(this.assetDir);
+        }
+
+        const pluginDir = this.getPluginDirectory();
+        if (!existsSync(pluginDir)) {
+            mkdirSync(pluginDir);
+        }
+    }
+
     public getAssetDirectory() {
         return this.assetDir;
+    }
+
+    public getPluginDirectory() {
+        return join(this.assetDir, 'plugin');
     }
 
     public loadFile(path: string, basePath: string = this.assetDir): string | null {
@@ -148,6 +169,32 @@ export class IOService {
 
     public saveJSONToFile(path: string, data: object, basePath: string = this.assetDir): boolean {
         return this.saveFile(path, JSON.stringify(data, null, 4), basePath);
+    }
+
+    public listDirectoryContent(path: string, basePath: string = this.assetDir): Dirent[] {
+        let dirList: Dirent[] = [];
+        const dirPath = join(basePath, path);
+
+        try {
+            dirList = readdirSync(dirPath, { withFileTypes: true });
+        } catch (e) {
+            Logger.error({
+                msg: 'Error while reading directory contents',
+                file: dirPath,
+                error: e,
+            });
+        }
+
+        return dirList;
+    }
+
+    /**
+     * Only list directories for given path
+     * @param path Path to read directories from
+     */
+    public listDirectories(path: string, basePath: string = this.assetDir): Dirent[] {
+        return this.listDirectoryContent(path, basePath)
+            .filter(dirent => dirent.isDirectory());
     }
 
     /**

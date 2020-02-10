@@ -62,9 +62,11 @@ export enum MessageType {
     REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
     BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
+    BROADCAST_APP_SHUTDOWN = 'BROADCAST_APP_SHUTDOWN',
     REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
     NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
+    NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
 }
 
 export interface IPCPacket {
@@ -115,12 +117,14 @@ export interface Request extends Message {
 export interface Broadcast extends Message {
     type:
     | MessageType.BROADCAST_GLOBAL_EVENT
+    | MessageType.BROADCAST_APP_SHUTDOWN
     ;
 }
 
 export interface Notification extends Message {
     type:
     | MessageType.NOTIFY_PLUGIN_PROCESS_READY
+    | MessageType.NOTIFY_PLUGIN_PROCESS_DED
     ;
 }
 
@@ -373,4 +377,18 @@ export interface LogOnServerRequest extends Request {
  */
 export interface PluginProcessReadyNotification extends Notification {
     type: MessageType.NOTIFY_PLUGIN_PROCESS_READY;
+}
+
+/**
+ * Notify main process that plugin process is ded
+ */
+export interface PluginProcessDedNotification extends Notification {
+    type: MessageType.NOTIFY_PLUGIN_PROCESS_DED;
+}
+
+/**
+ * Broadcast a shutdown event
+ */
+export interface AppShutdownBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_APP_SHUTDOWN;
 }

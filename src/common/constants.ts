@@ -1,10 +1,18 @@
 import { ApplicationSettings } from '../models/application-settings';
 import { SettingsConfigurationNamespace } from '../models/states/settings.state';
+import { InjectionToken } from 'lightweight-di';
+import { RuntimeEnvironment } from '../utils/services';
 
 /**
  * IPC Constants
  */
 export const IPC_SERVER_NAME = 'flamingo';
+
+/**
+ * Service constants without corresponding file
+ */
+export const RUNTIME_ENVIRONMENT_TOKEN = new InjectionToken<RuntimeEnvironment>('runtime-environment');
+
 
 /*
  * Default Values

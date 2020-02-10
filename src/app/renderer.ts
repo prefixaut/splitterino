@@ -39,7 +39,7 @@ import { IPC_CLIENT_TOKEN } from '../models/ipc';
 import { router } from './router';
 import { getClientStore } from '../store';
 import { Logger, LogLevel } from '../utils/logger';
-import { createInjector } from '../utils/services';
+import { createRendererInjector } from '../utils/services';
 
 process.on('uncaughtException', error => {
     Logger.fatal({
@@ -63,7 +63,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 (async () => {
-    const injector = createInjector();
+    const injector = createRendererInjector();
 
     // Initialize the logger
     Logger.initialize(injector, LogLevel.DEBUG);

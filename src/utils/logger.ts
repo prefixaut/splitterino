@@ -2,8 +2,10 @@ import { Injector } from 'lightweight-di';
 import pino from 'pino';
 import uuid from 'uuid';
 
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
+import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { IPC_CLIENT_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
+import { RuntimeEnvironment } from './services';
+import { RUNTIME_ENVIRONMENT_TOKEN } from '../common/constants';
 
 /**
  * Enum to map log levels
@@ -29,8 +31,8 @@ export class Logger {
     private static logHandlers: pino.Logger[] = [];
     private static isInitialized = false;
     private static windowId: number = null;
-    private static electron: ElectronInterface;
     private static ipcClient: IPCClientInterface;
+    private static runtimeEnv: RuntimeEnvironment;
 
     private static enrichMessage(messageOrData: string | object): object {
         let data: object = {
@@ -54,11 +56,12 @@ export class Logger {
     }
 
     public static initialize(injector: Injector, logLevel: LogLevel) {
+        this.runtimeEnv = injector.get(RUNTIME_ENVIRONMENT_TOKEN);
+
         if (this.isInitialized) {
             return;
         }
-        this.electron = injector.get(ELECTRON_INTERFACE_TOKEN);
-        if (this.electron.isRenderProcess()) {
+        if (this.runtimeEnv !== RuntimeEnvironment.BACKGROUND) {
             this.ipcClient = injector.get(IPC_CLIENT_TOKEN);
         }
 
@@ -72,9 +75,11 @@ export class Logger {
             },
         }));
 
-        const window = this.electron.getCurrentWindow();
-        if (window != null && typeof window.id === 'number') {
-            this.windowId = window.id;
+        if (this.runtimeEnv === RuntimeEnvironment.RENDERER) {
+            const window = injector.get(ELECTRON_INTERFACE_TOKEN)?.getCurrentWindow();
+            if (window != null && typeof window.id === 'number') {
+                this.windowId = window.id;
+            }
         }
         this.isInitialized = true;
     }
@@ -92,7 +97,11 @@ export class Logger {
      */
     // eslint-disable-next-line no-underscore-dangle
     public static _logToHandlers(logFnName: LogLevel, data: object) {
-        if (this.ipcClient && this.ipcClient.isInitialized() && this.electron.isRenderProcess()) {
+        if (
+            this.ipcClient &&
+            this.ipcClient.isInitialized() &&
+            this.runtimeEnv !== RuntimeEnvironment.BACKGROUND
+        ) {
             const message: LogOnServerRequest = {
                 id: uuid(),
                 type: MessageType.REQUEST_LOG_ON_SERVER,
@@ -100,6 +109,10 @@ export class Logger {
                 message: data,
             };
             this.ipcClient.sendDealerMessage(message, null, true);
+        }
+
+        if (this.runtimeEnv === RuntimeEnvironment.PLUGIN) {
+            return;
         }
 
         this.logHandlers.forEach(handler => {

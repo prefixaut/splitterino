@@ -10,7 +10,7 @@ import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { IPCServer } from './common/ipc-server';
-import { CommitMutationRequest, MessageType } from './models/ipc';
+import { CommitMutationRequest, MessageType, AppShutdownBroadcast } from './models/ipc';
 import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
@@ -19,8 +19,9 @@ import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
-import { createInjector } from './utils/services';
+import { createBackgroundInjector } from './utils/services';
 import { forkPluginProcess } from './common/plugin/fork';
+import { map, first, timeout } from 'rxjs/operators';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -80,7 +81,7 @@ process.on('unhandledRejection', (reason, promise) => {
     let mainWindow: BrowserWindow;
 
     /** Instance of an injector with resolved services */
-    const injector = createInjector();
+    const injector = createBackgroundInjector();
 
     /** Parsed command line arguments */
     const args = parseArguments();
@@ -139,7 +140,7 @@ process.on('unhandledRejection', (reason, promise) => {
     registerDefaultKeybindingFunctions();
 
     // Start plugin child process
-    const pluginProcess = await forkPluginProcess(ipcServer);
+    let pluginProcess = await forkPluginProcess(ipcServer);
     if (pluginProcess == null) {
         Logger.fatal('Could not start plugin process');
     } else {
@@ -234,9 +235,43 @@ process.on('unhandledRejection', (reason, promise) => {
         createMainWindow();
     });
 
+    let sentShutdown = false;
+    app.on('before-quit', event => {
+        // TODO: Check if timer is running
+        if (pluginProcess != null) {
+            Logger.debug('Trying to gracefully shut down plugin process');
+
+            event.preventDefault();
+            ipcServer.listenToRouterSocket().pipe(
+                map(packet => packet.message),
+                first(message => message.type === MessageType.NOTIFY_PLUGIN_PROCESS_DED),
+                timeout(5000)
+            ).subscribe(() => {
+                pluginProcess.kill('SIGTERM');
+                pluginProcess = null;
+                Logger.debug('Plugin process shut down gracefully');
+                app.quit();
+            }, () => {
+                pluginProcess.kill('SIGKILL');
+                pluginProcess = null;
+                Logger.error('Plugin process could not be shut down');
+                app.quit();
+            });
+        }
+
+        if (!sentShutdown) {
+            const message: AppShutdownBroadcast = {
+                id: uuid(),
+                type: MessageType.BROADCAST_APP_SHUTDOWN
+            };
+            ipcServer.publishMessage(message);
+            sentShutdown = true;
+        }
+    });
+
     app.on('quit', (event, exitCode) => {
         ipcServer.close();
-        Logger.info({ msg: 'App will quit!', event, exitCode });
+        Logger.info({ msg: 'App quit!', exitCode });
     });
 
     // Exit cleanly on request from parent process in development mode.
