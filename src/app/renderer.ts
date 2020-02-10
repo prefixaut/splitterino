@@ -80,7 +80,7 @@ process.on('unhandledRejection', (reason, promise) => {
         ipcClient.close();
     });
 
-    const store = await getClientStore(Vue, ipcClient, injector);
+    const store = await getClientStore(Vue, injector);
 
     // Initialize and register the ipc-client
     const response = await ipcClient.initialize(store, {

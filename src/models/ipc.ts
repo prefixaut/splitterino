@@ -64,6 +64,7 @@ export enum MessageType {
     BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
     REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
+    NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
 }
 
 export interface IPCPacket {
@@ -117,6 +118,12 @@ export interface Broadcast extends Message {
     ;
 }
 
+export interface Notification extends Message {
+    type:
+    | MessageType.NOTIFY_PLUGIN_PROCESS_READY
+    ;
+}
+
 /**
  * A basic Response to a Request which is being sent via IPC.
  */
@@ -141,6 +148,14 @@ export interface Response extends Message {
      * The Error why the request couldn't be processed.
      */
     error?: ResponseError;
+}
+
+/**
+ * Internal message structure for local message bus in single process
+ */
+export interface LocalMessage {
+    messageId: string;
+    content: any;
 }
 
 /**
@@ -354,9 +369,8 @@ export interface LogOnServerRequest extends Request {
 }
 
 /**
- * Internal message structure for local message bus in single process
+ * Notify main process that plugin process is ready
  */
-export interface LocalMessage {
-    messageId: string;
-    content: any;
+export interface PluginProcessReadyNotification extends Notification {
+    type: MessageType.NOTIFY_PLUGIN_PROCESS_READY;
 }

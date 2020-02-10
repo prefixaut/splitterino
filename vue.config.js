@@ -11,16 +11,11 @@ module.exports = {
         electronBuilder: {
             mainProcessFile: 'src/main.ts',
             nodeIntegration: true,
-            builderOptions: {
-                fileAssociations: [
-                    {
-                        ext: 'splits',
-                        description: 'Splits file',
-                    },
-                ],
-                appId: 'moe.prefixaut.splitterino',
-                productName: 'Splitterino',
-            },
-        },
-    },
+            chainWebpackMainProcess: config => {
+                config.entry('plugin-process')
+                    .add('./src/common/plugin/process.ts')
+                    .end();
+            }
+        }
+    }
 };

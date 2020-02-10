@@ -174,6 +174,10 @@ export class IPCServer {
         return Promise.resolve();
     }
 
+    public listenToRouterSocket() {
+        return this.routerMessages;
+    }
+
     public publishMessage(message: Message): Promise<boolean> {
         Logger.debug({
             msg: 'Sending IPC Message',
@@ -199,63 +203,6 @@ export class IPCServer {
         this.router.send([identity, targetClient, IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return Promise.resolve(true);
-    }
-
-    public async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
-        if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
-            Logger.debug({
-                msg: 'Received IPC Message',
-                direction: 'INBOUND',
-                socket: 'ROUTER',
-                ipcMessage: message,
-            });
-        }
-
-        // The message is an response to a previously sent request
-        // These are handled seperately.
-        if (typeof (message as any).respondsTo === 'string') {
-            return;
-        }
-
-        const handlerFn = this.routerTable[message.type];
-
-        if (typeof handlerFn === 'function') {
-            handlerFn.call(this, identity, receivedFrom, message, true);
-
-            return;
-        }
-
-        const response: Response = {
-            id: uuid(),
-            type: MessageType.RESPONSE_INVALID_REQUEST,
-            respondsTo: message.id,
-            successful: false,
-            error: {
-                message: `The received Request Type "${message.type}" could not be processed by the server!`,
-            }
-        };
-
-        // Respond to the client
-        await this.sendRouterMessage(identity, receivedFrom, response);
-    }
-
-    public handleIncomingPullMessage(message: Message) {
-        Logger.debug({
-            msg: 'Received IPC Message',
-            direction: 'INBOUND',
-            socket: 'PULL',
-            ipcMessage: message,
-        });
-
-        const handlerFn = this.pullTable[message.type];
-
-        if (typeof handlerFn === 'function') {
-            handlerFn.call(this, message, false);
-
-            return;
-        }
-
-        // As the server only pulls messages without responding, no response needed here.
     }
 
     protected async handleRegisterClient(identity: Buffer, receivedFrom: string, request: RegisterClientRequest) {
@@ -353,6 +300,68 @@ export class IPCServer {
         }
 
         this.sendRouterMessage(identity, receivedFrom, response);
+    }
+
+    private async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
+        if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
+            Logger.debug({
+                msg: 'Received IPC Message',
+                direction: 'INBOUND',
+                socket: 'ROUTER',
+                ipcMessage: message,
+            });
+        }
+
+        if (message.type.startsWith('NOTIFY')) {
+            // Drop message on notify since it's one shot
+            return;
+        }
+
+        // The message is an response to a previously sent request
+        // These are handled seperately.
+        if (typeof (message as any).respondsTo === 'string') {
+            return;
+        }
+
+        const handlerFn = this.routerTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, identity, receivedFrom, message, true);
+
+            return;
+        }
+
+        const response: Response = {
+            id: uuid(),
+            type: MessageType.RESPONSE_INVALID_REQUEST,
+            respondsTo: message.id,
+            successful: false,
+            error: {
+                message: `The received Request Type "${message.type}" could not be processed by the server!`,
+            }
+        };
+
+        // Respond to the client
+        await this.sendRouterMessage(identity, receivedFrom, response);
+    }
+
+    private handleIncomingPullMessage(message: Message) {
+        Logger.debug({
+            msg: 'Received IPC Message',
+            direction: 'INBOUND',
+            socket: 'PULL',
+            ipcMessage: message,
+        });
+
+        const handlerFn = this.pullTable[message.type];
+
+        if (typeof handlerFn === 'function') {
+            handlerFn.call(this, message, false);
+
+            return;
+        }
+
+        // As the server only pulls messages without responding, no response needed here.
     }
 
     private handleGlobalEventPublish(i: never, r: never, request: PublishGlobalEventRequest) {

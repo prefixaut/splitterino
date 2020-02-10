@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import Vuex, { DispatchOptions, Payload, Store } from 'vuex';
 
-import { IPCClientInterface } from '../models/ipc';
+import { IPC_CLIENT_TOKEN } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
 import { Logger } from '../utils/logger';
 import { getSplitterinoStoreModules } from './modules/index.module';
@@ -18,10 +18,12 @@ export function getStoreConfig(injector: Injector) {
     };
 }
 
-export function getClientStore(vueRef, client: IPCClientInterface, injector: Injector): Promise<Store<RootState>> {
+export function getClientStore(vueRef, injector: Injector): Promise<Store<RootState>> {
     vueRef.use(Vuex);
 
     const store = new Vuex.Store<RootState>(getStoreConfig(injector));
+
+    const client = injector.get(IPC_CLIENT_TOKEN);
 
     // Override the dispatch function to delegate it to the main process instead
     // eslint-disable-next-line dot-notation

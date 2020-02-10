@@ -1,4 +1,12 @@
 artifactName: installer.${ext}
+fileAssociations:
+  - ext: splits
+    description: Splits file
+appId: moe.prefixaut.splitterino
+productName: Splitterino
+extraFiles:
+  - from: dist_electron/bundled/plugin-process.js
+    to: plugin/process.js
 
 win:
   publish:

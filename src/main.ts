@@ -20,6 +20,7 @@ import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
 import { createInjector } from './utils/services';
+import { forkPluginProcess } from './common/plugin/fork';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({
@@ -137,6 +138,14 @@ process.on('unhandledRejection', (reason, promise) => {
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
 
+    // Start plugin child process
+    const pluginProcess = await forkPluginProcess(ipcServer);
+    if (pluginProcess == null) {
+        Logger.fatal('Could not start plugin process');
+    } else {
+        Logger.debug('Started plugin process');
+    }
+
     function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
 
@@ -210,7 +219,12 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', () => {
+    app.whenReady().then(async () => {
+        if (isDevelopment() && !process.env.IS_TEST) {
+            // Install Vue Devtools
+            await installVueDevtools();
+        }
+
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
