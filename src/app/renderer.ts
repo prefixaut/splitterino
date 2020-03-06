@@ -63,7 +63,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 (async () => {
-    const injector = createInjector();
+    const injector = await createInjector();
 
     // Initialize the logger
     Logger.initialize(injector, LogLevel.DEBUG);

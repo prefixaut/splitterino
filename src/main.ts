@@ -79,7 +79,7 @@ process.on('unhandledRejection', (reason, promise) => {
     let mainWindow: BrowserWindow;
 
     /** Instance of an injector with resolved services */
-    const injector = createInjector();
+    const injector = await createInjector();
 
     /** Parsed command line arguments */
     const args = parseArguments();

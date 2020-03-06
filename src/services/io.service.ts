@@ -12,7 +12,9 @@ import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../com
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { LiveSplitCoreInterface } from '../models/livesplit-core';
 import { TimingMethod } from '../models/segment';
+import { Splits } from '../models/splits';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
 import { GameInfoState } from '../models/states/game-info.state';
 import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
@@ -38,6 +40,7 @@ import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/spl
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
+import { LIVESPLIT_CORE_SERVICE_TOKEN } from './livesplit-core.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
@@ -48,7 +51,8 @@ export class IOService {
         @Inject(ELECTRON_INTERFACE_TOKEN) protected electron: ElectronInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface
+        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface,
+        @Inject(LIVESPLIT_CORE_SERVICE_TOKEN) protected livesplitCore: LiveSplitCoreInterface,
     ) {
         this.assetDir = join(this.electron.getAppPath(), isDevelopment() ? 'resources' : '..');
     }
@@ -183,49 +187,65 @@ export class IOService {
                     msg: 'Loading splits from File',
                     file: filePath,
                 });
-                const loadedJSON: any = this.loadJSONFromFile(filePath, '');
-                let loadedSplits: SplitsFile;
 
-                if (loadedJSON != null && typeof loadedJSON === 'object') {
-                    loadedSplits = this.transformer.upgradeSplitsFile(loadedJSON, loadedJSON.version);
-                }
+                let loadedSplits: Splits;
 
-                if (loadedSplits == null || !this.validator.isSplits(loadedSplits.splits)) {
-                    Logger.error({
-                        msg: 'The loaded splits are not valid Splits!',
-                        file: filePath,
-                    });
+                // If it's a regular splits file, then we load it our regular way
+                if (IOService.SPLITS_FILE_FILTER.extensions.findIndex(ext => filePath.endsWith(ext)) > -1) {
+                    const loadedJSON: any = this.loadJSONFromFile(filePath, '');
+                    let loadedSplitsFile: SplitsFile;
 
-                    return false;
-                }
+                    if (loadedJSON != null && typeof loadedJSON === 'object') {
+                        loadedSplitsFile = this.transformer.upgradeSplitsFile(loadedJSON, loadedJSON.version);
+                    }
 
-                const defaultGameInfo: GameInfoState = {
-                    name: null,
-                    category: null,
-                    language: null,
-                    platform: null,
-                    region: null,
-                };
+                    if (loadedSplitsFile == null || !this.validator.isSplits(loadedSplitsFile.splits)) {
+                        Logger.error({
+                            msg: 'The loaded splits are not valid Splits!',
+                            file: filePath,
+                        });
 
-                if (loadedSplits.splits.game == null) {
-                    loadedSplits.splits.game = defaultGameInfo;
-                } else {
-                    loadedSplits.splits.game = {
-                        ...defaultGameInfo,
-                        ...loadedSplits.splits.game,
+                        return false;
+                    }
+
+                    const defaultGameInfo: GameInfoState = {
+                        name: null,
+                        category: null,
+                        language: null,
+                        platform: null,
+                        region: null,
                     };
+
+                    if (loadedSplitsFile.splits.game == null) {
+                        loadedSplitsFile.splits.game = defaultGameInfo;
+                    } else {
+                        loadedSplitsFile.splits.game = {
+                            ...defaultGameInfo,
+                            ...loadedSplitsFile.splits.game,
+                        };
+                    }
+
+                    loadedSplits = loadedSplitsFile.splits;
+                } else {
+                    // Fallback to loading the file via livesplit
+                    const loadedFile = this.loadFile(filePath, '');
+                    const result = this.livesplitCore.loadSplitsViaLiveSplit(filePath, loadedFile);
+                    if (!result) {
+                        return false;
+                    }
+                    loadedSplits = result;
                 }
 
                 Logger.debug('Loaded splits are valid! Applying to store ...');
 
                 const values = await Promise.all([
-                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loadedSplits.splits.segments),
-                    store.dispatch(ACTION_SET_TIMING, loadedSplits.splits.timing),
-                    store.dispatch(ACTION_SET_GAME_NAME, loadedSplits.splits.game.name),
-                    store.dispatch(ACTION_SET_CATEGORY, loadedSplits.splits.game.category),
-                    store.dispatch(ACTION_SET_LANGUAGE, loadedSplits.splits.game.language),
-                    store.dispatch(ACTION_SET_PLATFORM, loadedSplits.splits.game.platform),
-                    store.dispatch(ACTION_SET_REGION, loadedSplits.splits.game.region),
+                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loadedSplits.segments),
+                    store.dispatch(ACTION_SET_TIMING, loadedSplits.timing),
+                    store.dispatch(ACTION_SET_GAME_NAME, loadedSplits.game.name),
+                    store.dispatch(ACTION_SET_CATEGORY, loadedSplits.game.category),
+                    store.dispatch(ACTION_SET_LANGUAGE, loadedSplits.game.language),
+                    store.dispatch(ACTION_SET_PLATFORM, loadedSplits.game.platform),
+                    store.dispatch(ACTION_SET_REGION, loadedSplits.game.region),
                 ]);
 
                 await store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath);
