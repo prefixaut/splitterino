@@ -20,9 +20,9 @@ jobs:
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+          key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+            ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
             ${{ matrix.os.name }}-node-${{ matrix.node}}-
 
       - name: Setup Node.js ${{ matrix.node }}
@@ -57,15 +57,15 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.cargo
-        key: ${{ matrix.os.name }}-cargo-${{ hashFiles('./livesplit-core/Cargo.lock') }}
+        key: ${{ matrix.os.name }}-cargo-${{ hashFiles('livesplit-core/Cargo.lock') }}
 
     - name: Cache npm dependencies
       uses: actions/cache@v1
       with:
         path: node_modules
-        key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+        key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
         restore-keys: |
-          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+          ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
           ${{ matrix.os.name }}-node-${{ matrix.node}}-
 
     - name: Setup Node.js ${{ matrix.node }}
@@ -135,15 +135,15 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cargo
-          key: ${{ matrix.os.name }}-cargo-${{ hashFiles('./livesplit-core/Cargo.lock') }}
+          key: ${{ matrix.os.name }}-cargo-${{ hashFiles('livesplit-core/Cargo.lock') }}
 
       - name: Cache npm dependencies
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+          key: ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('./yarn.lock') }}
+            ${{ matrix.os.name }}-node-${{ matrix.node}}-build-${{ hashFiles('yarn.lock') }}
             ${{ matrix.os.name }}-node-${{ matrix.node}}-
 
       - name: Setup Node.js ${{ matrix.node }}
