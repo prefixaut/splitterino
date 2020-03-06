@@ -37,6 +37,7 @@
     "scripts": {
         "serve": "vue-cli-service electron:serve",
         "build": "vue-cli-service electron:build",
+        "build:livesplit-core": "node ./scripts/build-livesplit-core.js",
         "lint": "vue-cli-service lint --no-fix ./src/**/*.vue ./src/**/*.ts",
         "postinstall": "patch-package && electron-builder install-app-deps",
         "test:unit": "vue-cli-service test:unit",

@@ -10,27 +10,48 @@ Splitterino is an open-source multi-platform applications for speedrunners (gami
 
 Splitterino is built ontop [Electron](https://electronjs.org/) and [Vue](https://vuejs.org/), using [TypeScript](https://www.typescriptlang.org/) as the language for a more reliable and stable application.
 
-## Usage
+## Installation
+
+### Regular Users
 
 To install Splitterino to use it, you should use the installer for your operating system.
 Download the appropriate installer from the [GitHub Releases](https://github.com/prefixaut/splitterino/releases) page and follow the instructions.
 
-## Installation
+---
+
+### Developers / Contributors
 
 This installation is aimed for developers to work on and test the code.
+Please read the rules for contributing which are specified in [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 
 Required Software:
-* Node via [NodeJS](https://nodejs.org) or via [NVM - Node Version Manager](https://github.com/nvm-sh/nvm)
-* [yarn](https://yarnpkg.com/) as the Package-Manager (instead of `npm`)
+* [NodeJS](https://nodejs.org), perferably via [NVM - Node Version Manager](https://github.com/nvm-sh/nvm)
+* [yarn](https://classic.yarnpkg.com) (Version 1!) as the Package-Manager (instead of `npm`)
+* The [Rust](https://rust-lang.org) Programming language
 
-First, clone the repository to your local machine.
-The rules for contributing are specified in [CONTRIBUTING](https://github.com/prefixaut/splitterino/blob/master/.github/CONTRIBUTING.md)
-
-Then install all packages via `yarn` and then serve the application.
-
-```sh
-yarn
-yarn serve
-```
+1. Clone the repository to your local machine (Recursive to load the submodules as well):
+    ```sh
+    git clone --recursive 
+    ```
+2. Install WebAssembly target to compile `livesplit-core`
+    ```sh
+    rustup target add wasm32-unknown-unknown
+    ```
+3. Build wasm-bingen
+    ```sh
+    cargo install wasm-bindgen-cli
+    ```
+4. Then install all packages via `yarn`
+    ```sh
+    yarn
+    ```
+5. Build the livesplit-core wasm
+    ```sh
+    yarn build:livesplit-core
+    ```
+6. Serve the application
+    ```sh
+    yarn serve
+    ```
 
 Beware of possible zombie threads when the application is killed via `Ctrl+C`.

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A completely custom implementation of IPC via ZeroMQ [SPL-26]
+- LiveSplit Core integration [SPL-27]
 
 ### Changed
 
