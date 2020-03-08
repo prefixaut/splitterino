@@ -47,7 +47,7 @@ Required Software:
     ```
 5. Build the livesplit-core wasm
     ```sh
-    yarn build:livesplit-core
+    yarn build:wasm
     ```
 6. Serve the application
     ```sh
