@@ -2,10 +2,10 @@ import { Injector } from 'lightweight-di';
 
 import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
 import { IPC_CLIENT_TOKEN } from '../models/ipc';
+import { LIVESPLIT_CORE_SERVICE_TOKEN } from '../models/livesplit-core';
 import { ElectronService } from '../services/electron.service';
 import { IO_SERVICE_TOKEN, IOService } from '../services/io.service';
 import { IPCClient } from '../services/ipc-client.service';
-import { LIVESPLIT_CORE_SERVICE_TOKEN } from '../services/livesplit-core.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../services/transfromer.service';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 

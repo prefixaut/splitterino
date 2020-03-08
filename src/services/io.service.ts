@@ -12,7 +12,7 @@ import { DEFAULT_APPLICATION_SETTINGS, GLOBAL_EVENT_LOAD_TEMPLATE } from '../com
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../models/electron';
 import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
-import { LiveSplitCoreInterface } from '../models/livesplit-core';
+import { LIVESPLIT_CORE_SERVICE_TOKEN, LiveSplitCoreInterface } from '../models/livesplit-core';
 import { TimingMethod } from '../models/segment';
 import { Splits } from '../models/splits';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
@@ -40,7 +40,6 @@ import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/spl
 import { asSaveableSegment } from '../utils/converters';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
-import { LIVESPLIT_CORE_SERVICE_TOKEN } from './livesplit-core.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');

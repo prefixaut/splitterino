@@ -79,21 +79,17 @@ jobs:
     - name: Setup Rust
       uses: hecrj/setup-rust-action@v1
 
-    - name: Install target
+    - name: Install wasm target
       run: rustup target add wasm32-unknown-unknown
 
-    - name: Install wasm-bindgen
-      run: |
-        set -e
-        cargo install wasm-bindgen-cli
+    - name: Install wasm-bindgen cli
+      run: cargo install wasm-bindgen-cli
 
     - name: Install packages via yarn
       run: yarn --non-interactive --frozen-lockfile
 
-    - name: Build LiveSplit Core
-      run: |
-        set -e
-        npm run build:core
+    - name: Build WASM modules
+      run: yarn build:wasm
 
     - name: Unit Tests & Code Coverage (Linux & Mac)
       if: matrix.os.name != 'windows'
@@ -157,21 +153,17 @@ jobs:
       - name: Setup Rust
         uses: hecrj/setup-rust-action@v1
 
-      - name: Install target
+      - name: Install wasm target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Install wasm-bindgen
-        run: |
-          set -e
-          cargo install wasm-bindgen-cli
+      - name: Install wasm-bindgen cli
+        run: cargo install wasm-bindgen-cli
 
       - name: Install packages via yarn
         run: yarn --non-interactive --frozen-lockfile
 
-      - name: Build LiveSplit Core
-        run: |
-          set -e
-          npm run build:core
+      - name: Build WASM modules
+        run: yarn build:wasm
 
       - name: Build the Application
         run: yarn build --publish=never

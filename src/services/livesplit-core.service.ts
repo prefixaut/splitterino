@@ -1,4 +1,4 @@
-import { Injectable, InjectionToken } from 'lightweight-di';
+import { Injectable } from 'lightweight-di';
 import { v4 as uuid } from 'uuid';
 
 import { Run, RunRef, SegmentRef as LiveSplitSegment, TimeRef, TimeSpanRef } from '../../wasm/livesplit-core';
@@ -7,8 +7,6 @@ import { DetailedTime, Segment, SegmentTime, TimingMethod } from '../models/segm
 import { Splits } from '../models/splits';
 import { Region } from '../models/states/game-info.state';
 import { Logger } from '../utils/logger';
-
-export const LIVESPLIT_CORE_SERVICE_TOKEN = new InjectionToken<LiveSplitCoreInterface>('livesplit-core');
 
 @Injectable
 export class LiveSplitCoreService implements LiveSplitCoreInterface {
