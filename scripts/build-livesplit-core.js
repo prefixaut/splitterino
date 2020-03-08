@@ -24,5 +24,5 @@ spawnSync(
 );
 
 fs.createReadStream('livesplit-core/capi/bindings/wasm_bindgen/index.ts').pipe(
-    fs.createWriteStream('src/livesplit-core/index.ts')
+    fs.createWriteStream('wasm/livesplit-core/index.ts')
 );

@@ -19,8 +19,8 @@ yarn-error.log*
 *.sln
 *.sw*
 
-# Build livesplit-core files
-src/livesplit-core
+# Build wasm modules
+wasm/
 
 # electron-builder output
 dist_electron/

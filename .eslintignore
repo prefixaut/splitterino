@@ -1,2 +1,4 @@
 /scripts
-/src/livesplit-core
+/libs
+/wasm
+/*.js
