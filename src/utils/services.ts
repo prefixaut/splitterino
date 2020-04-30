@@ -11,7 +11,7 @@ import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator
 
 // Initialize the Dependency-Injection
 export async function createInjector(): Promise<Injector> {
-    const { LiveSplitCoreService } = await import('./../services/livesplit-core.service');
+    const { LiveSplitCoreService } = await /* Promise.resolve({ LiveSplitCoreService: null });/* */import('../services/livesplit-core.service');/* */
 
     return Injector.resolveAndCreate([
         // Overrides/custom providers

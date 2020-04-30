@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es2017",
+        "target": "esnext",
         "module": "esnext",
         "strict": false,
         "jsx": "preserve",
@@ -16,6 +16,6 @@
         "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
     },
     "files": ["src/shims-vue.d.ts"],
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "tests/**/*.ts", "tests/**/*.tsx"],
+    "include": ["src/**/*.ts", "src/**/*.vue", "tests/**/*.ts", "tests/**/*.tsx"],
     "exclude": ["node_modules", "scripts", "**/*.wasm"]
 }

@@ -17,7 +17,7 @@ spawnSync(
 
 spawnSync(
     'wasm-bindgen',
-    ['libs/livesplit-core/target/wasm32-unknown-unknown/release/livesplit_core.wasm', '--out-dir', 'wasm/livesplit-core'],
+    ['libs/livesplit-core/target/wasm32-unknown-unknown/release/livesplit_core.wasm', '--target', 'nodejs', '--out-dir', 'wasm/livesplit-core'],
     {
         stdio: 'inherit',
     }
@@ -26,3 +26,7 @@ spawnSync(
 fs.createReadStream('libs/livesplit-core/capi/bindings/wasm_bindgen/index.ts').pipe(
     fs.createWriteStream('wasm/livesplit-core/index.ts')
 );
+
+fs.createReadStream('libs/livesplit-core/target/wasm-32-unknown-unknown/release/livesplit_core.wasm').pipe(
+    fs.createWriteStream('wasm/livesplit-core/livesplit_core.wasm')
+)

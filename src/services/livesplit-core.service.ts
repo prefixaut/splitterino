@@ -1,7 +1,7 @@
 import { Injectable } from 'lightweight-di';
 import { v4 as uuid } from 'uuid';
 
-import { Run, RunRef, SegmentRef as LiveSplitSegment, TimeRef, TimeSpanRef } from '../../wasm/livesplit-core';
+import { Run, RunRef, SegmentRef, TimeRef, TimeSpanRef } from '../wasm/livesplit-core';
 import { LiveSplitCoreInterface } from '../models/livesplit-core';
 import { DetailedTime, Segment, SegmentTime, TimingMethod } from '../models/segment';
 import { Splits } from '../models/splits';
@@ -41,7 +41,7 @@ export class LiveSplitCoreService implements LiveSplitCoreInterface {
         };
     }
 
-    private liveSplitSegmentToSegment(segment: LiveSplitSegment): Segment {
+    private liveSplitSegmentToSegment(segment: SegmentRef): Segment {
         return {
             id: uuid(),
             name: segment.name(),
