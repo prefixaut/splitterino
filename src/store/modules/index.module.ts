@@ -7,10 +7,12 @@ import { getMetaModule } from './meta.module';
 import { getSettingsStoreModule } from './settings.module';
 import { getSplitsStoreModule } from './splits.module';
 import { getTimerStoreModule } from './timer.module';
+import { getCoreStoreModule } from './core.module';
 
 export function getSplitterinoStoreModules(injector: Injector) {
     return {
         contextMenu: getContextMenuStoreModule(),
+        core: getCoreStoreModule(),
         gameInfo: getGameInfoStoreModule(),
         keybindings: getKeybindingsStoreModule(),
         settings: getSettingsStoreModule(injector),

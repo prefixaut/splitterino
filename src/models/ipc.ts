@@ -1,10 +1,10 @@
 import { InjectionToken } from 'lightweight-di';
+import { Observable } from 'rxjs';
 import { CommitOptions, DispatchOptions, Store } from 'vuex';
 import { Socket } from 'zeromq';
 
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
-import { Observable } from 'rxjs';
 
 export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
 
@@ -15,8 +15,8 @@ export interface IPCClientInterface {
     sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
     sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
     sendPushMessage(message: Message): boolean;
-    listenToSubscriberSocket(): Observable<IPCPacket>;
-    listenToDealerSocket(): Observable<IPCPacket>;
+    listenToSubscriberSocket(): Observable<IPCPacket<Message>>;
+    listenToDealerSocket(): Observable<IPCPacket<Message>>;
     getStoreState(): Promise<RootState>;
     dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
     listenForLocalMessage<T>(messageId: string): Observable<T>;
@@ -48,6 +48,7 @@ export interface SubscriberTable {
 export interface DealerTable {
     [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any;
 }
+
 export enum MessageType {
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
     RESPONSE_REGISTER_CLIENT = 'RESPONSE_REGISTER_CLIENT',
@@ -67,15 +68,17 @@ export enum MessageType {
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
     NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
     NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
+    REQUEST_PLUGIN_ACTION_DIFF = 'REQUEST_PLUGIN_ACTION_DIFF',
+    RESPONSE_PLUGIN_ACTION_DIFF = 'RESPONSE_PLUGIN_ACTION_DIFF',
 }
 
-export interface IPCPacket {
+export interface IPCPacket<T extends Message> {
     receiver: string;
     sender: string;
-    message: Message;
+    message: T;
 }
 
-export interface IPCRouterPacket extends IPCPacket {
+export interface IPCRouterPacket extends IPCPacket<Message> {
     identity: Buffer;
 }
 
@@ -111,6 +114,7 @@ export interface Request extends Message {
     | MessageType.REQUEST_COMMIT_MUTATION
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
+    | MessageType.REQUEST_PLUGIN_ACTION_DIFF
     ;
 }
 
@@ -139,6 +143,7 @@ export interface Response extends Message {
     | MessageType.RESPONSE_DISPATCH_ACTION
     | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
     | MessageType.RESPONSE_INVALID_REQUEST
+    | MessageType.RESPONSE_PLUGIN_ACTION_DIFF
     ;
     /**
      * The Message ID that this Response is responding to.
@@ -391,4 +396,39 @@ export interface PluginProcessDedNotification extends Notification {
  */
 export interface AppShutdownBroadcast extends Broadcast {
     type: MessageType.BROADCAST_APP_SHUTDOWN;
+}
+
+/**
+ * Request sent to the Plugin to create a diff from the requested Action.
+ */
+export interface PluginActionDiffRequest extends Request {
+    type: MessageType.REQUEST_PLUGIN_ACTION_DIFF;
+        /**
+     * The action name that should be applied.
+     */
+    action: string;
+    /**
+     * Payload for the action.
+     */
+    payload?: any;
+    /**
+     * Options for dispatching the action.
+     */
+    options?: DispatchOptions;
+}
+
+/**
+ * Response with the return-value of the action and the resulted
+ * changes which may be applied.
+ */
+export interface PluginActionDiffResponse extends Response {
+    type: MessageType.RESPONSE_PLUGIN_ACTION_DIFF;
+    /**
+     * The value returned from the action after completion.
+     */
+    returnValue?: any;
+    /**
+     * The diff that needs to be applied to the main store.
+     */
+    changes?: { [key: string]: any };
 }

@@ -2,6 +2,7 @@
 import { app, BrowserWindow, protocol } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
+import { first, map, timeout } from 'rxjs/operators';
 import { format as formatUrl } from 'url';
 import uuid from 'uuid';
 import Vue from 'vue';
@@ -10,7 +11,7 @@ import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { IPCServer } from './common/ipc-server';
-import { CommitMutationRequest, MessageType, AppShutdownBroadcast } from './models/ipc';
+import { AppShutdownBroadcast, CommitMutationRequest, MessageType } from './models/ipc';
 import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';
 import { getStoreConfig } from './store';
@@ -19,9 +20,8 @@ import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
+import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
-import { forkPluginProcess } from './common/plugin/fork';
-import { map, first, timeout } from 'rxjs/operators';
 
 process.on('uncaughtException', (error: Error) => {
     Logger.fatal({

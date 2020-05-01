@@ -72,7 +72,7 @@ export class IPCServer {
     private pullMessages: Observable<IPCPacket>;
     private pullMessageSubscription: Subscription;
 
-    private isInitialized = false;
+    private initialized = false;
 
     private connectedClients: Client[] = [];
     private actionTable: { [actionName: string]: string } = {};
@@ -91,8 +91,12 @@ export class IPCServer {
         /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
 
+    public isInitialized() {
+        return this.initialized;
+    }
+
     public initialize(options: InitializeOptions): Promise<void> {
-        if (this.isInitialized) {
+        if (this.initialized) {
             return Promise.resolve();
         }
 
@@ -121,13 +125,13 @@ export class IPCServer {
             this.handleIncomingPullMessage(packet.message);
         });
 
-        this.isInitialized = true;
+        this.initialized = true;
 
         return Promise.resolve();
     }
 
     public close(): Promise<void> {
-        if (!this.isInitialized) {
+        if (!this.initialized) {
             return Promise.resolve();
         }
 
@@ -169,7 +173,7 @@ export class IPCServer {
             this.pullMessageSubscription = null;
         }
 
-        this.isInitialized = false;
+        this.initialized = false;
 
         return Promise.resolve();
     }

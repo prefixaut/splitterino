@@ -1,9 +1,12 @@
-import { fork, ChildProcess } from 'child_process';
-import { isDevelopment } from '../../utils/is-development';
+import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
-import { IPCServer } from '../ipc-server';
 import { first, map, timeout } from 'rxjs/operators';
-import { MessageType } from '../../models/ipc';
+
+import { IPCServer } from '../common/ipc-server';
+import { MessageType } from '../models/ipc';
+import { isDevelopment } from '../utils/is-development';
+
+export const PLUGIN_CLIENT_ID = 'plugin-process';
 
 export async function forkPluginProcess(ipcServer: IPCServer): Promise<ChildProcess | null> {
     return new Promise<ChildProcess | null>((resolve, reject) => {
