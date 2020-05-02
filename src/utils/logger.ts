@@ -2,10 +2,9 @@ import { Injector } from 'lightweight-di';
 import pino from 'pino';
 import uuid from 'uuid';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../common/constants';
+import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { IPC_CLIENT_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
-import { RuntimeEnvironment } from './services';
-import { RUNTIME_ENVIRONMENT_TOKEN } from '../common/constants';
 
 /**
  * Enum to map log levels
@@ -76,7 +75,7 @@ export class Logger {
         }));
 
         if (this.runtimeEnv === RuntimeEnvironment.RENDERER) {
-            const window = injector.get(ELECTRON_INTERFACE_TOKEN)?.getCurrentWindow();
+            const window = injector.get(ELECTRON_SERVICE_TOKEN)?.getCurrentWindow();
             if (window != null && typeof window.id === 'number') {
                 this.windowId = window.id;
             }

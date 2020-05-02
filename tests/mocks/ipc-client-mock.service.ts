@@ -1,8 +1,8 @@
 import { Injectable } from 'lightweight-di';
+import { Observable, Subject } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 
 import { IPCClientInterface, LocalMessage } from '../../src/models/ipc';
-import { Subject, Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
 
 @Injectable
 export class IPCClientMockService implements IPCClientInterface {

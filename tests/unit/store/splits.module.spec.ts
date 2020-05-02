@@ -5,7 +5,7 @@ import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
 
 import { TimerStatus } from '../../../src/common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN } from '../../../src/models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../../src/models/electron';
 import { Segment, SegmentTime, TimingMethod } from '../../../src/models/segment';
 import { RootState } from '../../../src/models/states/root.state';
 import { SplitsState } from '../../../src/models/states/splits.state';
@@ -100,7 +100,7 @@ function generateSegmentArray(size: number): Segment[] {
 
 describe('Splits Store-Module', () => {
     const splitsModule: Module<SplitsState, RootState> = getSplitsStoreModule(injector);
-    const electron = injector.get(ELECTRON_INTERFACE_TOKEN) as ElectronMockService;
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN) as ElectronMockService;
 
     it('should be a valid module', () => {
         expect(splitsModule).to.be.a('object');

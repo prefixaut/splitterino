@@ -19,7 +19,7 @@
 import { BrowserWindow } from 'electron';
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {
@@ -35,7 +35,7 @@ export default class TitleBarComponent extends Vue {
     public windowRef: BrowserWindow;
 
     created() {
-        this.windowRef = this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow();
+        this.windowRef = this.$services.get(ELECTRON_SERVICE_TOKEN).getCurrentWindow();
         this.minimizable = this.windowRef.isMinimizable();
         this.maximizable = this.windowRef.isMaximizable();
         this.closeable = this.windowRef.isClosable();

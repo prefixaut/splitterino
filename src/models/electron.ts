@@ -31,4 +31,4 @@ export interface ElectronInterface {
     broadcastEvent(event: string, payload?: any): void;
 }
 
-export const ELECTRON_INTERFACE_TOKEN = new InjectionToken<ElectronInterface>('electron');
+export const ELECTRON_SERVICE_TOKEN = new InjectionToken<ElectronInterface>('electron');

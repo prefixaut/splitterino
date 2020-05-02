@@ -40,7 +40,7 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../../models/electron';
 import { IPC_CLIENT_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
 import { IOService, IO_SERVICE_TOKEN } from '../../services/io.service';
 import { Logger } from '../../utils/logger';
@@ -60,7 +60,7 @@ export default class DefaultView extends Vue {
 
     public created() {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
-        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
     }
 
     public mounted() {

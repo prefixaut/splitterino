@@ -2,7 +2,7 @@ import { Injector } from 'lightweight-di';
 import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
 import { ContextMenuItem } from '../../models/context-menu-item';
-import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
 import { GETTER_MENUES } from '../../store/modules/context-menu.module';
 
 export function getContextMenuDirective(injector: Injector): DirectiveOptions {
@@ -37,7 +37,7 @@ export function getContextMenuDirective(injector: Injector): DirectiveOptions {
 
     function openContextMenu(value: string[], vNode: VNode) {
         const menuItems: ContextMenuItem[] = vNode.context.$store.getters[GETTER_MENUES](value);
-        const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+        const electron = injector.get(ELECTRON_SERVICE_TOKEN);
         const contextMenu = electron.createMenu(menuItems, vNode);
         contextMenu.popup({
             window: electron.getCurrentWindow(),

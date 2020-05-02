@@ -3,7 +3,7 @@ import { cloneDeep } from 'lodash';
 import { ActionContext, Module } from 'vuex';
 
 import { TimerStatus } from '../../common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
 import { Segment, TimingMethod } from '../../models/segment';
 import { RootState } from '../../models/states/root.state';
 import { SplitsState } from '../../models/states/splits.state';
@@ -97,7 +97,7 @@ function resetSegment(segment: Segment): Segment {
 }
 
 export function getSplitsStoreModule(injector: Injector): Module<SplitsState, RootState> {
-    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
     const validator = injector.get(VALIDATOR_SERVICE_TOKEN);
 
     return {

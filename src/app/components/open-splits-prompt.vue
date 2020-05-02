@@ -25,7 +25,7 @@ import { upperCase } from 'lodash';
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../../models/electron';
 import { RecentlyOpenedSplit } from '../../models/states/meta.state';
 import { IO_SERVICE_TOKEN, IOService } from '../../services/io.service';
 
@@ -38,7 +38,7 @@ export default class OpenSplitsPromptComponent extends Vue {
 
     public created() {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
-        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
 
         const lastSplitFiles = this.$store.state.splitterino.meta.lastOpenedSplitsFiles;
         this.recentSplitFiles = lastSplitFiles

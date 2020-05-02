@@ -34,7 +34,7 @@ import TitleBarComponent from './components/title-bar.vue';
 import { getContextMenuDirective } from './directives/context-menu.directive';
 import { aevumFilter } from './filters/aevum.filter';
 import { timeFilter } from './filters/time.filter';
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { IPC_CLIENT_TOKEN } from '../models/ipc';
 import { router } from './router';
 import { getClientStore } from '../store';
@@ -73,7 +73,7 @@ process.on('unhandledRejection', (reason, promise) => {
     registerDefaultContextMenuFunctions(injector);
 
     const ipcClient = injector.get(IPC_CLIENT_TOKEN);
-    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
     const windowRef = electron.getCurrentWindow();
 
     windowRef.on('close', () => {

@@ -45,7 +45,7 @@ import { set, isEqual, merge } from 'lodash';
 import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
 import { IPC_CLIENT_TOKEN } from '../../models/ipc';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
 import { IO_SERVICE_TOKEN } from '../../services/io.service';
@@ -102,7 +102,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public close() {
-        this.$services.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().close();
+        this.$services.get(ELECTRON_SERVICE_TOKEN).getCurrentWindow().close();
     }
 
     public beforeDestroy() {

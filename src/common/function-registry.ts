@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 
 import { ContextMenuItemActionFunction } from '../models/context-menu-item';
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { KeybindingActionFunction } from '../models/keybindings';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
 import {
@@ -72,7 +72,7 @@ export abstract class FunctionRegistry {
 
 // TODO: Defaults for new windows
 export function registerDefaultContextMenuFunctions(injector: Injector) {
-    const electron = injector.get(ELECTRON_INTERFACE_TOKEN);
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
     const io = injector.get(IO_SERVICE_TOKEN);
 
     /*
@@ -152,7 +152,7 @@ export function registerDefaultKeybindingFunctions() {
 
     FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_RESET, params => {
         params.store.dispatch(ACTION_RESET, {
-            windowId: params.injector.get(ELECTRON_INTERFACE_TOKEN).getCurrentWindow().id,
+            windowId: params.injector.get(ELECTRON_SERVICE_TOKEN).getCurrentWindow().id,
         });
     });
 }

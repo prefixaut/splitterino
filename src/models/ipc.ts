@@ -15,8 +15,8 @@ export interface IPCClientInterface {
     sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
     sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
     sendPushMessage(message: Message): boolean;
-    listenToSubscriberSocket(): Observable<IPCPacket<Message>>;
-    listenToDealerSocket(): Observable<IPCPacket<Message>>;
+    listenToSubscriberSocket(): Observable<IPCPacket>;
+    listenToDealerSocket(): Observable<IPCPacket>;
     getStoreState(): Promise<RootState>;
     dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
     listenForLocalMessage<T>(messageId: string): Observable<T>;
@@ -72,13 +72,13 @@ export enum MessageType {
     RESPONSE_PLUGIN_ACTION_DIFF = 'RESPONSE_PLUGIN_ACTION_DIFF',
 }
 
-export interface IPCPacket<T extends Message> {
+export interface IPCPacket {
     receiver: string;
     sender: string;
-    message: T;
+    message: Message;
 }
 
-export interface IPCRouterPacket extends IPCPacket<Message> {
+export interface IPCRouterPacket extends IPCPacket {
     identity: Buffer;
 }
 

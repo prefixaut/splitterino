@@ -11,14 +11,14 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN } from '../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { GETTER_VALUE_BY_PATH } from '../store/modules/settings.module';
 
 @Component
 export default class AppComponent extends Vue {
 
     public get isMainWindow() {
-        const electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+        const electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
         const window = electron.getCurrentWindow();
 
         return window != null && window.id === 1;
