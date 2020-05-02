@@ -1,4 +1,5 @@
 import { Observable, Subscription } from 'rxjs';
+import { first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { Store } from 'vuex';
 import { socket } from 'zeromq';
@@ -14,6 +15,8 @@ import {
     LogOnServerRequest,
     Message,
     MessageType,
+    PluginActionDiffRequest,
+    PluginActionDiffResponse,
     PublishGlobalEventRequest,
     RegisterClientRequest,
     RegisterClientResponse,
@@ -24,8 +27,10 @@ import {
     UnregisterClientResponse,
 } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
+import { MUTATION_APPLY_DIFF } from '../store/modules/core.module';
 import { createSharedObservableFromSocket } from '../utils/ipc';
 import { Logger, LogLevel } from '../utils/logger';
+import { getModuleActionAndMutationNames } from '../utils/store';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
     IPC_PULL_PUSH_ADDRESS,
@@ -269,23 +274,54 @@ export class IPCServer {
         await this.sendRouterMessage(identity, receivedFrom, response);
     }
 
+    public sendPluginActionDiffRequest(request: PluginActionDiffRequest): Promise<any> {
+        return new Promise((resolve, reject) => {
+            // Setup a listener for the response
+            this.listenToRouterSocket().pipe(
+                map(packet => packet.message),
+                first(message => message.type === MessageType.RESPONSE_PLUGIN_ACTION_DIFF
+                    && (message as Response).respondsTo === request.id),
+                timeout(3_000),
+            ).subscribe((response: PluginActionDiffResponse) => {
+                if (response.successful) {
+                    // Forward the changes as a Mutation to the root
+                    this.store.commit(MUTATION_APPLY_DIFF, response.changes);
+                    resolve(response.returnValue);
+                } else {
+                    reject(response.error);
+                }
+            }, error => {
+                reject(error);
+            });
+
+            // Send the request to the plugin-process
+            this.publishMessage(request).then(successul => {
+                if (!successul) {
+                    throw new Error('Could not send the router message!');
+                }
+            }).catch(reject);
+        });
+    }
+
     protected async handleDispatchAction(identity: Buffer, receivedFrom: string, request: DispatchActionReqeust) {
         // Check if a client should handle the request.
-        // if (this.actionTable[request.action]) {
-        // TODO: Send a request to the client to perform the action in it's process
-        // The client then may send back a response with all commits that should
-        // be performed, and the actions return value.
-        // The mutations are then applied here in the main thread and synced to the
-        // clients via regular means.
-        // The action returnValue is returned as a response to this request.
-        // this.forwardDispatchToClient(req);
-        // return;
-        // }
-
+        const names = getModuleActionAndMutationNames(this.store);
         let response: DispatchActionResponse;
 
         try {
-            const dispatchResult = await this.store.dispatch(request.action, request.payload, request.options);
+            let dispatchResult: any;
+            if (!this.actionTable[request.action] && !names.actions.includes(request.action)) {
+                dispatchResult = await this.sendPluginActionDiffRequest({
+                    id: uuid(),
+                    type: MessageType.REQUEST_PLUGIN_ACTION_DIFF,
+                    action: request.action,
+                    payload: request.payload,
+                    options: request.options,
+                });
+            } else {
+                dispatchResult = await this.store.dispatch(request.action, request.payload, request.options);
+            }
+
             response = {
                 id: uuid(),
                 type: MessageType.RESPONSE_DISPATCH_ACTION,

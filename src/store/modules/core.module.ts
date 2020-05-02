@@ -2,6 +2,7 @@ import { Module } from 'vuex';
 
 import { RootState } from '../../models/states/root.state';
 import { CoreState } from '../../models/states/core.state';
+import { Logger } from '../../utils/logger';
 
 const MODULE_PATH = 'splitterino/core';
 
@@ -13,8 +14,12 @@ export function getCoreStoreModule(): Module<CoreState, RootState> {
         namespaced: true,
         mutations: {
             [ID_MUTATION_APPLY_DIFF](state: RootState, diff: any) {
-                // TODO: Apply diff
+                Logger.info({
+                    msg: 'Apply Diff, noop',
+                    state,
+                    diff
+                });
             }
         }
-    }
+    };
 }

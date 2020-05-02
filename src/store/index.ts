@@ -1,22 +1,20 @@
 import { Injector } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
-import { first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 import Vuex, { DispatchOptions, Module, ModuleOptions, Mutation, Payload, Store, StoreOptions } from 'vuex';
 
 import { IPCServer } from '../common/ipc-server';
-import { IPC_CLIENT_TOKEN, MessageType, PluginActionDiffRequest, PluginActionDiffResponse, Response } from '../models/ipc';
+import { IPC_CLIENT_TOKEN, MessageType } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
 import { Logger } from '../utils/logger';
-import { PLUGIN_CLIENT_ID } from '../utils/plugin';
 import {
+    difference,
     getActionHandler,
     getModuleActionAndMutationNames,
     getNestedState,
     makeLocalContext,
     unifyObjectStyle,
 } from '../utils/store';
-import { MUTATION_APPLY_DIFF } from './modules/core.module';
 import { getSplitterinoStoreModules } from './modules/index.module';
 
 export function getStoreConfig(injector: Injector): StoreOptions<RootState> {
@@ -33,10 +31,10 @@ export function getStoreConfig(injector: Injector): StoreOptions<RootState> {
 
 export const DIFF_OPTION = Symbol('diff-option');
 
-export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootState>> {
+export function getPluginStore(vueRef, storeOptions: StoreOptions<RootState>): Promise<Store<RootState>> {
     vueRef.use(Vuex);
 
-    const store = new Vuex.Store<RootState>(getStoreConfig(injector));
+    const store = new Vuex.Store<RootState>(storeOptions);
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalRegisterModule = store.registerModule;
@@ -49,9 +47,18 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
         module: Module<T, S>,
         options?: ModuleOptions
     ) {
+        console.log('>>> REGISTERING MODULE!');
         if (typeof path === 'string') {
             path = [path];
+        } else if (!Array.isArray(path)) {
+            path = [];
         }
+
+        if (path.length < 1) {
+            Logger.info('Cannot register module as root-module');
+        }
+
+        path.unshift('splitterino', 'plugins');
 
         const moduleName = path.pop();
         const namespace = path.join('/');
@@ -62,14 +69,27 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
         delete module.mutations;
         delete module.actions;
 
-        // Register the module to the store
-        originalRegisterModule.call(store, path, module, options);
+        Logger.info({
+            msg: 'Register-Module override',
+            path,
+            moduleName,
+            namespace,
+        });
+
+        try {
+            // Register the module to the store
+            originalRegisterModule.call(store, path, module, options);
+        } catch (error) {
+            Logger.error(error);
+
+            return;
+        }
 
         // Local/Module instance
         const local = makeLocalContext(store, namespace, path);
 
         // The current changes
-        let currentDiff = {};
+        const currentDiff = {};
 
         // Register the mutation-handlers into a seperate table
         if (moduleMutations != null && typeof moduleMutations === 'object') {
@@ -78,21 +98,22 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
                 const handler = moduleMutations[mutationName];
                 const entry = mutationHandlerTable[namespacedType] || (mutationHandlerTable[namespacedType] = []);
 
+                // This state is not reactive anymore and a copy.
+                // All changes are going to be performed in this commit are not going to be saved directly,
+                // but forwarded to the main-process to be processed there.
+                const clonedState = cloneDeep(store.state);
+
                 // Custom wrapper to create a copy of the state before manipulating it and then
                 entry.push((payload: any, mutationOption: { DIFF_OPTION?: boolean }) => {
-                    if (mutationOption != null && mutationOption[DIFF_OPTION] === true) {
-                        // This state is not reactive anymore and a copy.
-                        // All changes are going to be performed in this commit are not going to be saved directly,
-                        // but forwarded to the main-process to be processed there.
-                        const clonedState = cloneDeep(store.state);
+                    if (mutationOption != null && mutationOption[DIFF_OPTION]) {
                         // The module-state for the handler
                         const moduleState = getNestedState(clonedState, [namespace, moduleName]);
 
                         // Call the handler to perform the changes to the state
                         handler.call(clonedState, moduleState, payload);
 
-                        const diff = {}; // TODO: Create the diff of store.state and the clonedState.
-                        currentDiff = diff; // TODO: Merge the currentDiff with diff
+                        const diff = difference(store.state, clonedState);
+                        currentDiff[mutationOption[DIFF_OPTION]] = diff;
                     } else {
                         // The module-state for the handler
                         const moduleState = getNestedState(store.state, [namespace, moduleName]);
@@ -113,19 +134,21 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
                 entry.push((payload, dispatchOptions) => {
                     if (dispatchOptions && dispatchOptions[DIFF_OPTION]) {
                         // Reset the diff
-                        currentDiff = {};
+                        currentDiff[dispatchOptions[DIFF_OPTION]] = {};
                     }
 
                     const response = handler.call(store, {
                         dispatch: local.dispatch,
-                        commit: (dispatchOptions && dispatchOptions[DIFF_OPTION]) ? (commitType, commitPayload, commitOptions) => {
-                            const args = unifyObjectStyle(commitType, commitPayload, commitOptions);
-                            // Calling the regular commit, but with the diff-option enabled
-                            local.commit(args.type, args.payload, {
-                                ...args.options,
-                                [DIFF_OPTION]: true,
-                            });
-                        } : local.commit,
+                        commit: (dispatchOptions && dispatchOptions[DIFF_OPTION])
+                            ? (commitType, commitPayload, commitOptions) => {
+                                const args = unifyObjectStyle(commitType, commitPayload, commitOptions);
+                                // Calling the regular commit, but with the diff-option enabled
+                                local.commit(args.type, args.payload, {
+                                    ...args.options,
+                                    [DIFF_OPTION]: dispatchOptions[DIFF_OPTION],
+                                });
+                            }
+                            : local.commit,
                         getters: (local as any).getters,
                         state: (local as any).state,
                         rootGetters: store.getters,
@@ -134,7 +157,7 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
 
                     if (dispatchOptions && dispatchOptions[DIFF_OPTION]) {
                         return Promise.resolve({
-                            changes: currentDiff,
+                            changes: currentDiff[dispatchOptions[DIFF_OPTION]],
                             response,
                         });
                     } else {
@@ -154,17 +177,14 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
         _options?: DispatchOptions
     ) {
         const args = unifyObjectStyle(_type, _payload, _options);
-        const type = args.type;
-        const payload = args.payload;
-        const options = args.options;
 
-        const action = { type: type, payload: payload };
+        const action = { type: args.type, payload: args.payload };
         // eslint-disable-next-line no-underscore-dangle
-        const entry = this._actions[type];
+        const entry = this._actions[args.type];
 
         if (!entry) {
             if (process.env.NODE_ENV !== 'production') {
-                Logger.error(`[vuex] unknown action type: ${type}`);
+                Logger.error(`[vuex] unknown action type: ${args.type}`);
             }
 
             return;
@@ -184,11 +204,11 @@ export function getPluginStore(vueRef, injector: Injector): Promise<Store<RootSt
         }
 
         const result = entry.length > 1
-            ? Promise.all(entry.map(handler =>handler(payload, {
-                [DIFF_OPTION]: options && options[DIFF_OPTION]
+            ? Promise.all(entry.map(handler => handler(args.payload, {
+                [DIFF_OPTION]: args.options[DIFF_OPTION] ?? null
             })))
-            : entry[0](payload, {
-                [DIFF_OPTION]: options && options[DIFF_OPTION]
+            : entry[0](args.payload, {
+                [DIFF_OPTION]: args.options[DIFF_OPTION] ?? null
             });
 
         return result.then(res => {
@@ -217,15 +237,14 @@ export function getMainStore(vueRef, injector: Injector, ipcServer: IPCServer): 
     const storeConfig = getStoreConfig(injector);
     const store = new Vuex.Store<RootState>(storeConfig);
     const names = getModuleActionAndMutationNames(storeConfig);
-
     const originalDispatch = store.dispatch;
 
     // Override the dispatch function to delegate it to the main process instead
     // eslint-disable-next-line dot-notation
     store['_dispatch'] = store.dispatch = function <P extends Payload>(
-        typeMaybeWithPayload: string | P,
-        payloadOrOptions?: any | DispatchOptions,
-        options?: DispatchOptions
+        _type: string | P,
+        _payload?: any | DispatchOptions,
+        _options?: DispatchOptions
     ) {
         // Drop all actions which are done before init
         // TODO: Queue them and replay them later?
@@ -233,22 +252,9 @@ export function getMainStore(vueRef, injector: Injector, ipcServer: IPCServer): 
             return;
         }
 
-        let actualType: string;
-        let actualPayload: any;
-        let actualOptions: DispatchOptions;
+        const args = unifyObjectStyle(_type, _payload, _options);
 
-        if (typeof typeMaybeWithPayload === 'string') {
-            actualType = typeMaybeWithPayload;
-            actualPayload = payloadOrOptions;
-            actualOptions = options;
-        } else if (typeMaybeWithPayload != null && typeof typeMaybeWithPayload === 'object') {
-            const { type, ...payloadData } = typeMaybeWithPayload;
-            actualType = type;
-            actualPayload = payloadData;
-            actualOptions = payloadOrOptions;
-        }
-
-        if (actualType == null) {
+        if (args.type == null) {
             const errorMsg = 'The type for the dispatch could not be determined';
             Logger.error({
                 msg: errorMsg,
@@ -260,43 +266,18 @@ export function getMainStore(vueRef, injector: Injector, ipcServer: IPCServer): 
         }
 
         // It is a non-standard action from a plugin
-        if (!names.actions.includes(actualType)) {
-            const request: PluginActionDiffRequest = {
+        if (!names.actions.includes(args.type)) {
+            return ipcServer.sendPluginActionDiffRequest({
                 id: uuid(),
                 type: MessageType.REQUEST_PLUGIN_ACTION_DIFF,
-                action: actualType,
-                payload: actualPayload,
-                options: actualOptions,
-            };
-
-            return new Promise((resolve, reject) => {
-                // Setup a listener for the response
-                ipcServer.listenToRouterSocket().pipe(
-                    map(packet => packet.message),
-                    first(message => message.type === MessageType.RESPONSE_PLUGIN_ACTION_DIFF
-                        && (message as Response).respondsTo === request.id),
-                    timeout(3_000),
-                ).subscribe((response: PluginActionDiffResponse) => {
-                    if (response.successful) {
-                        // Forward the changes as a Mutation to the root
-                        store.commit(MUTATION_APPLY_DIFF, response.changes);
-                        resolve(response.returnValue);
-                    } else {
-                        reject(response.error);
-                    }
-                });
-
-                // Send the request to the plugin-process
-                ipcServer.sendRouterMessage(null, PLUGIN_CLIENT_ID, request).then(successul => {
-                    if (!successul) {
-                        throw new Error('Could not send the router message!');
-                    }
-                }).catch(reject);
+                action: args.type,
+                payload: args.payload,
+                options: args.options,
             });
         }
 
         // Call the default dispatch-function and return it's result
-        return originalDispatch(actualType, actualPayload, actualOptions);
+        return originalDispatch(args.type, args.payload, args.options);
     };
 
     return Promise.resolve(store);
@@ -312,9 +293,9 @@ export function getClientStore(vueRef, injector: Injector): Promise<Store<RootSt
     // Override the dispatch function to delegate it to the main process instead
     // eslint-disable-next-line dot-notation
     store['_dispatch'] = store.dispatch = function <P extends Payload>(
-        typeMaybeWithPayload: string | P,
-        payloadOrOptions?: any | DispatchOptions,
-        options?: DispatchOptions
+        _type: string | P,
+        _payload?: any | DispatchOptions,
+        _options?: DispatchOptions
     ) {
         // Drop all actions which are done before init
         // TODO: Queue them and replay them later?
@@ -322,22 +303,9 @@ export function getClientStore(vueRef, injector: Injector): Promise<Store<RootSt
             return;
         }
 
-        let actualType: string;
-        let actualPayload: any;
-        let actualOptions: DispatchOptions;
+        const args = unifyObjectStyle(_type, _payload, _options);
 
-        if (typeof typeMaybeWithPayload === 'string') {
-            actualType = typeMaybeWithPayload;
-            actualPayload = payloadOrOptions;
-            actualOptions = options;
-        } else if (typeMaybeWithPayload != null && typeof typeMaybeWithPayload === 'object') {
-            const { type, ...payloadData } = typeMaybeWithPayload;
-            actualType = type;
-            actualPayload = payloadData;
-            actualOptions = payloadOrOptions;
-        }
-
-        if (actualType == null) {
+        if (args.type == null) {
             const errorMsg = 'The type for the dispatch could not be determined';
             Logger.error({
                 msg: errorMsg,
@@ -350,12 +318,12 @@ export function getClientStore(vueRef, injector: Injector): Promise<Store<RootSt
 
         Logger.debug({
             msg: 'Forwarding action to main process',
-            type: actualType,
-            payload: actualPayload,
-            options: actualOptions,
+            type: args.type,
+            payload: args.payload,
+            options: args.options,
         });
 
-        return client.dispatchAction(actualType, actualPayload, actualOptions);
+        return client.dispatchAction(args.type, args.payload, args.options);
     };
 
     return Promise.resolve(store);

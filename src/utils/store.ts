@@ -1,20 +1,21 @@
-import { Module, Store, Action, ActionHandler } from 'vuex';
+import { transform, isEqual, isObject } from 'lodash';
+import { Module, Store, Action, ActionHandler, StoreOptions } from 'vuex';
 
 export function getModuleActionAndMutationNames(
-    module: Module<any, any>,
+    module: StoreOptions<any> | Module<any, any>,
     name: string = '',
     namespace?: string
 ): { actions: string[]; mutations: string[] } {
     const actionNames = [];
     const mutationNames = [];
 
+    if (namespace == null || namespace.trim().length < 1) {
+        namespace = name;
+    }
+
     if (module != null && typeof module === 'object') {
-        if (module.namespaced) {
-            if (namespace != null && namespace.trim().length > 0) {
-                namespace += `.${name}`;
-            } else {
-                namespace = name;
-            }
+        if ((module as any).namespaced) {
+            namespace += `/${name}`;
         }
 
         if (module.actions != null && typeof module.actions === 'object') {
@@ -60,6 +61,22 @@ export function getActionHandler<S, R>(
     const handler = typeof action === 'function'  ? action : action.handler;
 
     return { type, handler };
+}
+
+/**
+ * Deep diff between two object, using lodash
+ *
+ * @param  {Object} object Object compared
+ * @param  {Object} base   Object to compare with
+ * @return {Object}        Return a new object who represent the diff
+ * @see https://gist.github.com/Yimiprod/7ee176597fef230d1451#gistcomment-2565071
+ */
+export function difference(object, base) {
+	return transform(object, (result, value, key) => {
+		if (!isEqual(value, base[key])) {
+			result[key] = isObject(value) && isObject(base[key]) ? difference(value, base[key]) : value;
+		}
+	});
 }
 
 /*
