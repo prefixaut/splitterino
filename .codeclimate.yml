@@ -1,8 +1,12 @@
 version: "2"         # required to adjust maintainability checks
 plugins:
-  tslint:
+  eslint:
     enabled: true
-    config: tslint.json
+    channel: "eslint-6"
+    extensions:
+      - .js
+      - .ts
+      - .vue
   git-legal:
     enabled: true
     config:

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions,id-blacklist */
 import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
@@ -24,9 +25,7 @@ describe('Timer Store-Module', () => {
 
     it('should be a valid module', () => {
         expect(timerModule).to.be.a('object');
-        // tslint:disable-next-line no-unused-expression
         expect(timerModule).to.have.property('state').and.to.be.a('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(timerModule).to.have.property('mutations').and.to.be.a('object').which.has.keys;
     });
 

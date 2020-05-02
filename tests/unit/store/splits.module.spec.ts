@@ -82,18 +82,20 @@ function generateRandomTime(): SegmentTime {
 }
 
 function generateSegmentArray(size: number): Segment[] {
-    return new Array(size).fill(null).map(_ => ({
-        id: uuid(),
-        name: 'test',
-        currentTime: generateRandomTime(),
-        hasNewOverallBest: true,
-        overallBest: generateRandomTime(),
-        passed: true,
-        personalBest: generateRandomTime(),
-        previousOverallBest: generateRandomTime(),
-        skipped: false,
-        startTime: now(),
-    }));
+    return new Array(size).fill(null).map(() => {
+        return {
+            id: uuid(),
+            name: 'test',
+            currentTime: generateRandomTime(),
+            hasNewOverallBest: true,
+            overallBest: generateRandomTime(),
+            passed: true,
+            personalBest: generateRandomTime(),
+            previousOverallBest: generateRandomTime(),
+            skipped: false,
+            startTime: now(),
+        };
+    });
 }
 
 describe('Splits Store-Module', () => {
