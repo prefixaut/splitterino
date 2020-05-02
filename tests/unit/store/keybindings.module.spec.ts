@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
@@ -13,11 +14,8 @@ describe('Keybindings Store-Module', () => {
 
     it('should be a valid module', () => {
         expect(keybindingsModule).to.be.a('object');
-        // tslint:disable-next-line no-unused-expression
         expect(keybindingsModule).to.have.property('state').and.to.be.a('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(keybindingsModule).to.have.property('mutations').and.to.be.a('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(keybindingsModule).to.have.property('actions').and.to.be.a('object').which.has.keys;
     });
 });

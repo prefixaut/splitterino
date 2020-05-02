@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions,id-blacklist */
 import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 import Vue from 'vue';
@@ -101,11 +102,8 @@ describe('Splits Store-Module', () => {
 
     it('should be a valid module', () => {
         expect(splitsModule).to.be.a('object');
-        // tslint:disable-next-line no-unused-expression
         expect(splitsModule).to.have.property('state').and.to.be.a('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(splitsModule).to.have.property('mutations').and.to.be.a('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(splitsModule).to.have.property('actions').and.to.be.a('object').which.has.keys;
     });
 
@@ -933,11 +931,8 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(5);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-
                 expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.exist;
                 // Either current time or +1, as it may be a millisecond off
                 expect(commits[0].payload.time).to.be.within(startTime, startTime + maxTimeDeviation);
@@ -950,7 +945,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[2].payload).to.equal(totalIGTTime);
 
                 expect(commits[3].type).to.equal(ID_MUTATION_SET_SEGMENT);
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[3].payload).to.exist;
                 expect(commits[3].payload.index).to.equal(0);
                 expect(commits[3].payload.segment.id).to.equal(segments[0].id);
@@ -982,9 +976,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
             });
 
@@ -1014,9 +1006,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                 }
             });
@@ -1046,9 +1036,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
             });
 
@@ -1105,11 +1093,9 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(3);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
 
                 expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.exist;
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
@@ -1120,7 +1106,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
 
                 expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[1].payload).to.exist;
                 expect(commits[1].payload.index).to.equal(currentIndex + maxTimeDeviation);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex + maxTimeDeviation].id);
@@ -1312,7 +1297,6 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(2);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
 
                 expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
@@ -1342,12 +1326,10 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
                 expect(dispatches).to.have.lengthOf(1);
 
                 expect(dispatches[0].type).to.equal(ID_ACTION_RESET);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches[0].payload).to.not.exist;
             });
         });
@@ -1380,7 +1362,6 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(2);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
@@ -1426,9 +1407,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -1460,9 +1439,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(false);
             });
@@ -1515,7 +1492,6 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(3);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
@@ -1596,7 +1572,6 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(3);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
@@ -1674,7 +1649,6 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(3);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
@@ -1729,9 +1703,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -1761,9 +1733,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(false);
             });
@@ -1799,7 +1769,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
                 expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.PAUSED);
-                // tslint:disable-next-line:no-unused-expression
+
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -1831,9 +1801,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -1868,7 +1836,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
                 expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING_IGT_PAUSE);
-                // tslint:disable-next-line:no-unused-expression
+
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -1900,9 +1868,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     }, { igtOnly: true });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -1947,7 +1913,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -1987,9 +1952,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -2033,7 +1996,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2073,9 +2035,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     }, { igtOnly: true });
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -2128,7 +2088,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
                     .to.be.within(totalPauseTime, totalPauseTime + maxTimeDeviation);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2178,7 +2137,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
                     .to.be.within(totalPauseTime, totalPauseTime + maxTimeDeviation);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2225,7 +2183,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
                     .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2274,7 +2231,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
                     .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2323,7 +2279,6 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.currentTime.igt.pauseTime)
                     .to.be.within(pauseTime, pauseTime + maxTimeDeviation);
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2353,9 +2308,7 @@ describe('Splits Store-Module', () => {
                     rootState
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2383,7 +2336,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
                 expect(dispatches).to.have.lengthOf(1);
                 expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
@@ -2414,7 +2366,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
                 expect(dispatches).to.have.lengthOf(1);
                 expect(dispatches[0].type).to.equal(ID_ACTION_SAVING_RESET);
@@ -2452,7 +2403,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
                 expect(dispatches).to.have.lengthOf(1);
                 expect(dispatches[0].type).to.equal(ID_ACTION_DISCARDING_RESET);
@@ -2495,9 +2445,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(false);
             });
@@ -2535,9 +2483,7 @@ describe('Splits Store-Module', () => {
                     rootState,
                 }, { windowId: 1 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(false);
             });
@@ -2575,7 +2521,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
 
                 expect(dispatches).to.have.lengthOf(1);
@@ -2619,7 +2564,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
 
                 expect(dispatches).to.have.lengthOf(1);
@@ -2663,7 +2607,6 @@ describe('Splits Store-Module', () => {
                     rootState,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits).to.be.empty;
 
                 expect(dispatches).to.have.lengthOf(1);
@@ -2714,7 +2657,6 @@ describe('Splits Store-Module', () => {
                     payload: undefined,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2759,7 +2701,6 @@ describe('Splits Store-Module', () => {
                     payload: undefined,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2802,7 +2743,6 @@ describe('Splits Store-Module', () => {
                     payload: undefined,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2840,7 +2780,6 @@ describe('Splits Store-Module', () => {
                     payload: newSegments,
                 });
 
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
             });
@@ -2871,9 +2810,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     }, payload);
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }
@@ -2912,9 +2849,7 @@ describe('Splits Store-Module', () => {
                         rootState,
                     }, newSegments);
 
-                    // tslint:disable-next-line:no-unused-expression
                     expect(commits).to.be.empty;
-                    // tslint:disable-next-line:no-unused-expression
                     expect(dispatches).to.be.empty;
                     expect(returnValue).to.equal(false);
                 }

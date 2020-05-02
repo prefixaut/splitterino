@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 import Vue from 'vue';
 import Vuex, { Module } from 'vuex';
@@ -65,11 +66,8 @@ describe('Settings Store-Module', () => {
 
     it('should be a valid module', () => {
         expect(metaModule).to.be.an('object');
-        // tslint:disable-next-line no-unused-expression
         expect(metaModule).to.have.property('state').and.to.be.an('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(metaModule).to.have.property('mutations').and.to.be.an('object').which.has.keys;
-        // tslint:disable-next-line no-unused-expression
         expect(metaModule).to.have.property('actions').and.to.be.an('object').which.has.keys;
     });
 
@@ -245,9 +243,7 @@ describe('Settings Store-Module', () => {
                 );
 
                 expect(commits).to.have.lengthOf(1);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.eql(recentlyOpenedSplits);
             });
         });
@@ -275,9 +271,7 @@ describe('Settings Store-Module', () => {
                 );
 
                 expect(commits).to.have.lengthOf(1);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.eql({
                     path: recentlyOpenedSplitPath,
                     category: 'foo',
@@ -309,9 +303,7 @@ describe('Settings Store-Module', () => {
                 );
 
                 expect(commits).to.have.lengthOf(1);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.eql(recentlyOpenedTemplates);
             });
         });
@@ -337,9 +329,7 @@ describe('Settings Store-Module', () => {
                 );
 
                 expect(commits).to.have.lengthOf(1);
-                // tslint:disable-next-line:no-unused-expression
                 expect(dispatches).to.be.empty;
-                // tslint:disable-next-line:no-unused-expression
                 expect(commits[0].payload).to.eql(recentlyOpenedTemplate);
             });
         });
