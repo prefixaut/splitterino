@@ -5,6 +5,7 @@ import { Socket } from 'zeromq';
 
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
+import { Commit } from '../store/common';
 
 export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
 
@@ -50,26 +51,40 @@ export interface DealerTable {
 }
 
 export enum MessageType {
+    // IPC Setup
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
     RESPONSE_REGISTER_CLIENT = 'RESPONSE_REGISTER_CLIENT',
     REQUEST_UNREGISTER_CLIENT = 'REQUEST_UNREGISTER_CLIENT',
     RESPONSE_UNREGISTER_CLIENT = 'RESPONSE_UNREGISTER_CLIENT',
+
+    // Store related
     REQUEST_STORE_STATE = 'REQUEST_STORE_STATE',
     RESPONSE_STORE_STATE = 'RESPONSE_STORE_STATE',
+    REQUEST_STORE_COMMIT = 'REQUEST_STORE_COMMIT',
+    RESPONSE_STORE_COMMIT = 'RESPONSE_STORE_COMMIT',
+    BROADCAST_STORE_APPLY_DIFF = 'BROADCAST_STORE_APPLY_DIFF',
+    REQUEST_STORE_CREATE_DIFF = 'REQUEST_STORE_CREATE_DIFF',
+    RESPONSE_STORE_CREATE_DIFF = 'RESPONSE_STORE_CREATE_DIFF',
+
+    // Deperecated
     REQUEST_DISPATCH_ACTION = 'REQUEST_DISPATCH_ACTION',
     RESPONSE_DISPATCH_ACTION = 'RESPONSE_DISPATCH_ACTION',
     REQUEST_DISPATCH_CLIENT_ACTION = 'REQUEST_DISPATCH_CLIENT_ACTION',
     RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
     REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
-    REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
-    BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
-    BROADCAST_APP_SHUTDOWN = 'BROADCAST_APP_SHUTDOWN',
-    REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
-    RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
-    NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
-    NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
     REQUEST_PLUGIN_ACTION_DIFF = 'REQUEST_PLUGIN_ACTION_DIFF',
     RESPONSE_PLUGIN_ACTION_DIFF = 'RESPONSE_PLUGIN_ACTION_DIFF',
+
+    // General purpose
+    REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
+    BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
+    REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
+    RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
+    BROADCAST_APP_SHUTDOWN = 'BROADCAST_APP_SHUTDOWN',
+
+    // Plugin API
+    NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
+    NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
 }
 
 export interface IPCPacket {
@@ -109,9 +124,13 @@ export interface Request extends Message {
     | MessageType.REQUEST_REGISTER_CLIENT
     | MessageType.REQUEST_UNREGISTER_CLIENT
     | MessageType.REQUEST_STORE_STATE
+    | MessageType.REQUEST_STORE_COMMIT
+    | MessageType.REQUEST_STORE_CREATE_DIFF
+
     | MessageType.REQUEST_DISPATCH_ACTION
     | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
     | MessageType.REQUEST_COMMIT_MUTATION
+
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
     | MessageType.REQUEST_PLUGIN_ACTION_DIFF
@@ -122,6 +141,7 @@ export interface Broadcast extends Message {
     type:
     | MessageType.BROADCAST_GLOBAL_EVENT
     | MessageType.BROADCAST_APP_SHUTDOWN
+    | MessageType.BROADCAST_STORE_APPLY_DIFF
     ;
 }
 
@@ -140,10 +160,14 @@ export interface Response extends Message {
     | MessageType.RESPONSE_REGISTER_CLIENT
     | MessageType.RESPONSE_UNREGISTER_CLIENT
     | MessageType.RESPONSE_STORE_STATE
+    | MessageType.RESPONSE_STORE_COMMIT
+    | MessageType.RESPONSE_STORE_CREATE_DIFF
+
     | MessageType.RESPONSE_DISPATCH_ACTION
     | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
-    | MessageType.RESPONSE_INVALID_REQUEST
     | MessageType.RESPONSE_PLUGIN_ACTION_DIFF
+
+    | MessageType.RESPONSE_INVALID_REQUEST
     ;
     /**
      * The Message ID that this Response is responding to.
@@ -239,6 +263,61 @@ export interface StoreStateResponse extends Response {
      * The most recent state of the store.
      */
     state: RootState;
+}
+
+/**
+ * Request to perform an commit in the store
+ */
+export interface StoreCommitRequest extends Request {
+    type: MessageType.REQUEST_STORE_COMMIT;
+    /**
+     * The Commit to execute
+     */
+    commit: Commit;
+}
+
+/**
+ * Response to return the result of the commit
+ */
+export interface StoreCommitResponse extends Response {
+    type: MessageType.RESPONSE_STORE_COMMIT;
+}
+
+/**
+ * Request to create a diff from a commit
+ */
+export interface StoreCreateDiffRequest extends Request {
+    type: MessageType.REQUEST_STORE_CREATE_DIFF;
+    /**
+     * The commit that the client should create a diff for
+     */
+    commit: Commit;
+}
+
+/**
+ * Response with the created diff
+ */
+export interface StoreCreateDiffResponse extends Response {
+    type: MessageType.RESPONSE_STORE_CREATE_DIFF;
+    /**
+     * The created diff
+     */
+    diff: any;
+}
+
+/**
+ * A broadcast to all clients to apply the specified diff to the store
+ */
+export interface StoreApplyDiffBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_STORE_APPLY_DIFF;
+    /**
+     * The diff that needs to be applied
+     */
+    diff: any;
+    /**
+     * The monoton id to keep the commits in order
+     */
+    monotonId: number;
 }
 
 /**
@@ -403,9 +482,9 @@ export interface AppShutdownBroadcast extends Broadcast {
  */
 export interface PluginActionDiffRequest extends Request {
     type: MessageType.REQUEST_PLUGIN_ACTION_DIFF;
-        /**
-     * The action name that should be applied.
-     */
+    /**
+ * The action name that should be applied.
+ */
     action: string;
     /**
      * Payload for the action.
