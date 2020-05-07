@@ -63,6 +63,32 @@ export function getActionHandler<S, R>(
     return { type, handler };
 }
 
+export function lockObject<T>(reference: T, obj: any = reference, basePath: string[] = []): T {
+    const locked = {};
+
+    Object.keys(obj).forEach(key => {
+        Object.defineProperty(locked, key, {
+            get() {
+                let value = reference;
+                for (const part of [...basePath, key]) {
+                    value = value[part];
+                }
+
+                if (value != null && typeof obj[key] === 'object') {
+                    return this.lockObject(reference, value, [...basePath, key]);
+                } else {
+                    return value;
+                }
+            },
+            set() {
+                throw new Error('This object is immutable and can not be edited!');
+            },
+        });
+    });
+
+    return locked as T;
+}
+
 /**
  * Deep diff between two object, using lodash
  *

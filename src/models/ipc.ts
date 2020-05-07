@@ -1,17 +1,17 @@
 import { InjectionToken } from 'lightweight-di';
 import { Observable } from 'rxjs';
-import { CommitOptions, DispatchOptions, Store } from 'vuex';
 import { Socket } from 'zeromq';
 
+import { ReceiverStore } from '../store/client';
+import { Commit } from '../store/common';
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
-import { Commit } from '../store/common';
 
 export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
 
 export interface IPCClientInterface {
     isInitialized(): boolean;
-    initialize(store: Store<RootState>, clientInfo: ClientInformation): Promise<false | RegistationResult>;
+    initialize(store: ReceiverStore<RootState>, clientInfo: ClientInformation): Promise<false | RegistationResult>;
     close(): Promise<void>;
     sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
     sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
@@ -19,7 +19,6 @@ export interface IPCClientInterface {
     listenToSubscriberSocket(): Observable<IPCPacket>;
     listenToDealerSocket(): Observable<IPCPacket>;
     getStoreState(): Promise<RootState>;
-    dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
     listenForLocalMessage<T>(messageId: string): Observable<T>;
     sendLocalMessage(messageId: string, data?: any): void;
 }
@@ -65,15 +64,12 @@ export enum MessageType {
     BROADCAST_STORE_APPLY_DIFF = 'BROADCAST_STORE_APPLY_DIFF',
     REQUEST_STORE_CREATE_DIFF = 'REQUEST_STORE_CREATE_DIFF',
     RESPONSE_STORE_CREATE_DIFF = 'RESPONSE_STORE_CREATE_DIFF',
-
-    // Deperecated
-    REQUEST_DISPATCH_ACTION = 'REQUEST_DISPATCH_ACTION',
-    RESPONSE_DISPATCH_ACTION = 'RESPONSE_DISPATCH_ACTION',
-    REQUEST_DISPATCH_CLIENT_ACTION = 'REQUEST_DISPATCH_CLIENT_ACTION',
-    RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
-    REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
-    REQUEST_PLUGIN_ACTION_DIFF = 'REQUEST_PLUGIN_ACTION_DIFF',
-    RESPONSE_PLUGIN_ACTION_DIFF = 'RESPONSE_PLUGIN_ACTION_DIFF',
+    REQUEST_STORE_REGISTER_NAMESPACE = 'REQUEST_STORE_REGISTER_NAMESPACE',
+    RESPONSE_STORE_REGISTER_NAMESPACE = 'RESPONSE_STORE_REGISTER_NAMESPACE',
+    REQUEST_STORE_REGISTER_MODULE = 'REQUEST_STORE_REGISTER_MODULE',
+    RESPONSE_STORE_REGISTER_MODULE = 'RESPONSE_STORE_REGISTER_MODULE',
+    REQUEST_STORE_UNREGISTER_NAMESPACE = 'REQUEST_STORE_UNREGISTER_NAMESPACE',
+    RESPONSE_STORE_UNREGISTER_NAMESPACE = 'RESPONSE_STORE_UNREGISTER_NAMESPACE',
 
     // General purpose
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
@@ -126,14 +122,11 @@ export interface Request extends Message {
     | MessageType.REQUEST_STORE_STATE
     | MessageType.REQUEST_STORE_COMMIT
     | MessageType.REQUEST_STORE_CREATE_DIFF
-
-    | MessageType.REQUEST_DISPATCH_ACTION
-    | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
-    | MessageType.REQUEST_COMMIT_MUTATION
-
+    | MessageType.REQUEST_STORE_REGISTER_NAMESPACE
+    | MessageType.REQUEST_STORE_REGISTER_MODULE
+    | MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
-    | MessageType.REQUEST_PLUGIN_ACTION_DIFF
     ;
 }
 
@@ -162,11 +155,9 @@ export interface Response extends Message {
     | MessageType.RESPONSE_STORE_STATE
     | MessageType.RESPONSE_STORE_COMMIT
     | MessageType.RESPONSE_STORE_CREATE_DIFF
-
-    | MessageType.RESPONSE_DISPATCH_ACTION
-    | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
-    | MessageType.RESPONSE_PLUGIN_ACTION_DIFF
-
+    | MessageType.RESPONSE_STORE_REGISTER_NAMESPACE
+    | MessageType.RESPONSE_STORE_REGISTER_MODULE
+    | MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE
     | MessageType.RESPONSE_INVALID_REQUEST
     ;
     /**
@@ -263,6 +254,7 @@ export interface StoreStateResponse extends Response {
      * The most recent state of the store.
      */
     state: RootState;
+    monotonId: number;
 }
 
 /**
@@ -321,94 +313,57 @@ export interface StoreApplyDiffBroadcast extends Broadcast {
 }
 
 /**
- * Request to apply an action on the proper process.
+ * Request to register a namespace to the client
  */
-export interface DispatchActionReqeust extends Request {
-    type: MessageType.REQUEST_DISPATCH_ACTION;
+export interface StoreRegisterNamespaceRequest extends Request {
+    type: MessageType.REQUEST_STORE_REGISTER_NAMESPACE;
     /**
-     * The action name that should be applied.
+     * The namespace the client should handle
      */
-    action: string;
-    /**
-     * Payload for the action.
-     */
-    payload?: any;
-    /**
-     * Options for dispatching the action.
-     */
-    options?: DispatchOptions;
+    namespace: string;
 }
 
 /**
- * Response if the Server successfully applied the Action,
- * and the return value of the action.
+ * Response for registering a namespace as a client
  */
-export interface DispatchActionResponse extends Response {
-    type: MessageType.RESPONSE_DISPATCH_ACTION;
-    /**
-     * The value returned from the action after completion.
-     */
-    returnValue?: any;
+export interface StoreRegisterNamespaceResponse extends Response {
+    type: MessageType.RESPONSE_STORE_REGISTER_NAMESPACE;
 }
 
 /**
- * Request that an Action should be handled by a client in it's context.
+ * Request to register a module on the server
  */
-export interface DispatchClientActionRequest extends Request {
-    type: MessageType.REQUEST_DISPATCH_CLIENT_ACTION;
+export interface StoreRegisterModuleRequest extends Request {
+    type: MessageType.REQUEST_STORE_REGISTER_MODULE;
     /**
-     * Which client should handle this dispatch action in it's context.
+     * The module name the client wants to register
      */
-    clientId: string;
+    module: string;
     /**
-     * The action name that should be applied.
+     * The initial state of the module
      */
-    action: string;
-    /**
-     * Payload for the action.
-     */
-    payload?: any;
-    /**
-     * Options for dispatching the action.
-     */
-    options?: DispatchOptions;
+    state: any;
 }
 
 /**
- * Response if the Server successfully applied the Action,
- * and the return value of the action.
- * Additionally also contains all commits the action attempted to perform.
+ * Response to register a module on the server
  */
-export interface DispatchClientActionResponse extends Response {
-    type: MessageType.RESPONSE_DISPATCH_CLIENT_ACTION;
-    /**
-     * The value returned from the action after completion.
-     */
-    returnValue?: any;
-    /**
-     * The commits that the action attempted to perform.
-     * These commits may not be handled by the client, but by the server.
-     */
-    commits?: { name: string; payload?: any; options?: CommitOptions }[];
+export interface StoreRegisterMouleResponse extends Response {
+    type: MessageType.RESPONSE_STORE_REGISTER_MODULE;
 }
 
 /**
- * Request to apply a mutation to the store.
+ * Request to unregister the client from the namespace
  */
-export interface CommitMutationRequest extends Request {
-    type: MessageType.REQUEST_COMMIT_MUTATION;
-    /**
-     * The mutation that should be applied.
-     */
-    mutation: string;
-    /**
-     * Payload for the mutation.
-     */
-    payload?: any;
-    /**
-     * Options for commiting the mutation.
-     */
-    options?: CommitOptions;
+export interface StoreUnregisterNamespaceRequest extends Request {
+    type: MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE;
+}
+
+/**
+ * Response for unregistering a client from the namespace
+ */
+export interface StoreUnregisterNamespaceResponse extends Response {
+    type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE;
 }
 
 /**
@@ -475,39 +430,4 @@ export interface PluginProcessDedNotification extends Notification {
  */
 export interface AppShutdownBroadcast extends Broadcast {
     type: MessageType.BROADCAST_APP_SHUTDOWN;
-}
-
-/**
- * Request sent to the Plugin to create a diff from the requested Action.
- */
-export interface PluginActionDiffRequest extends Request {
-    type: MessageType.REQUEST_PLUGIN_ACTION_DIFF;
-    /**
- * The action name that should be applied.
- */
-    action: string;
-    /**
-     * Payload for the action.
-     */
-    payload?: any;
-    /**
-     * Options for dispatching the action.
-     */
-    options?: DispatchOptions;
-}
-
-/**
- * Response with the return-value of the action and the resulted
- * changes which may be applied.
- */
-export interface PluginActionDiffResponse extends Response {
-    type: MessageType.RESPONSE_PLUGIN_ACTION_DIFF;
-    /**
-     * The value returned from the action after completion.
-     */
-    returnValue?: any;
-    /**
-     * The diff that needs to be applied to the main store.
-     */
-    changes?: { [key: string]: any };
 }

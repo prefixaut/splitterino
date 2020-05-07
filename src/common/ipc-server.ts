@@ -1,12 +1,8 @@
 import { Observable, Subscription } from 'rxjs';
-import { first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
-import { Store } from 'vuex';
 import { socket } from 'zeromq';
 
 import {
-    DispatchActionReqeust,
-    DispatchActionResponse,
     GlobalEventBroadcast,
     IPCPacket,
     IPCRouterPacket,
@@ -15,22 +11,21 @@ import {
     LogOnServerRequest,
     Message,
     MessageType,
-    PluginActionDiffRequest,
-    PluginActionDiffResponse,
     PublishGlobalEventRequest,
     RegisterClientRequest,
     RegisterClientResponse,
     Response,
+    StoreCommitRequest,
+    StoreCommitResponse,
     StoreStateRequest,
     StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
-import { MUTATION_APPLY_DIFF } from '../store/modules/core.module';
+import { ServerStore } from '../store/server';
 import { createSharedObservableFromSocket } from '../utils/ipc';
 import { Logger, LogLevel } from '../utils/logger';
-import { getModuleActionAndMutationNames } from '../utils/store';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
     IPC_PULL_PUSH_ADDRESS,
@@ -59,16 +54,17 @@ interface Client {
 type RouterFn = (identity: Buffer, receivedFrom: string, message: Message, respond?: boolean) => any;
 
 export interface InitializeOptions {
-    store: Store<RootState>;
+    store: ServerStore<RootState>;
     logLevel: LogLevel;
 }
+
 export class IPCServer {
 
     private publisher: IPCSocket;
     private router: IPCRouterSocket;
     private pull: IPCSocket;
 
-    private store: Store<RootState>;
+    private store: ServerStore<RootState>;
     private logLevel: LogLevel;
 
     private routerMessages: Observable<IPCRouterPacket>;
@@ -85,10 +81,10 @@ export class IPCServer {
         /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
-        [MessageType.REQUEST_DISPATCH_ACTION]: this.handleDispatchAction,
         [MessageType.REQUEST_PUBLISH_GLOBAL_EVENT]: this.handleGlobalEventPublish,
         [MessageType.REQUEST_LOG_ON_SERVER]: this.handleLogToServer,
         [MessageType.REQUEST_STORE_STATE]: this.handleStoreFetch,
+        [MessageType.REQUEST_STORE_COMMIT]: this.handleStoreCommit,
         /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
     private pullTable: { [message: string]: (message: Message) => any } = {
@@ -187,7 +183,7 @@ export class IPCServer {
         return this.routerMessages;
     }
 
-    public publishMessage(message: Message): Promise<boolean> {
+    public publishMessage(message: Message, topic: string = ''): Promise<boolean> {
         Logger.debug({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUND',
@@ -195,7 +191,7 @@ export class IPCServer {
             ipcMessage: message,
         });
 
-        this.publisher.send(['', IPC_SERVER_NAME, JSON.stringify(message)]);
+        this.publisher.send([topic, IPC_SERVER_NAME, JSON.stringify(message)]);
 
         return Promise.resolve(true);
     }
@@ -272,74 +268,6 @@ export class IPCServer {
         };
 
         await this.sendRouterMessage(identity, receivedFrom, response);
-    }
-
-    public sendPluginActionDiffRequest(request: PluginActionDiffRequest): Promise<any> {
-        return new Promise((resolve, reject) => {
-            // Setup a listener for the response
-            this.listenToRouterSocket().pipe(
-                map(packet => packet.message),
-                first(message => message.type === MessageType.RESPONSE_PLUGIN_ACTION_DIFF
-                    && (message as Response).respondsTo === request.id),
-                timeout(3_000),
-            ).subscribe((response: PluginActionDiffResponse) => {
-                if (response.successful) {
-                    // Forward the changes as a Mutation to the root
-                    this.store.commit(MUTATION_APPLY_DIFF, response.changes);
-                    resolve(response.returnValue);
-                } else {
-                    reject(response.error);
-                }
-            }, error => {
-                reject(error);
-            });
-
-            // Send the request to the plugin-process
-            this.publishMessage(request).then(successul => {
-                if (!successul) {
-                    throw new Error('Could not send the router message!');
-                }
-            }).catch(reject);
-        });
-    }
-
-    protected async handleDispatchAction(identity: Buffer, receivedFrom: string, request: DispatchActionReqeust) {
-        // Check if a client should handle the request.
-        const names = getModuleActionAndMutationNames(this.store);
-        let response: DispatchActionResponse;
-
-        try {
-            let dispatchResult: any;
-            if (!this.actionTable[request.action] && !names.actions.includes(request.action)) {
-                dispatchResult = await this.sendPluginActionDiffRequest({
-                    id: uuid(),
-                    type: MessageType.REQUEST_PLUGIN_ACTION_DIFF,
-                    action: request.action,
-                    payload: request.payload,
-                    options: request.options,
-                });
-            } else {
-                dispatchResult = await this.store.dispatch(request.action, request.payload, request.options);
-            }
-
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_DISPATCH_ACTION,
-                successful: true,
-                respondsTo: request.id,
-                returnValue: dispatchResult,
-            };
-        } catch (error) {
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_DISPATCH_ACTION,
-                successful: false,
-                respondsTo: request.id,
-                error: error,
-            };
-        }
-
-        this.sendRouterMessage(identity, receivedFrom, response);
     }
 
     private async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
@@ -422,7 +350,32 @@ export class IPCServer {
             respondsTo: request.id,
             successful: true,
             state: this.store.state,
+            monotonId: this.store.monotonId,
         };
+
+        this.sendRouterMessage(identity, receivedFrom, response);
+    }
+
+    private async handleStoreCommit(identity: Buffer, receivedFrom: string, request: StoreCommitRequest) {
+        let response: StoreCommitResponse;
+
+        try {
+            const successful = await this.store.commit(request.commit);
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_COMMIT,
+                respondsTo: request.id,
+                successful: successful,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_COMMIT,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
 
         this.sendRouterMessage(identity, receivedFrom, response);
     }

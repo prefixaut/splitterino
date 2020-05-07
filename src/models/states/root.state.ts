@@ -6,8 +6,9 @@ import { PluginsState } from './plugins.state';
 import { SettingsState } from './settings.state';
 import { SplitsState } from './splits.state';
 import { TimerState } from './timer.state';
+import { StoreState } from '../../store/common';
 
-export interface RootState {
+export interface RootState extends StoreState {
     splitterino: {
         contextMenu: ContextMenuState;
         gameInfo: GameInfoState;

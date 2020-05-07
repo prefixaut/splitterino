@@ -1,43 +1,40 @@
-import { Observable, Subscription, Subject } from 'rxjs';
-import { first, map, timeout, filter } from 'rxjs/operators';
+import { Injectable } from 'lightweight-di';
+import { Observable, Subject, Subscription } from 'rxjs';
+import { filter, first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
-import { DispatchOptions, Store } from 'vuex';
 import { socket, ZMQ_IDENTITY } from 'zeromq';
 
-import {
-    CommitMutationRequest,
-    DispatchActionReqeust,
-    DispatchActionResponse,
-    DispatchClientActionRequest,
-    IPCClientInterface,
-    IPCPacket,
-    IPCSocket,
-    Message,
-    MessageType,
-    RegisterClientRequest,
-    RegisterClientResponse,
-    Request,
-    Response,
-    StoreStateRequest,
-    StoreStateResponse,
-    UnregisterClientRequest,
-    UnregisterClientResponse,
-    ClientInformation,
-    RegistationResult,
-    LocalMessage,
-    SubscriberTable,
-    DealerTable,
-} from '../models/ipc';
-import { RootState } from '../models/states/root.state';
-import { createSharedObservableFromSocket } from '../utils/ipc';
-import { Logger } from '../utils/logger';
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
     IPC_PULL_PUSH_ADDRESS,
     IPC_ROUTER_DEALER_ADDRESS,
     IPC_SERVER_NAME,
 } from '../common/constants';
-import { Injectable } from 'lightweight-di';
+import {
+    ClientInformation,
+    DealerTable,
+    IPCClientInterface,
+    IPCPacket,
+    IPCSocket,
+    LocalMessage,
+    Message,
+    MessageType,
+    RegistationResult,
+    RegisterClientRequest,
+    RegisterClientResponse,
+    Request,
+    Response,
+    StoreApplyDiffBroadcast,
+    StoreStateRequest,
+    StoreStateResponse,
+    SubscriberTable,
+    UnregisterClientRequest,
+    UnregisterClientResponse,
+} from '../models/ipc';
+import { RootState } from '../models/states/root.state';
+import { ReceiverStore } from '../store/client';
+import { createSharedObservableFromSocket } from '../utils/ipc';
+import { Logger } from '../utils/logger';
 
 export class ClientNotRegisteredError extends Error {
     constructor(message?: string) {
@@ -51,7 +48,7 @@ export class IPCClient implements IPCClientInterface {
     private subscriber: IPCSocket;
     private dealer: IPCSocket;
     private push: IPCSocket;
-    private store: Store<RootState>;
+    private store: ReceiverStore<RootState>;
 
     private subscriberMessages: Observable<IPCPacket>;
     private subscriberMessageSubscription: Subscription;
@@ -63,12 +60,11 @@ export class IPCClient implements IPCClientInterface {
 
     private readonly subscriberTable: SubscriberTable = {
         /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
-        [MessageType.REQUEST_COMMIT_MUTATION]: this.handleCommitMutation,
+        [MessageType.BROADCAST_STORE_APPLY_DIFF]: this.handleStoreApplyDiff,
         /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
     private readonly dealerTable: DealerTable = {
         /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
-        [MessageType.REQUEST_DISPATCH_CLIENT_ACTION]: this.handleDispatchClientAction,
         /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
 
@@ -81,7 +77,7 @@ export class IPCClient implements IPCClientInterface {
     }
 
     public async initialize(
-        store: Store<RootState>,
+        store: ReceiverStore<RootState>,
         clientInfo: ClientInformation
     ): Promise<false | RegistationResult> {
         // Close everything first
@@ -307,8 +303,8 @@ export class IPCClient implements IPCClientInterface {
         return this.dealerMessages;
     }
 
-    private handleCommitMutation(request: CommitMutationRequest) {
-        this.store.commit(request.mutation, request.payload, request.options);
+    private handleStoreApplyDiff(request: StoreApplyDiffBroadcast) {
+        this.store.applyDiff(request.diff, request.monotonId);
     }
 
     private async register(): Promise<false | RegistationResult> {
@@ -373,48 +369,6 @@ export class IPCClient implements IPCClientInterface {
         }
 
         return response.state;
-    }
-
-    public async dispatchAction(
-        actionName: string,
-        payload?: any,
-        options?: DispatchOptions
-    ): Promise<any> {
-        if (this.clientId == null) {
-            throw new ClientNotRegisteredError();
-        }
-
-        const request: DispatchActionReqeust = {
-            id: uuid(),
-            type: MessageType.REQUEST_DISPATCH_ACTION,
-            action: actionName,
-            payload: payload,
-            options: options,
-        };
-        const response = await this.sendDealerRequestAwaitResponse(
-            request,
-            MessageType.RESPONSE_DISPATCH_ACTION
-        ) as DispatchActionResponse;
-
-        if (!response.successful) {
-            throw new Error(response.error.message);
-        }
-
-        return response.returnValue;
-    }
-
-    private handleDispatchClientAction(sender: string, request: DispatchClientActionRequest) {
-        // Not a request for us
-        if (request.clientId !== this.clientId) {
-            return;
-        }
-
-        // TODO: Find a way on how to call the actions with a patched
-        // action-context, so commits are not actually executed.
-        // Seems currently impossible, as only wrapped action-handlers
-        // are getting saved in the store.
-
-        return;
     }
 
     public listenForLocalMessage<T>(messageId: string): Observable<T> {

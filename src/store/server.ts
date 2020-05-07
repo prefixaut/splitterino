@@ -6,24 +6,22 @@ import { IPCServer } from '../common/ipc-server';
 import { MessageType, StoreApplyDiffBroadcast, StoreCreateDiffRequest, StoreCreateDiffResponse } from '../models/ipc';
 import { Logger } from '../utils/logger';
 import { difference } from '../utils/store';
-import { Commit, DiffHandler, Module } from './common';
+import { Commit, DiffHandler, Module, StoreState, createCommit, BaseStore } from './common';
 
 interface Client {
     id: string;
     namespace: string;
 }
 
-interface StoreState {
-    [namespace: string]: {
-        [module: string]: any;
-    };
+interface LocalCommit {
+    id: string;
+    commit: Commit;
 }
 
-export class ServerStore<S extends StoreState> {
+export class ServerStore<S extends StoreState> extends BaseStore<S> {
 
     private locks: { [module: string]: string } = {};
     private clients: Client[] = [];
-    private state: S;
     private modules: {
         [namespace: string]: {
             [module: string]: {
@@ -31,24 +29,31 @@ export class ServerStore<S extends StoreState> {
             };
         };
     } = {};
-    private queue: Commit[] = [];
-    private monotonId = 0;
+    private queue: LocalCommit[] = [];
+    private isUpdatingQueue = false;
+    private resolveTable: {
+        [id: string]: {
+            resolve: (value: boolean) => void;
+            reject: (error?: any) => void;
+        };
+    } = {};
 
     constructor(private ipcServer: IPCServer) {
-        this.state = {} as any;
+        super({} as S);
     }
 
-    public commit(handler: string, data?: any) {
-        const parts = handler.split('/');
-        const commit: Commit = {
-            handler: parts.pop(),
-            module: parts.pop(),
-            namespace: parts.join('/'),
-            data: data,
+    public commit(handler: string | Commit, data?: any): Promise<boolean> {
+        const commit = typeof handler === 'string' ? createCommit(handler, data) : handler;
+        const local: LocalCommit = {
+            id: uuid(),
+            commit,
         };
 
-        this.queue.push(commit);
-        this.updateQueue();
+        return new Promise<boolean>((resolve, reject) => {
+            this.resolveTable[local.id] = { resolve, reject };
+            this.queue.push(local);
+            this.updateQueue();
+        });
     }
 
     public registerModule<T>(namespace: string, name: string, module: Module<T>) {
@@ -93,9 +98,15 @@ export class ServerStore<S extends StoreState> {
     }
 
     private updateQueue() {
+        if (this.isUpdatingQueue) {
+            return;
+        }
+
+        this.isUpdatingQueue = true;
         let hasExternal = false;
 
-        this.queue = this.queue.filter(commit => {
+        this.queue = this.queue.filter(local => {
+            const { id, commit } = local;
             const lockName = this.getLockName(commit);
 
             // See if the module is currently locked. If it is, then the commit will be queued
@@ -106,14 +117,27 @@ export class ServerStore<S extends StoreState> {
             const handlerFn = this.getHandler(commit);
 
             if (typeof handlerFn === 'function') {
-                this.commitLocally(commit, handlerFn);
+                try {
+                    const successful = this.commitLocally(commit, handlerFn);
+                    this.resolveTable[id].resolve(successful);
+                    delete this.resolveTable[id];
+                } catch (error) {
+                    this.resolveTable[id].reject(error);
+                    delete this.resolveTable[id];
+                }
 
                 return false;
             }
 
             const foundClient = this.clients.find(client => client.namespace === commit.namespace);
             if (foundClient != null) {
-                this.commitExternally(commit, foundClient);
+                this.commitExternally(commit, foundClient).then(successful => {
+                    this.resolveTable[id].resolve(successful);
+                    delete this.resolveTable[id];
+                }, error => {
+                    this.resolveTable[id].reject(error);
+                    delete this.resolveTable[id];
+                });
                 hasExternal = true;
 
                 return false;
@@ -127,13 +151,15 @@ export class ServerStore<S extends StoreState> {
             return false;
         });
 
+        this.isUpdatingQueue = false;
+
         // The queue isn't finished yet, therefore go through it again
         if (this.queue.length > 0 && !hasExternal) {
             this.updateQueue();
         }
     }
 
-    private commitLocally(commit: Commit, handlerFn: DiffHandler<any>) {
+    private commitLocally(commit: Commit, handlerFn: DiffHandler<any>): boolean {
         const lockName = this.getLockName(commit);
 
         // Lock the module
@@ -141,6 +167,9 @@ export class ServerStore<S extends StoreState> {
 
         // Get the state of the module
         const moduleState = this.state[commit.namespace][commit.module];
+
+        let successful = false;
+
         try {
             // Execute the handler to get the diff
             const diff = handlerFn(moduleState, commit.data);
@@ -148,6 +177,7 @@ export class ServerStore<S extends StoreState> {
             this.applyDiff(diff);
             // Publish the diff to the clients
             this.publishDiff(diff);
+            successful = true;
         } catch (error) {
             Logger.error({
                 msg: 'The handler function threw an error',
@@ -156,18 +186,24 @@ export class ServerStore<S extends StoreState> {
             });
         }
 
+        this.internalMonotonId++;
+
         // Unlock the module
         this.locks[lockName] = null;
+
+        return successful;
     }
 
-    private async commitExternally(commit: Commit, client: Client) {
+    private async commitExternally(commit: Commit, client: Client): Promise<boolean> {
         const lockName = this.getLockName(commit);
 
         // Lock the module
         this.locks[lockName] = client.id;
 
+        let successful = false;
+
         try {
-            await new Promise((resolve, reject) => {
+            successful = await new Promise((resolve, reject) => {
                 const request: StoreCreateDiffRequest = {
                     id: uuid(),
                     type: MessageType.REQUEST_STORE_CREATE_DIFF,
@@ -192,9 +228,13 @@ export class ServerStore<S extends StoreState> {
                         this.applyDiff(message.diff);
                         // Publish the diff to all clients
                         this.publishDiff(message.diff);
-                        resolve();
+                        // Increase the monoton-id
+                        this.internalMonotonId++;
+                        resolve(true);
                     }
-                }, reject);
+                }, () => {
+                    resolve(false);
+                });
 
                 this.ipcServer.publishMessage(request).then(sent => {
                     if (!sent) {
@@ -212,6 +252,8 @@ export class ServerStore<S extends StoreState> {
         this.locks[lockName] = null;
 
         this.updateQueue();
+
+        return successful;
     }
 
     private applyDiff(diff: any): void {
@@ -223,7 +265,7 @@ export class ServerStore<S extends StoreState> {
             id: uuid(),
             type: MessageType.BROADCAST_STORE_APPLY_DIFF,
             diff,
-            monotonId: this.monotonId++,
+            monotonId: this.internalMonotonId,
         };
         this.ipcServer.publishMessage(message);
     }
