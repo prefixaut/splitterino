@@ -10,19 +10,19 @@ import {
     ACTION_ADD_OPENED_TEMPLATE_FILE,
     ACTION_SET_LAST_OPENED_SPLITS_FILES,
     ACTION_SET_LAST_OPENED_TEMPLATE_FILES,
-    getMetaModule,
+    getMetaStoreModule,
     ID_ACTION_ADD_OPENED_SPLITS_FILE,
     ID_ACTION_ADD_OPENED_TEMPLATE_FILE,
     ID_ACTION_SET_LAST_OPENED_SPLITS_FILES,
     ID_ACTION_SET_LAST_OPENED_TEMPLATE_FILES,
-    ID_MUTATION_ADD_OPENED_SPLITS_FILE,
-    ID_MUTATION_ADD_OPENED_TEMPLATE_FILE,
-    ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES,
-    ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES,
-    MUTATION_ADD_OPENED_SPLITS_FILE,
-    MUTATION_ADD_OPENED_TEMPLATE_FILE,
-    MUTATION_SET_LAST_OPENED_SPLITS_FILES,
-    MUTATION_SET_LAST_OPENED_TEMPLATE_FILES,
+    ID_HANDLER_ADD_OPENED_SPLITS_FILE,
+    ID_HANDLER_ADD_OPENED_TEMPLATE_FILE,
+    ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES,
+    ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES,
+    HANDLER_ADD_OPENED_SPLITS_FILE,
+    HANDLER_ADD_OPENED_TEMPLATE_FILE,
+    HANDLER_SET_LAST_OPENED_SPLITS_FILES,
+    HANDLER_SET_LAST_OPENED_TEMPLATE_FILES,
 } from '../../../src/store/modules/meta.module';
 import { testAction } from '../../utils';
 
@@ -62,7 +62,7 @@ function generateRandomTemplateFileEntries(count: number = 10): RecentlyOpenedTe
 }
 
 describe('Settings Store-Module', () => {
-    const metaModule: Module<MetaState, RootState> = getMetaModule();
+    const metaModule: Module<MetaState, RootState> = getMetaStoreModule();
 
     it('should be a valid module', () => {
         expect(metaModule).to.be.an('object');
@@ -72,7 +72,7 @@ describe('Settings Store-Module', () => {
     });
 
     describe('mutations', () => {
-        describe(MUTATION_SET_LAST_OPENED_SPLITS_FILES, () => {
+        describe(HANDLER_SET_LAST_OPENED_SPLITS_FILES, () => {
             it('should set the last opened splits files', () => {
                 const recentlyOpenedSplits: RecentlyOpenedSplit[] = [{
                     gameName: 'test',
@@ -80,7 +80,7 @@ describe('Settings Store-Module', () => {
                     path: '/path/to/file'
                 }];
                 const cleanState = generateEmptyState();
-                metaModule.mutations[ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES](
+                metaModule.mutations[ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES](
                     cleanState,
                     recentlyOpenedSplits
                 );
@@ -88,7 +88,7 @@ describe('Settings Store-Module', () => {
             });
         });
 
-        describe(MUTATION_ADD_OPENED_SPLITS_FILE, () => {
+        describe(HANDLER_ADD_OPENED_SPLITS_FILE, () => {
             it('should add a splits file to recently opened ones', () => {
                 const recentlyOpenedSplit: RecentlyOpenedSplit = {
                     gameName: 'test',
@@ -96,7 +96,7 @@ describe('Settings Store-Module', () => {
                     path: '/path/to/file'
                 };
                 const cleanState = generateEmptyState();
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_SPLITS_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
                     cleanState,
                     recentlyOpenedSplit
                 );
@@ -119,7 +119,7 @@ describe('Settings Store-Module', () => {
                     randomSplitFile,
                     recentlyOpenedSplit
                 ];
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_SPLITS_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
                     cleanState,
                     recentlyOpenedSplit
                 );
@@ -137,7 +137,7 @@ describe('Settings Store-Module', () => {
                 };
                 const cleanState = generateEmptyState();
                 cleanState.lastOpenedSplitsFiles = generateRandomSplitFileEntries();
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_SPLITS_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
                     cleanState,
                     recentlyOpenedSplit
                 );
@@ -146,7 +146,7 @@ describe('Settings Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SET_LAST_OPENED_TEMPLATE_FILES, () => {
+        describe(HANDLER_SET_LAST_OPENED_TEMPLATE_FILES, () => {
             it('should set the last opened template files', () => {
                 const recentlyOpenedTemplates: RecentlyOpenedTemplate[] = [{
                     name: 'test',
@@ -154,7 +154,7 @@ describe('Settings Store-Module', () => {
                     path: '/path/to/template'
                 }];
                 const cleanState = generateEmptyState();
-                metaModule.mutations[ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES](
+                metaModule.mutations[ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES](
                     cleanState,
                     recentlyOpenedTemplates
                 );
@@ -162,7 +162,7 @@ describe('Settings Store-Module', () => {
             });
         });
 
-        describe(MUTATION_ADD_OPENED_TEMPLATE_FILE, () => {
+        describe(HANDLER_ADD_OPENED_TEMPLATE_FILE, () => {
             it('should add a template file to recently opened ones', () => {
                 const recentlyOpenedTemplate: RecentlyOpenedTemplate = {
                     name: 'test',
@@ -170,7 +170,7 @@ describe('Settings Store-Module', () => {
                     path: '/path/to/template'
                 };
                 const cleanState = generateEmptyState();
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_TEMPLATE_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
                     cleanState,
                     recentlyOpenedTemplate
                 );
@@ -193,7 +193,7 @@ describe('Settings Store-Module', () => {
                     randomTemplateFile,
                     recentlyOpenedTemplate
                 ];
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_TEMPLATE_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
                     cleanState,
                     recentlyOpenedTemplate
                 );
@@ -211,7 +211,7 @@ describe('Settings Store-Module', () => {
                 };
                 const cleanState = generateEmptyState();
                 cleanState.lastOpenedTemplateFiles = generateRandomTemplateFileEntries();
-                metaModule.mutations[ID_MUTATION_ADD_OPENED_TEMPLATE_FILE](
+                metaModule.mutations[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
                     cleanState,
                     recentlyOpenedTemplate
                 );
@@ -223,7 +223,7 @@ describe('Settings Store-Module', () => {
 
     describe('actions', () => {
         describe(ACTION_SET_LAST_OPENED_SPLITS_FILES, () => {
-            it(`it should call ${ID_MUTATION_SET_LAST_OPENED_SPLITS_FILES}`, async () => {
+            it(`it should call ${ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES}`, async () => {
                 const rootState = {
                     splitterino: {
                         meta: generateEmptyState()
@@ -283,7 +283,7 @@ describe('Settings Store-Module', () => {
         });
 
         describe(ACTION_SET_LAST_OPENED_TEMPLATE_FILES, () => {
-            it(`it should call ${ID_MUTATION_SET_LAST_OPENED_TEMPLATE_FILES}`, async () => {
+            it(`it should call ${ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES}`, async () => {
                 const rootState = {
                     splitterino: {
                         meta: generateEmptyState()
@@ -309,7 +309,7 @@ describe('Settings Store-Module', () => {
         });
 
         describe(ACTION_ADD_OPENED_TEMPLATE_FILE, () => {
-            it(`it should call ${ID_MUTATION_ADD_OPENED_TEMPLATE_FILE}`, async () => {
+            it(`it should call ${ID_HANDLER_ADD_OPENED_TEMPLATE_FILE}`, async () => {
                 const rootState = {
                     splitterino: {
                         meta: generateEmptyState()

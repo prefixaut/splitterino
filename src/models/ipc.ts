@@ -2,16 +2,17 @@ import { InjectionToken } from 'lightweight-di';
 import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
-import { ReceiverStore } from '../store/client';
-import { Commit } from '../store/common';
+import { Commit, StoreState } from '../store';
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
 
-export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
+export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
+
+export const IPC_SERVER_SERVICE_TOKEN = new InjectionToken<IPCServerInterface>('ipc-server');
 
 export interface IPCClientInterface {
     isInitialized(): boolean;
-    initialize(store: ReceiverStore<RootState>, clientInfo: ClientInformation): Promise<false | RegistationResult>;
+    initialize(clientInfo: ClientInformation): Promise<false | RegistationResult>;
     close(): Promise<void>;
     sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
     sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
@@ -21,6 +22,15 @@ export interface IPCClientInterface {
     getStoreState(): Promise<RootState>;
     listenForLocalMessage<T>(messageId: string): Observable<T>;
     sendLocalMessage(messageId: string, data?: any): void;
+}
+
+export interface IPCServerInterface {
+    isInitialized(): boolean;
+    initialize(logLevel: LogLevel): Promise<void>;
+    close(): Promise<void>;
+    listenToRouterSocket(): Observable<IPCRouterPacket>;
+    publishMessage(message: Message, topic?: string): Promise<boolean>;
+    sendRouterMessage(identity: Buffer, targetClient: string, message: Message): Promise<boolean>;
 }
 
 export interface ClientInformation {
@@ -248,12 +258,15 @@ export interface StoreStateRequest extends Request {
 /**
  * Response which contains the most recent state of the store.
  */
-export interface StoreStateResponse extends Response {
+export interface StoreStateResponse<S extends StoreState> extends Response {
     type: MessageType.RESPONSE_STORE_STATE;
     /**
      * The most recent state of the store.
      */
-    state: RootState;
+    state: S;
+    /**
+     * The monoton-id of the current state
+     */
     monotonId: number;
 }
 
@@ -294,7 +307,7 @@ export interface StoreCreateDiffResponse extends Response {
     /**
      * The created diff
      */
-    diff: any;
+    diff?: any;
 }
 
 /**

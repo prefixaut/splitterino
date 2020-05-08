@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 import { share } from 'rxjs/operators';
-import { IPCPacket, IPCSocket, IPCRouterSocket, IPCRouterPacket } from '../models/ipc';
+
+import { IPCPacket, IPCRouterPacket, IPCRouterSocket, IPCSocket } from '../models/ipc';
 
 export function createSharedObservableFromSocket<T extends IPCSocket>(
     socket: IPCSocket,

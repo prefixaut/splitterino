@@ -1,28 +1,19 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
-import Vue from 'vue';
-import Vuex, { Module } from 'vuex';
 
 import { RootState } from '../../../src/models/states/root.state';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
 import {
-    ACTION_BULK_SET_SETTINGS,
-    ACTION_SET_ALL_SETTINGS,
     getSettingsStoreModule,
-    GETTER_CONFIGURATIONS_BY_PATH,
-    GETTER_VALUE_BY_PATH,
-    ID_ACTION_BULK_SET_SETTINGS,
-    ID_ACTION_SET_ALL_SETTINGS,
-    ID_GETTER_GET_CONFIGURATIONS_BY_PATH,
-    ID_GETTER_GET_VALUE_BY_PATH,
-    ID_MUTATION_BULK_SET_SETTINGS,
-    ID_MUTATION_SET_ALL_SETTINGS,
-    MUTATION_BULK_SET_SETTINGS,
-    MUTATION_SET_ALL_SETTINGS,
+    ID_HANDLER_BULK_SET_SETTINGS,
+    ID_HANDLER_SET_ALL_SETTINGS,
+    HANDLER_BULK_SET_SETTINGS,
+    HANDLER_SET_ALL_SETTINGS,
 } from '../../../src/store/modules/settings.module';
 import { createMockInjector, testAction } from '../../utils';
-import { IPC_CLIENT_TOKEN } from '../../../src/models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/ipc';
 import { Subscription } from 'rxjs';
+import { Module } from 'vuex';
 
 const injector = createMockInjector();
 
@@ -71,7 +62,7 @@ function generateDummyConfiguration(): SettingsState {
 }
 
 describe('Settings Store-Module', () => {
-    const settingsModule: Module<SettingsState, RootState> = getSettingsStoreModule(injector);
+    const settingsModule: Module<SettingsState> = getSettingsStoreModule(injector);
 
     it('should be a valid module', () => {
         expect(settingsModule).to.be.an('object');
@@ -81,7 +72,7 @@ describe('Settings Store-Module', () => {
     });
 
     describe('mutations', () => {
-        describe(MUTATION_SET_ALL_SETTINGS, () => {
+        describe(HANDLER_SET_ALL_SETTINGS, () => {
             it('should set all settings values', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -92,12 +83,12 @@ describe('Settings Store-Module', () => {
                     plugins: {}
                 };
                 const cleanState = generateEmptyState();
-                settingsModule.mutations[ID_MUTATION_SET_ALL_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.mutations[ID_HANDLER_SET_ALL_SETTINGS](cleanState, { values: newSettings });
                 expect(cleanState.values).to.eql(newSettings);
             });
         });
 
-        describe(MUTATION_BULK_SET_SETTINGS, () => {
+        describe(HANDLER_BULK_SET_SETTINGS, () => {
             it('should set individual settings', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -109,13 +100,13 @@ describe('Settings Store-Module', () => {
                     plugins: {}
                 };
                 const cleanState = generateEmptyState();
-                settingsModule.mutations[ID_MUTATION_BULK_SET_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
                 expect(cleanState.values).to.eql(newSettings);
             });
 
             it('should only emit events for changed settings', async () => {
                 const messages: string[] = [];
-                const ipcClient = injector.get(IPC_CLIENT_TOKEN);
+                const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
                 const subscriptions: Subscription[] = [];
 
                 const mySettingSub = ipcClient
@@ -149,7 +140,7 @@ describe('Settings Store-Module', () => {
                 cleanState.values.splitterino.core.test.mySetting = 1;
                 cleanState.values.splitterino.core.test.doNotChange = 'hello';
 
-                settingsModule.mutations[ID_MUTATION_BULK_SET_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
 
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -172,7 +163,7 @@ describe('Settings Store-Module', () => {
             it('should emit the changed setting', async () => {
                 const messages: any[] = [];
 
-                const mySettingSub = injector.get(IPC_CLIENT_TOKEN)
+                const mySettingSub = injector.get(IPC_CLIENT_SERVICE_TOKEN)
                     .listenForLocalMessage('setting-changed:splitterino.core.test.mySetting')
                     .subscribe((setting: any) => {
                         messages.push(setting);
@@ -194,7 +185,7 @@ describe('Settings Store-Module', () => {
                 cleanState.values.splitterino.core.test.mySetting = 1;
                 cleanState.values.splitterino.core.test.doNotChange = 'hello';
 
-                settingsModule.mutations[ID_MUTATION_BULK_SET_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
 
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -216,7 +207,7 @@ describe('Settings Store-Module', () => {
 
     describe('actions', () => {
         describe(ACTION_SET_ALL_SETTINGS, () => {
-            it(`it should call ${ID_MUTATION_SET_ALL_SETTINGS}`, async () => {
+            it(`it should call ${ID_HANDLER_SET_ALL_SETTINGS}`, async () => {
                 const rootState = {
                     splitterino: {
                         settings: generateEmptyState()
@@ -245,7 +236,7 @@ describe('Settings Store-Module', () => {
         });
 
         describe(ACTION_BULK_SET_SETTINGS, () => {
-            it(`it should call ${ID_MUTATION_BULK_SET_SETTINGS}`, async () => {
+            it(`it should call ${ID_HANDLER_BULK_SET_SETTINGS}`, async () => {
                 const rootState = {
                     splitterino: {
                         settings: generateEmptyState()

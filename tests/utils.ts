@@ -3,7 +3,7 @@ import { Action, Commit, Dispatch } from 'vuex';
 
 import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../src/common/constants';
 import { ELECTRON_SERVICE_TOKEN } from '../src/models/electron';
-import { IPC_CLIENT_TOKEN } from '../src/models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../src/models/ipc';
 import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';
@@ -18,7 +18,7 @@ export function createMockInjector(): Injector {
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
         { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: IO_SERVICE_TOKEN, useClass: IOService },
-        { provide: IPC_CLIENT_TOKEN, useClass: IPCClientMockService },
+        { provide: IPC_CLIENT_SERVICE_TOKEN, useClass: IPCClientMockService },
         { provide: RUNTIME_ENVIRONMENT_TOKEN, useValue: RuntimeEnvironment.BACKGROUND },
     ]);
 }

@@ -5,18 +5,21 @@ import * as pino from 'pino';
 import { first, map, timeout } from 'rxjs/operators';
 import { format as formatUrl } from 'url';
 import uuid from 'uuid';
-import Vue from 'vue';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
-import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { IPCServer } from './common/ipc-server';
-import { AppShutdownBroadcast, CommitMutationRequest, MessageType } from './models/ipc';
+import { AppShutdownBroadcast, IPC_SERVER_SERVICE_TOKEN, MessageType } from './models/ipc';
 import { RootState } from './models/states/root.state';
 import { IO_SERVICE_TOKEN } from './services/io.service';
-import { getStoreConfig } from './store';
-import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
-import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
+import { ServerStoreService } from './services/server-store.service';
+import { Module, STORE_SERVICE_TOKEN } from './store';
+import { getContextMenuStoreModule } from './store/modules/context-menu.module';
+import { getGameInfoStoreModule } from './store/modules/game-info.module';
+import { getKeybindingsStoreModule, HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
+import { getMetaStoreModule } from './store/modules/meta.module';
+import { getSettingsStoreModule } from './store/modules/settings.module';
+import { getSplitsStoreModule } from './store/modules/splits.module';
+import { getTimerStoreModule } from './store/modules/timer.module';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
@@ -94,47 +97,31 @@ process.on('unhandledRejection', (reason, promise) => {
     const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
 
-    // Create the IPC Server
-    const ipcServer = new IPCServer();
+    // Initialize the Store and it's modules
+    const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
+    const coreStoreModules: { [name: string]: Module<any> } = {
+        contextMenu: getContextMenuStoreModule(),
+        gameInfo: getGameInfoStoreModule(),
+        keybindings: getKeybindingsStoreModule(),
+        settings: getSettingsStoreModule(injector),
+        splits: getSplitsStoreModule(injector),
+        timer: getTimerStoreModule(),
+        meta: getMetaStoreModule(),
+    };
+    for (const moduleName of Object.keys(coreStoreModules)) {
+        store.registerModule('splitterino', moduleName, coreStoreModules[moduleName]);
+    }
 
-    // Main instance of the Vuex-Store
-    Vue.use(Vuex);
-    const store = new Vuex.Store<RootState>({
-        ...getStoreConfig(injector),
-        plugins: [
-            storeInstance => {
-                storeInstance.subscribe(mutation => {
-                    try {
-                        const commitRequest: CommitMutationRequest = {
-                            id: uuid(),
-                            type: MessageType.REQUEST_COMMIT_MUTATION,
-                            mutation: mutation.type,
-                            payload: mutation.payload,
-                        };
-                        ipcServer.publishMessage(commitRequest);
-                    } catch (error) {
-                        Logger.error({
-                            msg: 'Error while sending mutation to other processes',
-                            mutation,
-                            error,
-                        });
-                    }
-                });
-            },
-            getKeybindingsStorePlugin(injector),
-        ]
-    });
+    // Get the IPC Server
+    const ipcServer = injector.get(IPC_SERVER_SERVICE_TOKEN);
 
     // Initialize the IPC Server with the store
-    await ipcServer.initialize({
-        store: store,
-        logLevel: args.logLevel || LogLevel.INFO
-    });
+    await ipcServer.initialize(args.logLevel || LogLevel.INFO);
 
     // load application settings
-    const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
+    const appSettings = await io.loadApplicationSettingsFromFile(args.splitsFile);
     // load user settings
-    await io.loadSettingsFromFileToStore(store);
+    await io.loadSettingsFromFileToStore();
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions();
@@ -170,7 +157,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
         // save app settings before main window close
         window.on('close', () => {
-            io.saveApplicationSettingsToFile(mainWindow, store);
+            io.saveApplicationSettingsToFile(mainWindow);
         });
 
         // free window variable after close to avoid usage afterwards
@@ -229,7 +216,7 @@ process.on('unhandledRejection', (reason, promise) => {
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
-            store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
+            store.commit(HANDLER_SET_BINDINGS, appSettings.keybindings);
         }
 
         createMainWindow();

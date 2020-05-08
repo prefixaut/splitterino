@@ -3,16 +3,9 @@ import { Injector } from 'lightweight-di';
 import { ContextMenuItemActionFunction } from '../models/context-menu-item';
 import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { KeybindingActionFunction } from '../models/keybindings';
+import { ACTION_SERVICE_TOKEN } from '../services/action.service';
 import { IO_SERVICE_TOKEN } from '../services/io.service';
-import {
-    ACTION_PAUSE,
-    ACTION_RESET,
-    ACTION_SKIP,
-    ACTION_SPLIT,
-    ACTION_START,
-    ACTION_UNDO,
-    ACTION_UNPAUSE,
-} from '../store/modules/splits.module';
+import { STORE_SERVICE_TOKEN } from '../store';
 import {
     openKeybindgsEditor,
     openLoadSplits,
@@ -84,14 +77,14 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
     /*
      * Split Actions
      */
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, params => {
-        openSplitsEditor(electron, params.vNode.context.$store);
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_EDIT, () => {
+        openSplitsEditor(injector);
     });
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, params => {
-        openLoadSplits(electron, io, params.vNode.context.$store);
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_LOAD_FROM_FILE, () => {
+        openLoadSplits(injector);
     });
     FunctionRegistry.registerContextMenuAction(CTX_MENU_SPLITS_SAVE_TO_FILE, params => {
-        io.saveSplitsFromStoreToFile(params.vNode.context.$store, null, params.browserWindow);
+        io.saveSplitsFromStoreToFile(null, params.browserWindow);
     });
 
     /*
@@ -111,48 +104,46 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
     /*
      * Open Template File
      */
-    FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, params => {
-        openLoadTemplate(
-            electron,
-            io,
-            params.vNode.context.$store
-        );
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_TEMPLATES_LOAD_FROM_FILE, () => {
+        openLoadTemplate(injector);
     });
 }
 
-export function registerDefaultKeybindingFunctions() {
+export function registerDefaultKeybindingFunctions(injector: Injector) {
+    const store = injector.get(STORE_SERVICE_TOKEN);
+    const actions = injector.get(ACTION_SERVICE_TOKEN);
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
+
     FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, params => {
         // The same action has to start the timer as well
         switch (params.store.state.splitterino.timer.status) {
             case TimerStatus.STOPPED:
-                params.store.dispatch(ACTION_START);
+                actions.startTimer();
                 break;
             default:
-                params.store.dispatch(ACTION_SPLIT);
+                actions.splitTimer();
         }
     });
 
-    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SKIP, params => {
-        params.store.dispatch(ACTION_SKIP);
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SKIP, () => {
+        actions.skipSplit();
     });
 
-    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_UNDO, params => {
-        params.store.dispatch(ACTION_UNDO);
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_UNDO, () => {
+        actions.revertSplit();
     });
 
-    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_TOGGLE_PAUSE, params => {
-        switch (params.store.state.splitterino.timer.status) {
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_TOGGLE_PAUSE, () => {
+        switch (store.state.splitterino.timer.status) {
             case TimerStatus.RUNNING:
-                params.store.dispatch(ACTION_PAUSE);
+                actions.pauseTimer();
                 break;
             case TimerStatus.PAUSED:
-                params.store.dispatch(ACTION_UNPAUSE);
+                actions.unpauseTimer();
         }
     });
 
-    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_RESET, params => {
-        params.store.dispatch(ACTION_RESET, {
-            windowId: params.injector.get(ELECTRON_SERVICE_TOKEN).getCurrentWindow().id,
-        });
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_RESET, () => {
+        actions.resetTimer(electron.getCurrentWindow().id);
     });
 }

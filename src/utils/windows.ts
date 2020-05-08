@@ -1,10 +1,10 @@
-import { Store } from 'vuex';
+import { Injector } from 'lightweight-di';
 
 import { TimerStatus } from '../common/timer-status';
-import { ElectronInterface } from '../models/electron';
-import { RootState } from '../models/states/root.state';
-import { IOService } from '../services/io.service';
-import { ACTION_SPLIT } from '../store/modules/splits.module';
+import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../models/electron';
+import { ACTION_SERVICE_TOKEN } from '../services/action.service';
+import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { STORE_SERVICE_TOKEN } from '../store';
 
 export function openKeybindgsEditor(electron: ElectronInterface) {
     electron.newWindow(
@@ -34,9 +34,13 @@ export function openSettingsEditor(electron: ElectronInterface) {
     );
 }
 
-export function openLoadSplits(electron: ElectronInterface, io: IOService, store: Store<RootState>) {
+export function openLoadSplits(injector: Injector) {
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
+    const io = injector.get(IO_SERVICE_TOKEN);
+    const store = injector.get(STORE_SERVICE_TOKEN);
+
     if (store.state.splitterino.meta.lastOpenedSplitsFiles.length === 0) {
-        io.loadSplitsFromFileToStore(store);
+        io.loadSplitsFromFileToStore();
     } else {
         openSplitsBrowser(electron);
     }
@@ -57,7 +61,11 @@ export function openSplitsBrowser(electron: ElectronInterface) {
     );
 }
 
-export function openLoadTemplate(electron: ElectronInterface, io: IOService, store: Store<RootState>) {
+export function openLoadTemplate(injector: Injector) {
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
+    const io = injector.get(IO_SERVICE_TOKEN);
+    const store = injector.get(STORE_SERVICE_TOKEN);
+
     if (store.state.splitterino.meta.lastOpenedTemplateFiles.length === 0) {
         io.askUserToOpenTemplateFile();
     } else {
@@ -80,13 +88,16 @@ export function openTemplateBrowser(electron: ElectronInterface) {
     );
 }
 
-export async function openSplitsEditor(electron: ElectronInterface, store: Store<RootState>) {
-    const state = store.state;
-    const status = state.splitterino.timer.status;
+export async function openSplitsEditor(injector: Injector) {
+    const electron = injector.get(ELECTRON_SERVICE_TOKEN);
+    const store = injector.get(STORE_SERVICE_TOKEN);
+    const actions = injector.get(ACTION_SERVICE_TOKEN);
+
+    const status = store.state.splitterino.timer.status;
 
     if (status === TimerStatus.FINISHED) {
         // Finish the run when attempting to edit the splits
-        await store.dispatch(ACTION_SPLIT);
+        await actions.splitTimer();
     } else if (status !== TimerStatus.STOPPED) {
         electron.showMessageDialog(electron.getCurrentWindow(), {
             title: 'Editing not allowed',

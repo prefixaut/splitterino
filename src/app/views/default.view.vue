@@ -41,7 +41,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
 import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../../models/electron';
-import { IPC_CLIENT_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
 import { IOService, IO_SERVICE_TOKEN } from '../../services/io.service';
 import { Logger } from '../../utils/logger';
 import { openSplitsEditor, openLoadSplits } from '../../utils/windows';
@@ -67,7 +67,7 @@ export default class DefaultView extends Vue {
         this.registerDragDropHandler();
 
         this.loadTemplate();
-        const sub = this.$services.get(IPC_CLIENT_TOKEN).listenToSubscriberSocket().pipe(
+        const sub = this.$services.get(IPC_CLIENT_SERVICE_TOKEN).listenToSubscriberSocket().pipe(
             // Trim out everything aside from the message itself
             map(packet => packet.message),
             // Filter out messages which aren't "load-template" global events
@@ -96,7 +96,7 @@ export default class DefaultView extends Vue {
     }
 
     private async loadTemplate(templateFile?: string) {
-        const templateFiles = await this.ioService.loadTemplateFile(this.$store, templateFile);
+        const templateFiles = await this.ioService.loadTemplateFile(templateFile);
 
         if (templateFiles == null) {
             Logger.warn({
@@ -134,7 +134,7 @@ export default class DefaultView extends Vue {
                         filePath.endsWith('.splits') &&
                         this.$store.state.splitterino.timer.status === TimerStatus.STOPPED
                     ) {
-                        this.ioService.loadSplitsFromFileToStore(this.$store, filePath);
+                        this.ioService.loadSplitsFromFileToStore(filePath);
                     }
                 }
 

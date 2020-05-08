@@ -7,7 +7,6 @@ import { homedir } from 'os';
 import { dirname, join } from 'path';
 import { extract } from 'tar-stream';
 import { v4 as uuid } from 'uuid';
-import { Store } from 'vuex';
 
 import {
     DEFAULT_APPLICATION_SETTINGS,
@@ -17,7 +16,7 @@ import {
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../models/electron';
-import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { TimingMethod } from '../models/segment';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
 import { GameInfoState } from '../models/states/game-info.state';
@@ -26,23 +25,19 @@ import { RootState } from '../models/states/root.state';
 import { Settings } from '../models/states/settings.state';
 import { TemplateFiles } from '../models/template-files';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
+import { BaseStore, STORE_SERVICE_TOKEN } from '../store';
+import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_GAME_MODULE_SPLITS_FILE } from '../store/modules/game-info.module';
 import {
-    ACTION_SET_CATEGORY,
-    ACTION_SET_GAME_NAME,
-    ACTION_SET_LANGUAGE,
-    ACTION_SET_PLATFORM,
-    ACTION_SET_REGION,
-} from '../store/modules/game-info.module';
-import {
-    ACTION_ADD_OPENED_SPLITS_FILE,
-    ACTION_ADD_OPENED_TEMPLATE_FILE,
-    ACTION_SET_LAST_OPENED_SPLITS_FILES,
-    ACTION_SET_LAST_OPENED_TEMPLATE_FILES,
+    HANDLER_ADD_OPENED_SPLITS_FILE,
+    HANDLER_ADD_OPENED_TEMPLATE_FILE,
+    HANDLER_SET_LAST_OPENED_SPLITS_FILES,
+    HANDLER_SET_LAST_OPENED_TEMPLATE_FILES,
 } from '../store/modules/meta.module';
-import { ACTION_SET_ALL_SETTINGS } from '../store/modules/settings.module';
-import { ACTION_SET_ALL_SEGMENTS, ACTION_SET_TIMING } from '../store/modules/splits.module';
+import { HANDLER_SET_ALL_SETTINGS } from '../store/modules/settings.module';
+import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
 import { Logger } from '../utils/logger';
+import { ACTION_SERVICE_TOKEN, ActionService } from './action.service';
 import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
 
 export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
@@ -50,11 +45,13 @@ export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 @Injectable
 export class IOService {
     constructor(
+        @Inject(ACTION_SERVICE_TOKEN) protected actions: ActionService,
         @Inject(ELECTRON_SERVICE_TOKEN) protected electron: ElectronInterface,
-        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
-        @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        @Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface,
+        @Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface,
         @Inject(RUNTIME_ENVIRONMENT_TOKEN) protected runtimeEnv: RuntimeEnvironment,
+        @Inject(STORE_SERVICE_TOKEN) protected store: BaseStore<RootState>,
+        @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
+        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
     ) {
         this.assetDir = join(homedir(), '.splitterino');
 
@@ -202,14 +199,14 @@ export class IOService {
     }
 
     /**
-     * Attempts to load splits from a File to the store.
+     * Attempts to load splits from a File to the this.store.
      * When no File is specified, it's asking the user to select a splits-file.
      *
-     * @param file Optional. The splits-file which should be loaded into the store.
+     * @param file Optional. The splits-file which should be loaded into the this.store.
      *
-     * @returns A Promise which resolves to if the file was successfully loaded into store.
+     * @returns A Promise which resolves to if the file was successfully loaded into this.store.
      */
-    public loadSplitsFromFileToStore(store: Store<RootState>, file?: string): Promise<boolean> {
+    public loadSplitsFromFileToStore(file?: string): Promise<boolean> {
         let fileSelect: Promise<string>;
 
         if (file != null) {
@@ -267,19 +264,14 @@ export class IOService {
                     };
                 }
 
-                Logger.debug('Loaded splits are valid! Applying to store ...');
+                Logger.debug('Loaded splits are valid! Applying to this.store ...');
 
                 const values = await Promise.all([
-                    store.dispatch(ACTION_SET_ALL_SEGMENTS, loadedSplits.splits.segments),
-                    store.dispatch(ACTION_SET_TIMING, loadedSplits.splits.timing),
-                    store.dispatch(ACTION_SET_GAME_NAME, loadedSplits.splits.game.name),
-                    store.dispatch(ACTION_SET_CATEGORY, loadedSplits.splits.game.category),
-                    store.dispatch(ACTION_SET_LANGUAGE, loadedSplits.splits.game.language),
-                    store.dispatch(ACTION_SET_PLATFORM, loadedSplits.splits.game.platform),
-                    store.dispatch(ACTION_SET_REGION, loadedSplits.splits.game.region),
+                    this.store.commit(HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE, loadedSplits),
+                    this.store.commit(HANDLER_APPLY_GAME_MODULE_SPLITS_FILE, loadedSplits),
                 ]);
 
-                await store.dispatch(ACTION_ADD_OPENED_SPLITS_FILE, filePath);
+                await this.store.commit(HANDLER_ADD_OPENED_SPLITS_FILE, filePath);
 
                 return values[0];
             })
@@ -296,13 +288,13 @@ export class IOService {
     }
 
     /**
-     * Saves the splits from the store into a file.
+     * Saves the splits from the this.store into a file.
      *
-     * @param store The Store-Instance to get the data from
+     * @param this.store The this.store-Instance to get the data from
      * @param file The File where the splits should be saved to. When left empty, it'll prompt the user to pick a file.
      * @param window The window to use as parent. Defaults to the main window.
      */
-    public saveSplitsFromStoreToFile(store: Store<RootState>, file?: string, window?: BrowserWindow): Promise<boolean> {
+    public saveSplitsFromStoreToFile(file?: string, window?: BrowserWindow): Promise<boolean> {
         let fileSelect: Promise<string>;
         if (file != null) {
             Logger.debug({
@@ -326,7 +318,7 @@ export class IOService {
                 file: fileToSave,
             });
 
-            const gameInfo = store.state.splitterino.gameInfo;
+            const gameInfo = this.store.state.splitterino.gameInfo;
             Object.keys(gameInfo).forEach(key => {
                 if (gameInfo[key] == null) {
                     delete gameInfo[key];
@@ -336,10 +328,10 @@ export class IOService {
             const fileContent: SplitsFile = {
                 version: MOST_RECENT_SPLITS_VERSION,
                 splits: {
-                    segments: cloneDeep(store.state.splitterino.splits.segments).map(segment =>
+                    segments: cloneDeep(this.store.state.splitterino.splits.segments).map(segment =>
                         asSaveableSegment(segment)
                     ),
-                    timing: store.state.splitterino.splits.timing || TimingMethod.RTA,
+                    timing: this.store.state.splitterino.splits.timing || TimingMethod.RTA,
                     game: gameInfo,
                 },
             };
@@ -379,11 +371,11 @@ export class IOService {
             });
     }
 
-    public async loadTemplateFile(store: Store<RootState>, file?: string): Promise<TemplateFiles | null> {
-        // Get last opened template file from store if no file was given
-        if (file == null && store.state.splitterino.meta.lastOpenedTemplateFiles.length > 0) {
+    public async loadTemplateFile(file?: string): Promise<TemplateFiles | null> {
+        // Get last opened template file from this.store if no file was given
+        if (file == null && this.store.state.splitterino.meta.lastOpenedTemplateFiles.length > 0) {
             Logger.debug('Using last opened template file');
-            file = store.state.splitterino.meta.lastOpenedTemplateFiles[0].path;
+            file = this.store.state.splitterino.meta.lastOpenedTemplateFiles[0].path;
         }
 
         if (file != null) {
@@ -477,7 +469,7 @@ export class IOService {
                             }
                         }
 
-                        store.dispatch(ACTION_ADD_OPENED_TEMPLATE_FILE, {
+                        this.store.commit(HANDLER_ADD_OPENED_TEMPLATE_FILE, {
                             path: file,
                             author: templateFiles.meta.author,
                             name: templateFiles.meta.name
@@ -558,17 +550,16 @@ export class IOService {
 
     /**
      * Loads application settings object from file if it exists
-     * @param store Vuex store instance
+     * @param this.store Vuex this.store instance
      */
     public async loadApplicationSettingsFromFile(
-        store: Store<RootState>,
         splitsFile?: string
     ): Promise<ApplicationSettings> {
         const appSettings = this.loadJSONFromFile(this.appSettingsFileName);
 
         try {
             if (splitsFile != null && typeof splitsFile === 'string') {
-                await this.loadSplitsFromFileToStore(store, splitsFile);
+                await this.loadSplitsFromFileToStore(splitsFile);
             } else if (this.validator.isApplicationSettings(appSettings)) {
                 let lastOpenedSplitsFiles: RecentlyOpenedSplit[] = [];
                 if (appSettings.lastOpenedSplitsFiles != null) {
@@ -577,8 +568,8 @@ export class IOService {
                     );
 
                     if (lastOpenedSplitsFiles.length > 0) {
-                        await store.dispatch(ACTION_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
-                        await this.loadSplitsFromFileToStore(store, lastOpenedSplitsFiles[0].path);
+                        await this.store.commit(HANDLER_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
+                        await this.loadSplitsFromFileToStore(lastOpenedSplitsFiles[0].path);
                     }
                 }
 
@@ -589,7 +580,7 @@ export class IOService {
                     );
 
                     if (lastOpenedTemplateFiles.length > 0) {
-                        await store.dispatch(ACTION_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
+                        await this.store.commit(HANDLER_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
                     }
                 }
             }
@@ -613,14 +604,14 @@ export class IOService {
     /**
      * Save application settings to file
      * @param window Main browser window instance
-     * @param store Vuex store instance
+     * @param this.store Vuex this.store instance
      */
-    public saveApplicationSettingsToFile(window: BrowserWindow, store: Store<RootState>): void {
+    public saveApplicationSettingsToFile(window: BrowserWindow): void {
         const windowSize = window.getSize();
         const windowPos = window.getPosition();
-        const lastOpenedSplitsFiles = store.state.splitterino.meta.lastOpenedSplitsFiles;
-        const lastOpenedTemplateFiles = store.state.splitterino.meta.lastOpenedTemplateFiles;
-        const keybindings = store.state.splitterino.keybindings.bindings;
+        const lastOpenedSplitsFiles = this.store.state.splitterino.meta.lastOpenedSplitsFiles;
+        const lastOpenedTemplateFiles = this.store.state.splitterino.meta.lastOpenedTemplateFiles;
+        const keybindings = this.store.state.splitterino.keybindings.bindings;
 
         const newAppSettings: ApplicationSettings = {
             windowOptions: {
@@ -644,11 +635,11 @@ export class IOService {
 
     /**
      * Flattens current settings and saves them to settings file
-     * @param store Store instance to retrieve settings from
+     * @param this.store this.store instance to retrieve settings from
      */
-    public saveSettingsToFile(store: Store<RootState>) {
+    public saveSettingsToFile() {
         const flattenedSettings = {};
-        const settings = store.state.splitterino.settings.values;
+        const settings = this.store.state.splitterino.settings.values;
 
         for (const [moduleKey, modulE] of Object.entries(settings)) {
             for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
@@ -665,11 +656,11 @@ export class IOService {
     }
 
     /**
-     * Loads settings that have a configuration registered into store.
+     * Loads settings that have a configuration registered into this.store.
      * Sets a deault value if no value for configuration exists
-     * @param store Root store instance
+     * @param this.store Root this.store instance
      */
-    public async loadSettingsFromFileToStore(store: Store<RootState>) {
+    public async loadSettingsFromFileToStore() {
         const loadedSettings = this.loadJSONFromFile(this.settingsFileName);
         const parsedSettings: Settings = {
             splitterino: {
@@ -680,7 +671,7 @@ export class IOService {
 
         let usedDefaultValue = false;
 
-        for (const [moduleKey, modulE] of Object.entries(store.state.splitterino.settings.configuration)) {
+        for (const [moduleKey, modulE] of Object.entries(this.store.state.splitterino.settings.configuration)) {
             for (const namespacE of modulE) {
                 for (const group of namespacE.groups) {
                     for (const setting of group.settings) {
@@ -699,10 +690,10 @@ export class IOService {
             }
         }
 
-        await store.dispatch(ACTION_SET_ALL_SETTINGS, { values: parsedSettings });
+        await this.store.commit(HANDLER_SET_ALL_SETTINGS, { values: parsedSettings });
 
         if (usedDefaultValue) {
-            this.saveSettingsToFile(store);
+            this.saveSettingsToFile();
         }
     }
 }

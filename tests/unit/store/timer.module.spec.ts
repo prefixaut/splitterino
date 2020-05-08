@@ -8,10 +8,10 @@ import { RootState } from '../../../src/models/states/root.state';
 import { TimerState } from '../../../src/models/states/timer.state';
 import {
     getTimerStoreModule,
-    ID_MUTATION_SET_START_DELAY,
-    ID_MUTATION_SET_STATUS,
-    MUTATION_SET_START_DELAY,
-    MUTATION_SET_STATUS,
+    ID_HANDLER_SET_START_DELAY,
+    ID_HANDLER_SET_STATUS,
+    HANDLER_SET_START_DELAY,
+    HANDLER_SET_STATUS,
 } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { randomInt } from '../../utils';
@@ -31,7 +31,7 @@ describe('Timer Store-Module', () => {
 
     describe('mutations', () => {
 
-        describe(MUTATION_SET_START_DELAY, () => {
+        describe(HANDLER_SET_START_DELAY, () => {
             it('should apply the mutation correctly', () => {
                 const newDelay = 1_000;
                 const state: TimerState = {
@@ -45,7 +45,7 @@ describe('Timer Store-Module', () => {
                     finishTime: 0,
                 };
 
-                timerModule.mutations[ID_MUTATION_SET_START_DELAY](state, newDelay);
+                timerModule.mutations[ID_HANDLER_SET_START_DELAY](state, newDelay);
                 expect(state.startDelay).to.equal(newDelay);
             });
 
@@ -76,7 +76,7 @@ describe('Timer Store-Module', () => {
                     {},
                     []
                 ].forEach(newDelay => {
-                    timerModule.mutations[ID_MUTATION_SET_START_DELAY](state, newDelay);
+                    timerModule.mutations[ID_HANDLER_SET_START_DELAY](state, newDelay);
                     expect(state.startDelay).to.equal(
                         originalDelay,
                         `Applied wrongfully following delay: "${newDelay}"!`
@@ -85,7 +85,7 @@ describe('Timer Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SET_STATUS, () => {
+        describe(HANDLER_SET_STATUS, () => {
             it('should not switch to an invalid status', () => {
                 const initialState: TimerState = {
                     status: TimerStatus.STOPPED,
@@ -112,7 +112,7 @@ describe('Timer Store-Module', () => {
                     {},
                     [],
                 ].forEach(invalidStatus => {
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, invalidStatus);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, invalidStatus);
 
                     expect(state.status).to.equal(initialState.status);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -123,7 +123,7 @@ describe('Timer Store-Module', () => {
                     expect(state.igtPauseTotal).to.equal(initialState.igtPauseTotal);
                     expect(state.finishTime).to.equal(initialState.finishTime);
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, { time: now(), status: invalidStatus });
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, { time: now(), status: invalidStatus });
 
                     expect(state.status).to.equal(initialState.status);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -150,7 +150,7 @@ describe('Timer Store-Module', () => {
                 };
                 const state: TimerState = { ...initialState };
 
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, { time, status: TimerStatus.RUNNING });
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, { time, status: TimerStatus.RUNNING });
 
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -176,7 +176,7 @@ describe('Timer Store-Module', () => {
                 const state: TimerState = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -205,7 +205,7 @@ describe('Timer Store-Module', () => {
 
                 const state: TimerState = { ...initialState };
 
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -236,7 +236,7 @@ describe('Timer Store-Module', () => {
 
                 const state: TimerState = { ...initialState };
 
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
@@ -265,7 +265,7 @@ describe('Timer Store-Module', () => {
 
                 const state: TimerState = { ...initialState };
 
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
                 expect(state.status).to.equal(TimerStatus.RUNNING);
                 expect(state.startDelay).to.equal(initialState.startDelay);
                 expect(state.startTime).to.equal(initialState.startTime);
@@ -307,7 +307,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
                     expect(state.status).to.deep.equal(invalidStatus);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -335,7 +335,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.PAUSED);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
 
                 expect(state.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -362,7 +362,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.PAUSED);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
 
                 expect(state.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -407,7 +407,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.PAUSED);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
 
                     expect(state.status).to.deep.equal(invalidStatus);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -435,7 +435,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(state.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -462,7 +462,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(state.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -489,7 +489,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(state.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -537,7 +537,7 @@ describe('Timer Store-Module', () => {
                             status: invalidStatus,
                         };
 
-                        timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                        timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                         expect(state.status).to.deep.equal(invalidStatus);
                         expect(state.startDelay).to.equal(initialState.startDelay);
@@ -565,7 +565,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
                 expect(state.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -598,7 +598,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
                 expect(state.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -628,7 +628,7 @@ describe('Timer Store-Module', () => {
                 const state = { ...initialState };
 
                 const time = now();
-                timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+                timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
                 expect(state.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(state.startDelay).to.equal(initialState.startDelay);
@@ -672,7 +672,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.FINISHED);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
                     expect(state.status).to.deep.equal(invalidStatus);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -708,7 +708,7 @@ describe('Timer Store-Module', () => {
                         status: status,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.STOPPED);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.STOPPED);
 
                     expect(state.status).to.deep.equal(TimerStatus.STOPPED);
                     expect(state.startDelay).to.equal(initialState.startDelay);
@@ -752,7 +752,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    timerModule.mutations[ID_MUTATION_SET_STATUS](state, TimerStatus.STOPPED);
+                    timerModule.mutations[ID_HANDLER_SET_STATUS](state, TimerStatus.STOPPED);
 
                     expect(state.status).to.deep.equal(invalidStatus);
                     expect(state.startDelay).to.equal(initialState.startDelay);

@@ -1,12 +1,20 @@
+import { Injectable } from 'lightweight-di';
 import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { socket } from 'zeromq';
 
 import {
+    IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
+    IPC_PULL_PUSH_ADDRESS,
+    IPC_ROUTER_DEALER_ADDRESS,
+    IPC_SERVER_NAME,
+} from '../common/constants';
+import {
     GlobalEventBroadcast,
     IPCPacket,
     IPCRouterPacket,
     IPCRouterSocket,
+    IPCServerInterface,
     IPCSocket,
     LogOnServerRequest,
     Message,
@@ -15,23 +23,11 @@ import {
     RegisterClientRequest,
     RegisterClientResponse,
     Response,
-    StoreCommitRequest,
-    StoreCommitResponse,
-    StoreStateRequest,
-    StoreStateResponse,
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../models/ipc';
-import { RootState } from '../models/states/root.state';
-import { ServerStore } from '../store/server';
 import { createSharedObservableFromSocket } from '../utils/ipc';
 import { Logger, LogLevel } from '../utils/logger';
-import {
-    IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
-    IPC_PULL_PUSH_ADDRESS,
-    IPC_ROUTER_DEALER_ADDRESS,
-    IPC_SERVER_NAME,
-} from './constants';
 
 /**
  * Internal representation of a IPC Client.
@@ -53,18 +49,13 @@ interface Client {
 
 type RouterFn = (identity: Buffer, receivedFrom: string, message: Message, respond?: boolean) => any;
 
-export interface InitializeOptions {
-    store: ServerStore<RootState>;
-    logLevel: LogLevel;
-}
-
-export class IPCServer {
+@Injectable
+export class IPCServerService implements IPCServerInterface {
 
     private publisher: IPCSocket;
     private router: IPCRouterSocket;
     private pull: IPCSocket;
 
-    private store: ServerStore<RootState>;
     private logLevel: LogLevel;
 
     private routerMessages: Observable<IPCRouterPacket>;
@@ -76,15 +67,12 @@ export class IPCServer {
     private initialized = false;
 
     private connectedClients: Client[] = [];
-    private actionTable: { [actionName: string]: string } = {};
     private routerTable: { [message: string]: RouterFn } = {
         /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
         [MessageType.REQUEST_REGISTER_CLIENT]: this.handleRegisterClient,
         [MessageType.REQUEST_UNREGISTER_CLIENT]: this.handleUnregisterClient,
         [MessageType.REQUEST_PUBLISH_GLOBAL_EVENT]: this.handleGlobalEventPublish,
         [MessageType.REQUEST_LOG_ON_SERVER]: this.handleLogToServer,
-        [MessageType.REQUEST_STORE_STATE]: this.handleStoreFetch,
-        [MessageType.REQUEST_STORE_COMMIT]: this.handleStoreCommit,
         /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
     };
     private pullTable: { [message: string]: (message: Message) => any } = {
@@ -96,13 +84,12 @@ export class IPCServer {
         return this.initialized;
     }
 
-    public initialize(options: InitializeOptions): Promise<void> {
+    public initialize(logLevel: LogLevel): Promise<void> {
         if (this.initialized) {
             return Promise.resolve();
         }
 
-        this.store = options.store;
-        this.logLevel = options.logLevel;
+        this.logLevel = logLevel;
 
         // Safe type assertion since type is missing in official typings
         this.publisher = socket('pub') as IPCSocket;
@@ -135,8 +122,6 @@ export class IPCServer {
         if (!this.initialized) {
             return Promise.resolve();
         }
-
-        this.store = null;
 
         if (this.publisher) {
             this.publisher.unbindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
@@ -219,9 +204,6 @@ export class IPCServer {
             };
 
             this.connectedClients.push(client);
-            client.actions.forEach(actionName => {
-                this.actionTable[actionName] = client.id;
-            });
 
             const response: RegisterClientResponse = {
                 id: uuid(),
@@ -250,14 +232,6 @@ export class IPCServer {
         const index = this.connectedClients.findIndex(client => client.id === request.clientId);
         if (index > -1) {
             this.connectedClients.splice(index, 1);
-
-            // Repopulate the actions
-            this.actionTable = {};
-            this.connectedClients.forEach(client => {
-                client.actions.forEach(actionName => {
-                    this.actionTable[actionName] = client.id;
-                });
-            });
         }
 
         const response: UnregisterClientResponse = {
@@ -343,84 +317,8 @@ export class IPCServer {
         this.publishMessage(broadcast);
     }
 
-    private handleStoreFetch(identity: Buffer, receivedFrom: string, request: StoreStateRequest) {
-        const response: StoreStateResponse = {
-            id: uuid(),
-            type: MessageType.RESPONSE_STORE_STATE,
-            respondsTo: request.id,
-            successful: true,
-            state: this.store.state,
-            monotonId: this.store.monotonId,
-        };
-
-        this.sendRouterMessage(identity, receivedFrom, response);
-    }
-
-    private async handleStoreCommit(identity: Buffer, receivedFrom: string, request: StoreCommitRequest) {
-        let response: StoreCommitResponse;
-
-        try {
-            const successful = await this.store.commit(request.commit);
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_STORE_COMMIT,
-                respondsTo: request.id,
-                successful: successful,
-            };
-        } catch (error) {
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_STORE_COMMIT,
-                respondsTo: request.id,
-                successful: false,
-                error: error,
-            };
-        }
-
-        this.sendRouterMessage(identity, receivedFrom, response);
-    }
-
     private handleLogToServer(i: never, r: never, request: LogOnServerRequest) {
         // eslint-disable-next-line no-underscore-dangle
         Logger._logToHandlers(request.level, request.message);
     }
-
-    /*
-    private async forwardDispatchToClient(initialReqeust: DispatchActionReqeust) {
-        const clientIdToFind = this.actionTable[initialReqeust.action];
-        // Loading the client to maybe check for the API Version in the future
-        const client = this.connectedClients.find(aClient => aClient.id === clientIdToFind);
-
-        const request: DispatchClientActionRequest = {
-            id: uuid(),
-            type: MessageType.REQUEST_DISPATCH_CLIENT_ACTION,
-            clientId: client.id,
-            action: initialReqeust.action,
-            payload: initialReqeust.payload,
-            options: initialReqeust.options,
-        };
-
-        const response = await this.sendRequestAwaitResponse(
-            request,
-            MessageType.RESPONSE_DISPATCH_CLIENT_ACTION,
-        ) as DispatchClientActionResponse;
-
-        if (response.successful) {
-            (response.commits || []).forEach(commit => {
-                this.store.commit(commit.name, commit.payload, commit.options);
-            });
-        }
-
-        const responseToIntialRequest: DispatchActionResponse = {
-            id: uuid(),
-            type: MessageType.RESPONSE_DISPATCH_ACTION,
-            respondsTo: initialReqeust.id,
-            successful: response.successful,
-            error: response.error,
-            returnValue: response.returnValue,
-        };
-
-        this.sendMessage(responseToIntialRequest);
-    }
-    */
 }

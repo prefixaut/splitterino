@@ -5,14 +5,14 @@ import { Store } from 'vuex';
 import { FunctionRegistry } from '../../common/function-registry';
 import { RootState } from '../../models/states/root.state';
 import { Logger } from '../../utils/logger';
-import { MUTATION_SET_BINDINGS } from '../modules/keybindings.module';
+import { HANDLER_SET_BINDINGS } from '../modules/keybindings.module';
 
 export function getKeybindingsStorePlugin(injector: Injector) {
     return (store: Store<RootState>) => {
         store.subscribe(mutation => {
             try {
                 // Skip all mutations which aren't changing the bindings
-                if (mutation == null || mutation.type !== MUTATION_SET_BINDINGS) {
+                if (mutation == null || mutation.type !== HANDLER_SET_BINDINGS) {
                     return;
                 }
 

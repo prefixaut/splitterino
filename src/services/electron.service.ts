@@ -20,7 +20,7 @@ import { VNode } from 'vue';
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../models/context-menu-item';
 import { ElectronInterface } from '../models/electron';
-import { IPC_CLIENT_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 
@@ -41,7 +41,7 @@ export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
 export class ElectronService implements ElectronInterface {
     private readonly url = 'http://localhost:8080#';
 
-    constructor(@Inject(IPC_CLIENT_TOKEN) protected ipcClient: IPCClientInterface) { }
+    constructor(@Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface) { }
 
     public isRenderProcess() {
         return !!remote;

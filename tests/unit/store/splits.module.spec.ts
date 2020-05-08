@@ -31,30 +31,30 @@ import {
     ID_ACTION_START,
     ID_ACTION_UNDO,
     ID_ACTION_UNPAUSE,
-    ID_MUTATION_ADD_SEGMENT,
-    ID_MUTATION_CLEAR_SEGMENTS,
-    ID_MUTATION_DISCARDING_RESET,
-    ID_MUTATION_REMOVE_SEGMENT,
-    ID_MUTATION_SAVING_RESET,
-    ID_MUTATION_SET_ALL_SEGMENTS,
-    ID_MUTATION_SET_CURRENT,
-    ID_MUTATION_SET_PREVIOUS_IGT_TIME,
-    ID_MUTATION_SET_PREVIOUS_RTA_TIME,
-    ID_MUTATION_SET_SEGMENT,
-    ID_MUTATION_SET_TIMING,
-    MUTATION_ADD_SEGMENT,
-    MUTATION_CLEAR_SEGMENTS,
-    MUTATION_DISCARDING_RESET,
-    MUTATION_REMOVE_SEGMENT,
-    MUTATION_SAVING_RESET,
-    MUTATION_SET_ALL_SEGMENTS,
-    MUTATION_SET_CURRENT,
-    MUTATION_SET_PREVIOUS_IGT_TIME,
-    MUTATION_SET_PREVIOUS_RTA_TIME,
-    MUTATION_SET_SEGMENT,
-    MUTATION_SET_TIMING,
+    ID_HANDLER_ADD_SEGMENT,
+    ID_HANDLER_CLEAR_SEGMENTS,
+    ID_HANDLER_DISCARDING_RESET,
+    ID_HANDLER_REMOVE_SEGMENT,
+    ID_HANDLER_SAVING_RESET,
+    ID_HANDLER_SET_ALL_SEGMENTS,
+    ID_HANDLER_SET_CURRENT,
+    ID_HANDLER_SET_PREVIOUS_IGT_TIME,
+    ID_HANDLER_SET_PREVIOUS_RTA_TIME,
+    ID_HANDLER_SET_SEGMENT,
+    ID_HANDLER_SET_TIMING,
+    HANDLER_ADD_SEGMENT,
+    HANDLER_CLEAR_SEGMENTS,
+    HANDLER_DISCARDING_RESET,
+    HANDLER_REMOVE_SEGMENT,
+    HANDLER_SAVING_RESET,
+    HANDLER_SET_ALL_SEGMENTS,
+    HANDLER_SET_CURRENT,
+    HANDLER_SET_PREVIOUS_IGT_TIME,
+    HANDLER_SET_PREVIOUS_RTA_TIME,
+    HANDLER_SET_SEGMENT,
+    HANDLER_SET_TIMING,
 } from '../../../src/store/modules/splits.module';
-import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
+import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { getFinalTime, now } from '../../../src/utils/time';
 import { ElectronMockService } from '../../mocks/electron-mock.service';
 import { createMockInjector, randomInt, testAction } from '../../utils';
@@ -110,7 +110,7 @@ describe('Splits Store-Module', () => {
     });
 
     describe('mutations', () => {
-        describe(MUTATION_SET_CURRENT, () => {
+        describe(HANDLER_SET_CURRENT, () => {
             it('should apply the mutation correctly', () => {
                 const newCurrent = 15;
 
@@ -122,7 +122,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, newCurrent);
+                splitsModule.mutations[ID_HANDLER_SET_CURRENT](state, newCurrent);
                 expect(state.current).to.equal(newCurrent);
 
                 [
@@ -140,13 +140,13 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(invalidCurrent => {
-                    splitsModule.mutations[ID_MUTATION_SET_CURRENT](state, invalidCurrent);
+                    splitsModule.mutations[ID_HANDLER_SET_CURRENT](state, invalidCurrent);
                     expect(state.current).to.equal(newCurrent);
                 });
             });
         });
 
-        describe(MUTATION_SET_TIMING, () => {
+        describe(HANDLER_SET_TIMING, () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -158,7 +158,7 @@ describe('Splits Store-Module', () => {
 
                 const valid = [TimingMethod.IGT, TimingMethod.RTA];
                 valid.forEach(timing => {
-                    splitsModule.mutations[ID_MUTATION_SET_TIMING](state, timing);
+                    splitsModule.mutations[ID_HANDLER_SET_TIMING](state, timing);
                     expect(state.timing).to.equal(timing);
                 });
 
@@ -179,13 +179,13 @@ describe('Splits Store-Module', () => {
                     'cool',
                     '',
                 ].forEach(timing => {
-                    splitsModule.mutations[ID_MUTATION_SET_TIMING](state, timing);
+                    splitsModule.mutations[ID_HANDLER_SET_TIMING](state, timing);
                     expect(state.timing).to.equal(valid[valid.length - 1]);
                 });
             });
         });
 
-        describe(MUTATION_SET_PREVIOUS_RTA_TIME, () => {
+        describe(HANDLER_SET_PREVIOUS_RTA_TIME, () => {
             it('should apply the mutation correctly', () => {
                 const newTime = randomInt(99999);
                 const state: SplitsState = {
@@ -196,13 +196,13 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                splitsModule.mutations[ID_MUTATION_SET_PREVIOUS_RTA_TIME](state, newTime);
+                splitsModule.mutations[ID_HANDLER_SET_PREVIOUS_RTA_TIME](state, newTime);
 
                 expect(state.previousRTATotal).to.equal(newTime);
             });
         });
 
-        describe(MUTATION_SET_PREVIOUS_IGT_TIME, () => {
+        describe(HANDLER_SET_PREVIOUS_IGT_TIME, () => {
             it('should apply the mutation correctly', () => {
                 const newTime = randomInt(99999);
                 const state: SplitsState = {
@@ -213,13 +213,13 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                splitsModule.mutations[ID_MUTATION_SET_PREVIOUS_IGT_TIME](state, newTime);
+                splitsModule.mutations[ID_HANDLER_SET_PREVIOUS_IGT_TIME](state, newTime);
 
                 expect(state.previousIGTTotal).to.equal(newTime);
             });
         });
 
-        describe(MUTATION_ADD_SEGMENT, () => {
+        describe(HANDLER_ADD_SEGMENT, () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -234,7 +234,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentOne);
+                splitsModule.mutations[ID_HANDLER_ADD_SEGMENT](state, segmentOne);
 
                 expect(state.segments).to.have.lengthOf(1);
                 expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -244,7 +244,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentTwo);
+                splitsModule.mutations[ID_HANDLER_ADD_SEGMENT](state, segmentTwo);
 
                 expect(state.segments).to.have.lengthOf(2);
                 expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -255,7 +255,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segmentThree);
+                splitsModule.mutations[ID_HANDLER_ADD_SEGMENT](state, segmentThree);
 
                 expect(state.segments).to.have.lengthOf(3);
                 expect(state.segments[0].id).to.equal(segmentOne.id);
@@ -291,14 +291,14 @@ describe('Splits Store-Module', () => {
                     { uuid: 'but no name' },
                     { name: 'invalid uuid', uuid: 'cool test' },
                 ].forEach(segment => {
-                    splitsModule.mutations[ID_MUTATION_ADD_SEGMENT](state, segment);
+                    splitsModule.mutations[ID_HANDLER_ADD_SEGMENT](state, segment);
 
                     expect(state.segments).to.have.lengthOf(0, `"${segment}" was accepted as valid segment`);
                 });
             });
         });
 
-        describe(MUTATION_SET_SEGMENT, () => {
+        describe(HANDLER_SET_SEGMENT, () => {
             it('should apply the mutation correctly', () => {
                 const originalSegments: Segment[] = [
                     { id: uuid(), name: '0' },
@@ -318,7 +318,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                splitsModule.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment: newSegment });
+                splitsModule.mutations[ID_HANDLER_SET_SEGMENT](state, { index: 0, segment: newSegment });
 
                 expect(state.segments).to.have.lengthOf(3);
                 expect(state.segments[0]).to.deep.equal(newSegment);
@@ -358,7 +358,7 @@ describe('Splits Store-Module', () => {
                     { uuid: 'but no name' },
                     { name: 'invalid uuid', uuid: 'cool test' },
                 ].forEach(segment => {
-                    splitsModule.mutations[ID_MUTATION_SET_SEGMENT](state, { index: 0, segment });
+                    splitsModule.mutations[ID_HANDLER_SET_SEGMENT](state, { index: 0, segment });
 
                     expect(state.segments).to.have.lengthOf(1);
                     expect(state.segments[0]).to.deep.equal(
@@ -401,7 +401,7 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(index => {
-                    splitsModule.mutations[ID_MUTATION_SET_SEGMENT](state, { index, segment: newSegment });
+                    splitsModule.mutations[ID_HANDLER_SET_SEGMENT](state, { index, segment: newSegment });
 
                     expect(state.segments).to.have.lengthOf(1);
                     expect(state.segments[0]).to.deep.equal(
@@ -412,7 +412,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SET_ALL_SEGMENTS, () => {
+        describe(HANDLER_SET_ALL_SEGMENTS, () => {
             it('should apply the mutation correctly', () => {
                 const originalSegments = generateSegmentArray(5);
                 const state: SplitsState = {
@@ -428,7 +428,7 @@ describe('Splits Store-Module', () => {
 
                 const newSegments = generateSegmentArray(10);
 
-                splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, newSegments);
+                splitsModule.mutations[ID_HANDLER_SET_ALL_SEGMENTS](state, newSegments);
 
                 expect(state.segments).to.deep.equal(newSegments);
             });
@@ -466,22 +466,22 @@ describe('Splits Store-Module', () => {
                     { uuid: 'but no name' },
                     { name: 'invalid uuid', uuid: 'cool test' },
                 ].forEach(invalidSegment => {
-                    splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, [invalidSegment]);
+                    splitsModule.mutations[ID_HANDLER_SET_ALL_SEGMENTS](state, [invalidSegment]);
                     expect(state.segments).to.have.lengthOf(0, `"${[invalidSegment]}" were accepted as valid segments`);
 
-                    splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, [invalidSegment, validSegment]);
+                    splitsModule.mutations[ID_HANDLER_SET_ALL_SEGMENTS](state, [invalidSegment, validSegment]);
                     expect(state.segments).to.have.lengthOf(
                         0,
                         `"${[invalidSegment, validSegment]}" were accepted as valid segments`
                     );
 
-                    splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](state, [validSegment, invalidSegment]);
+                    splitsModule.mutations[ID_HANDLER_SET_ALL_SEGMENTS](state, [validSegment, invalidSegment]);
                     expect(state.segments).to.have.lengthOf(
                         0,
                         `"${[validSegment, invalidSegment]}" were accepted as valid segments`
                     );
 
-                    splitsModule.mutations[ID_MUTATION_SET_ALL_SEGMENTS](
+                    splitsModule.mutations[ID_HANDLER_SET_ALL_SEGMENTS](
                         state,
                         [validSegment, invalidSegment, validSegment]
                     );
@@ -493,7 +493,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_REMOVE_SEGMENT, () => {
+        describe(HANDLER_REMOVE_SEGMENT, () => {
             it('should apply the mutation correctly', () => {
                 const deleteIndicies = [0, 1, 2];
                 const originalSegments = generateSegmentArray(deleteIndicies.length);
@@ -507,7 +507,7 @@ describe('Splits Store-Module', () => {
                         previousIGTTotal: randomInt(99999),
                     };
 
-                    splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, deleteIndex);
+                    splitsModule.mutations[ID_HANDLER_REMOVE_SEGMENT](state, deleteIndex);
 
                     // Create a copy
                     const expectedSegments = originalSegments.slice(0);
@@ -543,13 +543,13 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(value => {
-                    splitsModule.mutations[ID_MUTATION_REMOVE_SEGMENT](state, value);
+                    splitsModule.mutations[ID_HANDLER_REMOVE_SEGMENT](state, value);
                     expect(state.segments).to.deep.equals(originalSegments);
                 });
             });
         });
 
-        describe(MUTATION_CLEAR_SEGMENTS, () => {
+        describe(HANDLER_CLEAR_SEGMENTS, () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -559,13 +559,13 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_CLEAR_SEGMENTS](state, null);
+                splitsModule.mutations[ID_HANDLER_CLEAR_SEGMENTS](state, null);
 
                 expect(state.segments.length).to.equal(0);
             });
         });
 
-        describe(MUTATION_DISCARDING_RESET, () => {
+        describe(HANDLER_DISCARDING_RESET, () => {
             it('should apply the mutation correctly', () => {
                 const originalSegments: Segment[] = [
                     {
@@ -668,7 +668,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
+                splitsModule.mutations[ID_HANDLER_SAVING_RESET](state, null);
 
                 expect(state.segments).to.have.lengthOf(originalSegments.length);
 
@@ -696,7 +696,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(MUTATION_SAVING_RESET, () => {
+        describe(HANDLER_SAVING_RESET, () => {
             it('should apply the time without personal-bests mutation correctly', () => {
                 const originalSegments: Segment[] = [
                     {
@@ -799,7 +799,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
+                splitsModule.mutations[ID_HANDLER_SAVING_RESET](state, null);
 
                 expect(state.segments).to.have.lengthOf(originalSegments.length);
 
@@ -875,7 +875,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 1_000_000,
                 };
 
-                splitsModule.mutations[ID_MUTATION_SAVING_RESET](state, null);
+                splitsModule.mutations[ID_HANDLER_SAVING_RESET](state, null);
 
                 expect(state.segments).to.have.lengthOf(originalSegments.length);
 
@@ -934,25 +934,25 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(5);
                 expect(dispatches).to.be.empty;
-                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[0].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[0].payload).to.exist;
                 // Either current time or +1, as it may be a millisecond off
                 expect(commits[0].payload.time).to.be.within(startTime, startTime + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_PREVIOUS_RTA_TIME);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_PREVIOUS_RTA_TIME);
                 expect(commits[1].payload).to.equal(totalRTATime);
 
-                expect(commits[2].type).to.equal(ID_MUTATION_SET_PREVIOUS_IGT_TIME);
+                expect(commits[2].type).to.equal(ID_HANDLER_SET_PREVIOUS_IGT_TIME);
                 expect(commits[2].payload).to.equal(totalIGTTime);
 
-                expect(commits[3].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[3].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[3].payload).to.exist;
                 expect(commits[3].payload.index).to.equal(0);
                 expect(commits[3].payload.segment.id).to.equal(segments[0].id);
                 expect(commits[3].payload.segment.startTime).to.be.within(startTime, startTime + maxTimeDeviation);
 
-                expect(commits[4]).to.deep.equal({ type: ID_MUTATION_SET_CURRENT, payload: 0 });
+                expect(commits[4]).to.deep.equal({ type: ID_HANDLER_SET_CURRENT, payload: 0 });
             });
 
             it('should not start without segments', async () => {
@@ -1097,7 +1097,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.have.lengthOf(3);
                 expect(dispatches).to.be.empty;
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload).to.exist;
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
@@ -1107,7 +1107,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.skipped).to.equal(false);
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(true);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[1].payload).to.exist;
                 expect(commits[1].payload.index).to.equal(currentIndex + maxTimeDeviation);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex + maxTimeDeviation].id);
@@ -1115,7 +1115,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].payload.segment.passed).to.equal(false);
                 expect(commits[1].payload.segment.skipped).to.equal(false);
 
-                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].type).to.equal(ID_HANDLER_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex + maxTimeDeviation);
             });
 
@@ -1301,7 +1301,7 @@ describe('Splits Store-Module', () => {
                 expect(commits).to.have.lengthOf(2);
                 expect(dispatches).to.be.empty;
 
-                expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[1].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[1].payload).to.equal(TimerStatus.FINISHED);
             });
 
@@ -1367,7 +1367,7 @@ describe('Splits Store-Module', () => {
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.currentTime).to.equal(null);
@@ -1375,7 +1375,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.skipped).to.equal(true);
                 expect(commits[0].payload.segment.passed).to.equal(false);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_CURRENT);
                 expect(commits[1].payload).to.equal(currentIndex + maxTimeDeviation);
             });
 
@@ -1497,7 +1497,7 @@ describe('Splits Store-Module', () => {
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.startTime).to.equal(-1);
@@ -1510,14 +1510,14 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
                 expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
                 expect(commits[1].payload.segment.passed).to.equal(false);
                 expect(commits[1].payload.segment.skipped).to.equal(false);
                 expect(commits[1].payload.segment.currentTime.rta.pauseTime).to.equal(pauseTime);
 
-                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].type).to.equal(ID_HANDLER_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex - 1);
             });
 
@@ -1577,7 +1577,7 @@ describe('Splits Store-Module', () => {
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.startTime).to.equal(-1);
@@ -1590,7 +1590,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
                 expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
                 expect(commits[1].payload.segment.passed).to.equal(false);
@@ -1598,7 +1598,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].payload.segment.currentTime.rta.pauseTime).to.equal(initialPauseTime + pauseTime);
                 expect(commits[1].payload.segment.currentTime.igt.pauseTime).to.equal(pauseTime);
 
-                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].type).to.equal(ID_HANDLER_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex - 1);
             });
 
@@ -1654,7 +1654,7 @@ describe('Splits Store-Module', () => {
                 expect(dispatches).to.be.empty;
                 expect(returnValue).to.equal(true);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(segments[currentIndex].id);
                 expect(commits[0].payload.segment.startTime).to.equal(-1);
@@ -1667,7 +1667,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[0].payload.segment.hasNewOverallBest).to.equal(false);
                 expect(commits[0].payload.segment.previousOverallBest).to.equal(null);
 
-                expect(commits[1].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[1].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[1].payload.segment.id).to.equal(segments[currentIndex - 1].id);
                 expect(commits[1].payload.segment.startTime).to.equal(segments[currentIndex - 1].startTime);
                 expect(commits[1].payload.segment.passed).to.equal(false);
@@ -1675,7 +1675,7 @@ describe('Splits Store-Module', () => {
                 expect(commits[1].payload.segment.currentTime.rta.pauseTime).to.equal(initialPauseTime);
                 expect(commits[1].payload.segment.currentTime.igt.pauseTime).to.equal(initialPauseTime);
 
-                expect(commits[2].type).to.equal(ID_MUTATION_SET_CURRENT);
+                expect(commits[2].type).to.equal(ID_HANDLER_SET_CURRENT);
                 expect(commits[2].payload).to.equal(currentIndex - 1);
             });
 
@@ -1768,7 +1768,7 @@ describe('Splits Store-Module', () => {
                 });
 
                 expect(commits).to.have.lengthOf(1);
-                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[0].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.PAUSED);
 
@@ -1835,7 +1835,7 @@ describe('Splits Store-Module', () => {
                 }, { igtOnly: true });
 
                 expect(commits).to.have.lengthOf(1);
-                expect(commits[0].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[0].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[0].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[0].payload.status).to.equal(TimerStatus.RUNNING_IGT_PAUSE);
 
@@ -1907,11 +1907,11 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
 
-                expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[1].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
@@ -1990,11 +1990,11 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(2);
 
-                expect(commits[0].type).to.equal(ID_MUTATION_SET_SEGMENT);
+                expect(commits[0].type).to.equal(ID_HANDLER_SET_SEGMENT);
                 expect(commits[0].payload.index).to.equal(currentIndex);
                 expect(commits[0].payload.segment.id).to.equal(originalSegments[currentIndex].id);
 
-                expect(commits[1].type).to.equal(MUTATION_SET_STATUS);
+                expect(commits[1].type).to.equal(HANDLER_SET_STATUS);
                 expect(commits[1].payload.time).to.be.within(time, time + maxTimeDeviation);
                 expect(commits[1].payload.status).to.equal(TimerStatus.RUNNING);
 
@@ -2647,15 +2647,15 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
-                    type: MUTATION_SET_STATUS,
+                    type: HANDLER_SET_STATUS,
                     payload: TimerStatus.STOPPED,
                 });
                 expect(commits[1]).to.deep.equal({
-                    type: ID_MUTATION_SET_CURRENT,
+                    type: ID_HANDLER_SET_CURRENT,
                     payload: -1,
                 });
                 expect(commits[2]).to.deep.equal({
-                    type: ID_MUTATION_DISCARDING_RESET,
+                    type: ID_HANDLER_DISCARDING_RESET,
                     payload: undefined,
                 });
 
@@ -2691,15 +2691,15 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
-                    type: MUTATION_SET_STATUS,
+                    type: HANDLER_SET_STATUS,
                     payload: TimerStatus.STOPPED,
                 });
                 expect(commits[1]).to.deep.equal({
-                    type: ID_MUTATION_SET_CURRENT,
+                    type: ID_HANDLER_SET_CURRENT,
                     payload: -1,
                 });
                 expect(commits[2]).to.deep.equal({
-                    type: ID_MUTATION_SAVING_RESET,
+                    type: ID_HANDLER_SAVING_RESET,
                     payload: undefined,
                 });
 
@@ -2733,15 +2733,15 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(3);
                 expect(commits[0]).to.deep.equal({
-                    type: MUTATION_SET_STATUS,
+                    type: HANDLER_SET_STATUS,
                     payload: TimerStatus.STOPPED,
                 });
                 expect(commits[1]).to.deep.equal({
-                    type: ID_MUTATION_SET_CURRENT,
+                    type: ID_HANDLER_SET_CURRENT,
                     payload: -1,
                 });
                 expect(commits[2]).to.deep.equal({
-                    type: ID_MUTATION_SAVING_RESET,
+                    type: ID_HANDLER_SAVING_RESET,
                     payload: undefined,
                 });
 
@@ -2778,7 +2778,7 @@ describe('Splits Store-Module', () => {
 
                 expect(commits).to.have.lengthOf(1);
                 expect(commits[0]).to.deep.equal({
-                    type: ID_MUTATION_SET_ALL_SEGMENTS,
+                    type: ID_HANDLER_SET_ALL_SEGMENTS,
                     payload: newSegments,
                 });
 

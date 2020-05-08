@@ -4,7 +4,7 @@ import uuid from 'uuid';
 
 import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../common/constants';
 import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
-import { IPC_CLIENT_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
 
 /**
  * Enum to map log levels
@@ -61,7 +61,7 @@ export class Logger {
             return;
         }
         if (this.runtimeEnv !== RuntimeEnvironment.BACKGROUND) {
-            this.ipcClient = injector.get(IPC_CLIENT_TOKEN);
+            this.ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
         }
 
         this.logHandlers.push(pino({

@@ -1,12 +1,22 @@
-import { cloneDeep, merge } from 'lodash';
-import { first, map, timeout } from 'rxjs/operators';
+import { Inject, Injectable } from 'lightweight-di';
+import { merge } from 'lodash';
+import { filter, first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
-import { IPCServer } from '../common/ipc-server';
-import { MessageType, StoreApplyDiffBroadcast, StoreCreateDiffRequest, StoreCreateDiffResponse } from '../models/ipc';
+import {
+    IPC_SERVER_SERVICE_TOKEN,
+    MessageType,
+    StoreApplyDiffBroadcast,
+    StoreCommitRequest,
+    StoreCommitResponse,
+    StoreCreateDiffRequest,
+    StoreCreateDiffResponse,
+    StoreStateResponse,
+} from '../models/ipc';
+import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
 import { Logger } from '../utils/logger';
-import { difference } from '../utils/store';
-import { Commit, DiffHandler, Module, StoreState, createCommit, BaseStore } from './common';
+import { createCommit } from '../utils/store';
+import { IPCServerService } from './ipc-server.service';
 
 interface Client {
     id: string;
@@ -18,7 +28,8 @@ interface LocalCommit {
     commit: Commit;
 }
 
-export class ServerStore<S extends StoreState> extends BaseStore<S> {
+@Injectable
+export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
     private locks: { [module: string]: string } = {};
     private clients: Client[] = [];
@@ -38,7 +49,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
         };
     } = {};
 
-    constructor(private ipcServer: IPCServer) {
+    constructor(@Inject(IPC_SERVER_SERVICE_TOKEN) private ipcServer: IPCServerService) {
         super({} as S);
     }
 
@@ -72,7 +83,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
             throw new Error('The module\'s initialize-function has to create a valid state object!');
         }
 
-        this.state[namespace][name] = state;
+        this.internalState[namespace][name] = state;
         this.modules[namespace][name] = module.handlers || {};
 
         // Publish the initial state of the module
@@ -83,10 +94,9 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
         if (this.state[namespace] == null || this.state[namespace][name] == null) {
             return false;
         }
-        const oldState = cloneDeep(this.state);
 
         // Delete the module
-        this.state[namespace][name] = {};
+        this.internalState[namespace][name] = null;
         delete this.modules[namespace][name];
 
         // Delete the namespace if it isn't used anymore
@@ -94,7 +104,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
             delete this.modules[namespace];
         }
 
-        this.publishDiff(difference(oldState, this.state));
+        this.publishDiff({ [namespace]: { [name]: null } });
     }
 
     private updateQueue() {
@@ -148,6 +158,9 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
                 commit,
             });
 
+            this.resolveTable[id].reject(new Error('Could not find any possible handler for the commit'));
+            delete this.resolveTable[id];
+
             return false;
         });
 
@@ -186,7 +199,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
             });
         }
 
-        this.internalMonotonId++;
+        this.internalMonotonousId++;
 
         // Unlock the module
         this.locks[lockName] = null;
@@ -229,7 +242,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
                         // Publish the diff to all clients
                         this.publishDiff(message.diff);
                         // Increase the monoton-id
-                        this.internalMonotonId++;
+                        this.internalMonotonousId++;
                         resolve(true);
                     }
                 }, () => {
@@ -265,7 +278,7 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
             id: uuid(),
             type: MessageType.BROADCAST_STORE_APPLY_DIFF,
             diff,
-            monotonId: this.internalMonotonId,
+            monotonId: this.internalMonotonousId,
         };
         this.ipcServer.publishMessage(message);
     }
@@ -287,5 +300,56 @@ export class ServerStore<S extends StoreState> extends BaseStore<S> {
 
     private getLockName(commit: Commit): string {
         return `${commit.namespace}/${commit.module}`;
+    }
+
+    protected setupIpcHooks() {
+        this.ipcServer.listenToRouterSocket().pipe(
+            filter(packet => packet.message.type === MessageType.REQUEST_STORE_STATE)
+        ).subscribe(packet => {
+            const { identity, sender, message } = packet;
+            const response: StoreStateResponse<S> = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_STATE,
+                respondsTo: message.id,
+                successful: true,
+                state: this.internalState,
+                monotonId: this.internalMonotonousId,
+            };
+
+            this.ipcServer.sendRouterMessage(identity, sender, response);
+        });
+
+        this.ipcServer.listenToRouterSocket().pipe(
+            filter(packet => packet.message.type === MessageType.REQUEST_STORE_COMMIT)
+        ).subscribe(packet => {
+            (async () => {
+                const { identity, sender } = packet;
+                const request = packet.message as StoreCommitRequest;
+                let response: StoreCommitResponse;
+
+                try {
+                    const result = await this.commit(request.commit);
+                    if (!result) {
+                        throw new Error('The commit coult not be executed!');
+                    }
+                    response = {
+                        id: uuid(),
+                        type: MessageType.RESPONSE_STORE_COMMIT,
+                        respondsTo: request.id,
+                        successful: true,
+                    };
+                } catch (error) {
+                    response = {
+                        id: uuid(),
+                        type: MessageType.RESPONSE_STORE_COMMIT,
+                        respondsTo: request.id,
+                        successful: false,
+                        error: error,
+                    };
+                }
+
+                this.ipcServer.sendRouterMessage(identity, sender, response);
+            })();
+        });
     }
 }

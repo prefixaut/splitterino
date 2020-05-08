@@ -1,25 +1,24 @@
 import { filter, first, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
-import Vue from 'vue';
-import Vuex, { ActionContext } from 'vuex';
 
 import {
-    IPC_CLIENT_TOKEN,
+    IPC_CLIENT_SERVICE_TOKEN,
     IPCPacket,
     MessageType,
-    PluginActionDiffRequest,
-    PluginActionDiffResponse,
     PluginProcessDedNotification,
+    StoreCreateDiffRequest,
+    StoreCreateDiffResponse,
 } from '../../models/ipc';
 import { RootState } from '../../models/states/root.state';
+import { HandlerStoreService } from '../../services/handler-store.service';
 import { IO_SERVICE_TOKEN } from '../../services/io.service';
-import { DIFF_OPTION, getPluginStore, getStoreConfig } from '../../store';
+import { Module, STORE_SERVICE_TOKEN } from '../../store';
 import { Logger, LogLevel } from '../../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../../utils/plugin';
 import { createPluginInjector } from '../../utils/services';
-import { getModuleActionAndMutationNames } from '../../utils/store';
 import { IPC_SERVER_NAME } from '../constants';
 import { getPluginList } from './load-plugin';
+import { Injector } from 'lightweight-di';
 
 (async () => {
     const injector = createPluginInjector();
@@ -27,47 +26,27 @@ import { getPluginList } from './load-plugin';
     // Initialize the logger
     Logger.initialize(injector, LogLevel.DEBUG);
 
-    Vue.use(Vuex);
-
-    // Setup the store
-    const storeOptions = getStoreConfig(injector);
-    const names = getModuleActionAndMutationNames(storeOptions);
-    const store = await getPluginStore(Vue, storeOptions);
-
-    // Register plugin modules
-    const testModule = {
-        namespaced: true,
-        state: {
-            hi: 456,
-        },
-        actions: {
-            action(context: ActionContext<{}, RootState>) {
-                Logger.info('Test action called!');
-                context.commit('mutation');
-
-                return { test: 123 };
-            },
-        },
-        mutations: {
-            mutation(state: any) {
-                state.hi = 890;
-            }
-        },
-    };
-    store.registerModule('test', testModule);
-    const testModuleNames = getModuleActionAndMutationNames(testModule, 'test', 'splitterino/plugins');
-    names.actions.push(...testModuleNames.actions);
-    names.mutations.push(...testModuleNames.mutations);
-    console.log('>>> test-module', testModuleNames);
-
-    const ipcClient = injector.get(IPC_CLIENT_TOKEN);
-    const response = await ipcClient.initialize(store, { name: PLUGIN_CLIENT_ID });
-
+    const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+    const initResponse = await ipcClient.initialize({ name: PLUGIN_CLIENT_ID });
     // Update the Logger log-level from the registration
-    if (response) {
+    if (initResponse) {
         // eslint-disable-next-line no-underscore-dangle
-        Logger._setInitialLogLevel(response.logLevel);
+        Logger._setInitialLogLevel(initResponse.logLevel);
     }
+
+    await setupStore(injector);
+
+    getPluginList(injector.get(IO_SERVICE_TOKEN));
+
+    ipcClient.sendDealerMessage({
+        id: uuid(),
+        type: MessageType.NOTIFY_PLUGIN_PROCESS_READY
+    });
+})();
+
+async function setupStore(injector: Injector) {
+    const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
+    const store = injector.get(STORE_SERVICE_TOKEN) as HandlerStoreService<RootState>;
 
     ipcClient.listenToSubscriberSocket().pipe(
         map(packet => packet.message),
@@ -83,49 +62,49 @@ import { getPluginList } from './load-plugin';
 
     ipcClient.listenToSubscriberSocket().pipe(
         filter(packet => packet.sender === IPC_SERVER_NAME
-            && packet.message.type === MessageType.REQUEST_PLUGIN_ACTION_DIFF),
+            && packet.message.type === MessageType.REQUEST_STORE_CREATE_DIFF),
     ).subscribe((packet: IPCPacket) => {
         const { message, sender } = packet;
-        const req = message as PluginActionDiffRequest;
+        const req = message as StoreCreateDiffRequest;
+        let response: StoreCreateDiffResponse;
 
-        Logger.info(names);
-        if (!names.actions.includes(req.action)) {
-            Logger.info(`Plugin will not handle unknown action "${req.action}"`);
-
-            return;
-        }
-
-        store.dispatch(req.action, req.payload, {
-            ...req.options,
-            [DIFF_OPTION]: message.id,
-        } as any).then(result => {
-            const responseMessage: PluginActionDiffResponse = {
+        try {
+            const diff = store.getDiff(req.commit);
+            response = {
                 id: uuid(),
-                type: MessageType.RESPONSE_PLUGIN_ACTION_DIFF,
+                type: MessageType.RESPONSE_STORE_CREATE_DIFF,
                 respondsTo: message.id,
                 successful: true,
-                changes: result.changes,
-                returnValue: result.response,
+                diff,
             };
-
-            ipcClient.sendDealerMessage(responseMessage, sender);
-        }).catch(error => {
-            const responseMessage: PluginActionDiffResponse = {
+        } catch (error) {
+            response = {
                 id: uuid(),
-                type: MessageType.RESPONSE_PLUGIN_ACTION_DIFF,
+                type: MessageType.RESPONSE_STORE_CREATE_DIFF,
                 respondsTo: message.id,
                 successful: false,
                 error: error,
             };
+        }
 
-            ipcClient.sendDealerMessage(responseMessage, sender);
-        });
+        ipcClient.sendDealerMessage(response, sender);
     });
 
-    getPluginList(injector.get(IO_SERVICE_TOKEN));
+    // Register the store namespace
+    await store.registerNamespace('plugins');
 
-    ipcClient.sendDealerMessage({
-        id: uuid(),
-        type: MessageType.NOTIFY_PLUGIN_PROCESS_READY
-    });
-})();
+    // Register plugin modules
+    const testModule: Module<any> = {
+        initialize() {
+            return {
+                hi: 456,
+            };
+        },
+        handlers: {
+            mutation() {
+                return { hi: 890 };
+            }
+        },
+    };
+    await store.registerModule('test', testModule);
+}

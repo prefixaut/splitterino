@@ -10,7 +10,7 @@ import { aevumFilter } from '../../../src/app/filters/aevum.filter';
 import { RootState } from '../../../src/models/states/root.state';
 import { TimerState } from '../../../src/models/states/timer.state';
 import { getSplitterinoStoreModules } from '../../../src/store/modules/index.module';
-import { MUTATION_SET_STATUS } from '../../../src/store/modules/timer.module';
+import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, wait } from '../../utils';
 
@@ -430,7 +430,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.PAUSED);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.PAUSED);
 
         await wait(secondWaitTime);
 
@@ -489,7 +489,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -548,7 +548,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -607,7 +607,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -669,7 +669,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.PAUSED);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.PAUSED);
 
         await wait(secondWaitTime);
 
@@ -728,7 +728,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -788,7 +788,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -848,7 +848,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(MUTATION_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -907,7 +907,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -963,7 +963,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1019,7 +1019,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1074,7 +1074,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1131,7 +1131,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1188,7 +1188,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(MUTATION_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 

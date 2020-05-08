@@ -1,5 +1,5 @@
 import { Injectable } from 'lightweight-di';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { filter, first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 import { socket, ZMQ_IDENTITY } from 'zeromq';
@@ -12,7 +12,6 @@ import {
 } from '../common/constants';
 import {
     ClientInformation,
-    DealerTable,
     IPCClientInterface,
     IPCPacket,
     IPCSocket,
@@ -24,15 +23,12 @@ import {
     RegisterClientResponse,
     Request,
     Response,
-    StoreApplyDiffBroadcast,
     StoreStateRequest,
     StoreStateResponse,
-    SubscriberTable,
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
-import { ReceiverStore } from '../store/client';
 import { createSharedObservableFromSocket } from '../utils/ipc';
 import { Logger } from '../utils/logger';
 
@@ -43,30 +39,17 @@ export class ClientNotRegisteredError extends Error {
 }
 
 @Injectable
-export class IPCClient implements IPCClientInterface {
+export class IPCClientService implements IPCClientInterface {
 
     private subscriber: IPCSocket;
     private dealer: IPCSocket;
     private push: IPCSocket;
-    private store: ReceiverStore<RootState>;
 
     private subscriberMessages: Observable<IPCPacket>;
-    private subscriberMessageSubscription: Subscription;
 
     private dealerMessages: Observable<IPCPacket>;
-    private dealerMessageSubscription: Subscription;
 
     private initialized = false;
-
-    private readonly subscriberTable: SubscriberTable = {
-        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
-        [MessageType.BROADCAST_STORE_APPLY_DIFF]: this.handleStoreApplyDiff,
-        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
-    };
-    private readonly dealerTable: DealerTable = {
-        /* eslint-disable @typescript-eslint/unbound-method,no-invalid-this */
-        /* eslint-enable @typescript-eslint/unbound-method,no-invalid-this */
-    };
 
     private clientId: string;
     private clientInfo: ClientInformation;
@@ -76,10 +59,7 @@ export class IPCClient implements IPCClientInterface {
         return this.initialized;
     }
 
-    public async initialize(
-        store: ReceiverStore<RootState>,
-        clientInfo: ClientInformation
-    ): Promise<false | RegistationResult> {
+    public async initialize(clientInfo: ClientInformation): Promise<false | RegistationResult> {
         // Close everything first
         await this.close();
 
@@ -87,7 +67,6 @@ export class IPCClient implements IPCClientInterface {
             return false;
         }
 
-        this.store = store;
         this.clientInfo = clientInfo;
         this.clientId = uuid();
 
@@ -97,9 +76,6 @@ export class IPCClient implements IPCClientInterface {
         this.subscriber.subscribe('');
 
         this.subscriberMessages = createSharedObservableFromSocket(this.subscriber);
-        this.subscriberMessageSubscription = this.subscriberMessages.subscribe(packet => {
-            this.handleIncomingSubscriberMessage(packet.message);
-        });
 
         this.dealer = socket('dealer') as IPCSocket;
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
@@ -107,9 +83,6 @@ export class IPCClient implements IPCClientInterface {
         this.dealer.setsockopt(ZMQ_IDENTITY, Buffer.from(this.clientId));
 
         this.dealerMessages = createSharedObservableFromSocket(this.dealer, this.clientId);
-        this.dealerMessageSubscription = this.dealerMessages.subscribe(packet => {
-            this.handleIncomingDealerMessage(packet.sender, packet.message);
-        });
 
         this.push = socket('push') as IPCSocket;
         this.push.connect(IPC_PULL_PUSH_ADDRESS);
@@ -131,8 +104,6 @@ export class IPCClient implements IPCClientInterface {
             return;
         }
 
-        this.store = null;
-
         if (this.subscriber) {
             this.subscriber.disconnect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.subscriber.close();
@@ -143,11 +114,6 @@ export class IPCClient implements IPCClientInterface {
             this.subscriberMessages = null;
         }
 
-        if (this.subscriberMessageSubscription) {
-            this.subscriberMessageSubscription.unsubscribe();
-            this.subscriberMessageSubscription = null;
-        }
-
         if (this.dealer) {
             this.dealer.disconnect(IPC_ROUTER_DEALER_ADDRESS);
             this.dealer.close();
@@ -156,11 +122,6 @@ export class IPCClient implements IPCClientInterface {
 
         if (this.dealerMessages) {
             this.dealerMessages = null;
-        }
-
-        if (this.dealerMessageSubscription) {
-            this.dealerMessageSubscription.unsubscribe();
-            this.dealerMessageSubscription = null;
         }
 
         if (this.push) {
@@ -176,23 +137,6 @@ export class IPCClient implements IPCClientInterface {
         }
 
         this.initialized = false;
-    }
-
-    private handleIncomingSubscriberMessage(message: Message) {
-        Logger.debug({
-            msg: 'Received IPC Message',
-            direction: 'INBOUND',
-            socket: 'SUBSCRIBER',
-            ipcMessage: message,
-        });
-
-        const handlerFn = this.subscriberTable[message.type];
-
-        if (typeof handlerFn === 'function') {
-            handlerFn.call(this, message, true);
-
-            return;
-        }
     }
 
     public sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
@@ -213,41 +157,6 @@ export class IPCClient implements IPCClientInterface {
         } else {
             return false;
         }
-    }
-
-    private handleIncomingDealerMessage(receivedFrom: string, message: Message) {
-        Logger.debug({
-            msg: 'Received IPC Message',
-            direction: 'INBOUND',
-            socket: 'DEALER',
-            ipcMessage: message.type !== MessageType.RESPONSE_STORE_STATE ? message : { ...message, state: null },
-        });
-
-        // The message is an response to a previously sent request
-        // These are handled seperately.
-        if (typeof (message as any).respondsTo === 'string') {
-            return;
-        }
-
-        const handlerFn = this.dealerTable[message.type];
-
-        if (typeof handlerFn === 'function') {
-            handlerFn.call(this, receivedFrom, message, true);
-
-            return;
-        }
-
-        const response: Response = {
-            id: uuid(),
-            type: MessageType.RESPONSE_INVALID_REQUEST,
-            respondsTo: message.id,
-            successful: false,
-            error: {
-                message: `The received Request Type "${message.type}" could not be processed by the server!`,
-            }
-        };
-
-        this.sendDealerMessage(response);
     }
 
     public sendDealerRequestAwaitResponse(
@@ -301,10 +210,6 @@ export class IPCClient implements IPCClientInterface {
 
     public listenToDealerSocket() {
         return this.dealerMessages;
-    }
-
-    private handleStoreApplyDiff(request: StoreApplyDiffBroadcast) {
-        this.store.applyDiff(request.diff, request.monotonId);
     }
 
     private async register(): Promise<false | RegistationResult> {
@@ -362,7 +267,7 @@ export class IPCClient implements IPCClientInterface {
             request,
             MessageType.RESPONSE_STORE_STATE,
             10_000
-        ) as StoreStateResponse;
+        ) as StoreStateResponse<RootState>;
 
         if (!response.successful) {
             throw new Error(response.error.message);
