@@ -71,15 +71,17 @@ export enum MessageType {
     RESPONSE_STORE_STATE = 'RESPONSE_STORE_STATE',
     REQUEST_STORE_COMMIT = 'REQUEST_STORE_COMMIT',
     RESPONSE_STORE_COMMIT = 'RESPONSE_STORE_COMMIT',
-    BROADCAST_STORE_APPLY_DIFF = 'BROADCAST_STORE_APPLY_DIFF',
     REQUEST_STORE_CREATE_DIFF = 'REQUEST_STORE_CREATE_DIFF',
     RESPONSE_STORE_CREATE_DIFF = 'RESPONSE_STORE_CREATE_DIFF',
+    BROADCAST_STORE_APPLY_DIFF = 'BROADCAST_STORE_APPLY_DIFF',
     REQUEST_STORE_REGISTER_NAMESPACE = 'REQUEST_STORE_REGISTER_NAMESPACE',
     RESPONSE_STORE_REGISTER_NAMESPACE = 'RESPONSE_STORE_REGISTER_NAMESPACE',
-    REQUEST_STORE_REGISTER_MODULE = 'REQUEST_STORE_REGISTER_MODULE',
-    RESPONSE_STORE_REGISTER_MODULE = 'RESPONSE_STORE_REGISTER_MODULE',
     REQUEST_STORE_UNREGISTER_NAMESPACE = 'REQUEST_STORE_UNREGISTER_NAMESPACE',
     RESPONSE_STORE_UNREGISTER_NAMESPACE = 'RESPONSE_STORE_UNREGISTER_NAMESPACE',
+    REQUEST_STORE_REGISTER_MODULE = 'REQUEST_STORE_REGISTER_MODULE',
+    RESPONSE_STORE_REGISTER_MODULE = 'RESPONSE_STORE_REGISTER_MODULE',
+    REQUEST_STORE_UNREGISTER_MODULE = 'REQUEST_STORE_UNREGISTER_MODULE',
+    RESPONSE_STORE_UNREGISTER_MODULE = 'RESPONSE_STORE_UNREGISTER_MODULE',
 
     // General purpose
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
@@ -133,8 +135,9 @@ export interface Request extends Message {
     | MessageType.REQUEST_STORE_COMMIT
     | MessageType.REQUEST_STORE_CREATE_DIFF
     | MessageType.REQUEST_STORE_REGISTER_NAMESPACE
-    | MessageType.REQUEST_STORE_REGISTER_MODULE
     | MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE
+    | MessageType.REQUEST_STORE_REGISTER_MODULE
+    | MessageType.REQUEST_STORE_UNREGISTER_MODULE
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
     ;
@@ -166,8 +169,9 @@ export interface Response extends Message {
     | MessageType.RESPONSE_STORE_COMMIT
     | MessageType.RESPONSE_STORE_CREATE_DIFF
     | MessageType.RESPONSE_STORE_REGISTER_NAMESPACE
-    | MessageType.RESPONSE_STORE_REGISTER_MODULE
     | MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE
+    | MessageType.RESPONSE_STORE_REGISTER_MODULE
+    | MessageType.RESPONSE_STORE_UNREGISTER_MODULE
     | MessageType.RESPONSE_INVALID_REQUEST
     ;
     /**
@@ -344,10 +348,32 @@ export interface StoreRegisterNamespaceResponse extends Response {
 }
 
 /**
+ * Request to unregister the client from the namespace
+ */
+export interface StoreUnregisterNamespaceRequest extends Request {
+    type: MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE;
+    /**
+     * The namespace to unregister from the client
+     */
+    namespace: string;
+}
+
+/**
+ * Response for unregistering a client from the namespace
+ */
+export interface StoreUnregisterNamespaceResponse extends Response {
+    type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE;
+}
+
+/**
  * Request to register a module on the server
  */
 export interface StoreRegisterModuleRequest extends Request {
     type: MessageType.REQUEST_STORE_REGISTER_MODULE;
+    /**
+     * To which namespace the module should get registered to
+     */
+    namespace: string;
     /**
      * The module name the client wants to register
      */
@@ -366,17 +392,25 @@ export interface StoreRegisterMouleResponse extends Response {
 }
 
 /**
- * Request to unregister the client from the namespace
+ * Request to unregister a module on the server
  */
-export interface StoreUnregisterNamespaceRequest extends Request {
-    type: MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE;
+export interface StoreUnregisterModuleRequest extends Request {
+    type: MessageType.REQUEST_STORE_UNREGISTER_MODULE;
+    /**
+     * To which namespace the module should get unregistered from
+     */
+    namespace: string;
+    /**
+     * The module name the client wants to unregister
+     */
+    module: string;
 }
 
 /**
- * Response for unregistering a client from the namespace
+ * Response to unregister a module on the server
  */
-export interface StoreUnregisterNamespaceResponse extends Response {
-    type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE;
+export interface StoreUnregisterModuleResponse extends Response {
+    type: MessageType.RESPONSE_STORE_UNREGISTER_MODULE;
 }
 
 /**

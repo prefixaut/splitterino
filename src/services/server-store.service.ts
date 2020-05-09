@@ -1,6 +1,6 @@
 import { Inject, Injectable } from 'lightweight-di';
 import { merge } from 'lodash';
-import { filter, first, map, timeout } from 'rxjs/operators';
+import { first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {
@@ -11,7 +11,16 @@ import {
     StoreCommitResponse,
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
+    StoreRegisterModuleRequest,
+    StoreRegisterMouleResponse,
+    StoreRegisterNamespaceRequest,
+    StoreRegisterNamespaceResponse,
+    StoreStateRequest,
     StoreStateResponse,
+    StoreUnregisterModuleRequest,
+    StoreUnregisterModuleResponse,
+    StoreUnregisterNamespaceRequest,
+    StoreUnregisterNamespaceResponse,
 } from '../models/ipc';
 import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
 import { Logger } from '../utils/logger';
@@ -30,7 +39,6 @@ interface LocalCommit {
 
 @Injectable
 export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
-
     private locks: { [module: string]: string } = {};
     private clients: Client[] = [];
     private modules: {
@@ -80,7 +88,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         }
         const state = module.initialize();
         if (state == null || typeof state !== 'object') {
-            throw new Error('The module\'s initialize-function has to create a valid state object!');
+            throw new Error("The module's initialize-function has to create a valid state object!");
         }
 
         this.internalState[namespace][name] = state;
@@ -141,13 +149,16 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
             const foundClient = this.clients.find(client => client.namespace === commit.namespace);
             if (foundClient != null) {
-                this.commitExternally(commit, foundClient).then(successful => {
-                    this.resolveTable[id].resolve(successful);
-                    delete this.resolveTable[id];
-                }, error => {
-                    this.resolveTable[id].reject(error);
-                    delete this.resolveTable[id];
-                });
+                this.commitExternally(commit, foundClient).then(
+                    successful => {
+                        this.resolveTable[id].resolve(successful);
+                        delete this.resolveTable[id];
+                    },
+                    error => {
+                        this.resolveTable[id].reject(error);
+                        delete this.resolveTable[id];
+                    }
+                );
                 hasExternal = true;
 
                 return false;
@@ -223,37 +234,48 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                     commit,
                 };
 
-                this.ipcServer.listenToRouterSocket().pipe(
-                    first(packet => {
-                        const { message, sender } = packet;
+                this.ipcServer
+                    .listenToRouterSocket()
+                    .pipe(
+                        first(packet => {
+                            const { message, sender } = packet;
 
-                        return message.type === MessageType.RESPONSE_STORE_CREATE_DIFF
-                            && (message as StoreCreateDiffResponse).respondsTo === request.id
-                            && sender === client.id;
-                    }),
-                    map(packet => packet.message),
-                    timeout(3_000)
-                ).subscribe((message: StoreCreateDiffResponse) => {
-                    if (!message.successful) {
-                        reject(message.error);
-                    } else {
-                        // Apply the diff to the local store
-                        this.applyDiff(message.diff);
-                        // Publish the diff to all clients
-                        this.publishDiff(message.diff);
-                        // Increase the monoton-id
-                        this.internalMonotonousId++;
-                        resolve(true);
-                    }
-                }, () => {
-                    resolve(false);
-                });
+                            return (
+                                message.type === MessageType.RESPONSE_STORE_CREATE_DIFF &&
+                                (message as StoreCreateDiffResponse).respondsTo === request.id &&
+                                sender === client.id
+                            );
+                        }),
+                        map(packet => packet.message),
+                        timeout(3_000)
+                    )
+                    .subscribe(
+                        (message: StoreCreateDiffResponse) => {
+                            if (!message.successful) {
+                                reject(message.error);
+                            } else {
+                                // Apply the diff to the local store
+                                this.applyDiff(message.diff);
+                                // Publish the diff to all clients
+                                this.publishDiff(message.diff);
+                                // Increase the monoton-id
+                                this.internalMonotonousId++;
+                                resolve(true);
+                            }
+                        },
+                        () => {
+                            resolve(false);
+                        }
+                    );
 
-                this.ipcServer.publishMessage(request).then(sent => {
-                    if (!sent) {
-                        throw new Error('The message could not be sent!');
-                    }
-                }).catch(reject);
+                this.ipcServer
+                    .publishMessage(request)
+                    .then(sent => {
+                        if (!sent) {
+                            throw new Error('The message could not be sent!');
+                        }
+                    })
+                    .catch(reject);
             });
         } catch (error) {
             Logger.error({
@@ -303,53 +325,208 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     protected setupIpcHooks() {
-        this.ipcServer.listenToRouterSocket().pipe(
-            filter(packet => packet.message.type === MessageType.REQUEST_STORE_STATE)
-        ).subscribe(packet => {
+        this.ipcServer.listenToRouterSocket().subscribe(packet => {
             const { identity, sender, message } = packet;
-            const response: StoreStateResponse<S> = {
+
+            switch (message.type) {
+                case MessageType.REQUEST_STORE_STATE:
+                    this.handleStateFetchRequest(identity, sender, message as StoreStateRequest);
+                    break;
+                case MessageType.REQUEST_STORE_COMMIT:
+                    this.hanleCommitRequest(identity, sender, message as StoreCommitRequest);
+                    break;
+                case MessageType.REQUEST_STORE_REGISTER_NAMESPACE:
+                    this.handleNamespaceRegisterRequest(identity, sender, message as StoreRegisterNamespaceRequest);
+                    break;
+                case MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE:
+                    this.handleNamespaceUnregisterRequest(identity, sender, message as StoreUnregisterNamespaceRequest);
+                    break;
+                case MessageType.REQUEST_STORE_REGISTER_MODULE:
+                    this.handleRegisterModuleRequest(identity, sender, message as StoreRegisterModuleRequest);
+                    break;
+                case MessageType.REQUEST_STORE_UNREGISTER_MODULE:
+                    this.handleUnregisterModuleRequest(identity, sender, message as StoreUnregisterModuleRequest);
+                    break;
+            }
+        });
+    }
+
+    protected handleStateFetchRequest(identity: Buffer, sender: string, request: StoreStateRequest) {
+        const response: StoreStateResponse<S> = {
+            id: uuid(),
+            type: MessageType.RESPONSE_STORE_STATE,
+            respondsTo: request.id,
+            successful: true,
+            state: this.internalState,
+            monotonId: this.internalMonotonousId,
+        };
+
+        this.ipcServer.sendRouterMessage(identity, sender, response);
+    }
+
+    protected async hanleCommitRequest(identity: Buffer, sender: string, request: StoreCommitRequest) {
+        let response: StoreCommitResponse;
+
+        try {
+            const result = await this.commit(request.commit);
+            if (!result) {
+                throw new Error('The commit coult not be executed!');
+            }
+            response = {
                 id: uuid(),
-                type: MessageType.RESPONSE_STORE_STATE,
-                respondsTo: message.id,
+                type: MessageType.RESPONSE_STORE_COMMIT,
+                respondsTo: request.id,
                 successful: true,
-                state: this.internalState,
-                monotonId: this.internalMonotonousId,
             };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_COMMIT,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
 
-            this.ipcServer.sendRouterMessage(identity, sender, response);
-        });
+        this.ipcServer.sendRouterMessage(identity, sender, response);
+    }
 
-        this.ipcServer.listenToRouterSocket().pipe(
-            filter(packet => packet.message.type === MessageType.REQUEST_STORE_COMMIT)
-        ).subscribe(packet => {
-            (async () => {
-                const { identity, sender } = packet;
-                const request = packet.message as StoreCommitRequest;
-                let response: StoreCommitResponse;
+    protected handleNamespaceRegisterRequest(identity: Buffer, sender: string, request: StoreRegisterNamespaceRequest) {
+        let response: StoreRegisterNamespaceResponse;
 
-                try {
-                    const result = await this.commit(request.commit);
-                    if (!result) {
-                        throw new Error('The commit coult not be executed!');
-                    }
-                    response = {
-                        id: uuid(),
-                        type: MessageType.RESPONSE_STORE_COMMIT,
-                        respondsTo: request.id,
-                        successful: true,
-                    };
-                } catch (error) {
-                    response = {
-                        id: uuid(),
-                        type: MessageType.RESPONSE_STORE_COMMIT,
-                        respondsTo: request.id,
-                        successful: false,
-                        error: error,
-                    };
-                }
+        try {
+            if (this.clients.findIndex(client => client.namespace === request.namespace) !== -1) {
+                throw new Error('The requested namespace is already registered!');
+            }
 
-                this.ipcServer.sendRouterMessage(identity, sender, response);
-            })();
-        });
+            this.clients.push({
+                id: sender,
+                namespace: request.namespace,
+            });
+
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_REGISTER_NAMESPACE,
+                respondsTo: request.id,
+                successful: true,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_REGISTER_NAMESPACE,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
+
+        this.ipcServer.sendRouterMessage(identity, sender, response);
+    }
+
+    protected handleNamespaceUnregisterRequest(
+        identity: Buffer,
+        sender: string,
+        request: StoreUnregisterNamespaceRequest
+    ) {
+        let response: StoreUnregisterNamespaceResponse;
+
+        try {
+            const index = this.clients.findIndex(
+                client => client.id === sender && client.namespace === request.namespace
+            );
+            if (index === -1) {
+                throw new Error('The requested namespace is not registered by the client!');
+            }
+
+            this.clients.splice(index, 1);
+            this.publishDiff({ [request.namespace]: null });
+
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE,
+                respondsTo: request.id,
+                successful: true,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
+
+        this.ipcServer.sendRouterMessage(identity, sender, response);
+    }
+
+    protected handleRegisterModuleRequest(identity: Buffer, sender: string, request: StoreRegisterModuleRequest) {
+        let response: StoreRegisterMouleResponse;
+
+        try {
+            if (this.clients.findIndex(
+                client => client.id === sender && client.namespace === request.namespace
+            ) === -1) {
+                throw new Error('The requested namespace is not registered by the client!');
+            }
+            if (this.internalState[request.namespace][request.module] != null) {
+                throw new Error('The requested module is already registered in the namespace!');
+            }
+
+            this.internalState[request.namespace][request.module] = request.state;
+            this.publishDiff({ [request.namespace]: { [request.module]: request.state } });
+
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_REGISTER_MODULE,
+                respondsTo: request.id,
+                successful: true,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_REGISTER_MODULE,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
+
+        this.ipcServer.sendRouterMessage(identity, sender, response);
+    }
+
+    protected handleUnregisterModuleRequest(identity: Buffer, sender: string, request: StoreUnregisterModuleRequest) {
+        let response: StoreUnregisterModuleResponse;
+
+        try {
+            if (this.clients.findIndex(
+                client => client.id === sender && client.namespace === request.namespace
+            ) === -1) {
+                throw new Error('The requested namespace is not registered by the client!');
+            }
+            if (this.internalState[request.namespace][request.module] != null) {
+                throw new Error('The requested module is already registered in the namespace!');
+            }
+
+            delete this.internalState[request.namespace][request.module];
+            this.publishDiff({ [request.namespace]: { [request.module]: null } });
+
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_UNREGISTER_MODULE,
+                respondsTo: request.id,
+                successful: true,
+            };
+        } catch (error) {
+            response = {
+                id: uuid(),
+                type: MessageType.RESPONSE_STORE_UNREGISTER_MODULE,
+                respondsTo: request.id,
+                successful: false,
+                error: error,
+            };
+        }
+
+        this.ipcServer.sendRouterMessage(identity, sender, response);
     }
 }

@@ -10,6 +10,7 @@ import {
     StoreRegisterModuleRequest,
     StoreRegisterNamespaceRequest,
     StoreUnregisterNamespaceRequest,
+    StoreUnregisterModuleRequest,
 } from '../models/ipc';
 import { Commit, DiffHandler, Module, StoreState } from '../store';
 import { IPCClientService } from './ipc-client.service';
@@ -18,11 +19,11 @@ import { ReceiverStoreService } from './receiver-store.service';
 @Injectable
 export class HandlerStoreService<S extends StoreState> extends ReceiverStoreService<S> {
 
-    protected isRegistered = false;
-    protected namespace: string;
     protected modules: {
-        [name: string]: {
-            [handlerName: string]: DiffHandler<any>;
+        [namespace: string]: {
+            [name: string]: {
+                [handlerName: string]: DiffHandler<any>;
+            };
         };
     } = {};
 
@@ -30,12 +31,12 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
         super(ipcClient);
     }
 
-    public getNamespace() {
-        return this.namespace;
+    public getNamespaces() {
+        return Object.keys(this.modules);
     }
 
     public async registerNamespace(namespace: string): Promise<boolean> {
-        if (this.isRegistered || namespace == null || namespace.trim().length < 1) {
+        if (namespace == null || this.modules[namespace] == null) {
             return false;
         }
         const request: StoreRegisterNamespaceRequest = {
@@ -46,43 +47,38 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
         const response = await this.ipcClient
             .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_REGISTER_NAMESPACE);
 
-        if (!response.successful) {
-            return false;
+        if (response.successful) {
+            this.modules[namespace] = {};
         }
 
-        this.namespace = namespace;
-        this.isRegistered = true;
-
-        return true;
+        return response.successful;
     }
 
-    public async unregisterNamespace(): Promise<boolean> {
-        if (!this.isRegistered) {
-            throw new Error('This client is not registered to a namespace yet!');
+    public async unregisterNamespace(namespace: string): Promise<boolean> {
+        if (this.modules[namespace] == null) {
+            throw new Error('The namespace is not registered yet!');
         }
         const request: StoreUnregisterNamespaceRequest = {
             id: uuid(),
             type: MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE,
+            namespace: namespace,
         };
         const response = await this.ipcClient
             .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE);
 
-        if (!response.successful) {
-            return false;
+        if (response.successful) {
+            delete this.modules[namespace];
         }
 
-        this.namespace = null;
-        this.isRegistered = false;
-
-        return true;
+        return response.successful;
     }
 
-    public async registerModule<T>(name: string, module: Module<T>): Promise<boolean> {
-        if (!this.isRegistered) {
-            throw new Error('This client is not registered to a namespace yet!');
+    public async registerModule<T>(namespace: string, name: string, module: Module<T>): Promise<boolean> {
+        if (this.modules[namespace] == null) {
+            throw new Error(`This client has not been registered the namespace "${namespace}" yet!`);
         }
-        if (this.modules[name] != null) {
-            throw new Error(`The module "${name}" is already registered in the namespace "${this.namespace}"!`);
+        if (this.modules[namespace][name] != null) {
+            throw new Error(`The module "${name}" is already registered in the namespace "${namespace}"!`);
         }
         const state = module.initialize();
         if (state == null || typeof state !== 'object') {
@@ -92,30 +88,57 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
         const request: StoreRegisterModuleRequest = {
             id: uuid(),
             type: MessageType.REQUEST_STORE_REGISTER_MODULE,
+            namespace: namespace,
             module: name,
             state: state,
         };
         const response = await this.ipcClient
             .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_REGISTER_MODULE);
 
-        this.modules[name] = module.handlers;
+        if (response.successful) {
+            this.modules[namespace][name] = module.handlers;
+        }
+
+        return response.successful;
+    }
+
+    public async unregisterModule(namespace: string, name: string): Promise<boolean> {
+        if (this.modules[namespace] == null) {
+            throw new Error(`This client has not been registered the namespace "${namespace}" yet!`);
+        }
+        if (this.modules[namespace][name] == null) {
+            throw new Error(`The module "${name}" is not registered in the namespace "${namespace}" yet!`);
+        }
+
+        const request: StoreUnregisterModuleRequest = {
+            id: uuid(),
+            type: MessageType.REQUEST_STORE_UNREGISTER_MODULE,
+            namespace: namespace,
+            module: name,
+        };
+        const response = await this.ipcClient
+            .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_UNREGISTER_MODULE);
+
+        if (response.successful) {
+            delete this.modules[namespace];
+        }
 
         return response.successful;
     }
 
     public getDiff(commit: Commit): Partial<any> {
-        if (!this.isRegistered) {
-            throw new Error('This client is not registered to a namespace yet!');
-        }
-        if (this.namespace !== commit.namespace) {
+        if (this.modules[commit.namespace] == null) {
             throw new Error('The commits namespace is not identical to the currently registered namespace!');
         }
-        if (this.modules[commit.module] == null || this.modules[commit.module][commit.handler] == null) {
+        if (
+            this.modules[commit.namespace][commit.module] == null
+            || this.modules[commit.namespace][commit.module][commit.handler] == null
+        ) {
             throw new Error(`Could not find an handler for "${commit.module}" -> "${commit.handler}"!`);
         }
 
-        const moduleState = this.internalState[this.namespace][commit.module];
-        const diff = this.modules[commit.module][commit.handler](moduleState, commit.data);
+        const moduleState = this.internalState[commit.namespace][commit.module];
+        const diff = this.modules[commit.namespace][commit.module][commit.handler](moduleState, commit.data);
 
         return diff;
     }
