@@ -106,5 +106,5 @@ async function setupStore(injector: Injector) {
             }
         },
     };
-    await store.registerModule('test', testModule);
+    await store.registerModule('splitterino.plugin.test', 'test', testModule);
 }

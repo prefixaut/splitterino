@@ -10,11 +10,13 @@ import DetailedTimeSchema from '../schemas/detailed-time.schema.json';
 import GameInfoSchema from '../schemas/game-info.schema.json';
 import KeybindingSchema from '../schemas/keybinding.schema.json';
 import MetaSchema from '../schemas/meta.schema.json';
+import PluginMetaSchema from '../schemas/plugin-meta.schema.json';
 import SegmentTimeSchema from '../schemas/segment-time.schema.json';
 import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import { Logger } from '../utils/logger';
+import { PluginMetaFile } from '../models/plugin-meta-file';
 
 export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 
@@ -36,6 +38,7 @@ export class ValidatorService {
         this.ajv.addSchema(ApplicationSettingsSchema, 'application-settings.schema.json');
         this.ajv.addSchema(KeybindingSchema, 'keybinding.schema.json');
         this.ajv.addSchema(MetaSchema, 'meta.schema.json');
+        this.ajv.addSchema(PluginMetaSchema, 'plugin-meta.schema.json');
     }
 
     /**
@@ -70,5 +73,9 @@ export class ValidatorService {
 
     public isTemplateMetaFile(data: any): data is TemplateMetaFile {
         return this.validate<TemplateMetaFile>('meta.schema.json', data);
+    }
+
+    public isPluginMetaFile(data: any): data is PluginMetaFile {
+        return this.validate<PluginMetaFile>('pluging-meta.schema.json', data);
     }
 }

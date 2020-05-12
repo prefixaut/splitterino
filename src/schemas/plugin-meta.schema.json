@@ -1,0 +1,64 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "plugin-meta",
+    "title": "Plugin Meta File",
+    "description": "Holds metadata like plugin name, author etc.",
+    "type": "object",
+    "required": ["author", "version", "compatibleVersion", "name", "repositoryURL"],
+    "properties": {
+        "author": {
+            "type": "string",
+            "description": "Plugin author's name"
+        },
+        "contributors": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Array of names of additional contributors"
+        },
+        "version": {
+            "type": "string",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "description": "Semver string of plugin's version"
+        },
+        "compatibleVersion": {
+            "type": "string",
+            "description": "Semver version satisfaction string",
+            "examples": ["1.x || >=2.5.0 || 5.0.0 - 7.2.3"]
+        },
+        "name": {
+            "type": "string",
+            "description": "Plugin name"
+        },
+        "components": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Array of file paths to vue library components to load (relative to plugin directory)"
+        },
+        "entryFile": {
+            "type": "string",
+            "description": "Path to js file loaded by the plugin process (relative to plugin directory)"
+        },
+        "dependencies": {
+            "type": "object",
+            "additionalItems": {
+                "type": "string"
+            },
+            "description": "List of required dependencies in package.json style"
+        },
+        "optionalDependencies": {
+            "type": "object",
+            "additionalItems": {
+                "type": "string"
+            },
+            "description": "List of optional dependencies in package.json style"
+        },
+        "repositoryURL": {
+            "type": "string",
+            "description": "Link to public github repository for plugin"
+        }
+    }
+}
