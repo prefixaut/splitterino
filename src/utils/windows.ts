@@ -6,8 +6,8 @@ import {
     ELECTRON_SERVICE_TOKEN,
     ElectronServiceInterface,
     IO_SERVICE_TOKEN,
+    STORE_SERVICE_TOKEN,
 } from '../models/services';
-import { STORE_SERVICE_TOKEN } from '../store';
 
 export function openKeybindgsEditor(electron: ElectronServiceInterface) {
     electron.newWindow(

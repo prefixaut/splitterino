@@ -10,10 +10,10 @@ import {
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
 } from '../../models/ipc';
-import { IO_SERVICE_TOKEN } from '../../models/services';
+import { IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../models/services';
 import { RootState } from '../../models/states/root.state';
 import { HandlerStoreService } from '../../services/handler-store.service';
-import { Module, STORE_SERVICE_TOKEN } from '../../store';
+import { Module } from '../../store';
 import { Logger, LogLevel } from '../../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../../utils/plugin';
 import { createPluginInjector } from '../../utils/services';

@@ -1,14 +1,9 @@
-import { InjectionToken } from 'lightweight-di';
 import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
 import { Commit, StoreState } from '../store';
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
-
-export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
-
-export const IPC_SERVER_SERVICE_TOKEN = new InjectionToken<IPCServerInterface>('ipc-server');
 
 export interface IPCClientInterface {
     isInitialized(): boolean;

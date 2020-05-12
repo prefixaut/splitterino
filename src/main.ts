@@ -9,10 +9,10 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, IPC_SERVER_SERVICE_TOKEN, MessageType } from './models/ipc';
-import { IO_SERVICE_TOKEN } from './models/services';
+import { IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/states/root.state';
 import { ServerStoreService } from './services/server-store.service';
-import { Module, STORE_SERVICE_TOKEN } from './store';
+import { Module } from './store';
 import { getContextMenuStoreModule } from './store/modules/context-menu.module';
 import { getGameInfoStoreModule } from './store/modules/game-info.module';
 import { getKeybindingsStoreModule, HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';

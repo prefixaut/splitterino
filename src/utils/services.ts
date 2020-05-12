@@ -6,6 +6,7 @@ import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
     IO_SERVICE_TOKEN,
+    STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
 } from '../models/services';
@@ -19,7 +20,6 @@ import { ReceiverStoreService } from '../services/receiver-store.service';
 import { ServerStoreService } from '../services/server-store.service';
 import { TransformerService } from '../services/transfromer.service';
 import { ValidatorService } from '../services/validator.service';
-import { STORE_SERVICE_TOKEN } from '../store';
 
 // Initialize the Dependency-Injection
 export function createBackgroundInjector(): Injector {

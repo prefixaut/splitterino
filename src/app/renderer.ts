@@ -8,8 +8,11 @@ import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
-import { ELECTRON_SERVICE_TOKEN } from '../models/services';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/ipc';
+import { ELECTRON_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
+import { RootState } from '../models/states/root.state';
+import { ReceiverStoreService } from '../services/receiver-store.service';
+import { Commit } from '../store';
 import { Logger, LogLevel } from '../utils/logger';
 import { createRendererInjector } from '../utils/services';
 import App from './app.vue';
@@ -39,9 +42,6 @@ import { getContextMenuDirective } from './directives/context-menu.directive';
 import { aevumFilter } from './filters/aevum.filter';
 import { timeFilter } from './filters/time.filter';
 import { router } from './router';
-import { STORE_SERVICE_TOKEN, Commit } from '../store';
-import { ReceiverStoreService } from '../services/receiver-store.service';
-import { RootState } from '../models/states/root.state';
 
 process.on('uncaughtException', error => {
     Logger.fatal({

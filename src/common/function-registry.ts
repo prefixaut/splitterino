@@ -2,8 +2,7 @@ import { Injector } from 'lightweight-di';
 
 import { ContextMenuItemActionFunction } from '../models/context-menu-item';
 import { KeybindingActionFunction } from '../models/keybindings';
-import { ACTION_SERVICE_TOKEN, ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../models/services';
-import { STORE_SERVICE_TOKEN } from '../store';
+import { ACTION_SERVICE_TOKEN, ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
 import {
     openKeybindgsEditor,
     openLoadSplits,

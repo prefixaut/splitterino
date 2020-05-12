@@ -2,24 +2,37 @@ import { Injector } from 'lightweight-di';
 import { Action, Commit, Dispatch } from 'vuex';
 
 import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../src/common/constants';
-import { ELECTRON_SERVICE_TOKEN } from '../src/models/electron';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../src/models/ipc';
-import { IO_SERVICE_TOKEN, IOService } from '../src/services/io.service';
-import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from '../src/services/transfromer.service';
-import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../src/services/validator.service';
+import {
+    ACTION_SERVICE_TOKEN,
+    ELECTRON_SERVICE_TOKEN,
+    IO_SERVICE_TOKEN,
+    IPC_CLIENT_SERVICE_TOKEN,
+    IPC_SERVER_SERVICE_TOKEN,
+    STORE_SERVICE_TOKEN,
+    TRANSFORMER_SERVICE_TOKEN,
+    VALIDATOR_SERVICE_TOKEN,
+} from '../src/models/services';
+import { ActionService } from '../src/services/action.service';
+import { IOService } from '../src/services/io.service';
+import { TransformerService } from '../src/services/transfromer.service';
+import { ValidatorService } from '../src/services/validator.service';
 import { ElectronMockService } from './mocks/electron-mock.service';
 import { IPCClientMockService } from './mocks/ipc-client-mock.service';
+import { StoreMockService } from './mocks/store-mock.service';
 
 // Initialize the Dependency-Injection
 export function createMockInjector(): Injector {
     return Injector.resolveAndCreate([
         // Overrides/custom providers
+        { provide: ACTION_SERVICE_TOKEN, useClass: ActionService },
         { provide: ELECTRON_SERVICE_TOKEN, useClass: ElectronMockService },
-        { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
-        { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: IO_SERVICE_TOKEN, useClass: IOService },
         { provide: IPC_CLIENT_SERVICE_TOKEN, useClass: IPCClientMockService },
+        { provide: IPC_SERVER_SERVICE_TOKEN, useValue: null },
         { provide: RUNTIME_ENVIRONMENT_TOKEN, useValue: RuntimeEnvironment.BACKGROUND },
+        { provide: STORE_SERVICE_TOKEN, useClass: StoreMockService },
+        { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
+        { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
     ]);
 }
 

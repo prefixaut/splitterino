@@ -1,6 +1,4 @@
-import { InjectionToken } from 'lightweight-di';
-
-import { RootState } from '../models/states/root.state';
+import { StoreInterface } from '../models/services';
 import { lockObject } from '../utils/store';
 
 export interface StoreState {
@@ -25,9 +23,7 @@ export interface Commit {
     data?: any;
 }
 
-export const STORE_SERVICE_TOKEN = new InjectionToken<BaseStore<RootState>>('store');
-
-export abstract class BaseStore<S extends StoreState> {
+export abstract class BaseStore<S extends StoreState> implements StoreInterface<S> {
     protected internalState: S;
     protected lockedState: S;
     protected internalMonotonousId = 0;

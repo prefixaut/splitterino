@@ -23,6 +23,8 @@ import {
     ELECTRON_SERVICE_TOKEN,
     ElectronServiceInterface,
     IOServiceInterface,
+    STORE_SERVICE_TOKEN,
+    StoreInterface,
     TRANSFORMER_SERVICE_TOKEN,
     TransformerServiceInterface,
     VALIDATOR_SERVICE_TOKEN,
@@ -33,7 +35,6 @@ import { GameInfoState } from '../models/states/game-info.state';
 import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
 import { RootState } from '../models/states/root.state';
 import { Settings } from '../models/states/settings.state';
-import { BaseStore, STORE_SERVICE_TOKEN } from '../store';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_GAME_MODULE_SPLITS_FILE } from '../store/modules/game-info.module';
 import {
     HANDLER_ADD_OPENED_SPLITS_FILE,
@@ -53,7 +54,7 @@ export class IOService implements IOServiceInterface {
         @Inject(ELECTRON_SERVICE_TOKEN) protected electron: ElectronServiceInterface,
         @Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface,
         @Inject(RUNTIME_ENVIRONMENT_TOKEN) protected runtimeEnv: RuntimeEnvironment,
-        @Inject(STORE_SERVICE_TOKEN) protected store: BaseStore<RootState>,
+        @Inject(STORE_SERVICE_TOKEN) protected store: StoreInterface<RootState>,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerServiceInterface,
         @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorServiceInterface,
     ) {
