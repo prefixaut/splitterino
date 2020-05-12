@@ -79,8 +79,8 @@ import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { DEFAULT_SPLIT } from '../../common/constants';
-import { Segment, TimingMethod } from '../../models/segment';
-import { ValidatorService, VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
+import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
+import { Segment, TimingMethod } from '../../models/splits';
 import { getFinalTime } from '../../utils/time';
 
 const splits = namespace('splitterino/splits');
@@ -96,7 +96,7 @@ export default class SegmentsEditorComponent extends Vue {
 
     public segments: Segment[] = [];
 
-    private validator: ValidatorService = null;
+    private validator: ValidatorServiceInterface = null;
 
     public created() {
         this.validator = this.$services.get(VALIDATOR_SERVICE_TOKEN);

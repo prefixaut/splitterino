@@ -1,31 +1,29 @@
-import { Inject, Injectable, InjectionToken } from 'lightweight-di';
+import { Inject, Injectable } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 
 import { TimerStatus } from '../common/timer-status';
-import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../models/electron';
+import { ActionServiceInterface, ELECTRON_SERVICE_TOKEN, ElectronServiceInterface } from '../models/services';
+import { Segment, TimingMethod } from '../models/splits';
 import { RecentlyOpenedSplit } from '../models/states/meta.state';
 import { RootState } from '../models/states/root.state';
 import { BaseStore, STORE_SERVICE_TOKEN } from '../store';
 import { HANDLER_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
 import {
+    HANDLER_DISCARDING_RESET,
+    HANDLER_SAVING_RESET,
     HANDLER_SET_CURRENT,
     HANDLER_SET_PREVIOUS_IGT_TIME,
     HANDLER_SET_PREVIOUS_RTA_TIME,
     HANDLER_SET_SEGMENT,
-    HANDLER_DISCARDING_RESET,
-    HANDLER_SAVING_RESET
 } from '../store/modules/splits.module';
 import { HANDLER_SET_STATUS } from '../store/modules/timer.module';
 import { getFinalTime, now } from '../utils/time';
-import { Segment, TimingMethod } from '../models/segment';
-
-export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionService>('action');
 
 @Injectable
-export class ActionService {
+export class ActionService implements ActionServiceInterface {
 
     constructor(
-        @Inject(ELECTRON_SERVICE_TOKEN) private electron: ElectronInterface,
+        @Inject(ELECTRON_SERVICE_TOKEN) private electron: ElectronServiceInterface,
         @Inject(STORE_SERVICE_TOKEN) private store: BaseStore<RootState>
     ) { }
 

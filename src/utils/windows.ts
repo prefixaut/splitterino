@@ -1,12 +1,15 @@
 import { Injector } from 'lightweight-di';
 
 import { TimerStatus } from '../common/timer-status';
-import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../models/electron';
-import { ACTION_SERVICE_TOKEN } from '../services/action.service';
-import { IO_SERVICE_TOKEN } from '../services/io.service';
+import {
+    ACTION_SERVICE_TOKEN,
+    ELECTRON_SERVICE_TOKEN,
+    ElectronServiceInterface,
+    IO_SERVICE_TOKEN,
+} from '../models/services';
 import { STORE_SERVICE_TOKEN } from '../store';
 
-export function openKeybindgsEditor(electron: ElectronInterface) {
+export function openKeybindgsEditor(electron: ElectronServiceInterface) {
     electron.newWindow(
         {
             title: 'Keybindings',
@@ -20,7 +23,7 @@ export function openKeybindgsEditor(electron: ElectronInterface) {
     );
 }
 
-export function openSettingsEditor(electron: ElectronInterface) {
+export function openSettingsEditor(electron: ElectronServiceInterface) {
     electron.newWindow(
         {
             title: 'Settings',
@@ -46,7 +49,7 @@ export function openLoadSplits(injector: Injector) {
     }
 }
 
-export function openSplitsBrowser(electron: ElectronInterface) {
+export function openSplitsBrowser(electron: ElectronServiceInterface) {
     electron.newWindow(
         {
             title: 'Open Splits File',
@@ -73,7 +76,7 @@ export function openLoadTemplate(injector: Injector) {
     }
 }
 
-export function openTemplateBrowser(electron: ElectronInterface) {
+export function openTemplateBrowser(electron: ElectronServiceInterface) {
     electron.newWindow(
         {
             title: 'Open Template File',

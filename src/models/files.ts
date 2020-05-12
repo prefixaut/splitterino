@@ -1,3 +1,7 @@
+import { Splits } from './splits';
+
+export const MOST_RECENT_SPLITS_VERSION = '0.1';
+
 export interface PluginMetaFile {
     /** Main plugin author */
     author: string;
@@ -30,3 +34,22 @@ export interface PluginMetaFile {
         [index: string]: string;
     };
 }
+
+export interface SplitsFile {
+    version: string;
+    splits: Splits;
+}
+
+export interface TemplateMetaFile {
+    author: string;
+    name: string;
+    version: string;
+    requiredVersion: string;
+}
+
+export interface TemplateFiles {
+    meta?: TemplateMetaFile;
+    template?: string;
+    styles?: string;
+}
+

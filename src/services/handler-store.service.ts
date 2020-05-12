@@ -137,8 +137,9 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
             throw new Error(`Could not find an handler for "${commit.module}" -> "${commit.handler}"!`);
         }
 
-        const moduleState = this.internalState[commit.namespace][commit.module];
-        const diff = this.modules[commit.namespace][commit.module][commit.handler](moduleState, commit.data);
+        const moduleState = this.state[commit.namespace][commit.module];
+        const handlerFn = this.modules[commit.namespace][commit.module][commit.handler];
+        const diff = handlerFn(moduleState, commit.data);
 
         return diff;
     }

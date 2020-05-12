@@ -1,7 +1,7 @@
 import ISO6391 from 'iso-639-1';
 
 import { Module } from '..';
-import { SplitsFile } from '../../models/splits-file';
+import { SplitsFile } from '../../models/files';
 import { GameInfoState, Region } from '../../models/states/game-info.state';
 
 export const MODULE_PATH = 'splitterino/gameInfo';

@@ -1,10 +1,10 @@
 import Ajv from 'ajv';
-import { Injectable, InjectionToken } from 'lightweight-di';
+import { Injectable } from 'lightweight-di';
 
 import { ApplicationSettings } from '../models/application-settings';
-import { Segment } from '../models/segment';
-import { Splits } from '../models/splits';
-import { TemplateMetaFile } from '../models/template-files';
+import { PluginMetaFile, TemplateMetaFile } from '../models/files';
+import { ValidatorServiceInterface } from '../models/services';
+import { Segment, Splits } from '../models/splits';
 import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
 import DetailedTimeSchema from '../schemas/detailed-time.schema.json';
 import GameInfoSchema from '../schemas/game-info.schema.json';
@@ -16,12 +16,9 @@ import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import { Logger } from '../utils/logger';
-import { PluginMetaFile } from '../models/plugin-meta-file';
-
-export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
 
 @Injectable
-export class ValidatorService {
+export class ValidatorService implements ValidatorServiceInterface {
     private readonly ajv = new Ajv();
 
     constructor() {

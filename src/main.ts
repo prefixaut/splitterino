@@ -9,8 +9,8 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, IPC_SERVER_SERVICE_TOKEN, MessageType } from './models/ipc';
+import { IO_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/states/root.state';
-import { IO_SERVICE_TOKEN } from './services/io.service';
 import { ServerStoreService } from './services/server-store.service';
 import { Module, STORE_SERVICE_TOKEN } from './store';
 import { getContextMenuStoreModule } from './store/modules/context-menu.module';
@@ -124,7 +124,7 @@ process.on('unhandledRejection', (reason, promise) => {
     await io.loadSettingsFromFileToStore();
 
     // Setup the Keybiding Functions
-    registerDefaultKeybindingFunctions();
+    registerDefaultKeybindingFunctions(injector);
 
     // Start plugin child process
     let pluginProcess = await forkPluginProcess(ipcServer);

@@ -1,7 +1,7 @@
 import { BrowserWindow, FileFilter } from 'electron';
 import { createReadStream, Dirent, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import gunzip from 'gunzip-maybe';
-import { Inject, Injectable, InjectionToken } from 'lightweight-di';
+import { Inject, Injectable } from 'lightweight-di';
 import { cloneDeep, merge, set } from 'lodash';
 import { homedir } from 'os';
 import { dirname, join } from 'path';
@@ -15,16 +15,24 @@ import {
     RuntimeEnvironment,
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
-import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../models/electron';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
 import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
-import { TimingMethod } from '../models/segment';
-import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
+import {
+    ACTION_SERVICE_TOKEN,
+    ActionServiceInterface,
+    ELECTRON_SERVICE_TOKEN,
+    ElectronServiceInterface,
+    IOServiceInterface,
+    TRANSFORMER_SERVICE_TOKEN,
+    TransformerServiceInterface,
+    VALIDATOR_SERVICE_TOKEN,
+    ValidatorServiceInterface,
+} from '../models/services';
+import { TimingMethod } from '../models/splits';
 import { GameInfoState } from '../models/states/game-info.state';
 import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
 import { RootState } from '../models/states/root.state';
 import { Settings } from '../models/states/settings.state';
-import { TemplateFiles } from '../models/template-files';
-import { VALIDATOR_SERVICE_TOKEN, ValidatorService } from '../services/validator.service';
 import { BaseStore, STORE_SERVICE_TOKEN } from '../store';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_GAME_MODULE_SPLITS_FILE } from '../store/modules/game-info.module';
 import {
@@ -37,21 +45,17 @@ import { HANDLER_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
 import { Logger } from '../utils/logger';
-import { ACTION_SERVICE_TOKEN, ActionService } from './action.service';
-import { TRANSFORMER_SERVICE_TOKEN, TransformerService } from './transfromer.service';
-
-export const IO_SERVICE_TOKEN = new InjectionToken<IOService>('io');
 
 @Injectable
-export class IOService {
+export class IOService implements IOServiceInterface {
     constructor(
-        @Inject(ACTION_SERVICE_TOKEN) protected actions: ActionService,
-        @Inject(ELECTRON_SERVICE_TOKEN) protected electron: ElectronInterface,
+        @Inject(ACTION_SERVICE_TOKEN) protected actions: ActionServiceInterface,
+        @Inject(ELECTRON_SERVICE_TOKEN) protected electron: ElectronServiceInterface,
         @Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface,
         @Inject(RUNTIME_ENVIRONMENT_TOKEN) protected runtimeEnv: RuntimeEnvironment,
         @Inject(STORE_SERVICE_TOKEN) protected store: BaseStore<RootState>,
-        @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerService,
-        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorService,
+        @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerServiceInterface,
+        @Inject(VALIDATOR_SERVICE_TOKEN) protected validator: ValidatorServiceInterface,
     ) {
         this.assetDir = join(homedir(), '.splitterino');
 
@@ -502,7 +506,7 @@ export class IOService {
      *
      * @returns A Promise which resolves to the path of the template-file.
      */
-    public async askUserToOpenTemplateFile(): Promise<boolean> {
+    public askUserToOpenTemplateFile(): Promise<boolean> {
         Logger.debug('Asking user to select a Template-File ...');
 
         return this.electron

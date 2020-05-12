@@ -8,7 +8,7 @@ import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
-import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../models/services';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/ipc';
 import { Logger, LogLevel } from '../utils/logger';
 import { createRendererInjector } from '../utils/services';

@@ -1,6 +1,6 @@
 import { Time } from 'aevum';
 
-import { DetailedTime } from '../models/segment';
+import { DetailedTime } from '../models/splits';
 import { asCleanNumber } from './converters';
 
 export function now() {

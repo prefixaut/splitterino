@@ -1,3 +1,4 @@
+import { Injector } from 'lightweight-di';
 import { filter, first, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
@@ -9,16 +10,15 @@ import {
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
 } from '../../models/ipc';
+import { IO_SERVICE_TOKEN } from '../../models/services';
 import { RootState } from '../../models/states/root.state';
 import { HandlerStoreService } from '../../services/handler-store.service';
-import { IO_SERVICE_TOKEN } from '../../services/io.service';
 import { Module, STORE_SERVICE_TOKEN } from '../../store';
 import { Logger, LogLevel } from '../../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../../utils/plugin';
 import { createPluginInjector } from '../../utils/services';
 import { IPC_SERVER_NAME } from '../constants';
 import { getPluginList } from './load-plugin';
-import { Injector } from 'lightweight-di';
 
 (async () => {
     const injector = createPluginInjector();

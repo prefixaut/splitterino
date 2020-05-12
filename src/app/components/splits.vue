@@ -34,7 +34,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
-import { Segment, TimingMethod } from '../../models/segment';
+import { Segment, TimingMethod } from '../../models/splits';
 import { GETTER_VALUE_BY_PATH } from '../../store/modules/settings.module';
 import { Logger } from '../../utils/logger';
 import { now, getFinalTime } from '../../utils/time';

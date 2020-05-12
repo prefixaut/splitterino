@@ -11,7 +11,7 @@ import { namespace } from 'vuex-class';
 
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 import { TimerStatus } from '../../common/timer-status';
-import { Segment, TimingMethod } from '../../models/segment';
+import { Segment, TimingMethod } from '../../models/splits';
 import { now, getFinalTime } from '../../utils/time';
 
 const timer = namespace('splitterino/timer');

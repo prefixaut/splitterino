@@ -1,4 +1,4 @@
-import { Segment } from '../models/segment';
+import { Segment } from '../models/splits';
 import { getFinalTime } from './time';
 
 export function convertToBoolean(

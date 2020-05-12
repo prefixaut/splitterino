@@ -25,9 +25,9 @@
 import { isEqual, cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
-import { Segment } from '../../models/segment';
+import { Segment } from '../../models/splits';
 import { GameInfoState } from '../../models/states/game-info.state';
-import { IO_SERVICE_TOKEN } from '../../services/io.service';
+import { IO_SERVICE_TOKEN } from '../../models/services';
 import { HANDLER_SET_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
 import { HANDLER_SET_ALL_SEGMENTS } from '../../store/modules/splits.module';
 import {

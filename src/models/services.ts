@@ -1,0 +1,85 @@
+import {
+    BrowserWindow,
+    BrowserWindowConstructorOptions,
+    Menu,
+    MessageBoxOptions,
+    OpenDialogOptions,
+    SaveDialogOptions,
+} from 'electron';
+import { Dirent } from 'fs';
+import { InjectionToken } from 'lightweight-di';
+import { VNode } from 'vue';
+
+import { ApplicationSettings } from './application-settings';
+import { ContextMenuItem } from './context-menu-item';
+import { SplitsFile, TemplateFiles, TemplateMetaFile, PluginMetaFile } from './files';
+import { Splits, Segment } from './splits';
+
+export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionServiceInterface>('action');
+export const ELECTRON_SERVICE_TOKEN = new InjectionToken<ElectronServiceInterface>('electron');
+export const IO_SERVICE_TOKEN = new InjectionToken<IOServiceInterface>('io');
+export const TRANSFORMER_SERVICE_TOKEN = new InjectionToken<TransformerServiceInterface>('transformer');
+export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorServiceInterface>('validator');
+
+export interface ActionServiceInterface {
+    addOpenedSplitsFile(filePath: string): Promise<boolean>;
+    startTimer(): Promise<boolean>;
+    splitTimer(): Promise<boolean>;
+    skipSplit(): Promise<boolean>;
+    revertSplit(): Promise<boolean>;
+    pauseTimer(igtOnly?: boolean): Promise<boolean>;
+    unpauseTimer(igtOnly?: boolean): Promise<boolean>;
+    resetTimer(windowId?: number): Promise<boolean>;
+    discardingReset(): Promise<boolean>;
+    savingReset(isNewPersonalBest?: boolean): Promise<boolean>;
+}
+
+export interface ElectronServiceInterface {
+    isRenderProcess(): boolean;
+    getAppPath(): string;
+    getWindowById(id: number): BrowserWindow;
+    getCurrentWindow(): BrowserWindow;
+    reloadCurrentWindow(): void;
+    closeCurrentWindow(): void;
+    showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]>;
+    showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string>;
+    showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number>;
+    newWindow(settings: BrowserWindowConstructorOptions, route: string): BrowserWindow;
+    createMenu(menuItems: ContextMenuItem[], vNode: VNode): Menu;
+    broadcastEvent(event: string, payload?: any): void;
+}
+
+export interface IOServiceInterface {
+    getAssetDirectory(): string;
+    getPluginDirectory(): string;
+    loadFile(path: string, basePath?: string): string | null;
+    saveFile(path: string, data: string, basePath?: string): boolean;
+    loadJSONFromFile(path: string, basePath?: string): any;
+    saveJSONToFile(path: string, data: object, basePath?: string): boolean;
+    listDirectoryContent(path: string, basePath?: string): Dirent[];
+    listDirectories(path: string, basePath?: string): Dirent[];
+    loadSplitsFromFileToStore(file?: string): Promise<boolean>;
+    saveSplitsFromStoreToFile(file?: string, window?: BrowserWindow): Promise<boolean>;
+    askUserToOpenSplitsFile(): Promise<string>;
+    loadTemplateFile(file?: string): Promise<TemplateFiles | null>;
+    askUserToOpenTemplateFile(): Promise<boolean>;
+    askUserToSaveSplitsFile(window?: BrowserWindow): Promise<string>;
+    loadApplicationSettingsFromFile(splitsFile?: string): Promise<ApplicationSettings>;
+    saveApplicationSettingsToFile(window: BrowserWindow): void;
+    saveSettingsToFile(): void;
+    loadSettingsFromFileToStore(): Promise<void>;
+}
+
+export interface TransformerServiceInterface {
+    upgradeSplitsFile(splits: any, originVersion: string, toVersion?: string): SplitsFile;
+    downgradeSplitsFile(splits: any, originVersion: string, toVersion: string): any;
+}
+
+export interface ValidatorServiceInterface {
+    validate<T>(schema: string, data: any): data is T;
+    isSplits(data: any): data is Splits;
+    isSegment(data: any): data is Segment;
+    isApplicationSettings(data: any): data is ApplicationSettings;
+    isTemplateMetaFile(data: any): data is TemplateMetaFile;
+    isPluginMetaFile(data: any): data is PluginMetaFile;
+}

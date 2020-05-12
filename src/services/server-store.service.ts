@@ -24,7 +24,7 @@ import {
 } from '../models/ipc';
 import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
 import { Logger } from '../utils/logger';
-import { createCommit } from '../utils/store';
+import { createCommit, lockObject } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
 
 interface Client {
@@ -76,9 +76,11 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     public registerModule<T>(namespace: string, name: string, module: Module<T>) {
+        let isNewNamespace = false;
         if (this.state[namespace] == null) {
             // Hacky workaround for TypeScript#31661
             (this.state as any)[namespace] = {};
+            isNewNamespace = true;
         }
         if (this.modules[namespace] == null) {
             this.modules[namespace] = {};
@@ -93,6 +95,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
         this.internalState[namespace][name] = state;
         this.modules[namespace][name] = module.handlers || {};
+        if (isNewNamespace) {
+            this.lockedState = lockObject(this.internalState);
+        }
 
         // Publish the initial state of the module
         this.publishDiff({ [namespace]: { [name]: state } });
@@ -110,9 +115,12 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         // Delete the namespace if it isn't used anymore
         if (Object.keys(this.modules[namespace]).length < 1) {
             delete this.modules[namespace];
+            delete this.internalState[namespace];
+            this.lockedState = lockObject(this.internalState);
+            this.publishDiff({ [namespace]: null });
+        } else {
+            this.publishDiff({ [namespace]: { [name]: null } });
         }
-
-        this.publishDiff({ [namespace]: { [name]: null } });
     }
 
     private updateQueue() {

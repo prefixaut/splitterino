@@ -40,9 +40,8 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
-import { ELECTRON_SERVICE_TOKEN, ElectronInterface } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN, ElectronServiceInterface, IO_SERVICE_TOKEN, IOServiceInterface } from '../../models/services';
 import { IPC_CLIENT_SERVICE_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
-import { IOService, IO_SERVICE_TOKEN } from '../../services/io.service';
 import { Logger } from '../../utils/logger';
 import { openSplitsEditor, openLoadSplits } from '../../utils/windows';
 
@@ -55,8 +54,8 @@ export default class DefaultView extends Vue {
 
     private subscriptions: Subscription[] = [];
 
-    private ioService: IOService;
-    private electron: ElectronInterface;
+    private electron: ElectronServiceInterface;
+    private ioService: IOServiceInterface;
 
     public created() {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
@@ -88,11 +87,11 @@ export default class DefaultView extends Vue {
     }
 
     public selectSplits() {
-        openLoadSplits(this.electron, this.ioService, this.$store);
+        openLoadSplits(this.$services);
     }
 
     public editSplits() {
-        openSplitsEditor(this.electron, this.$store);
+        openSplitsEditor(this.$services);
     }
 
     private async loadTemplate(templateFile?: string) {

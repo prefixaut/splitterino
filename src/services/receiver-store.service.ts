@@ -12,7 +12,7 @@ import {
 } from '../models/ipc';
 import { RootState } from '../models/states/root.state';
 import { BaseStore, Commit, StoreState } from '../store';
-import { createCommit } from '../utils/store';
+import { createCommit, lockObject } from '../utils/store';
 import { IPCClientService } from './ipc-client.service';
 
 @Injectable
@@ -62,7 +62,18 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         }
 
         this.internalMonotonousId = monotonId;
+        // Check if the diff creates a new namespace or deletes one
+        const existingNamespaces = Object.keys(this.internalState);
+        const needsRelock = Object.keys(diff).every(
+            namespace => !existingNamespaces.includes(namespace) || diff[namespace] == null
+        );
         merge(this.internalState, diff);
+
+        // If a new namespace has been created, we need to create a new lock
+        // as it's based on the namespace keys
+        if (needsRelock) {
+            this.lockedState = lockObject(this.internalState);
+        }
 
         return true;
     }
@@ -78,6 +89,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         if (response.successful) {
             this.internalState = response.state as any;
             this.internalMonotonousId = response.monotonId;
+            this.lockedState = lockObject(this.internalState);
 
             this.queue.filter(item => item.monotonId > this.monotonousId).forEach(item => {
                 this.applyDiff(item.diff, item.monotonId);

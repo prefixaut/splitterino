@@ -1,10 +1,8 @@
 import { Injector } from 'lightweight-di';
 
 import { ContextMenuItemActionFunction } from '../models/context-menu-item';
-import { ELECTRON_SERVICE_TOKEN } from '../models/electron';
 import { KeybindingActionFunction } from '../models/keybindings';
-import { ACTION_SERVICE_TOKEN } from '../services/action.service';
-import { IO_SERVICE_TOKEN } from '../services/io.service';
+import { ACTION_SERVICE_TOKEN, ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../models/services';
 import { STORE_SERVICE_TOKEN } from '../store';
 import {
     openKeybindgsEditor,

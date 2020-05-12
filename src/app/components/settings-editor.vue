@@ -45,11 +45,10 @@ import { set, isEqual, merge } from 'lodash';
 import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
-import { IPC_CLIENT_TOKEN } from '../../models/ipc';
+import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../../models/services';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/ipc';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
-import { IO_SERVICE_TOKEN } from '../../services/io.service';
-import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH, ACTION_BULK_SET_SETTINGS } from '../../store/modules/settings.module';
+import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH } from '../../store/modules/settings.module';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -64,10 +63,10 @@ export default class SettingsEditorComponent extends Vue {
     private settingsSubscription: Subscription;
 
     public created() {
-        this.settingsSubscription = this.$services.get(IPC_CLIENT_TOKEN)
+        this.settingsSubscription = this.$services.get(IPC_CLIENT_SERVICE_TOKEN)
             .listenForLocalMessage('settings-changed')
             .subscribe(() => {
-                this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile(this.$store);
+                this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile();
             });
     }
 
