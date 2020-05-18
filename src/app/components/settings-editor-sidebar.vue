@@ -31,7 +31,7 @@ export default class SettingsEditorSidebarComponent extends Vue {
     public readonly modules = ['splitterino', 'plugins'];
 
     public get configuration() {
-        return this.$store.state.splitterino.settings.configuration;
+        return this.$state.splitterino.settings.configuration;
     }
 
     public onGroupClicked(moduleKey: string, namespaceKey: string, groupKey: string) {

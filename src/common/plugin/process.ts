@@ -3,14 +3,13 @@ import { filter, first, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {
-    IPC_CLIENT_SERVICE_TOKEN,
     IPCPacket,
     MessageType,
     PluginProcessDedNotification,
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
 } from '../../models/ipc';
-import { IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../models/services';
+import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../models/services';
 import { RootState } from '../../models/states/root.state';
 import { HandlerStoreService } from '../../services/handler-store.service';
 import { Module } from '../../store';

@@ -1,15 +1,15 @@
 import { Injector } from 'lightweight-di';
 import { cloneDeep, get, isEqual, merge } from 'lodash';
 
+import { Module } from '..';
 import { CORE_SETTINGS } from '../../common/constants';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
 import {
     Settings,
     SettingsConfigurationNamespace,
     SettingsConfigurationValue,
     SettingsState,
 } from '../../models/states/settings.state';
-import { Module } from '..';
 
 export const MODULE_PATH = 'splitterino/settings';
 

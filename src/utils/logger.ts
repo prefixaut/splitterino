@@ -3,8 +3,8 @@ import pino from 'pino';
 import uuid from 'uuid';
 
 import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../common/constants';
-import { ELECTRON_SERVICE_TOKEN } from '../models/services';
-import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
+import { IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
+import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 
 /**
  * Enum to map log levels

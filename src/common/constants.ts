@@ -1,6 +1,7 @@
+import { InjectionToken } from 'lightweight-di';
+
 import { ApplicationSettings } from '../models/application-settings';
 import { SettingsConfigurationNamespace } from '../models/states/settings.state';
-import { InjectionToken } from 'lightweight-di';
 
 /**
  * IPC Constants

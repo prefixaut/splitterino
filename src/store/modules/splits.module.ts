@@ -2,9 +2,9 @@ import { Injector } from 'lightweight-di';
 
 import { Module } from '..';
 import { SplitsFile } from '../../models/files';
+import { VALIDATOR_SERVICE_TOKEN } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
 import { SplitsState } from '../../models/states/splits.state';
-import { VALIDATOR_SERVICE_TOKEN } from '../../services/validator.service';
 import { asCleanNumber } from '../../utils/converters';
 import { getFinalTime } from '../../utils/time';
 

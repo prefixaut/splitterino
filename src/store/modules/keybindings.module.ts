@@ -11,8 +11,8 @@ import { Module } from '..';
 
 const MODULE_PATH = 'splitterino/keybindings';
 
-const ID_HANDLER_SET_BINDINGS = 'setBindings';
-const ID_HANDLER_DISABLE_BINDINGS = 'disableBindings';
+export const ID_HANDLER_SET_BINDINGS = 'setBindings';
+export const ID_HANDLER_DISABLE_BINDINGS = 'disableBindings';
 
 export const HANDLER_SET_BINDINGS = `${MODULE_PATH}/${ID_HANDLER_SET_BINDINGS}`;
 export const HANDLER_SET_DISABLE_BINDINGS = `${MODULE_PATH}/${ID_HANDLER_DISABLE_BINDINGS}`;

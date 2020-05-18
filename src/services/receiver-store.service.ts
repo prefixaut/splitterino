@@ -3,16 +3,11 @@ import { merge } from 'lodash';
 import { filter, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
-import {
-    IPC_CLIENT_SERVICE_TOKEN,
-    MessageType,
-    StoreApplyDiffBroadcast,
-    StoreCommitRequest,
-    StoreStateResponse,
-} from '../models/ipc';
+import { MessageType, StoreApplyDiffBroadcast, StoreCommitRequest, StoreStateResponse } from '../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { RootState } from '../models/states/root.state';
 import { BaseStore, Commit, StoreState } from '../store';
-import { createCommit, lockObject } from '../utils/store';
+import { createCommit, createGetterTree } from '../utils/store';
 import { IPCClientService } from './ipc-client.service';
 
 @Injectable
@@ -72,7 +67,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         // If a new namespace has been created, we need to create a new lock
         // as it's based on the namespace keys
         if (needsRelock) {
-            this.lockedState = lockObject(this.internalState);
+            this.lockedState = createGetterTree(this.internalState);
         }
 
         return true;
@@ -89,7 +84,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         if (response.successful) {
             this.internalState = response.state as any;
             this.internalMonotonousId = response.monotonId;
-            this.lockedState = lockObject(this.internalState);
+            this.lockedState = createGetterTree(this.internalState);
 
             this.queue.filter(item => item.monotonId > this.monotonousId).forEach(item => {
                 this.applyDiff(item.diff, item.monotonId);

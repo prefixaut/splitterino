@@ -1,5 +1,5 @@
 import { StoreInterface } from '../models/services';
-import { lockObject } from '../utils/store';
+import { createGetterTree } from '../utils/store';
 
 export interface StoreState {
     [namespace: string]: {
@@ -38,7 +38,7 @@ export abstract class BaseStore<S extends StoreState> implements StoreInterface<
 
     constructor(intialState: S) {
         this.internalState = intialState;
-        this.lockedState = lockObject(this.internalState);
+        this.lockedState = createGetterTree(this.internalState);
     }
 
     public abstract commit(handlerOrCommit: string | Commit, data?: any): Promise<boolean>;

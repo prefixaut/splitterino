@@ -8,8 +8,7 @@ import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../models/ipc';
-import { ELECTRON_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
+import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
 import { RootState } from '../models/states/root.state';
 import { ReceiverStoreService } from '../services/receiver-store.service';
 import { Commit } from '../store';

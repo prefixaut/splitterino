@@ -63,7 +63,7 @@ export function getActionHandler<S, R>(
     return { type, handler };
 }
 
-export function lockObject<T>(reference: T, obj: any = reference, basePath: string[] = []): T {
+export function createGetterTree<T>(reference: T, obj: any = reference, basePath: string[] = []): T {
     const locked = {};
 
     Object.keys(obj).forEach(key => {
@@ -75,7 +75,7 @@ export function lockObject<T>(reference: T, obj: any = reference, basePath: stri
                 }
 
                 if (value != null && typeof obj[key] === 'object') {
-                    return this.lockObject(reference, value, [...basePath, key]);
+                    return createGetterTree(reference, value, [...basePath, key]);
                 } else {
                     return value;
                 }

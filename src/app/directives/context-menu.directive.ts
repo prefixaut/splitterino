@@ -3,7 +3,7 @@ import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
 import { ContextMenuItem } from '../../models/context-menu-item';
 import { ELECTRON_SERVICE_TOKEN } from '../../models/services';
-import { GETTER_MENUES } from '../../store/modules/context-menu.module';
+import { contextMenuGetter } from '../../store/modules/context-menu.module';
 
 export function getContextMenuDirective(injector: Injector): DirectiveOptions {
     return {
@@ -36,7 +36,7 @@ export function getContextMenuDirective(injector: Injector): DirectiveOptions {
     }
 
     function openContextMenu(value: string[], vNode: VNode) {
-        const menuItems: ContextMenuItem[] = vNode.context.$store.getters[GETTER_MENUES](value);
+        const menuItems: ContextMenuItem[] = contextMenuGetter(vNode.context.$state.splitterino.contextMenu)(value);
         const electron = injector.get(ELECTRON_SERVICE_TOKEN);
         const contextMenu = electron.createMenu(menuItems, vNode);
         contextMenu.popup({

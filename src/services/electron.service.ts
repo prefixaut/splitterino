@@ -19,8 +19,8 @@ import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../models/context-menu-item';
-import { ElectronServiceInterface } from '../models/services';
-import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { ElectronServiceInterface, IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 

@@ -8,6 +8,7 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
+
 import { HANDLER_SET_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
 
 @Component({ name: 'spl-property-decorator-view' })

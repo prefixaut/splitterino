@@ -9,7 +9,7 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
-import { GETTER_VALUE_BY_PATH } from '../../store/modules/settings.module';
+import { getValueByPath } from '../../store/modules/settings.module';
 import { now } from '../../utils/time';
 
 const timer = namespace('splitterino/timer');
@@ -59,10 +59,13 @@ export default class TimerComponent extends Vue {
     };
 
     public created() {
+        // TODO: Find a way to watch the state
+        /*
         this.statusWatcher = this.$store.watch(
             state => state.splitterino.timer.status,
             () => this.statusChange()
         );
+        */
 
         this.calculateCurrentTime();
         this.statusChange();
@@ -76,7 +79,7 @@ export default class TimerComponent extends Vue {
         if (this.format != null) {
             return this.format;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.timer.format');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.timer.format');
         }
     }
 

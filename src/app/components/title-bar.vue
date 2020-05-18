@@ -19,7 +19,7 @@
 import { BrowserWindow } from 'electron';
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import { ELECTRON_SERVICE_TOKEN } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN } from '../../models/services';
 
 @Component({ name: 'spl-title-bar' })
 export default class TitleBarComponent extends Vue {

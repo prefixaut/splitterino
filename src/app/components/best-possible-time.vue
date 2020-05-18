@@ -49,10 +49,13 @@ export default class BestPossibleTimeComponent extends Vue {
     };
 
     public created() {
+        // TODO: Find a way to watch the state
+        /*
         this.statusWatcher = this.$store.watch(
             state => state.splitterino.timer.status,
             () => this.statusChange()
         );
+        */
 
         this.calculateCurrentSegmentTime();
         this.statusChange();

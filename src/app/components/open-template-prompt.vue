@@ -38,7 +38,7 @@ export default class OpenTemplatePromptComponent extends Vue {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
         this.electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
 
-        const lastTemplateFiles = this.$store.state.splitterino.meta.lastOpenedTemplateFiles;
+        const lastTemplateFiles = this.$state.splitterino.meta.lastOpenedTemplateFiles;
         this.recentTemplateFiles = lastTemplateFiles
             .slice(0, 5)
             .map(file => {

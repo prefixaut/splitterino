@@ -1,4 +1,4 @@
-import { Region } from './game-info.state';
+import { Region } from '../splits';
 
 export interface MetaState {
     lastOpenedSplitsFiles: RecentlyOpenedSplit[];

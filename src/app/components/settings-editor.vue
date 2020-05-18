@@ -45,10 +45,9 @@ import { set, isEqual, merge } from 'lodash';
 import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../../models/services';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/ipc';
+import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
-import { GETTER_VALUE_BY_PATH, GETTER_CONFIGURATIONS_BY_PATH } from '../../store/modules/settings.module';
+import { HANDLER_BULK_SET_SETTINGS, getConfigurationByPath, getValueByPath } from '../../store/modules/settings.module';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -71,12 +70,11 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public get settingsValue() {
-        return this.$store.getters[GETTER_VALUE_BY_PATH];
+        return getValueByPath(this.$state.splitterino.settings);
     }
 
     public get haveSettingsChanged() {
-        const state = this.$store.state;
-        const values = state.splitterino.settings.values;
+        const values = this.$state.splitterino.settings.values;
         const mergedValues = merge({}, values, this.changesValues);
 
         return !isEqual(values, mergedValues);
@@ -84,7 +82,7 @@ export default class SettingsEditorComponent extends Vue {
 
     public onGroupSelected(group: string) {
         this.configPath = group;
-        this.activeSettingsConfig = this.$store.getters[GETTER_CONFIGURATIONS_BY_PATH](group);
+        this.activeSettingsConfig = getConfigurationByPath(this.$state.splitterino.settings)(group);
     }
 
     public onValueChange(value: any, settingKey: string) {
@@ -92,7 +90,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public applySettings() {
-        this.$store.dispatch(ACTION_BULK_SET_SETTINGS, { values: this.changesValues });
+        this.$commit(HANDLER_BULK_SET_SETTINGS, { values: this.changesValues });
     }
 
     public saveSettings() {

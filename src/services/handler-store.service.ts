@@ -3,15 +3,15 @@ import { filter, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {
-    IPC_CLIENT_SERVICE_TOKEN,
     MessageType,
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
     StoreRegisterModuleRequest,
     StoreRegisterNamespaceRequest,
-    StoreUnregisterNamespaceRequest,
     StoreUnregisterModuleRequest,
+    StoreUnregisterNamespaceRequest,
 } from '../models/ipc';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Commit, DiffHandler, Module, StoreState } from '../store';
 import { IPCClientService } from './ipc-client.service';
 import { ReceiverStoreService } from './receiver-store.service';

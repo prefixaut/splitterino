@@ -8,8 +8,8 @@ import uuid from 'uuid';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { AppShutdownBroadcast, IPC_SERVER_SERVICE_TOKEN, MessageType } from './models/ipc';
-import { IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
+import { AppShutdownBroadcast, MessageType } from './models/ipc';
+import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/states/root.state';
 import { ServerStoreService } from './services/server-store.service';
 import { Module } from './store';
@@ -97,6 +97,12 @@ process.on('unhandledRejection', (reason, promise) => {
     const logFile = join(io.getAssetDirectory(), 'application.log');
     Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
 
+    // Get the IPC Server
+    const ipcServer = injector.get(IPC_SERVER_SERVICE_TOKEN);
+
+    // Initialize the IPC Server with the store
+    await ipcServer.initialize(args.logLevel || LogLevel.INFO);
+
     // Initialize the Store and it's modules
     const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
     const coreStoreModules: { [name: string]: Module<any> } = {
@@ -111,12 +117,6 @@ process.on('unhandledRejection', (reason, promise) => {
     for (const moduleName of Object.keys(coreStoreModules)) {
         store.registerModule('splitterino', moduleName, coreStoreModules[moduleName]);
     }
-
-    // Get the IPC Server
-    const ipcServer = injector.get(IPC_SERVER_SERVICE_TOKEN);
-
-    // Initialize the IPC Server with the store
-    await ipcServer.initialize(args.logLevel || LogLevel.INFO);
 
     // load application settings
     const appSettings = await io.loadApplicationSettingsFromFile(args.splitsFile);

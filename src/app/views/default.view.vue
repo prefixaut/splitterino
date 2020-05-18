@@ -40,8 +40,14 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
-import { ELECTRON_SERVICE_TOKEN, ElectronServiceInterface, IO_SERVICE_TOKEN, IOServiceInterface } from '../../models/services';
-import { IPC_CLIENT_SERVICE_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
+import {
+    ELECTRON_SERVICE_TOKEN,
+    ElectronServiceInterface,
+    IO_SERVICE_TOKEN,
+    IOServiceInterface,
+    IPC_CLIENT_SERVICE_TOKEN
+} from '../../models/services';
+import { MessageType, GlobalEventBroadcast } from '../../models/ipc';
 import { Logger } from '../../utils/logger';
 import { openSplitsEditor, openLoadSplits } from '../../utils/windows';
 
@@ -131,7 +137,7 @@ export default class DefaultView extends Vue {
                     // ? Maybe also warn user in general when splits file is corrupt/invalid
                     if (
                         filePath.endsWith('.splits') &&
-                        this.$store.state.splitterino.timer.status === TimerStatus.STOPPED
+                        this.$state.splitterino.timer.status === TimerStatus.STOPPED
                     ) {
                         this.ioService.loadSplitsFromFileToStore(filePath);
                     }

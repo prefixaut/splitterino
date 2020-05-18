@@ -4,7 +4,6 @@ import { first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 import {
-    IPC_SERVER_SERVICE_TOKEN,
     MessageType,
     StoreApplyDiffBroadcast,
     StoreCommitRequest,
@@ -22,9 +21,10 @@ import {
     StoreUnregisterNamespaceRequest,
     StoreUnregisterNamespaceResponse,
 } from '../models/ipc';
+import { IPC_SERVER_SERVICE_TOKEN } from '../models/services';
 import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
 import { Logger } from '../utils/logger';
-import { createCommit, lockObject } from '../utils/store';
+import { createCommit, createGetterTree } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
 
 interface Client {
@@ -77,15 +77,15 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
     public registerModule<T>(namespace: string, name: string, module: Module<T>) {
         let isNewNamespace = false;
-        if (this.state[namespace] == null) {
+        if (this.internalState[namespace] == null) {
             // Hacky workaround for TypeScript#31661
-            (this.state as any)[namespace] = {};
+            (this.internalState as any)[namespace] = {};
             isNewNamespace = true;
         }
         if (this.modules[namespace] == null) {
             this.modules[namespace] = {};
         }
-        if (this.state[namespace][name] != null) {
+        if (this.internalState[namespace][name] != null) {
             throw new Error(`The module "${name}" is already registered in the namespace "${namespace}"!`);
         }
         const state = module.initialize();
@@ -96,7 +96,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         this.internalState[namespace][name] = state;
         this.modules[namespace][name] = module.handlers || {};
         if (isNewNamespace) {
-            this.lockedState = lockObject(this.internalState);
+            this.lockedState = createGetterTree(this.internalState);
         }
 
         // Publish the initial state of the module
@@ -116,7 +116,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         if (Object.keys(this.modules[namespace]).length < 1) {
             delete this.modules[namespace];
             delete this.internalState[namespace];
-            this.lockedState = lockObject(this.internalState);
+            this.lockedState = createGetterTree(this.internalState);
             this.publishDiff({ [namespace]: null });
         } else {
             this.publishDiff({ [namespace]: { [name]: null } });
@@ -136,7 +136,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             const lockName = this.getLockName(commit);
 
             // See if the module is currently locked. If it is, then the commit will be queued
-            if (this.locks[lockName] == null) {
+            if (this.locks[lockName] != null) {
                 return true;
             }
 

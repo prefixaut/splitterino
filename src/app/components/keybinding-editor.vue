@@ -1,7 +1,7 @@
 <template>
     <div class="keybinding-editor">
         <p>
-            Edit the Keybindings for your actions!<br>
+            Edit the Keybindings for your actions!<br />
             <small><b>Note</b>: Keybindings will not trigger when a modal is opened!</small>
         </p>
         <div class="bindings">
@@ -27,11 +27,7 @@
             <span>&nbsp;Add new Keybinding</span>
         </spl-button>
 
-        <spl-button
-            theme="info"
-            outline
-            @click="saveBindings()"
-        >Save Keybindings</spl-button>
+        <spl-button theme="info" outline @click="saveBindings()">Save Keybindings</spl-button>
     </div>
 </template>
 
@@ -40,7 +36,7 @@ import { cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
 import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../../models/keybindings';
-import { ACTION_SET_BINDINGS } from '../../store/modules/keybindings.module';
+import { HANDLER_SET_BINDINGS } from '../../store/modules/keybindings.module';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
@@ -49,9 +45,9 @@ export default class KeybindingEditorComponent extends Vue {
 
     created() {
         this.actions = cloneDeep(
-            this.$store.state.splitterino.keybindings.actions || []);
+            this.$state.splitterino.keybindings.actions || []);
         this.bindings = cloneDeep(
-            this.$store.state.splitterino.keybindings.bindings || []);
+            this.$state.splitterino.keybindings.bindings || []);
     }
 
     getBindingAction(index: number) {
@@ -94,11 +90,9 @@ export default class KeybindingEditorComponent extends Vue {
     saveBindings() {
         const filteredBindings = this.bindings.slice(0).filter(isActionKeybinding);
         if (filteredBindings.length > 0) {
-            this.$store.dispatch(ACTION_SET_BINDINGS, filteredBindings).then(didSave => {
-            if (didSave) {
+            this.$commit(HANDLER_SET_BINDINGS, filteredBindings).then(() => {
                 window.close();
-            }
-        });
+            });
         }
     }
 }

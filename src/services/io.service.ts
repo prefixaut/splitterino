@@ -16,13 +16,14 @@ import {
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
-import { IPC_CLIENT_SERVICE_TOKEN, IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import {
     ACTION_SERVICE_TOKEN,
     ActionServiceInterface,
     ELECTRON_SERVICE_TOKEN,
     ElectronServiceInterface,
     IOServiceInterface,
+    IPC_CLIENT_SERVICE_TOKEN,
     STORE_SERVICE_TOKEN,
     StoreInterface,
     TRANSFORMER_SERVICE_TOKEN,
