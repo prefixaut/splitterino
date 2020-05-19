@@ -31,16 +31,13 @@
 <script lang="ts">
 import { clamp } from 'lodash';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
 import { Segment, TimingMethod } from '../../models/splits';
 import { getValueByPath } from '../../store/modules/settings.module';
 import { Logger } from '../../utils/logger';
+import { State } from '../../utils/store';
 import { now, getFinalTime } from '../../utils/time';
-
-const timer = namespace('splitterino/timer');
-const splits = namespace('splitterino/splits');
 
 @Component({ name: 'spl-splits' })
 export default class SplitsComponent extends Vue {
@@ -65,16 +62,16 @@ export default class SplitsComponent extends Vue {
     @Prop({ type: String, default: null })
     public comparisonTimeFormat: string;
 
-    @timer.State('status')
+    @State('splitterino.timer.status')
     public status: TimerStatus;
 
-    @splits.State('segments')
+    @State('splitterino.splits.segments')
     public segments: Segment[];
 
-    @splits.State('current')
+    @State('splitterino.splits.current')
     public currentSegment: number;
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     /**

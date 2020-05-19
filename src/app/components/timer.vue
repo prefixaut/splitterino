@@ -6,13 +6,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
 import { getValueByPath } from '../../store/modules/settings.module';
+import { State } from '../../utils/store';
 import { now } from '../../utils/time';
-
-const timer = namespace('splitterino/timer');
 
 @Component({ name: 'spl-timer' })
 export default class TimerComponent extends Vue {
@@ -25,22 +23,22 @@ export default class TimerComponent extends Vue {
     @Prop({ type: String, default: null })
     public format: string;
 
-    @timer.State('status')
+    @State('splitterino.timer.status')
     public status: TimerStatus;
 
-    @timer.State('startDelay')
+    @State('splitterino.timer.startDelay')
     public startDelay: number;
 
-    @timer.State('startTime')
+    @State('splitterino.timer.startTime')
     public startTime: number;
 
-    @timer.State('pauseTotal')
+    @State('splitterino.timer.pauseTotal')
     public pauseTotal: number;
 
-    @timer.State('igtPauseTotal')
+    @State('splitterino.timer.igtPauseTotal')
     public igtPauseTotal: number;
 
-    @timer.State('finishTime')
+    @State('splitterino.timer.finishTime')
     public finishTime: number;
 
     /**

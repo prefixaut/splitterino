@@ -7,13 +7,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 import { Segment, TimingMethod } from '../../models/splits';
+import { State } from '../../utils/store';
 import { getFinalTime } from '../../utils/time';
-
-const splits = namespace('splitterino/splits');
 
 @Component({
     name: 'spl-previous-segment',
@@ -23,13 +21,13 @@ export default class PreviousSegmentComponent extends Vue {
     @Prop({ type: String, default: 'Previous Segment' })
     public label: string;
 
-    @splits.State('segments')
+    @State('splitterino.splits.segments')
     public segments: Segment[];
 
-    @splits.State('current')
+    @State('splitterino.splits.current')
     public currentSegment: number;
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     public get previousSegmentTime() {

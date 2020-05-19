@@ -7,15 +7,12 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
 import { TimerStatus } from '../../common/timer-status';
 import { Segment, TimingMethod } from '../../models/splits';
+import { State } from '../../utils/store';
 import { now, getFinalTime } from '../../utils/time';
-
-const timer = namespace('splitterino/timer');
-const splits = namespace('splitterino/splits');
 
 @Component({
     name: 'spl-best-possible-time',
@@ -25,16 +22,16 @@ export default class BestPossibleTimeComponent extends Vue {
     @Prop({ type: String, default: 'Best possible Time' })
     public label: string;
 
-    @timer.State('status')
+    @State('splitterino.timer.status')
     public status: TimerStatus;
 
-    @splits.State('segments')
+    @State('splitterino.splits.segments')
     public segments: Segment[];
 
-    @splits.State('current')
+    @State('splitterino.splits.current')
     public currentSegment: number;
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     public currentSegmentTime: number = 0;

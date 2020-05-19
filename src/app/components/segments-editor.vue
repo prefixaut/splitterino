@@ -76,14 +76,12 @@
 import { cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import { DEFAULT_SPLIT } from '../../common/constants';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
+import { State } from '../../utils/store';
 import { getFinalTime } from '../../utils/time';
-
-const splits = namespace('splitterino/splits');
 
 @Component({ name: 'spl-segments-editor' })
 export default class SegmentsEditorComponent extends Vue {
@@ -91,7 +89,7 @@ export default class SegmentsEditorComponent extends Vue {
     @Prop({ default: () => [] })
     public value: Segment[];
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     public segments: Segment[] = [];

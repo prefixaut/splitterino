@@ -1,5 +1,19 @@
+import { get } from 'lodash';
+import { createDecorator } from 'vue-class-component';
 import { Action, ActionHandler, Module, StoreOptions } from 'vuex';
+
 import { Commit } from '../store';
+
+export const State = (path: string) => createDecorator((options, key) => {
+    if (options.computed == null) {
+        options.computed = {};
+    }
+    options.computed[key] = {
+        get() {
+            return get(this.$state, path);
+        },
+    };
+});
 
 export function getModuleActionAndMutationNames(
     module: StoreOptions<any> | Module<any, any>,
@@ -105,6 +119,50 @@ export function createGetterArray<T>(reference: any, obj: T[] = reference, baseP
 
             return value.length;
         }
+    });
+
+    // Defining the prototype functions which don't manipulate the original array
+    [
+        'concat',
+        'copyWithin',
+        'entries',
+        'every',
+        'fill',
+        'filter',
+        'find',
+        'findIndex',
+        'flat',
+        'flatMap',
+        'forEach',
+        'includes',
+        'indexOf',
+        'join',
+        'keys',
+        'lastIndexOf',
+        'map',
+        'reduce',
+        'reduceRight',
+        'slice',
+        'some',
+        'toLocaleString',
+        'toString',
+        'values',
+    ].forEach(fnName => {
+        getterObj[fnName] = Array.prototype[fnName].bind(getterObj);
+    });
+
+    // Defining the prototype functions which manipulate the original array,
+    // but calling it with a copy of this getter object
+    [
+        'pop',
+        'push',
+        'reverse',
+        'shift',
+        'sort',
+        'splice',
+        'unshift',
+    ].forEach(fnName => {
+        getterObj[fnName] = Array.prototype[fnName].bind(Array.of(getterObj));
     });
 
     Object.defineProperty(getterObj, 'splice', () => {
