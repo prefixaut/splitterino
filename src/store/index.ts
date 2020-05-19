@@ -25,11 +25,11 @@ export interface Commit {
 
 export abstract class BaseStore<S extends StoreState> implements StoreInterface<S> {
     protected internalState: S;
-    protected lockedState: S;
+    protected getterState: S;
     protected internalMonotonousId = 0;
 
     public get state(): Readonly<S> {
-        return this.lockedState;
+        return this.getterState;
     }
 
     public get monotonousId(): number {
@@ -38,7 +38,7 @@ export abstract class BaseStore<S extends StoreState> implements StoreInterface<
 
     constructor(intialState: S) {
         this.internalState = intialState;
-        this.lockedState = createGetterTree(this.internalState);
+        this.getterState = createGetterTree(this.internalState);
     }
 
     public abstract commit(handlerOrCommit: string | Commit, data?: any): Promise<boolean>;

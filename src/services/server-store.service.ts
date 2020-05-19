@@ -96,7 +96,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         this.internalState[namespace][name] = state;
         this.modules[namespace][name] = module.handlers || {};
         if (isNewNamespace) {
-            this.lockedState = createGetterTree(this.internalState);
+            this.getterState = createGetterTree(this.internalState);
         }
 
         // Publish the initial state of the module
@@ -116,7 +116,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         if (Object.keys(this.modules[namespace]).length < 1) {
             delete this.modules[namespace];
             delete this.internalState[namespace];
-            this.lockedState = createGetterTree(this.internalState);
+            this.getterState = createGetterTree(this.internalState);
             this.publishDiff({ [namespace]: null });
         } else {
             this.publishDiff({ [namespace]: { [name]: null } });
@@ -186,7 +186,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         this.isUpdatingQueue = false;
 
         // The queue isn't finished yet, therefore go through it again
-        if (this.queue.length > 0 && !hasExternal) {
+        if (this.queue.length > 0 && hasExternal) {
             this.updateQueue();
         }
     }
@@ -332,7 +332,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         return `${commit.namespace}/${commit.module}`;
     }
 
-    protected setupIpcHooks() {
+    public setupIpcHooks() {
         this.ipcServer.listenToRouterSocket().subscribe(packet => {
             const { identity, sender, message } = packet;
 
@@ -411,6 +411,8 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 id: sender,
                 namespace: request.namespace,
             });
+            (this.internalState as any)[request.namespace] = {};
+            this.getterState = createGetterTree(this.internalState);
 
             response = {
                 id: uuid(),
@@ -447,6 +449,8 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             }
 
             this.clients.splice(index, 1);
+            delete this.internalState[request.namespace];
+            this.getterState = createGetterTree(this.internalState);
             this.publishDiff({ [request.namespace]: null });
 
             response = {
@@ -496,7 +500,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 type: MessageType.RESPONSE_STORE_REGISTER_MODULE,
                 respondsTo: request.id,
                 successful: false,
-                error: error,
+                error: {
+                    message: error.message,
+                },
             };
         }
 

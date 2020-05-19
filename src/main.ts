@@ -105,6 +105,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Initialize the Store and it's modules
     const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
+    store.setupIpcHooks();
     const coreStoreModules: { [name: string]: Module<any> } = {
         contextMenu: getContextMenuStoreModule(),
         gameInfo: getGameInfoStoreModule(),

@@ -63,11 +63,11 @@ export function getActionHandler<S, R>(
     return { type, handler };
 }
 
-export function createGetterTree<T>(reference: T, obj: any = reference, basePath: string[] = []): T {
-    const locked = {};
+export function createGetterTree<T>(reference: T, obj: any = reference, basePath: (string | number | symbol)[] = []): T {
+    const getterObj = {};
 
     Object.keys(obj).forEach(key => {
-        Object.defineProperty(locked, key, {
+        Object.defineProperty(getterObj, key, {
             get() {
                 let value = reference;
                 for (const part of [...basePath, key]) {
@@ -75,7 +75,11 @@ export function createGetterTree<T>(reference: T, obj: any = reference, basePath
                 }
 
                 if (value != null && typeof obj[key] === 'object') {
-                    return createGetterTree(reference, value, [...basePath, key]);
+                    if (Array.isArray(obj[key])) {
+                        return createGetterArray(reference, value as unknown as any[], [...basePath, key]);
+                    } else {
+                        return createGetterTree(reference, value, [...basePath, key]);
+                    }
                 } else {
                     return value;
                 }
@@ -86,7 +90,52 @@ export function createGetterTree<T>(reference: T, obj: any = reference, basePath
         });
     });
 
-    return locked as T;
+    return getterObj as T;
+}
+
+export function createGetterArray<T>(reference: any, obj: T[] = reference, basePath: (string | number | symbol)[] = []): T[] {
+    const getterObj = {};
+
+    Object.defineProperty(getterObj, 'length', {
+        get() {
+            let value = reference;
+            for (const part of basePath) {
+                value = value[part];
+            }
+
+            return value.length;
+        }
+    });
+
+    Object.defineProperty(getterObj, 'splice', () => {
+        throw new Error('This array is immutable and can not be edited!');
+    });
+
+    for (let index = 0; index < obj.length; index++) {
+        Object.defineProperty(getterObj, index, {
+            get() {
+                let value = reference;
+                for (const part of [...basePath, index]) {
+                    value = value[part];
+                }
+
+                if (value != null && typeof obj[index] === 'object') {
+                    if (Array.isArray(obj[index])) {
+                        return createGetterArray(reference, value, [...basePath, index]);
+                    } else {
+                        return createGetterTree(reference, value, [...basePath, index]);
+                    }
+                } else {
+                    return value;
+                }
+            },
+            set() {
+                throw new Error('This array is immutable and can not be edited!');
+            }
+        });
+    }
+
+    return getterObj as T[];
 }
 
 export function createCommit(handler: string, data?: any): Commit {

@@ -22,7 +22,6 @@ import {
     PublishGlobalEventRequest,
     RegisterClientRequest,
     RegisterClientResponse,
-    Response,
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../models/ipc';
@@ -244,7 +243,7 @@ export class IPCServerService implements IPCServerInterface {
         await this.sendRouterMessage(identity, receivedFrom, response);
     }
 
-    private async handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
+    private handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
         if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
             Logger.debug({
                 msg: 'Received IPC Message',
@@ -273,18 +272,7 @@ export class IPCServerService implements IPCServerInterface {
             return;
         }
 
-        const response: Response = {
-            id: uuid(),
-            type: MessageType.RESPONSE_INVALID_REQUEST,
-            respondsTo: message.id,
-            successful: false,
-            error: {
-                message: `The received Request Type "${message.type}" could not be processed by the server!`,
-            }
-        };
-
-        // Respond to the client
-        await this.sendRouterMessage(identity, receivedFrom, response);
+        // Ignore messages which couldn't be handled internally
     }
 
     private handleIncomingPullMessage(message: Message) {

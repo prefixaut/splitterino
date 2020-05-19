@@ -18,7 +18,6 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
 
     constructor(@Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientService) {
         super({} as any);
-        this.setupIpcHooks();
     }
 
     public async commit(handler: string | Commit, data?: any): Promise<boolean> {
@@ -67,7 +66,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         // If a new namespace has been created, we need to create a new lock
         // as it's based on the namespace keys
         if (needsRelock) {
-            this.lockedState = createGetterTree(this.internalState);
+            this.getterState = createGetterTree(this.internalState);
         }
 
         return true;
@@ -84,7 +83,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         if (response.successful) {
             this.internalState = response.state as any;
             this.internalMonotonousId = response.monotonId;
-            this.lockedState = createGetterTree(this.internalState);
+            this.getterState = createGetterTree(this.internalState);
 
             this.queue.filter(item => item.monotonId > this.monotonousId).forEach(item => {
                 this.applyDiff(item.diff, item.monotonId);
@@ -94,7 +93,7 @@ export class ReceiverStoreService<S extends StoreState> extends BaseStore<S> {
         this.isSyncing = false;
     }
 
-    protected setupIpcHooks() {
+    public setupIpcHooks() {
         this.ipcClient.listenToSubscriberSocket().pipe(
             map(packet => packet.message),
             filter(message => message.type === MessageType.BROADCAST_STORE_APPLY_DIFF)

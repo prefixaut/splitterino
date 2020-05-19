@@ -36,7 +36,7 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
     }
 
     public async registerNamespace(namespace: string): Promise<boolean> {
-        if (namespace == null || this.modules[namespace] == null) {
+        if (namespace == null || this.modules[namespace] != null) {
             return false;
         }
         const request: StoreRegisterNamespaceRequest = {
@@ -45,7 +45,7 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
             namespace,
         };
         const response = await this.ipcClient
-            .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_REGISTER_NAMESPACE);
+            .sendDealerRequestAwaitResponse(request, MessageType.RESPONSE_STORE_REGISTER_NAMESPACE, 3_000);
 
         if (response.successful) {
             this.modules[namespace] = {};

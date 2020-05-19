@@ -41,7 +41,14 @@ import { getPluginList } from './load-plugin';
         id: uuid(),
         type: MessageType.NOTIFY_PLUGIN_PROCESS_READY
     });
-})();
+})().catch(error => {
+    Logger.error({
+        msg: 'Unknown error thrown in plugin process!',
+        error: {
+            message: error.message,
+        }
+    });
+});
 
 async function setupStore(injector: Injector) {
     const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
@@ -89,8 +96,10 @@ async function setupStore(injector: Injector) {
         ipcClient.sendDealerMessage(response, sender);
     });
 
+    Logger.info('register plugins namespace ...');
     // Register the store namespace
     await store.registerNamespace('plugins');
+    Logger.info('namespace registered!');
 
     // Register plugin modules
     const testModule: Module<any> = {
@@ -105,5 +114,8 @@ async function setupStore(injector: Injector) {
             }
         },
     };
-    await store.registerModule('splitterino.plugin.test', 'test', testModule);
+
+    Logger.info('register module ...');
+    await store.registerModule('plugins', 'test', testModule);
+    Logger.info('module registered!');
 }

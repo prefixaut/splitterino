@@ -98,6 +98,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the store
     const store = injector.get(STORE_SERVICE_TOKEN) as ReceiverStoreService<RootState>;
+    store.setupIpcHooks();
     await store.requestNewState();
 
     // Initialize the Application
@@ -168,6 +169,13 @@ function setupVueElements(injector: Injector) {
     Vue.prototype.$services = injector;
 
     const store = injector.get(STORE_SERVICE_TOKEN);
-    Vue.prototype.$state = store.state;
+    Object.defineProperty(Vue.prototype, '$state', {
+        get() {
+            return store.state;
+        },
+        set() {
+            throw new Error('You can not edit the state!');
+        }
+    });
     Vue.prototype.$commit = (handlerOrCommit: string | Commit, data?: any) => store.commit(handlerOrCommit, data);
 }
