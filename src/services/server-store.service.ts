@@ -104,7 +104,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     public unregisterModule(namespace: string, name: string) {
-        if (this.state[namespace] == null || this.state[namespace][name] == null) {
+        if (this.internalState[namespace] == null || this.internalState[namespace][name] == null) {
             return false;
         }
 
@@ -204,7 +204,11 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
         try {
             // Execute the handler to get the diff
-            const diff = handlerFn(moduleState, commit.data);
+            const diff = {
+                [commit.namespace]: {
+                    [commit.module]: handlerFn(moduleState, commit.data)
+                }
+            };
             // Apply the created diff to the local state
             this.applyDiff(diff);
             // Publish the diff to the clients
@@ -214,7 +218,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             Logger.error({
                 msg: 'The handler function threw an error',
                 commit,
-                error,
+                error: {
+                    message: error.message,
+                },
             });
         }
 
@@ -262,10 +268,11 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                             if (!message.successful) {
                                 reject(message.error);
                             } else {
+                                const diff = { [commit.namespace]: { [commit.module]: message.diff } };
                                 // Apply the diff to the local store
-                                this.applyDiff(message.diff);
+                                this.applyDiff(diff);
                                 // Publish the diff to all clients
-                                this.publishDiff(message.diff);
+                                this.publishDiff(diff);
                                 // Increase the monoton-id
                                 this.internalMonotonousId++;
                                 resolve(true);
@@ -289,6 +296,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             Logger.error({
                 msg: 'Error while executing external commit',
                 commit,
+                error: {
+                    message: error.message,
+                },
             });
         }
 
@@ -300,7 +310,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     private applyDiff(diff: any): void {
-        merge(this.state, diff);
+        merge(this.internalState, diff);
     }
 
     private publishDiff(diff: any): void {
@@ -392,7 +402,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 type: MessageType.RESPONSE_STORE_COMMIT,
                 respondsTo: request.id,
                 successful: false,
-                error: error,
+                error: {
+                    message: error.message,
+                },
             };
         }
 
@@ -426,7 +438,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 type: MessageType.RESPONSE_STORE_REGISTER_NAMESPACE,
                 respondsTo: request.id,
                 successful: false,
-                error: error,
+                error: {
+                    message: error.message,
+                },
             };
         }
 
@@ -465,7 +479,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE,
                 respondsTo: request.id,
                 successful: false,
-                error: error,
+                error: {
+                    message: error.message,
+                },
             };
         }
 
@@ -537,7 +553,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 type: MessageType.RESPONSE_STORE_UNREGISTER_MODULE,
                 respondsTo: request.id,
                 successful: false,
-                error: error,
+                error: {
+                    message: error.message,
+                },
             };
         }
 
