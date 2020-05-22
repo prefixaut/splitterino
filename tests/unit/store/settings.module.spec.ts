@@ -1,41 +1,23 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
+import { Subscription } from 'rxjs';
 
-import { RootState } from '../../../src/models/states/root.state';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
+import { Module } from '../../../src/store';
 import {
+    getConfigurationByPath,
     getSettingsStoreModule,
+    getValueByPath,
     ID_HANDLER_BULK_SET_SETTINGS,
     ID_HANDLER_SET_ALL_SETTINGS,
-    HANDLER_BULK_SET_SETTINGS,
-    HANDLER_SET_ALL_SETTINGS,
 } from '../../../src/store/modules/settings.module';
-import { createMockInjector, testAction } from '../../utils';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/ipc';
-import { Subscription } from 'rxjs';
-import { Module } from 'vuex';
+import { createMockInjector } from '../../utils';
 
 const injector = createMockInjector();
 
-Vue.use(Vuex);
-
-function generateEmptyState(): SettingsState {
-    return {
-        configuration: {
-            splitterino: [],
-            plugins: []
-        },
-        values: {
-            splitterino: {
-                core: {}
-            },
-            plugins: {}
-        }
-    };
-}
-
-function generateDummyConfiguration(): SettingsState {
-    const state = generateEmptyState();
+function generateDummyConfiguration(settingsModule: Module<SettingsState>): SettingsState {
+    const state = settingsModule.initialize();
     const settings = [
         {
             key: 'pinLastSegment',
@@ -65,14 +47,16 @@ describe('Settings Store-Module', () => {
     const settingsModule: Module<SettingsState> = getSettingsStoreModule(injector);
 
     it('should be a valid module', () => {
-        expect(settingsModule).to.be.an('object');
-        expect(settingsModule).to.have.property('state').and.to.be.an('object').which.has.keys;
-        expect(settingsModule).to.have.property('mutations').and.to.be.an('object').which.has.keys;
-        expect(settingsModule).to.have.property('actions').and.to.be.an('object').which.has.keys;
+        expect(settingsModule).to.be.a('object');
+        expect(settingsModule).to.have.property('handlers').which.is.a('object').and.has.keys;
+        expect(settingsModule).to.have.property('initialize').which.is.a('function');
+
+        const state = settingsModule.initialize();
+        expect(state).to.be.a('object').and.to.have.keys;
     });
 
-    describe('mutations', () => {
-        describe(HANDLER_SET_ALL_SETTINGS, () => {
+    describe('Handlers', () => {
+        describe(ID_HANDLER_SET_ALL_SETTINGS, () => {
             it('should set all settings values', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -82,13 +66,15 @@ describe('Settings Store-Module', () => {
                     },
                     plugins: {}
                 };
-                const cleanState = generateEmptyState();
-                settingsModule.mutations[ID_HANDLER_SET_ALL_SETTINGS](cleanState, { values: newSettings });
-                expect(cleanState.values).to.eql(newSettings);
+                const state = settingsModule.initialize();
+                const diff = settingsModule.handlers[ID_HANDLER_SET_ALL_SETTINGS](state, {
+                    values: newSettings
+                });
+                expect(diff).to.deep.equal({ values: newSettings });
             });
         });
 
-        describe(HANDLER_BULK_SET_SETTINGS, () => {
+        describe(ID_HANDLER_BULK_SET_SETTINGS, () => {
             it('should set individual settings', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -99,9 +85,11 @@ describe('Settings Store-Module', () => {
                     },
                     plugins: {}
                 };
-                const cleanState = generateEmptyState();
-                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
-                expect(cleanState.values).to.eql(newSettings);
+                const state = settingsModule.initialize();
+                const diff = settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                    values: newSettings
+                });
+                expect(diff).to.deep.equal({ values: newSettings });
             });
 
             it('should only emit events for changed settings', async () => {
@@ -135,12 +123,15 @@ describe('Settings Store-Module', () => {
                     },
                     plugins: {}
                 };
-                const cleanState = generateEmptyState();
-                cleanState.values.splitterino.core.test = {};
-                cleanState.values.splitterino.core.test.mySetting = 1;
-                cleanState.values.splitterino.core.test.doNotChange = 'hello';
+                const state = settingsModule.initialize();
+                state.values.splitterino.core.test = {
+                    mySetting: 1,
+                    doNotChange: 'hello',
+                };
 
-                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                    values: newSettings
+                });
 
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -180,12 +171,15 @@ describe('Settings Store-Module', () => {
                     },
                     plugins: {}
                 };
-                const cleanState = generateEmptyState();
-                cleanState.values.splitterino.core.test = {};
-                cleanState.values.splitterino.core.test.mySetting = 1;
-                cleanState.values.splitterino.core.test.doNotChange = 'hello';
+                const state = settingsModule.initialize();
+                state.values.splitterino.core.test = {
+                    mySetting: 1,
+                    doNotChange: 'hello',
+                };
 
-                settingsModule.mutations[ID_HANDLER_BULK_SET_SETTINGS](cleanState, { values: newSettings });
+                settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                    values: newSettings
+                });
 
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -205,150 +199,75 @@ describe('Settings Store-Module', () => {
         });
     });
 
-    describe('actions', () => {
-        describe(ACTION_SET_ALL_SETTINGS, () => {
-            it(`it should call ${ID_HANDLER_SET_ALL_SETTINGS}`, async () => {
-                const rootState = {
-                    splitterino: {
-                        settings: generateEmptyState()
-                    }
-                };
-
-                const newSettings: Settings = {
-                    splitterino: {
-                        core: {
-                            test: {}
-                        }
-                    },
-                    plugins: {}
-                };
-
-                const { commits, dispatches } = await testAction(
-                    settingsModule.actions[ID_ACTION_SET_ALL_SETTINGS],
-                    { state: generateEmptyState(), rootState },
-                    { values: newSettings }
-                );
-
-                expect(commits).to.have.lengthOf(1);
-                expect(dispatches).to.be.empty;
-                expect(commits[0].payload.values).to.eql(newSettings);
-            });
-        });
-
-        describe(ACTION_BULK_SET_SETTINGS, () => {
-            it(`it should call ${ID_HANDLER_BULK_SET_SETTINGS}`, async () => {
-                const rootState = {
-                    splitterino: {
-                        settings: generateEmptyState()
-                    }
-                };
-
-                const newSettings: Settings = {
-                    splitterino: {
-                        core: {
-                            test: {}
-                        }
-                    },
-                    plugins: {}
-                };
-
-                const { commits, dispatches } = await testAction(
-                    settingsModule.actions[ID_ACTION_BULK_SET_SETTINGS],
-                    { state: generateEmptyState(), rootState },
-                    { values: newSettings }
-                );
-
-                expect(commits).to.have.lengthOf(1);
-                expect(dispatches).to.be.empty;
-                expect(commits[0].payload.values).to.eql(newSettings);
-            });
-        });
-    });
-
-    describe('getters', () => {
-        describe(GETTER_VALUE_BY_PATH, () => {
+    describe('Getters', () => {
+        describe('getValueByPath', () => {
             it('should get a value if it exists', () => {
-                const cleanState = generateEmptyState();
-                cleanState.values.splitterino.core.test = {};
-                cleanState.values.splitterino.core.test.mySetting = 1;
+                const state = settingsModule.initialize();
+                state.values.splitterino.core.test = {
+                    mySetting: 1,
+                };
 
-                const setting = settingsModule.getters[ID_GETTER_GET_VALUE_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core.test.mySetting');
+                const setting = getValueByPath(state)('splitterino.core.test.mySetting');
 
                 expect(setting).to.equal(1);
             });
 
             it('should return null for non existing values and when not default was given', () => {
-                const cleanState = generateEmptyState();
+                const state = settingsModule.initialize();
 
-                const setting = settingsModule.getters[ID_GETTER_GET_VALUE_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core.test.mySetting');
+                const setting = getValueByPath(state)('splitterino.core.test.mySetting');
 
                 expect(setting).to.be.null;
             });
 
             it('should return a given default when value does not exist', () => {
-                const cleanState = generateEmptyState();
+                const state = settingsModule.initialize();
 
-                const setting = settingsModule.getters[ID_GETTER_GET_VALUE_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core.test.mySetting', 10000);
+                const setting = getValueByPath(state)('splitterino.core.test.mySetting', 10_000);
 
                 expect(setting).to.equal(10000);
             });
         });
 
-        describe(GETTER_CONFIGURATIONS_BY_PATH, () => {
+        describe('getConfigurationByPath', () => {
             it('should get the configuration for a given path', () => {
-                const cleanState = generateDummyConfiguration();
+                const state = generateDummyConfiguration(settingsModule);
 
-                const config = settingsModule.getters[ID_GETTER_GET_CONFIGURATIONS_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core.splits');
+                const config = getConfigurationByPath(state)('splitterino.core.splits');
 
-                expect(config).to.eql(cleanState.configuration.splitterino[0].groups[0].settings);
+                expect(config).to.deep.equal(state.configuration.splitterino[0].groups[0].settings);
             });
 
             it('should return [] if the path is not the correct length', () => {
-                const cleanState = generateDummyConfiguration();
+                const state = generateDummyConfiguration(settingsModule);
 
-                const config = settingsModule.getters[ID_GETTER_GET_CONFIGURATIONS_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core');
+                const config = getConfigurationByPath(state)('splitterino.core');
 
-                expect(config).to.eql([]);
+                expect(config).to.deep.equal([]);
             });
 
             it('should return [] if the module does not exist', () => {
-                const cleanState = generateDummyConfiguration();
+                const state = generateDummyConfiguration(settingsModule);
 
-                const config = settingsModule.getters[ID_GETTER_GET_CONFIGURATIONS_BY_PATH](
-                    cleanState, null, null, null
-                )('doesNotExist.core.splits');
+                const config = getConfigurationByPath(state)('doesNotExist.core.splits');
 
-                expect(config).to.eql([]);
+                expect(config).to.deep.equal([]);
             });
 
             it('should return [] if the namespace does not exist', () => {
-                const cleanState = generateDummyConfiguration();
+                const state = generateDummyConfiguration(settingsModule);
 
-                const config = settingsModule.getters[ID_GETTER_GET_CONFIGURATIONS_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.doesNotExist.splits');
+                const config = getConfigurationByPath(state)('splitterino.doesNotExist.splits');
 
                 expect(config).to.eql([]);
             });
 
             it('should return [] if the group does not exist', () => {
-                const cleanState = generateDummyConfiguration();
+                const state = generateDummyConfiguration(settingsModule);
 
-                const config = settingsModule.getters[ID_GETTER_GET_CONFIGURATIONS_BY_PATH](
-                    cleanState, null, null, null
-                )('splitterino.core.doesNotExist');
+                const config = getConfigurationByPath(state)('splitterino.core.doesNotExist');
 
-                expect(config).to.eql([]);
+                expect(config).to.deep.equal([]);
             });
         });
     });

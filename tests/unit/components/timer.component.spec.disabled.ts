@@ -9,7 +9,6 @@ import TimerComponent from '../../../src/app/components/timer.vue';
 import { aevumFilter } from '../../../src/app/filters/aevum.filter';
 import { RootState } from '../../../src/models/states/root.state';
 import { TimerState } from '../../../src/models/states/timer.state';
-import { getSplitterinoStoreModules } from '../../../src/store/modules/index.module';
 import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, wait } from '../../utils';
@@ -22,6 +21,11 @@ function setupVueInstance() {
     return localVue;
 }
 
+function getSplitterinoStoreModules(a) {
+    // Noop
+    return null;
+}
+
 // Deviation times, as the rendering can be a bit delayed
 
 /** Allowed deviation that the timer is allowed to be in front of the time */
@@ -31,36 +35,16 @@ const maxPostTimeDeviation = 20;
 
 describe('Timer.vue', () => {
     it('should be stopped on default', () => {
-        const store = new Store<RootState>({
-            modules: {
-                splitterino: {
-                    namespaced: true,
-                    modules: getSplitterinoStoreModules(createMockInjector()),
-                }
-            }
-        });
-
         const component = mount(TimerComponent, {
             localVue: setupVueInstance(),
-            mocks: { $store: store },
         });
 
         expect(component.find('.content').text()).to.equal('0.000');
     });
 
     it('should render with custom format', () => {
-        const store = new Store<RootState>({
-            modules: {
-                splitterino: {
-                    namespaced: true,
-                    modules: getSplitterinoStoreModules(createMockInjector()),
-                }
-            }
-        });
-
         const component = mount(TimerComponent, {
             localVue: setupVueInstance(),
-            mocks: { $store: store },
             propsData: { format: 'test[s]s[ddd]dtest' },
         });
 
