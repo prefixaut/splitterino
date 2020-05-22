@@ -81,7 +81,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                     index < -1 ||
                     index > state.segments.length
                 ) {
-                    return;
+                    return {};
                 }
 
                 return { current: index };
@@ -97,10 +97,20 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                 }
             },
             [ID_HANDLER_SET_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
-                return { previousRTATotal: asCleanNumber(newTime) };
+                newTime = asCleanNumber(newTime, null);
+                if (newTime == null) {
+                    return {};
+                }
+
+                return { previousRTATotal: Math.max(newTime, -1) };
             },
             [ID_HANDLER_SET_PREVIOUS_IGT_TIME](state: SplitsState, newTime: number) {
-                return { previousIGTTotal: asCleanNumber(newTime) };
+                newTime = asCleanNumber(newTime, null);
+                if (newTime == null) {
+                    return {};
+                }
+
+                return { previousIGTTotal: Math.max(newTime, -1) };
             },
             [ID_HANDLER_ADD_SEGMENT](state: SplitsState, segment: Segment) {
                 if (!validator.isSegment(segment)) {
@@ -146,7 +156,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                     isNaN(index) ||
                     !isFinite(index) ||
                     index < 0 ||
-                    state.segments.length < index
+                    index >= state.segments.length
                 ) {
                     return {};
                 }

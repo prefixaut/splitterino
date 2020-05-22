@@ -74,7 +74,12 @@ export function contextMenuGetter(state: ContextMenuState) {
                 throw new Error(`Menu '${el}' does not exist in state`);
             }
 
-            ctxMenu.push(...state[el]);
+            state[el].forEach(item => {
+                ctxMenu.push({
+                    ...item,
+                    type: 'normal',
+                });
+            });
 
             if (index < menus.length - 1) {
                 ctxMenu.push({ type: 'separator' });

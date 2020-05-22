@@ -144,7 +144,7 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
         return diff;
     }
 
-    protected setupIpcHooks() {
+    public setupIpcHooks() {
         super.setupIpcHooks();
 
         this.ipcClient.listenToSubscriberSocket().pipe(

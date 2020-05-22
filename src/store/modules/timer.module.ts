@@ -76,7 +76,7 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.finishTime = 0;
                                 break;
                             default:
-                                return;
+                                return {};
                         }
                         break;
 
@@ -89,7 +89,7 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.pauseTime = time;
                                 break;
                             default:
-                                return;
+                                return {};
                         }
                         break;
 
@@ -104,7 +104,7 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.pauseTime = 0;
                                 break;
                             default:
-                                return;
+                                return {};
                         }
                         break;
 
@@ -121,7 +121,7 @@ export function getTimerStoreModule(): Module<TimerState> {
                             case TimerStatus.RUNNING:
                                 break;
                             default:
-                                return;
+                                return {};
                         }
                         result.finishTime = time;
                         break;
@@ -140,12 +140,12 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.finishTime = 0;
                                 break;
                             default:
-                                return;
+                                return {};
                         }
                         break;
 
                     default:
-                        return;
+                        return {};
                 }
                 result.status = changeTo;
 
