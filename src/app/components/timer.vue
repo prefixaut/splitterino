@@ -57,13 +57,10 @@ export default class TimerComponent extends Vue {
     };
 
     public created() {
-        // TODO: Find a way to watch the state
-        /*
-        this.statusWatcher = this.$store.watch(
+        this.statusWatcher = this.$watch(
             state => state.splitterino.timer.status,
             () => this.statusChange()
         );
-        */
 
         this.calculateCurrentTime();
         this.statusChange();

@@ -1,3 +1,5 @@
+import Vue, { WatchOptions } from 'vue';
+
 import { StoreInterface } from '../models/services';
 import { createGetterTree } from '../utils/store';
 
@@ -24,8 +26,10 @@ export interface Commit {
 }
 
 export abstract class BaseStore<S extends StoreState> implements StoreInterface<S> {
+
     protected internalState: S;
     protected getterState: S;
+    protected isCommitting = false;
     protected internalMonotonousId = 0;
 
     public get state(): Readonly<S> {
@@ -42,4 +46,44 @@ export abstract class BaseStore<S extends StoreState> implements StoreInterface<
     }
 
     public abstract commit(handlerOrCommit: string | Commit, data?: any): Promise<boolean>;
+}
+
+export abstract class ReactiveStore<S extends StoreState> extends BaseStore<S> {
+
+    protected getterInstance: Vue;
+
+    public get state(): Readonly<S> {
+        return this.getterInstance.$data.$state;
+    }
+
+    constructor(intialState: S) {
+        super(intialState);
+        this.replaceGetterInstance(intialState);
+    }
+
+    public watch(
+        expOrFn: string | Function,
+        callback: (n: any, o: any) => void,
+        options?: WatchOptions
+    ): () => void {
+        // Wrap it to the instance
+        if (typeof expOrFn === 'string') {
+            expOrFn = `$state.${expOrFn}`;
+        } else if (typeof expOrFn === 'function') {
+            expOrFn = instance => {
+                (expOrFn as Function)(instance.$state);
+            };
+        }
+
+        return this.getterInstance.$watch(expOrFn as any, callback, options);
+    }
+
+    protected replaceGetterInstance(state: S) {
+        // Creating a reactive getter state
+        this.getterInstance = new Vue({
+            data: {
+                $state: createGetterTree(state, state, () => this.isCommitting),
+            }
+        });
+    }
 }

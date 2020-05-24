@@ -677,7 +677,9 @@ export class IOService implements IOServiceInterface {
 
         let usedDefaultValue = false;
 
-        for (const [moduleKey, modulE] of Object.entries(this.store.state.splitterino.settings.configuration)) {
+        const config = this.store.state.splitterino.settings.configuration;
+
+        for (const [moduleKey, modulE] of Object.entries(config)) {
             for (const namespacE of modulE) {
                 for (const group of namespacE.groups) {
                     for (const setting of group.settings) {

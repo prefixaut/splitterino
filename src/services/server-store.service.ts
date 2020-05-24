@@ -24,7 +24,7 @@ import {
 import { IPC_SERVER_SERVICE_TOKEN } from '../models/services';
 import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
 import { Logger } from '../utils/logger';
-import { createCommit, createGetterTree } from '../utils/store';
+import { createCommit, defineGetterProperty } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
 
 interface Client {
@@ -76,11 +76,9 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     public registerModule<T>(namespace: string, name: string, module: Module<T>) {
-        let isNewNamespace = false;
         if (this.internalState[namespace] == null) {
             // Hacky workaround for TypeScript#31661
             (this.internalState as any)[namespace] = {};
-            isNewNamespace = true;
         }
         if (this.modules[namespace] == null) {
             this.modules[namespace] = {};
@@ -95,8 +93,14 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
         this.internalState[namespace][name] = state;
         this.modules[namespace][name] = module.handlers || {};
-        if (isNewNamespace) {
-            this.getterState = createGetterTree(this.internalState);
+        if (this.getterState[namespace] == null) {
+            // Create the new namespace entry in the getter
+            defineGetterProperty(
+                this.internalState,
+                this.getterState,
+                namespace,
+                () => this.isCommitting,
+            );
         }
 
         // Publish the initial state of the module
@@ -116,7 +120,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
         if (Object.keys(this.modules[namespace]).length < 1) {
             delete this.modules[namespace];
             delete this.internalState[namespace];
-            this.getterState = createGetterTree(this.internalState);
+            delete this.getterState[namespace];
             this.publishDiff({ [namespace]: null });
         } else {
             this.publishDiff({ [namespace]: { [name]: null } });
@@ -211,6 +215,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             };
             // Apply the created diff to the local state
             this.applyDiff(diff);
+            this.internalMonotonousId++;
             // Publish the diff to the clients
             this.publishDiff(diff);
             successful = true;
@@ -223,8 +228,6 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 },
             });
         }
-
-        this.internalMonotonousId++;
 
         // Unlock the module
         this.locks[lockName] = null;
@@ -271,10 +274,10 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                                 const diff = { [commit.namespace]: { [commit.module]: message.diff } };
                                 // Apply the diff to the local store
                                 this.applyDiff(diff);
-                                // Publish the diff to all clients
-                                this.publishDiff(diff);
                                 // Increase the monoton-id
                                 this.internalMonotonousId++;
+                                // Publish the diff to all clients
+                                this.publishDiff(diff);
                                 resolve(true);
                             }
                         },
@@ -310,7 +313,34 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     private applyDiff(diff: any): void {
-        merge(this.internalState, diff);
+        this.isCommitting = true;
+
+        // Check if the diff creates a new namespace or deletes one
+        const existingNamespaces = Object.keys(this.internalState);
+
+        // If a new namespace has been created, we need to create a new lock
+        // as it's based on the namespace keys
+        Object.keys(diff).filter(
+            namespace => !existingNamespaces.includes(namespace) || diff[namespace] == null
+        ).forEach(namespace => {
+            if (diff[namespace] == null) {
+                // Delete the namespace when asked to
+                delete this.getterState[namespace];
+            } else {
+                // Create the new namespace entry in the getter
+                defineGetterProperty(
+                    this.internalState,
+                    this.getterState,
+                    namespace,
+                    () => this.isCommitting,
+                );
+            }
+        });
+
+        merge(this.getterState, diff);
+
+
+        this.isCommitting = false;
     }
 
     private publishDiff(diff: any): void {
@@ -423,8 +453,15 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 id: sender,
                 namespace: request.namespace,
             });
+
+            // Creating the new namespace entry in the state and getter state
             (this.internalState as any)[request.namespace] = {};
-            this.getterState = createGetterTree(this.internalState);
+            defineGetterProperty(
+                this.internalState,
+                this.getterState,
+                request.namespace,
+                () => this.isCommitting,
+            );
 
             response = {
                 id: uuid(),
@@ -464,7 +501,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
 
             this.clients.splice(index, 1);
             delete this.internalState[request.namespace];
-            this.getterState = createGetterTree(this.internalState);
+            delete this.getterState[request.namespace];
             this.publishDiff({ [request.namespace]: null });
 
             response = {

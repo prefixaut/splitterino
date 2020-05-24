@@ -27,6 +27,8 @@ import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
 
 process.on('uncaughtException', (error: Error) => {
+    console.log(error);
+
     Logger.fatal({
         msg: 'Uncaught Exception in background process!',
         error: error,
@@ -277,6 +279,7 @@ process.on('unhandledRejection', (reason, promise) => {
         });
     }
 })().catch(err => {
+    console.log(err);
     Logger.fatal({
         msg: 'Unknown Error in the main thread!',
         error: err,

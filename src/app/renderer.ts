@@ -3,7 +3,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { Injector } from 'lightweight-di';
 import VRuntimeTemplate from 'v-runtime-template';
-import Vue from 'vue';
+import Vue, { WatchOptions } from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
@@ -168,7 +168,7 @@ function setupVueElements(injector: Injector) {
     // Update the Prototype with an injector and event-hub
     Vue.prototype.$services = injector;
 
-    const store = injector.get(STORE_SERVICE_TOKEN);
+    const store = injector.get(STORE_SERVICE_TOKEN) as ReceiverStoreService<RootState>;
     Object.defineProperty(Vue.prototype, '$state', {
         get() {
             return store.state;
@@ -177,5 +177,10 @@ function setupVueElements(injector: Injector) {
             throw new Error('You can not edit the state!');
         }
     });
+    Vue.prototype.$watch = (
+        expOrFn: string | Function,
+        callback: (n: any, o: any) => void,
+        options?: WatchOptions
+    ) => store.watch(expOrFn, callback, options);
     Vue.prototype.$commit = (handlerOrCommit: string | Commit, data?: any) => store.commit(handlerOrCommit, data);
 }
