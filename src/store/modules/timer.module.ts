@@ -65,11 +65,11 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.startTime = time;
                                 break;
                             case TimerStatus.PAUSED:
-                                result.pauseTotal = state.pauseTime + time - state.pauseTime;
+                                result.pauseTotal = state.pauseTotal + time - state.pauseTime;
                                 result.pauseTime = 0;
                             // eslint-disable-next-line no-fallthrough
                             case TimerStatus.RUNNING_IGT_PAUSE:
-                                result.igtPauseTotal = state.igtPauseTime + time - state.igtPauseTime;
+                                result.igtPauseTotal = state.igtPauseTotal + time - state.igtPauseTime;
                                 result.igtPauseTime = 0;
                                 break;
                             case TimerStatus.FINISHED:
@@ -100,7 +100,7 @@ export function getTimerStoreModule(): Module<TimerState> {
                                 result.igtPauseTime = time;
                                 break;
                             case TimerStatus.PAUSED:
-                                result.pauseTotal = state.pauseTime + time - state.pauseTime;
+                                result.pauseTotal = state.pauseTotal + time - state.pauseTime;
                                 result.pauseTime = 0;
                                 break;
                             default:

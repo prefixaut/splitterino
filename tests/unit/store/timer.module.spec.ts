@@ -80,7 +80,7 @@ describe('Timer Store-Module', () => {
 
         describe(ID_HANDLER_SET_STATUS, () => {
             it('should not switch to an invalid status', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.STOPPED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -90,7 +90,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-                const state: TimerState = { ...initialState };
 
                 [
                     undefined,
@@ -118,7 +117,7 @@ describe('Timer Store-Module', () => {
 
             it('should should use the provided time when switching the status', () => {
                 const time = now() - 20_000;
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.STOPPED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -128,7 +127,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-                const state: TimerState = { ...initialState };
 
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, {
                     time,
@@ -142,7 +140,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should start the timer correctly [STOPPED => RUNNING]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.STOPPED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -152,7 +150,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-                const state: TimerState = { ...initialState };
 
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
@@ -165,7 +162,7 @@ describe('Timer Store-Module', () => {
                 const time = now();
                 const pauseTime = 20_000;
 
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.PAUSED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -176,20 +173,18 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state: TimerState = { ...initialState };
-
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.pauseTime).to.equal(0);
                 expect(diff.igtPauseTime).to.equal(0);
                 expect(diff.pauseTotal).to.be.within(
-                    initialState.pauseTotal + pauseTime,
-                    initialState.pauseTotal + pauseTime + maxTimeDeviation
+                    state.pauseTotal + pauseTime,
+                    state.pauseTotal + pauseTime + maxTimeDeviation
                 );
                 expect(diff.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + pauseTime,
-                    initialState.igtPauseTotal + pauseTime + maxTimeDeviation
+                    state.igtPauseTotal + pauseTime,
+                    state.igtPauseTotal + pauseTime + maxTimeDeviation
                 );
             });
 
@@ -197,7 +192,7 @@ describe('Timer Store-Module', () => {
                 const time = now();
                 const pauseTime = 20_000;
 
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING_IGT_PAUSE,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -208,15 +203,13 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state: TimerState = { ...initialState };
-
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.igtPauseTime).to.equal(0);
                 expect(diff.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + pauseTime,
-                    initialState.igtPauseTotal + pauseTime + maxTimeDeviation
+                    state.igtPauseTotal + pauseTime,
+                    state.igtPauseTotal + pauseTime + maxTimeDeviation
                 );
             });
 
@@ -224,7 +217,7 @@ describe('Timer Store-Module', () => {
                 const time = now();
                 const pauseTime = 20_000;
 
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.FINISHED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -234,8 +227,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-
-                const state: TimerState = { ...initialState };
 
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
 
@@ -281,7 +272,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should pause the RTA timer now as well [RUNNING_IGT_PAUSED => PAUSED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING_IGT_PAUSE,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -292,8 +283,6 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
 
@@ -302,7 +291,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should pause both timers [RUNNING => PAUSED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -312,8 +301,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-
-                const state = { ...initialState };
 
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
@@ -363,7 +350,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should pause the IGT timer correctly [RUNNING => RUNNING_IGT_PAUSED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -374,8 +361,6 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
@@ -384,7 +369,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should set it back to running but keep the IGT timer paused [FINISHED => RUNNING_IGT_PAUSED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.FINISHED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -395,8 +380,6 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
@@ -405,7 +388,7 @@ describe('Timer Store-Module', () => {
             });
 
             it('should unpause the RTA timer but keep the IGT timer paused [PAUSED => RUNNING_IGT_PAUSED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.PAUSED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -416,16 +399,14 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(diff.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(diff.pauseTime).to.equal(0);
                 expect(diff.pauseTotal).to.be.within(
-                    initialState.pauseTotal + (time - initialState.pauseTime),
-                    initialState.pauseTotal + (time - initialState.pauseTime) + maxTimeDeviation
+                    state.pauseTotal + (time - state.pauseTime),
+                    state.pauseTotal + (time - state.pauseTime) + maxTimeDeviation
                 );
             });
 
@@ -469,7 +450,7 @@ describe('Timer Store-Module', () => {
                 });
 
             it('should finish the timer when it was paused previously [PAUSED => FINISHED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.PAUSED,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -480,8 +461,6 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
@@ -489,18 +468,18 @@ describe('Timer Store-Module', () => {
                 expect(diff.pauseTime).to.equal(0);
                 expect(diff.igtPauseTime).to.equal(0);
                 expect(diff.pauseTotal).to.be.within(
-                    initialState.pauseTotal + (time - initialState.pauseTime),
-                    initialState.pauseTotal + (time - initialState.pauseTime) + maxTimeDeviation
+                    state.pauseTotal + (time - state.pauseTime),
+                    state.pauseTotal + (time - state.pauseTime) + maxTimeDeviation
                 );
                 expect(diff.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime),
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + maxTimeDeviation
+                    state.igtPauseTotal + (time - state.igtPauseTime),
+                    state.igtPauseTotal + (time - state.igtPauseTime) + maxTimeDeviation
                 );
                 expect(diff.finishTime).to.be.within(time, time + maxTimeDeviation);
             });
 
             it('should finish the paused IGT timer correctly [RUNNING_IGT_PAUSED => FINISHED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING_IGT_PAUSE,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -511,22 +490,20 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const state = { ...initialState };
-
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(diff.igtPauseTime).to.equal(0);
                 expect(diff.igtPauseTotal).to.be.within(
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime),
-                    initialState.igtPauseTotal + (time - initialState.igtPauseTime) + maxTimeDeviation
+                    state.igtPauseTotal + (time - state.igtPauseTime),
+                    state.igtPauseTotal + (time - state.igtPauseTime) + maxTimeDeviation
                 );
                 expect(diff.finishTime).to.be.within(time, time + maxTimeDeviation);
             });
 
             it('should finish the running timer correctly [RUNNING => FINISHED]', () => {
-                const initialState: TimerState = {
+                const state: TimerState = {
                     status: TimerStatus.RUNNING,
                     startDelay: randomInt(99_999),
                     startTime: randomInt(99_999),
@@ -536,8 +513,6 @@ describe('Timer Store-Module', () => {
                     igtPauseTotal: randomInt(99_999),
                     finishTime: randomInt(99_999),
                 };
-
-                const state = { ...initialState };
 
                 const time = now();
                 const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
