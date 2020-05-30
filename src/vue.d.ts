@@ -5,16 +5,16 @@ import { RootState } from './models/states/root.state';
 import { Commit } from './store';
 import { WatchOptions } from 'vue';
 
+type StoreObserveHandler = (state: RootState) => any;
 
 declare module 'vue/types/vue' {
-
     interface Vue {
         $eventHub: Vue;
         $services: Injector;
         $state: RootState;
-        $watch(
-            expOrFn: string | Function,
-            callback: (n: any, o: any) => void,
+        $observe(
+            expOrFn: string | StoreObserveHandler,
+            callback: (newValue: any, oldValue: any) => void,
             options?: WatchOptions
         ): () => void;
         $commit: (handlerOrCommit: string | Commit, data?: any) => Promise<boolean>;

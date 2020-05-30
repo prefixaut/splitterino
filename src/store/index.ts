@@ -70,8 +70,9 @@ export abstract class ReactiveStore<S extends StoreState> extends BaseStore<S> {
         if (typeof expOrFn === 'string') {
             expOrFn = `$state.${expOrFn}`;
         } else if (typeof expOrFn === 'function') {
+            const originalFn = expOrFn;
             expOrFn = instance => {
-                (expOrFn as Function)(instance.$state);
+                originalFn(instance.$data.$state);
             };
         }
 

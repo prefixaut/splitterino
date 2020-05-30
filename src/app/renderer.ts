@@ -177,7 +177,7 @@ function setupVueElements(injector: Injector) {
             throw new Error('You can not edit the state!');
         }
     });
-    Vue.prototype.$watch = (
+    Vue.prototype.$observe = (
         expOrFn: string | Function,
         callback: (n: any, o: any) => void,
         options?: WatchOptions
