@@ -338,7 +338,7 @@ export class ActionService implements ActionServiceInterface {
 
         // if the time is a new PB or the splits should get saved as
         // the status is finished.
-        if (status === TimerStatus.FINISHED) {
+        if (isNewPersonalBest || status === TimerStatus.FINISHED) {
             return this.savingReset();
         }
 
@@ -370,7 +370,7 @@ export class ActionService implements ActionServiceInterface {
                 case 1:
                     return this.discardingReset();
                 case 2:
-                    return this.savingReset(isNewPersonalBest);
+                    return this.savingReset();
             }
         });
     }
@@ -383,7 +383,7 @@ export class ActionService implements ActionServiceInterface {
         return true;
     }
 
-    public async savingReset(isNewPersonalBest: boolean = false): Promise<boolean> {
+    public async savingReset(): Promise<boolean> {
         await this.store.commit(HANDLER_SET_STATUS, TimerStatus.STOPPED);
         await this.store.commit(HANDLER_SET_CURRENT, -1);
         await this.store.commit(HANDLER_SAVING_RESET);

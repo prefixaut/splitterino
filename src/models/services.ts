@@ -37,7 +37,7 @@ export interface ActionServiceInterface {
     unpauseTimer(igtOnly?: boolean): Promise<boolean>;
     resetTimer(windowId?: number): Promise<boolean>;
     discardingReset(): Promise<boolean>;
-    savingReset(isNewPersonalBest?: boolean): Promise<boolean>;
+    savingReset(): Promise<boolean>;
 }
 
 export interface ElectronServiceInterface {

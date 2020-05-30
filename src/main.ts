@@ -27,6 +27,8 @@ import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
 
 process.on('uncaughtException', (error: Error) => {
+    // TODO: Fix Logger not logging errors at all (empty string result)
+    // eslint-disable-next-line no-console
     console.log(error);
 
     Logger.fatal({
@@ -279,6 +281,8 @@ process.on('unhandledRejection', (reason, promise) => {
         });
     }
 })().catch(err => {
+    // TODO: Fix Logger not logging errors at all (empty string result)
+    // eslint-disable-next-line no-console
     console.log(err);
     Logger.fatal({
         msg: 'Unknown Error in the main thread!',
