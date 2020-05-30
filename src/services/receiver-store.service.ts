@@ -80,7 +80,7 @@ export class ReceiverStoreService<S extends StoreState> extends ReactiveStore<S>
             }
         });
 
-        Object.entries(merge({}, this.getterInstance, diff)).forEach(([key, value]) => {
+        Object.entries(merge({}, this.getterInstance.$data.$state, diff)).forEach(([key, value]) => {
             this.getterInstance.$set(this.getterInstance.$data.$state, key, value);
         });
 
@@ -116,6 +116,10 @@ export class ReceiverStoreService<S extends StoreState> extends ReactiveStore<S>
             filter(message => message.type === MessageType.BROADCAST_STORE_APPLY_DIFF)
         ).subscribe((request: StoreApplyDiffBroadcast) => {
             this.applyDiff(request.diff, request.monotonId);
+            if (request.commit != null) {
+                // Trigger listeners that a commit has been executed
+                this.triggerCommit(request.commit);
+            }
         });
     }
 }

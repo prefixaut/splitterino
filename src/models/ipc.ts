@@ -322,6 +322,11 @@ export interface StoreApplyDiffBroadcast extends Broadcast {
      * The monoton id to keep the commits in order
      */
     monotonId: number;
+    /**
+     * The commit which caused the state update.
+     * Is null when it's registering/unregistering modules and namespaces
+     */
+    commit?: Commit;
 }
 
 /**

@@ -1,8 +1,3 @@
-import { Injector } from 'lightweight-di';
-import { Store } from 'vuex';
-
-import { RootState } from './states/root.state';
-
 /**
  * Interface to provide an easy and consistent way to store and
  * interact with keybindings.
@@ -53,9 +48,4 @@ export function isActionKeybinding(value: any): value is ActionKeybinding {
     return typeof value.accelerator === 'string' && Array.isArray(value.keys) && typeof value.action === 'string';
 }
 
-export interface KeybindingActionFunctionParameters {
-    store: Store<RootState>;
-    injector: Injector;
-}
-
-export type KeybindingActionFunction = (params: KeybindingActionFunctionParameters) => void;
+export type KeybindingActionFunction = () => void;

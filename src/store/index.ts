@@ -17,6 +17,7 @@ export interface Module<S> {
 }
 
 export type DiffHandler<S> = (state: S, data?: any) => Partial<S>;
+export type StoreListener<S> = (commit: Commit, state: S) => void;
 
 export interface Commit {
     namespace: string;
@@ -31,6 +32,7 @@ export abstract class BaseStore<S extends StoreState> implements StoreInterface<
     protected getterState: S;
     protected isCommitting = false;
     protected internalMonotonousId = 0;
+    protected listeners: StoreListener<S>[] = [];
 
     public get state(): Readonly<S> {
         return this.getterState;
@@ -46,6 +48,29 @@ export abstract class BaseStore<S extends StoreState> implements StoreInterface<
     }
 
     public abstract commit(handlerOrCommit: string | Commit, data?: any): Promise<boolean>;
+
+    public onCommit(listener: StoreListener<S>) {
+        if (!this.listeners.includes(listener)) {
+            this.listeners.push(listener);
+        }
+    }
+
+    public offCommit(listener: StoreListener<S>) {
+        const index = this.listeners.indexOf(listener);
+        if (index > -1) {
+            this.listeners.splice(index, 1);
+        }
+    }
+
+    protected triggerCommit(commit: Commit) {
+        this.listeners.forEach(listener => {
+            try {
+                listener(commit, this.state);
+            } catch {
+                // Ignore errors from listeners
+            }
+        });
+    }
 }
 
 export abstract class ReactiveStore<S extends StoreState> extends BaseStore<S> {

@@ -111,9 +111,9 @@ export function registerDefaultKeybindingFunctions(injector: Injector) {
     const actions = injector.get(ACTION_SERVICE_TOKEN);
     const electron = injector.get(ELECTRON_SERVICE_TOKEN);
 
-    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, params => {
+    FunctionRegistry.registerKeybindingAction(KEYBINDING_SPLITS_SPLIT, () => {
         // The same action has to start the timer as well
-        switch (params.store.state.splitterino.timer.status) {
+        switch (store.state.splitterino.timer.status) {
             case TimerStatus.STOPPED:
                 actions.startTimer();
                 break;

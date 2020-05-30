@@ -25,6 +25,7 @@ import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
 import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
+import { registerKeybindingsListener } from './store/plugins/keybindings';
 
 process.on('uncaughtException', (error: Error) => {
     // TODO: Fix Logger not logging errors at all (empty string result)
@@ -130,6 +131,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions(injector);
+    registerKeybindingsListener(store);
 
     // Start plugin child process
     let pluginProcess = await forkPluginProcess(ipcServer);

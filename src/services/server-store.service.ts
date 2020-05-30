@@ -76,19 +76,19 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     }
 
     public registerModule<T>(namespace: string, name: string, module: Module<T>) {
+        if (this.internalState?.[namespace]?.[name] != null) {
+            throw new Error(`The module "${name}" is already registered in the namespace "${namespace}"!`);
+        }
+        const state = module.initialize();
+        if (state == null || typeof state !== 'object') {
+            throw new Error("The module's initialize-function has to create a valid state object!");
+        }
         if (this.internalState[namespace] == null) {
             // Hacky workaround for TypeScript#31661
             (this.internalState as any)[namespace] = {};
         }
         if (this.modules[namespace] == null) {
             this.modules[namespace] = {};
-        }
-        if (this.internalState[namespace][name] != null) {
-            throw new Error(`The module "${name}" is already registered in the namespace "${namespace}"!`);
-        }
-        const state = module.initialize();
-        if (state == null || typeof state !== 'object') {
-            throw new Error("The module's initialize-function has to create a valid state object!");
         }
 
         this.internalState[namespace][name] = state;
@@ -150,6 +150,8 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                 try {
                     const successful = this.commitLocally(commit, handlerFn);
                     this.resolveTable[id].resolve(successful);
+                    // Trigger listeners that a commit has been executed
+                    this.triggerCommit(commit);
                     delete this.resolveTable[id];
                 } catch (error) {
                     this.resolveTable[id].reject(error);
@@ -217,7 +219,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             this.applyDiff(diff);
             this.internalMonotonousId++;
             // Publish the diff to the clients
-            this.publishDiff(diff);
+            this.publishDiff(diff, commit);
             successful = true;
         } catch (error) {
             Logger.error({
@@ -277,8 +279,11 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
                                 // Increase the monoton-id
                                 this.internalMonotonousId++;
                                 // Publish the diff to all clients
-                                this.publishDiff(diff);
+                                this.publishDiff(diff, commit);
+                                // Resolve the promise
                                 resolve(true);
+                                // Trigger listeners that a commit has been executed
+                                this.triggerCommit(commit);
                             }
                         },
                         () => {
@@ -337,18 +342,19 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             }
         });
 
-        merge(this.getterState, diff);
+        merge(this.internalState, diff);
 
 
         this.isCommitting = false;
     }
 
-    private publishDiff(diff: any): void {
+    private publishDiff(diff: any, commit?: Commit): void {
         const message: StoreApplyDiffBroadcast = {
             id: uuid(),
             type: MessageType.BROADCAST_STORE_APPLY_DIFF,
             diff,
             monotonId: this.internalMonotonousId,
+            commit,
         };
         this.ipcServer.publishMessage(message);
     }

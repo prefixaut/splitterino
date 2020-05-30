@@ -50,7 +50,7 @@ export class ActionService implements ActionServiceInterface {
         const time = now();
         const status = this.store.state.splitterino.timer.status;
 
-        if (status !== TimerStatus.STOPPED || this.store.state.segments.length < 1) {
+        if (status !== TimerStatus.STOPPED || this.store.state.splitterino.splits.segments.length < 1) {
             return false;
         }
 
@@ -62,7 +62,7 @@ export class ActionService implements ActionServiceInterface {
         let totalRTATime = 0;
         let totalIGTTime = 0;
 
-        await this.store.state.state.segments.forEach(segment => {
+        this.store.state.splitterino.splits.segments.forEach(segment => {
             if (segment.passed) {
                 totalRTATime += getFinalTime(segment.personalBest.rta);
                 totalIGTTime += getFinalTime(segment.personalBest.igt);
@@ -72,7 +72,7 @@ export class ActionService implements ActionServiceInterface {
         await this.store.commit(HANDLER_SET_PREVIOUS_RTA_TIME, totalRTATime);
         await this.store.commit(HANDLER_SET_PREVIOUS_IGT_TIME, totalIGTTime);
 
-        const firstSegment = this.store.state.segments[0];
+        const firstSegment = this.store.state.splitterino.splits.segments[0];
 
         await this.store.commit(HANDLER_SET_SEGMENT, {
             index: 0,
