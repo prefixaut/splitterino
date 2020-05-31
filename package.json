@@ -38,7 +38,7 @@
         "serve": "vue-cli-service electron:serve",
         "build": "vue-cli-service electron:build",
         "lint": "vue-cli-service lint --no-fix ./src/**/*.vue ./src/**/*.ts",
-        "postinstall": "patch-package && electron-builder install-app-deps",
+        "postinstall": "electron-builder install-app-deps",
         "test:unit": "vue-cli-service test:unit",
         "test:unit:coverage": "nyc vue-cli-service test:unit"
     },
@@ -98,8 +98,6 @@
         "lint-staged": "^9.5.0",
         "node-sass": "^4.13.0",
         "nyc": "^14.1.1",
-        "patch-package": "^6.2.0",
-        "postinstall-postinstall": "^2.0.0",
         "sass-loader": "^8.0.0",
         "sasspect": "^1.1.0",
         "typescript": "^3.7.2",
