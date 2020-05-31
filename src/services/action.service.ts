@@ -22,7 +22,7 @@ import {
     HANDLER_SET_SEGMENT,
 } from '../store/modules/splits.module';
 import { HANDLER_SET_STATUS } from '../store/modules/timer.module';
-import { getFinalTime, now } from '../utils/time';
+import { getTotalTime, now } from '../utils/time';
 
 @Injectable
 export class ActionService implements ActionServiceInterface {
@@ -46,49 +46,38 @@ export class ActionService implements ActionServiceInterface {
         return this.store.commit(HANDLER_ADD_OPENED_SPLITS_FILE, recentlyOpenedSplit);
     }
 
-    public async startTimer(): Promise<boolean> {
-        const time = now();
+    public async startTimer(time: number = now()): Promise<boolean> {
         const status = this.store.state.splitterino.timer.status;
 
         if (status !== TimerStatus.STOPPED || this.store.state.splitterino.splits.segments.length < 1) {
             return false;
         }
 
-        await this.store.commit(
-            HANDLER_SET_STATUS,
-            { time, status: TimerStatus.RUNNING }
-        );
+        const commits: Promise<any>[] = [];
+        const { rtaPersonalBest, igtPersonalBest } = getTotalTime(this.store.state.splitterino.splits.segments);
 
-        let totalRTATime = 0;
-        let totalIGTTime = 0;
-
-        this.store.state.splitterino.splits.segments.forEach(segment => {
-            if (segment.passed) {
-                totalRTATime += getFinalTime(segment.personalBest.rta);
-                totalIGTTime += getFinalTime(segment.personalBest.igt);
-            }
-        });
-
-        await this.store.commit(HANDLER_SET_PREVIOUS_RTA_TIME, totalRTATime);
-        await this.store.commit(HANDLER_SET_PREVIOUS_IGT_TIME, totalIGTTime);
+        commits.push(this.store.commit(HANDLER_SET_PREVIOUS_RTA_TIME, rtaPersonalBest));
+        commits.push(this.store.commit(HANDLER_SET_PREVIOUS_IGT_TIME, igtPersonalBest));
 
         const firstSegment = this.store.state.splitterino.splits.segments[0];
 
-        await this.store.commit(HANDLER_SET_SEGMENT, {
+        commits.push(this.store.commit(HANDLER_SET_SEGMENT, {
             index: 0,
             segment: {
                 ...firstSegment,
                 startTime: time
             }
-        });
-        await this.store.commit(HANDLER_SET_CURRENT, 0);
+        }));
+        commits.push(this.store.commit(HANDLER_SET_CURRENT, 0));
+        commits.push(this.store.commit(
+            HANDLER_SET_STATUS,
+            { time, status: TimerStatus.RUNNING }
+        ));
 
-        return true;
+        return Promise.all(commits).then(() => true);
     }
 
-    public async splitTimer(): Promise<boolean> {
-        const currentTime = now();
-
+    public async splitTimer(time: number = now()): Promise<boolean> {
         const { timer: timerState, splits: splitsState } = this.store.state.splitterino;
         const currentStatus = timerState.status;
 
@@ -108,7 +97,7 @@ export class ActionService implements ActionServiceInterface {
         // Get the segment and spread it to create a copy to be able
         // to modify it.
         const currentSegment: Segment = cloneDeep(segments[currentIndex]);
-        const rawTime = currentTime - currentSegment.startTime;
+        const rawTime = time - currentSegment.startTime;
 
         if (currentSegment.currentTime == null) {
             currentSegment.currentTime = {
@@ -152,7 +141,7 @@ export class ActionService implements ActionServiceInterface {
 
         const next: Segment = {
             ...cloneDeep(splitsState.segments[currentIndex + 1]),
-            startTime: currentTime,
+            startTime: time,
             currentTime: null,
             passed: false,
             skipped: false
@@ -180,7 +169,17 @@ export class ActionService implements ActionServiceInterface {
 
         const segment: Segment = {
             ...cloneDeep(segments[index]),
-            currentTime: null,
+            // Only reset the raw-time
+            currentTime: segments[index].currentTime != null ? {
+                rta: {
+                    rawTime: 0,
+                    pauseTime: segments[index].currentTime.rta.pauseTime,
+                },
+                igt: {
+                    rawTime: 0,
+                    pauseTime: segments[index].currentTime.igt.pauseTime,
+                },
+            } : null,
             skipped: true,
             passed: false
         };
@@ -243,8 +242,7 @@ export class ActionService implements ActionServiceInterface {
         return true;
     }
 
-    public async pauseTimer(igtOnly: boolean = false): Promise<boolean> {
-        const time = now();
+    public async pauseTimer(igtOnly: boolean = false, time: number = now()): Promise<boolean> {
         const status = this.store.state.splitterino.timer.status;
 
         if (igtOnly ? (
@@ -267,8 +265,7 @@ export class ActionService implements ActionServiceInterface {
         return true;
     }
 
-    public async unpauseTimer(igtOnly: boolean = false): Promise<boolean> {
-        const time = now();
+    public async unpauseTimer(igtOnly: boolean = false, time: number = now()): Promise<boolean> {
         const { timer: timerState, splits: splitsState } = this.store.state.splitterino;
         const status = timerState.status;
 
@@ -321,18 +318,10 @@ export class ActionService implements ActionServiceInterface {
 
         const previousRTAPB = Math.max(0, previousRTATotal);
         const previousIGTPB = Math.max(0, previousIGTTotal);
-        let totalRTATime = 0;
-        let totalIGTTime = 0;
+        const { igtCurrent, rtaCurrent } = getTotalTime(segments);
 
-        segments.forEach(segment => {
-            if (segment.passed) {
-                totalRTATime += getFinalTime(segment.currentTime.rta);
-                totalIGTTime += getFinalTime(segment.currentTime.igt);
-            }
-        });
-
-        const isNewRTAPB = previousRTAPB === 0 || (totalRTATime > 0 && totalRTATime < previousRTAPB);
-        const isNewIGTPB = previousIGTPB === 0 || (totalIGTTime > 0 && totalIGTTime < previousIGTPB);
+        const isNewRTAPB = previousRTAPB === 0 || (rtaCurrent > 0 && rtaCurrent < previousRTAPB);
+        const isNewIGTPB = previousIGTPB === 0 || (igtCurrent > 0 && igtCurrent < previousIGTPB);
         const isNewPersonalBest = timing === TimingMethod.RTA ? isNewRTAPB : isNewIGTPB;
         const isNewOverallBest = segments.findIndex(segment => segment.passed) !== -1;
 

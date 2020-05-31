@@ -2,13 +2,11 @@
 import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 
-import { Segment, SegmentTime, TimingMethod } from '../../../src/models/splits';
+import { Segment, TimingMethod } from '../../../src/models/splits';
 import { SplitsState } from '../../../src/models/states/splits.state';
 import { Module } from '../../../src/store';
 import {
     getSplitsStoreModule,
-    HANDLER_SET_PREVIOUS_IGT_TIME,
-    HANDLER_SET_SEGMENT,
     ID_HANDLER_ADD_SEGMENT,
     ID_HANDLER_CLEAR_SEGMENTS,
     ID_HANDLER_DISCARDING_RESET,
@@ -21,45 +19,11 @@ import {
     ID_HANDLER_SET_SEGMENT,
     ID_HANDLER_SET_TIMING,
 } from '../../../src/store/modules/splits.module';
-import { now } from '../../../src/utils/time';
-import { createMockInjector, randomInt } from '../../utils';
+import { createMockInjector, generateSegmentArray, randomInt } from '../../utils';
 
 // Initialize the Dependency-Injection
 const injector = createMockInjector();
 const maxTimeDeviation = 1;
-
-function generateRandomTime(): SegmentTime {
-    const rawTime = randomInt(99999, 100);
-    const pauseTime = randomInt(rawTime - 1, 1);
-
-    return {
-        igt: {
-            rawTime,
-            pauseTime,
-        },
-        rta: {
-            rawTime,
-            pauseTime,
-        }
-    };
-}
-
-function generateSegmentArray(size: number): Segment[] {
-    return new Array(size).fill(null).map(() => {
-        return {
-            id: uuid(),
-            name: 'test',
-            currentTime: generateRandomTime(),
-            hasNewOverallBest: true,
-            overallBest: generateRandomTime(),
-            passed: true,
-            personalBest: generateRandomTime(),
-            previousOverallBest: generateRandomTime(),
-            skipped: false,
-            startTime: now(),
-        };
-    });
-}
 
 describe('Splits Store-Module', () => {
     const splitsModule: Module<SplitsState> = getSplitsStoreModule(injector);

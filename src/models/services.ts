@@ -29,12 +29,12 @@ export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorServiceInterf
 
 export interface ActionServiceInterface {
     addOpenedSplitsFile(filePath: string): Promise<boolean>;
-    startTimer(): Promise<boolean>;
-    splitTimer(): Promise<boolean>;
+    startTimer(time?: number): Promise<boolean>;
+    splitTimer(time?: number): Promise<boolean>;
     skipSplit(): Promise<boolean>;
     revertSplit(): Promise<boolean>;
-    pauseTimer(igtOnly?: boolean): Promise<boolean>;
-    unpauseTimer(igtOnly?: boolean): Promise<boolean>;
+    pauseTimer(igtOnly?: boolean, time?: number): Promise<boolean>;
+    unpauseTimer(igtOnly?: boolean, time?: number): Promise<boolean>;
     resetTimer(windowId?: number): Promise<boolean>;
     discardingReset(): Promise<boolean>;
     savingReset(): Promise<boolean>;
