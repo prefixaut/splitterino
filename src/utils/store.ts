@@ -2,6 +2,7 @@ import { get } from 'lodash';
 import { createDecorator } from 'vue-class-component';
 
 import { Commit } from '../store';
+import { getValueByPath } from '../store/modules/settings.module';
 
 export const State = (path: string) => createDecorator((options, key) => {
     if (options.computed == null) {
@@ -12,6 +13,22 @@ export const State = (path: string) => createDecorator((options, key) => {
         get() {
             return get(this.$state, path);
         },
+    };
+});
+
+export const Config = (path: string, defaultValue?: any) => createDecorator((options, key) => {
+    if (options.computed == null) {
+        options.computed = {};
+    }
+
+    options.computed[key] = {
+        get() {
+            if (typeof defaultValue === 'function') {
+                return getValueByPath(this.$state.splitterino.settings)(path, defaultValue());
+            } else {
+                return getValueByPath(this.$state.splitterino.settings)(path, defaultValue);
+            }
+        }
     };
 });
 
