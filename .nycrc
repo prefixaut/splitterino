@@ -3,10 +3,10 @@
     "per-file": true,
     "skip-full": true,
     "include": [
-        "src/**/*.{js,vue,ts}"
+        "src/**/*"
     ],
     "exclude": [
-        "src/*.{js,ts}",
+        "src/**/*.{json}",
         "**/*.d.ts"
     ],
     "reporter": [
