@@ -13,7 +13,10 @@ import {
     VALIDATOR_SERVICE_TOKEN,
 } from '../src/models/services';
 import { Segment, SegmentTime } from '../src/models/splits';
+import { ActionService } from '../src/services/action.service';
 import { IOService } from '../src/services/io.service';
+import { ReceiverStoreService } from '../src/services/receiver-store.service';
+import { ServerStoreService } from '../src/services/server-store.service';
 import { TransformerService } from '../src/services/transfromer.service';
 import { ValidatorService } from '../src/services/validator.service';
 import { now } from '../src/utils/time';
@@ -33,6 +36,21 @@ export function createMockInjector(): Injector {
         { provide: IPC_SERVER_SERVICE_TOKEN, useValue: null },
         { provide: RUNTIME_ENVIRONMENT_TOKEN, useValue: RuntimeEnvironment.BACKGROUND },
         { provide: STORE_SERVICE_TOKEN, useClass: StoreMockService },
+        { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
+        { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
+    ]);
+}
+
+export function createPluginTestInjector(): Injector {
+    return Injector.resolveAndCreate([
+        // Overrides/custom providers
+        { provide: ACTION_SERVICE_TOKEN, useClass: ActionService },
+        { provide: ELECTRON_SERVICE_TOKEN, useClass: ElectronMockService },
+        { provide: IO_SERVICE_TOKEN, useClass: IOService },
+        { provide: IPC_CLIENT_SERVICE_TOKEN, useValue: ReceiverStoreService },
+        { provide: IPC_SERVER_SERVICE_TOKEN, useValue: null },
+        { provide: RUNTIME_ENVIRONMENT_TOKEN, useValue: RuntimeEnvironment.PLUGIN },
+        { provide: STORE_SERVICE_TOKEN, useClass: ServerStoreService },
         { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },
     ]);
