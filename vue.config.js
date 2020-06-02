@@ -22,7 +22,7 @@ module.exports = {
             nodeIntegration: true,
             chainWebpackMainProcess: config => {
                 config.entry('plugin-process')
-                    .add('./src/common/plugin/process.ts')
+                    .add('./src/plugin/process.ts')
                     .end();
 
                 config.plugin('environment')

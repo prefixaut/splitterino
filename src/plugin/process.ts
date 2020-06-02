@@ -8,15 +8,15 @@ import {
     PluginProcessDedNotification,
     StoreCreateDiffRequest,
     StoreCreateDiffResponse,
-} from '../../models/ipc';
-import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../models/services';
-import { RootState } from '../../models/states/root.state';
-import { HandlerStoreService } from '../../services/handler-store.service';
-import { Module } from '../../store';
-import { Logger, LogLevel } from '../../utils/logger';
-import { PLUGIN_CLIENT_ID } from '../../utils/plugin';
-import { createPluginInjector } from '../../utils/services';
-import { IPC_SERVER_NAME } from '../constants';
+} from '../models/ipc';
+import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
+import { RootState } from '../models/states/root.state';
+import { HandlerStoreService } from '../services/handler-store.service';
+import { Module } from '../store';
+import { Logger, LogLevel } from '../utils/logger';
+import { PLUGIN_CLIENT_ID } from '../utils/plugin';
+import { createPluginInjector } from '../utils/services';
+import { IPC_SERVER_NAME } from '../common/constants';
 import { getPluginList } from './load-plugin';
 
 (async () => {
