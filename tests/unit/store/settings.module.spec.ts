@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs';
 
 import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import {
     getConfigurationByPath,
     getSettingsStoreModule,

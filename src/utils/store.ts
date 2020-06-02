@@ -1,7 +1,7 @@
 import { get } from 'lodash';
 import { createDecorator } from 'vue-class-component';
 
-import { Commit } from '../store';
+import { Commit } from '../models/store';
 import { getValueByPath } from '../store/modules/settings.module';
 
 export const State = (path: string) => createDecorator((options, key) => {

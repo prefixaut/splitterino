@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid';
 
 import { Segment, TimingMethod } from '../../../src/models/splits';
 import { SplitsState } from '../../../src/models/states/splits.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import {
     getSplitsStoreModule,
     ID_HANDLER_ADD_SEGMENT,

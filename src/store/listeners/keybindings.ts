@@ -1,9 +1,9 @@
 import { globalShortcut } from 'electron';
 
-import { BaseStore } from '..';
 import { FunctionRegistry } from '../../common/function-registry';
 import { RootState } from '../../models/states/root.state';
 import { Logger } from '../../utils/logger';
+import { BaseStore } from '../base-store';
 import { HANDLER_SET_BINDINGS } from '../modules/keybindings.module';
 
 export function registerKeybindingsListener(store: BaseStore<RootState>) {

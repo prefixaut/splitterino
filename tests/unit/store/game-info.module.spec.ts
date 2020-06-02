@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { SplitsFile } from '../../../src/models/files';
 import { GameInfo, Region, TimingMethod } from '../../../src/models/splits';
 import { GameInfoState } from '../../../src/models/states/game-info.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import {
     getGameInfoStoreModule,
     ID_HANDLER_APPLY_GAMEINFO,

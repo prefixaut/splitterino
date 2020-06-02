@@ -12,7 +12,7 @@ import {
     StoreUnregisterNamespaceRequest,
 } from '../models/ipc';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
-import { Commit, DiffHandler, Module, StoreState } from '../store';
+import { Commit, DiffHandler, Module, StoreState } from '../models/store';
 import { IPCClientService } from './ipc-client.service';
 import { ReceiverStoreService } from './receiver-store.service';
 

@@ -10,7 +10,7 @@ import { Dirent } from 'fs';
 import { InjectionToken } from 'lightweight-di';
 import { VNode } from 'vue';
 
-import { Commit, StoreState } from '../store';
+import { Commit, StoreState } from '../models/store';
 import { ApplicationSettings } from './application-settings';
 import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';

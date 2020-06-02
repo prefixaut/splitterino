@@ -1,7 +1,7 @@
 import { TimerStatus } from '../../common/timer-status';
 import { TimerState } from '../../models/states/timer.state';
+import { Module } from '../../models/store';
 import { now } from '../../utils/time';
-import { Module } from '..';
 
 export const MODULE_PATH = 'splitterino/timer';
 

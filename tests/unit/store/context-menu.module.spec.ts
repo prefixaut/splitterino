@@ -10,7 +10,7 @@ import {
     CTX_MENU_WINDOW_RELOAD,
 } from '../../../src/common/constants';
 import { ContextMenuState } from '../../../src/models/states/context-menu.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import { contextMenuGetter, getContextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
 
 describe('Context-Menu Store-Module', () => {

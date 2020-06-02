@@ -4,15 +4,16 @@ import { join } from 'path';
 import * as pino from 'pino';
 import { first, map, timeout } from 'rxjs/operators';
 import { format as formatUrl } from 'url';
-import uuid from 'uuid';
+import uuid from 'uuid/v4';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, MessageType } from './models/ipc';
 import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/states/root.state';
+import { Module } from './models/store';
 import { ServerStoreService } from './services/server-store.service';
-import { Module } from './store';
+import { registerKeybindingsListener } from './store/listeners/keybindings';
 import { getContextMenuStoreModule } from './store/modules/context-menu.module';
 import { getGameInfoStoreModule } from './store/modules/game-info.module';
 import { getKeybindingsStoreModule, HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
@@ -25,7 +26,6 @@ import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
 import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
-import { registerKeybindingsListener } from './store/plugins/keybindings';
 
 process.on('uncaughtException', (error: Error) => {
     // TODO: Fix Logger not logging errors at all (empty string result)

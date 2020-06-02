@@ -2,7 +2,7 @@
 import { expect } from 'chai';
 
 import { KeybindingsState } from '../../../src/models/states/keybindings.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import { getKeybindingsStoreModule, ID_HANDLER_SET_BINDINGS, ID_HANDLER_DISABLE_BINDINGS } from '../../../src/store/modules/keybindings.module';
 import { ActionKeybinding } from '../../../src/models/keybindings';
 import { KEYBINDING_SPLITS_SPLIT, KEYBINDING_SPLITS_UNDO, KEYBINDING_SPLITS_TOGGLE_PAUSE, KEYBINDING_SPLITS_RESET } from '../../../src/common/constants';

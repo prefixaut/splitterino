@@ -10,7 +10,7 @@ import {
 } from '../../common/constants';
 import { ContextMenuItem } from '../../models/context-menu-item';
 import { ContextMenuState } from '../../models/states/context-menu.state';
-import { Module } from '..';
+import { Module } from '../../models/store';
 
 export function getContextMenuStoreModule(): Module<ContextMenuState> {
     return {

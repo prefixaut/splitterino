@@ -2,6 +2,7 @@ import { Injector } from 'lightweight-di';
 import { filter, first, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
+import { IPC_SERVER_NAME } from '../common/constants';
 import {
     IPCPacket,
     MessageType,
@@ -11,12 +12,11 @@ import {
 } from '../models/ipc';
 import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
 import { RootState } from '../models/states/root.state';
+import { Module } from '../models/store';
 import { HandlerStoreService } from '../services/handler-store.service';
-import { Module } from '../store';
 import { Logger, LogLevel } from '../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../utils/plugin';
 import { createPluginInjector } from '../utils/services';
-import { IPC_SERVER_NAME } from '../common/constants';
 import { getPluginList } from './load-plugin';
 
 (async () => {

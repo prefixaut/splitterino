@@ -1,4 +1,4 @@
-import { StoreState } from '../../store';
+import { StoreState } from '../store';
 import { ContextMenuState } from './context-menu.state';
 import { GameInfoState } from './game-info.state';
 import { KeybindingsState } from './keybindings.state';

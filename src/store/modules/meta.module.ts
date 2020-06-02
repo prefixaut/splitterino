@@ -1,5 +1,5 @@
 import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../models/states/meta.state';
-import { Module } from '..';
+import { Module } from '../../models/store';
 
 const MODULE_PATH = 'splitterino/meta';
 

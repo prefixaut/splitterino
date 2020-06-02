@@ -22,7 +22,8 @@ import {
     StoreUnregisterNamespaceResponse,
 } from '../models/ipc';
 import { IPC_SERVER_SERVICE_TOKEN } from '../models/services';
-import { BaseStore, Commit, DiffHandler, Module, StoreState } from '../store';
+import { Commit, DiffHandler, DiffHandlerTree, Module, StoreState } from '../models/store';
+import { BaseStore } from '../store/base-store';
 import { Logger } from '../utils/logger';
 import { createCommit, defineGetterProperty } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
@@ -41,13 +42,7 @@ interface LocalCommit {
 export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
     private locks: { [module: string]: string } = {};
     private clients: Client[] = [];
-    private modules: {
-        [namespace: string]: {
-            [module: string]: {
-                [handler: string]: DiffHandler<any>;
-            };
-        };
-    } = {};
+    private modules: DiffHandlerTree = {};
     private queue: LocalCommit[] = [];
     private isUpdatingQueue = false;
     private resolveTable: {

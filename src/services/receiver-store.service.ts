@@ -6,7 +6,8 @@ import uuid from 'uuid/v4';
 import { MessageType, StoreApplyDiffBroadcast, StoreCommitRequest, StoreStateResponse } from '../models/ipc';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { RootState } from '../models/states/root.state';
-import { Commit, ReactiveStore, StoreState } from '../store';
+import { Commit, StoreState } from '../models/store';
+import { ReactiveStore } from '../store/reactive-store';
 import { createCommit, defineGetterProperty } from '../utils/store';
 import { IPCClientService } from './ipc-client.service';
 

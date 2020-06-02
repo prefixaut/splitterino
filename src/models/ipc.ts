@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
-import { Commit, StoreState } from '../store';
+import { Commit, StoreState } from '../models/store';
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
 

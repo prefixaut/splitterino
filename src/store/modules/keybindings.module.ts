@@ -7,7 +7,7 @@ import {
 } from '../../common/constants';
 import { ActionKeybinding, isActionKeybinding } from '../../models/keybindings';
 import { KeybindingsState } from '../../models/states/keybindings.state';
-import { Module } from '..';
+import { Module } from '../../models/store';
 
 const MODULE_PATH = 'splitterino/keybindings';
 

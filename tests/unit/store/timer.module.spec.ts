@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 import { TimerStatus } from '../../../src/common/timer-status';
 import { TimerState } from '../../../src/models/states/timer.state';
-import { Module } from '../../../src/store';
+import { Module } from '../../../src/models/store';
 import {
     getTimerStoreModule,
     ID_HANDLER_SET_START_DELAY,
