@@ -104,16 +104,12 @@ export default class DefaultView extends Vue {
         const templateFiles = await this.ioService.loadTemplateFile(templateFile);
 
         if (templateFiles == null) {
-            Logger.warn({
-                msg: 'Could not load template file'
-            });
+            Logger.debug('Could not load template file');
 
             // Check if template is already loaded
             // If not, fall back to default template
             if (this.template == null) {
-                Logger.warn({
-                    msg: 'Falling back to default template'
-                });
+                Logger.debug('Falling back to default template');
                 this.template = null;
             }
         } else {
