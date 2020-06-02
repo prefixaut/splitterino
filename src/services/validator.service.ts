@@ -73,6 +73,6 @@ export class ValidatorService implements ValidatorServiceInterface {
     }
 
     public isPluginMetaFile(data: any): data is PluginMetaFile {
-        return this.validate<PluginMetaFile>('pluging-meta.schema.json', data);
+        return this.validate<PluginMetaFile>('plugin-meta.schema.json', data);
     }
 }

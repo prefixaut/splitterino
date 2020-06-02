@@ -15,7 +15,7 @@ import {
     RuntimeEnvironment,
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
-import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles, PluginMetaFile } from '../models/files';
 import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import {
     ACTION_SERVICE_TOKEN,
@@ -703,5 +703,36 @@ export class IOService implements IOServiceInterface {
         if (usedDefaultValue) {
             this.saveSettingsToFile();
         }
+    }
+
+    public loadPluginMetaFiles(): PluginMetaFile[] {
+        const pluginDir = this.getPluginDirectory();
+        const dirs = this.listDirectories(pluginDir, '');
+        const metaFiles: PluginMetaFile[] = [];
+
+        for (const dir of dirs) {
+            const content = this.listDirectoryContent(dir.name, pluginDir);
+            const metaFileName = content.find(entry => entry.name === 'meta.json')?.name;
+            if (metaFileName == null) {
+                Logger.warn(`Did not find meta file for plugin directory "${dir.name}"`);
+                continue;
+            }
+
+            const metaFile = this.loadJSONFromFile(metaFileName, join(this.getPluginDirectory(), dir.name));
+            if (metaFile == null) {
+                Logger.warn(`Could not load meta file for plugin directory "${dir.name}"`);
+                continue;
+            }
+
+            if (!this.validator.isPluginMetaFile(metaFile)) {
+                Logger.warn(`Plugin meta file for directory "${dir.name}" does not match schema`);
+                continue;
+            }
+
+            metaFile.folderName = dir.name;
+            metaFiles.push(metaFile);
+        }
+
+        return metaFiles;
     }
 }

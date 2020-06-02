@@ -74,6 +74,7 @@ export interface IOServiceInterface {
     saveApplicationSettingsToFile(window: BrowserWindow): void;
     saveSettingsToFile(): void;
     loadSettingsFromFileToStore(): Promise<void>;
+    loadPluginMetaFiles(): PluginMetaFile[];
 }
 
 export interface StoreInterface<S extends StoreState> {

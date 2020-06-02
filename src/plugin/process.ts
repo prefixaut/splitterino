@@ -1,23 +1,13 @@
-import { Injector } from 'lightweight-di';
-import { filter, first, map } from 'rxjs/operators';
-import uuid from 'uuid/v4';
-
-import { IPC_SERVER_NAME } from '../common/constants';
-import {
-    IPCPacket,
-    MessageType,
-    PluginProcessDedNotification,
-    StoreCreateDiffRequest,
-    StoreCreateDiffResponse,
-} from '../models/ipc';
-import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
-import { RootState } from '../models/states/root.state';
-import { Module } from '../models/store';
-import { HandlerStoreService } from '../services/handler-store.service';
+import { v4 as uuid } from 'uuid';
+import { MessageType, IPCClientInterface, PluginProcessDedNotification } from '../models/ipc';
+import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Logger, LogLevel } from '../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../utils/plugin';
 import { createPluginInjector } from '../utils/services';
-import { getPluginList } from './load-plugin';
+import { loadPluginsIntoContext } from './load-plugin';
+import { setupStore } from './setup-store';
+import { map, first } from 'rxjs/operators';
+import { createContext } from 'vm';
 
 (async () => {
     const injector = createPluginInjector();
@@ -33,9 +23,12 @@ import { getPluginList } from './load-plugin';
         Logger._setInitialLogLevel(initResponse.logLevel);
     }
 
+    setupShutdownListener(ipcClient);
+
     await setupStore(injector);
 
-    getPluginList(injector.get(IO_SERVICE_TOKEN));
+    const pluginContext = createContext({ exports: {} });
+    const plugins = await loadPluginsIntoContext(injector.get(IO_SERVICE_TOKEN), pluginContext);
 
     ipcClient.sendDealerMessage({
         id: uuid(),
@@ -50,10 +43,7 @@ import { getPluginList } from './load-plugin';
     });
 });
 
-async function setupStore(injector: Injector) {
-    const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-    const store = injector.get(STORE_SERVICE_TOKEN) as HandlerStoreService<RootState>;
-
+function setupShutdownListener(ipcClient: IPCClientInterface) {
     ipcClient.listenToSubscriberSocket().pipe(
         map(packet => packet.message),
         first(message => message.type === MessageType.BROADCAST_APP_SHUTDOWN)
@@ -65,57 +55,4 @@ async function setupStore(injector: Injector) {
         };
         ipcClient.sendDealerMessage(message);
     });
-
-    ipcClient.listenToSubscriberSocket().pipe(
-        filter(packet => packet.sender === IPC_SERVER_NAME
-            && packet.message.type === MessageType.REQUEST_STORE_CREATE_DIFF),
-    ).subscribe((packet: IPCPacket) => {
-        const { message, sender } = packet;
-        const req = message as StoreCreateDiffRequest;
-        let response: StoreCreateDiffResponse;
-
-        try {
-            const diff = store.getDiff(req.commit);
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_STORE_CREATE_DIFF,
-                respondsTo: message.id,
-                successful: true,
-                diff,
-            };
-        } catch (error) {
-            response = {
-                id: uuid(),
-                type: MessageType.RESPONSE_STORE_CREATE_DIFF,
-                respondsTo: message.id,
-                successful: false,
-                error: error,
-            };
-        }
-
-        ipcClient.sendDealerMessage(response, sender);
-    });
-
-    Logger.info('register plugins namespace ...');
-    // Register the store namespace
-    await store.registerNamespace('plugins');
-    Logger.info('namespace registered!');
-
-    // Register plugin modules
-    const testModule: Module<any> = {
-        initialize() {
-            return {
-                hi: 456,
-            };
-        },
-        handlers: {
-            mutation() {
-                return { hi: 890 };
-            }
-        },
-    };
-
-    Logger.info('register module ...');
-    await store.registerModule('plugins', 'test', testModule);
-    Logger.info('module registered!');
 }
