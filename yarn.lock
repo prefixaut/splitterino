@@ -11902,7 +11902,7 @@ yorkie@^2.0.0:
     normalize-path "^1.0.0"
     strip-indent "^2.0.0"
 
-zeromq@^5.2:
+zeromq@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/zeromq/-/zeromq-5.2.0.tgz#92eed6baeee5167977e51a2e2360b2c29a3b39fd"
   integrity sha512-qsckhCmrg6et6zrAJytC971SSN/4iLxKgkXK1Wqn2Gij5KXMY+TA+3cy/iFwehaWdU5usg5HNOOgaBdjSqtCVw==
