@@ -99,13 +99,14 @@ export class PluginManager {
     }
 
     public static async teardown() {
-        const teardownFunctions: Promise<void>[] = [];
+        const order = this.depGraph.overallOrder().reverse();
 
-        for (const plugin of this.loadedPlugins) {
-            teardownFunctions.push(this.teardownSinglePlugin(plugin));
+        for (const plugin of order) {
+            const loadedPlugin = this.loadedPlugins.find(pl => pl.meta.name === plugin);
+            if (loadedPlugin != null) {
+                await this.teardownSinglePlugin(loadedPlugin);
+            }
         }
-
-        return Promise.all(teardownFunctions);
     }
 
     private static addToDepGraph(metaFile: PluginMetaFile) {
@@ -328,11 +329,15 @@ export class PluginManager {
 
         try {
             if(!await plugin.instance.destroy()) {
-                throw new Error(`Method "destroy" for plugin "${plugin.meta.name}" returned false`);
+                Logger.error({
+                    msg: 'Plugin method "destroy" returned false',
+                    pluginName: plugin.meta.name
+                });
             }
         } catch (e) {
             Logger.error({
-               msg: `Could not gracefully destroy plugin instance for "${plugin.meta.name}"`,
+               msg: 'Could not gracefully destroy plugin instance',
+               pluginName: plugin.meta.name,
                error: e.message
             });
         }
