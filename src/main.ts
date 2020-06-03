@@ -95,18 +95,18 @@ process.on('unhandledRejection', (reason, promise) => {
     const args = parseArguments();
 
     // Initialize the logger
-    Logger.initialize(injector, args.logLevel);
+    Logger.initialize(injector, args['log-level']);
 
     // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IO_SERVICE_TOKEN);
     const logFile = join(io.getAssetDirectory(), 'application.log');
-    Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
+    Logger.registerHandler(pino.destination(logFile), { level: args['log-level'] });
 
     // Get the IPC Server
     const ipcServer = injector.get(IPC_SERVER_SERVICE_TOKEN);
 
     // Initialize the IPC Server with the store
-    await ipcServer.initialize(args.logLevel || LogLevel.INFO);
+    await ipcServer.initialize(args['log-level'] || LogLevel.INFO);
 
     // Initialize the Store and it's modules
     const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
