@@ -1,13 +1,13 @@
 import { v4 as uuid } from 'uuid';
 import { MessageType, IPCClientInterface, PluginProcessDedNotification } from '../models/ipc';
-import { IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
+import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Logger, LogLevel } from '../utils/logger';
 import { PLUGIN_CLIENT_ID } from '../utils/plugin';
 import { createPluginInjector } from '../utils/services';
-import { loadPluginsIntoContext } from './load-plugin';
 import { setupStore } from './setup-store';
 import { map, first } from 'rxjs/operators';
 import { createContext } from 'vm';
+import { PluginManager } from './plugin-manager';
 
 (async () => {
     const injector = createPluginInjector();
@@ -28,7 +28,7 @@ import { createContext } from 'vm';
     await setupStore(injector);
 
     const pluginContext = createContext({ exports: {} });
-    const plugins = await loadPluginsIntoContext(injector.get(IO_SERVICE_TOKEN), pluginContext);
+    await PluginManager.loadPluginsIntoContext(injector, pluginContext);
 
     ipcClient.sendDealerMessage({
         id: uuid(),
@@ -48,11 +48,12 @@ function setupShutdownListener(ipcClient: IPCClientInterface) {
         map(packet => packet.message),
         first(message => message.type === MessageType.BROADCAST_APP_SHUTDOWN)
     ).subscribe(() => {
-        // TODO: Implement teardown logic
-        const message: PluginProcessDedNotification = {
-            id: uuid(),
-            type: MessageType.NOTIFY_PLUGIN_PROCESS_DED
-        };
-        ipcClient.sendDealerMessage(message);
+        PluginManager.teardown().then(() => {
+            const message: PluginProcessDedNotification = {
+                id: uuid(),
+                type: MessageType.NOTIFY_PLUGIN_PROCESS_DED
+            };
+            ipcClient.sendDealerMessage(message);
+        });
     });
 }
