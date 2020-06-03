@@ -4,7 +4,9 @@ import { DetailedTime, Segment } from '../models/splits';
 import { asCleanNumber } from './converters';
 
 export function now() {
-    return new Date().getTime();
+    const [sec, nano] = process.hrtime();
+
+    return sec * 1000 + Math.round(nano / 1e6);
 }
 
 export function timeToTimestamp(time: Time) {
