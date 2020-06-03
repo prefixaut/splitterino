@@ -141,7 +141,7 @@ export class IPCClientService implements IPCClientInterface {
 
     public sendDealerMessage(message: Message, target?: string, quiet: boolean = false) {
         if (!quiet) {
-            Logger.debug({
+            Logger.trace({
                 msg: 'Sending IPC Message',
                 direction: 'OUTBOUND',
                 socket: 'DEALER',
@@ -188,7 +188,7 @@ export class IPCClientService implements IPCClientInterface {
     }
 
     public sendPushMessage(message: Message) {
-        Logger.debug({
+        Logger.trace({
             msg: 'Received IPC Message',
             direction: 'OUTBOUND',
             socket: 'PUSH',

@@ -29,7 +29,17 @@
         },
         "name": {
             "type": "string",
-            "description": "Plugin name"
+            "pattern": "^[a-zA-Z]+[0-9a-z-A-Z\\-_]$",
+            "examples": ["my-plugin", "aVeryCool1337Plugin"],
+            "description": "Plugin name (indentifier)"
+        },
+        "displayName": {
+            "type": "string",
+            "description": "The name that is being displayed for the Plugin"
+        },
+        "description": {
+            "type": "string",
+            "description": "The Description of the Plugin"
         },
         "components": {
             "type": "array",

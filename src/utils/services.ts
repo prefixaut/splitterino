@@ -1,6 +1,6 @@
 import { Injector } from 'lightweight-di';
 
-import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../common/constants';
+import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment, SPLITTERINO_VERSION_TOKEN, SPLITTERINO_VERSION } from '../common/constants';
 import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
@@ -63,6 +63,7 @@ export function createPluginInjector(): Injector {
         { provide: IPC_CLIENT_SERVICE_TOKEN, useClass: IPCClientService },
         { provide: IPC_SERVER_SERVICE_TOKEN, useValue: null },
         { provide: RUNTIME_ENVIRONMENT_TOKEN, useValue: RuntimeEnvironment.PLUGIN },
+        { provide: SPLITTERINO_VERSION_TOKEN, useValue: SPLITTERINO_VERSION },
         { provide: STORE_SERVICE_TOKEN, useClass: HandlerStoreService },
         { provide: TRANSFORMER_SERVICE_TOKEN, useClass: TransformerService },
         { provide: VALIDATOR_SERVICE_TOKEN, useClass: ValidatorService },

@@ -2,7 +2,7 @@ import { v4 as uuid } from 'uuid';
 import { MessageType, IPCClientInterface, PluginProcessDedNotification } from '../models/ipc';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Logger, LogLevel } from '../utils/logger';
-import { PLUGIN_CLIENT_ID } from '../utils/plugin';
+import { IPC_PLUGIN_CLIENT_NAME } from '../common/constants';
 import { createPluginInjector } from '../utils/services';
 import { setupStore } from './setup-store';
 import { map, first } from 'rxjs/operators';
@@ -15,7 +15,7 @@ import { PluginManager } from './plugin-manager';
     Logger.initialize(injector, LogLevel.DEBUG);
 
     const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-    const initResponse = await ipcClient.initialize({ name: PLUGIN_CLIENT_ID });
+    const initResponse = await ipcClient.initialize({ name: IPC_PLUGIN_CLIENT_NAME });
     // Update the Logger log-level from the registration
     if (initResponse) {
         // eslint-disable-next-line no-underscore-dangle

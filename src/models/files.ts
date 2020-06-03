@@ -14,8 +14,12 @@ export interface PluginMetaFile {
     author: string;
     /** Optional list of contributors for plugin */
     contributors?: string[];
-    /** Plugin name */
+    /** Plugin identification-name */
     name: string;
+    /** Plugin display-name */
+    displayName?: string;
+    /** Description of the Plugin */
+    decription?: string;
     /** Plugin semver */
     version: string;
     /** Semver comparison string */

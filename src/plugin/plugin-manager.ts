@@ -1,12 +1,23 @@
-import { IO_SERVICE_TOKEN, IOServiceInterface } from '../models/services';
-import { join } from 'path';
-import { Logger } from '../utils/logger';
-import { Context, Script, createContext } from 'vm';
-import { satisfies as semverSatisfies } from 'semver';
-import { Plugin } from '../models/plugins';
-import { Injector } from 'lightweight-di';
-import { PluginMetaFile } from '../models/files';
 import { DepGraph } from 'dependency-graph';
+import { Injector } from 'lightweight-di';
+import { join } from 'path';
+import { satisfies as semverSatisfies } from 'semver';
+import { Context, createContext, Script } from 'vm';
+
+import { PluginMetaFile } from '../models/files';
+import { Plugin } from '../models/plugins';
+import {
+    ACTION_SERVICE_TOKEN,
+    ELECTRON_SERVICE_TOKEN,
+    IO_SERVICE_TOKEN,
+    IOServiceInterface,
+    IPC_CLIENT_SERVICE_TOKEN,
+    STORE_SERVICE_TOKEN,
+    TRANSFORMER_SERVICE_TOKEN,
+    VALIDATOR_SERVICE_TOKEN,
+} from '../models/services';
+import { Logger } from '../utils/logger';
+import { createPluginInstanceInjector } from '../utils/plugin';
 
 interface LoadedPlugin {
     meta: PluginMetaFile;
@@ -199,7 +210,16 @@ export class PluginManager {
             return;
         }
 
-        const context = createContext({ exports: {} });
+        const context = createContext({
+            exports: {},
+            IPC_CLIENT_SERVICE_TOKEN,
+            ACTION_SERVICE_TOKEN,
+            TRANSFORMER_SERVICE_TOKEN,
+            ELECTRON_SERVICE_TOKEN,
+            STORE_SERVICE_TOKEN,
+            VALIDATOR_SERVICE_TOKEN,
+            IO_SERVICE_TOKEN,
+        });
 
         for (const node of order) {
             const meta = this.depGraph.getNodeData(node);
@@ -270,7 +290,9 @@ export class PluginManager {
 
                     const plugin: Plugin = new context.Plugin();
                     // TODO: Create custom scoped injector
-                    if (await plugin.initialize(this.injector)) {
+                    const pluginInjector = createPluginInstanceInjector(this.injector, metaFile.name);
+
+                    if (await plugin.initialize(pluginInjector)) {
                         this.loadedPlugins.push({
                             meta: metaFile,
                             instance: plugin
@@ -330,7 +352,7 @@ export class PluginManager {
         Logger.debug(`Trying to destroy plugin "${plugin.meta.name}"`);
 
         try {
-            if(!await plugin.instance.destroy()) {
+            if (!await plugin.instance.destroy()) {
                 Logger.error({
                     msg: 'Plugin method "destroy" returned false',
                     pluginName: plugin.meta.name
@@ -338,9 +360,9 @@ export class PluginManager {
             }
         } catch (e) {
             Logger.error({
-               msg: 'Could not gracefully destroy plugin instance',
-               pluginName: plugin.meta.name,
-               error: e.message
+                msg: 'Could not gracefully destroy plugin instance',
+                pluginName: plugin.meta.name,
+                error: e.message
             });
         }
     }

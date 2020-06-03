@@ -15,6 +15,7 @@ import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Commit, DiffHandler, Module, StoreState } from '../models/store';
 import { IPCClientService } from './ipc-client.service';
 import { ReceiverStoreService } from './receiver-store.service';
+import { Logger } from '../utils/logger';
 
 @Injectable
 export class HandlerStoreService<S extends StoreState> extends ReceiverStoreService<S> {
@@ -74,6 +75,11 @@ export class HandlerStoreService<S extends StoreState> extends ReceiverStoreServ
     }
 
     public async registerModule<T>(namespace: string, name: string, module: Module<T>): Promise<boolean> {
+        Logger.info({
+            msg: 'Registering in handler-store a new module',
+            namespace,
+            name
+        });
         if (this.modules[namespace] == null) {
             throw new Error(`This client has not been registered the namespace "${namespace}" yet!`);
         }

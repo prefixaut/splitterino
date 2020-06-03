@@ -168,7 +168,7 @@ export class IPCServerService implements IPCServerInterface {
     }
 
     public publishMessage(message: Message, topic: string = ''): Promise<boolean> {
-        Logger.debug({
+        Logger.trace({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUND',
             socket: 'PUBLISHER',
@@ -181,7 +181,7 @@ export class IPCServerService implements IPCServerInterface {
     }
 
     public sendRouterMessage(identity: Buffer, targetClient: string, message: Message): Promise<boolean> {
-        Logger.debug({
+        Logger.trace({
             msg: 'Sending IPC Message',
             direction: 'OUTBOUND',
             socket: 'ROUTER',
@@ -245,7 +245,7 @@ export class IPCServerService implements IPCServerInterface {
 
     private handleIncomingRouterMessage(identity: Buffer, receivedFrom: string, message: Message) {
         if (message.type !== MessageType.REQUEST_LOG_ON_SERVER) {
-            Logger.debug({
+            Logger.trace({
                 msg: 'Received IPC Message',
                 direction: 'INBOUND',
                 socket: 'ROUTER',
@@ -276,7 +276,7 @@ export class IPCServerService implements IPCServerInterface {
     }
 
     private handleIncomingPullMessage(message: Message) {
-        Logger.debug({
+        Logger.trace({
             msg: 'Received IPC Message',
             direction: 'INBOUND',
             socket: 'PULL',
