@@ -81,7 +81,19 @@ export default class GameInfoEditorComponent extends Vue {
     ];
 
     created() {
-        this.allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes());
+        this.allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes())
+            .sort((a, b) => {
+                const aLang = a.name;
+                const bLang = b.name;
+
+                if (aLang < bLang) {
+                    return -1;
+                } else if (aLang > bLang) {
+                    return 1;
+                }
+
+                return 0;
+            });
     }
 
     public updateName(name: string) {
