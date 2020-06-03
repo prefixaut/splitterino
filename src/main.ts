@@ -226,7 +226,7 @@ process.on('unhandledRejection', (reason, promise) => {
             store.commit(HANDLER_SET_BINDINGS, appSettings.keybindings);
         }
 
-        createMainWindow();
+        mainWindow = createMainWindow();
     });
 
     let sentShutdown = false;
