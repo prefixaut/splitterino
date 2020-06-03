@@ -80,15 +80,49 @@ export class ValidatorService implements ValidatorServiceInterface {
 
         // Check if field is valid semver
         if (validSemver(data.version) == null) {
-            Logger.warn('Field "version" in plugin meta file is not a valid semver string');
+            Logger.warn({
+                msg: 'Field "version" in plugin meta file is not a valid semver string',
+                pluginName: data.name,
+                invalidVersionString: data.version
+            });
 
             return false;
         }
 
         if (validSemverRange(data.compatibleVersion) == null) {
-            Logger.warn('Field "compatibleVersion" in plugin meta file is not a valid semver range');
+            Logger.warn({
+                msg: 'Field "compatibleVersion" in plugin meta file is not a valid semver range',
+                pluginName: data.name,
+                invalidVersionString: data.compatibleVersion
+            });
 
             return false;
+        }
+
+        for (const [depName, depVersion] of Object.entries(data.dependencies ?? {})) {
+            if (validSemverRange(depVersion) == null) {
+                Logger.warn({
+                    msg: 'Version range in "dependency" field in plugin meta file not valid',
+                    pluginName: data.name,
+                    depName,
+                    invalidVersionString: depVersion
+                });
+
+                return false;
+            }
+        }
+
+        for (const [depName, depVersion] of Object.entries(data.optionalDependencies ?? {})) {
+            if (validSemverRange(depVersion) == null) {
+                Logger.warn({
+                    msg: 'Version range in "optionalDependencies" field in plugin meta file not valid',
+                    pluginName: data.name,
+                    depName,
+                    invalidVersionString: depVersion
+                });
+
+                return false;
+            }
         }
 
         return true;
