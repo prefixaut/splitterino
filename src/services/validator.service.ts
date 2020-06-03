@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import { Injectable } from 'lightweight-di';
+import { valid as validSemver, validRange as validSemverRange } from 'semver';
 
 import { ApplicationSettings } from '../models/application-settings';
 import { PluginMetaFile, TemplateMetaFile } from '../models/files';
@@ -73,6 +74,23 @@ export class ValidatorService implements ValidatorServiceInterface {
     }
 
     public isPluginMetaFile(data: any): data is PluginMetaFile {
-        return this.validate<PluginMetaFile>('plugin-meta.schema.json', data);
+        if (!this.validate<PluginMetaFile>('plugin-meta.schema.json', data)) {
+            return false;
+        }
+
+        // Check if field is valid semver
+        if (validSemver(data.version) == null) {
+            Logger.warn('Field "version" in plugin meta file is not a valid semver string');
+
+            return false;
+        }
+
+        if (validSemverRange(data.compatibleVersion) == null) {
+            Logger.warn('Field "compatibleVersion" in plugin meta file is not a valid semver range');
+
+            return false;
+        }
+
+        return true;
     }
 }
