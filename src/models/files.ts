@@ -2,6 +2,10 @@ import { Splits } from './splits';
 
 export const MOST_RECENT_SPLITS_VERSION = '0.1';
 
+export interface Dependencies {
+    [index: string]: string;
+}
+
 /**
  * Contains meta information about a plugin e.g. version, author, ...
  */
@@ -26,16 +30,12 @@ export interface PluginMetaFile {
      *
      * Tries to load this plugin after dependencies were loaded.
      */
-    dependencies?: {
-        [index: string]: string;
-    };
+    dependencies?: Dependencies;
     /** Optional dependencies for this plugin.
      *
      * Tries to load this plugin after dependencies were loaded.
      */
-    optionalDependencies?: {
-        [index: string]: string;
-    };
+    optionalDependencies?: Dependencies;
 
     folderName?: string;
 }

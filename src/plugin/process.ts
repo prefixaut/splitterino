@@ -6,7 +6,6 @@ import { PLUGIN_CLIENT_ID } from '../utils/plugin';
 import { createPluginInjector } from '../utils/services';
 import { setupStore } from './setup-store';
 import { map, first } from 'rxjs/operators';
-import { createContext } from 'vm';
 import { PluginManager } from './plugin-manager';
 
 (async () => {
@@ -27,8 +26,7 @@ import { PluginManager } from './plugin-manager';
 
     await setupStore(injector);
 
-    const pluginContext = createContext({ exports: {} });
-    await PluginManager.loadPluginsIntoContext(injector, pluginContext);
+    await PluginManager.loadPluginsIntoContext(injector);
 
     ipcClient.sendDealerMessage({
         id: uuid(),
