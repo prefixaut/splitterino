@@ -1,3 +1,6 @@
+const EnvironmentPlugin = require('webpack').EnvironmentPlugin;
+const packageJson = require('./package.json');
+
 module.exports = {
     runtimeCompiler: true,
     chainWebpack: config => {
@@ -6,21 +9,28 @@ module.exports = {
             .clear()
             .add('./src/app/renderer.ts')
             .end();
+
+        config.plugin('environment')
+            .use(
+                EnvironmentPlugin,
+                [{ 'SPL_VERSION': packageJson.version }]
+            )
     },
     pluginOptions: {
         electronBuilder: {
             mainProcessFile: 'src/main.ts',
             nodeIntegration: true,
-            builderOptions: {
-                fileAssociations: [
-                    {
-                        ext: 'splits',
-                        description: 'Splits file',
-                    },
-                ],
-                appId: 'moe.prefixaut.splitterino',
-                productName: 'Splitterino',
-            },
-        },
-    },
+            chainWebpackMainProcess: config => {
+                config.entry('plugin-process')
+                    .add('./src/plugin/process.ts')
+                    .end();
+
+                config.plugin('environment')
+                    .use(
+                        EnvironmentPlugin,
+                        [{ 'SPL_VERSION': packageJson.version }]
+                    )
+            }
+        }
+    }
 };

@@ -1,16 +1,13 @@
-import { InjectionToken } from 'lightweight-di';
-import { CommitOptions, DispatchOptions, Store } from 'vuex';
+import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
+import { Commit, StoreState } from '../models/store';
 import { LogLevel } from '../utils/logger';
 import { RootState } from './states/root.state';
-import { Observable } from 'rxjs';
-
-export const IPC_CLIENT_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
 
 export interface IPCClientInterface {
     isInitialized(): boolean;
-    initialize(store: Store<RootState>, clientInfo: ClientInformation): Promise<false | RegistationResult>;
+    initialize(clientInfo: ClientInformation): Promise<false | RegistationResult>;
     close(): Promise<void>;
     sendDealerMessage(message: Message, target?: string, quiet?: boolean): boolean;
     sendDealerRequestAwaitResponse(request: Request, responseType: MessageType, timeoutMs: number): Promise<Response>;
@@ -18,9 +15,17 @@ export interface IPCClientInterface {
     listenToSubscriberSocket(): Observable<IPCPacket>;
     listenToDealerSocket(): Observable<IPCPacket>;
     getStoreState(): Promise<RootState>;
-    dispatchAction(actionName: string, payload?: any, options?: DispatchOptions): Promise<any>;
     listenForLocalMessage<T>(messageId: string): Observable<T>;
     sendLocalMessage(messageId: string, data?: any): void;
+}
+
+export interface IPCServerInterface {
+    isInitialized(): boolean;
+    initialize(logLevel: LogLevel): Promise<void>;
+    close(): Promise<void>;
+    listenToRouterSocket(): Observable<IPCRouterPacket>;
+    publishMessage(message: Message, topic?: string): Promise<boolean>;
+    sendRouterMessage(identity: Buffer, targetClient: string, message: Message): Promise<boolean>;
 }
 
 export interface ClientInformation {
@@ -48,22 +53,41 @@ export interface SubscriberTable {
 export interface DealerTable {
     [message: string]: (receivedFrom: string, message: Message, respond?: boolean) => any;
 }
+
 export enum MessageType {
+    // IPC Setup
     REQUEST_REGISTER_CLIENT = 'REQUEST_REGISTER_CLIENT',
     RESPONSE_REGISTER_CLIENT = 'RESPONSE_REGISTER_CLIENT',
     REQUEST_UNREGISTER_CLIENT = 'REQUEST_UNREGISTER_CLIENT',
     RESPONSE_UNREGISTER_CLIENT = 'RESPONSE_UNREGISTER_CLIENT',
+
+    // Store related
     REQUEST_STORE_STATE = 'REQUEST_STORE_STATE',
     RESPONSE_STORE_STATE = 'RESPONSE_STORE_STATE',
-    REQUEST_DISPATCH_ACTION = 'REQUEST_DISPATCH_ACTION',
-    RESPONSE_DISPATCH_ACTION = 'RESPONSE_DISPATCH_ACTION',
-    REQUEST_DISPATCH_CLIENT_ACTION = 'REQUEST_DISPATCH_CLIENT_ACTION',
-    RESPONSE_DISPATCH_CLIENT_ACTION = 'RESPONSE_DISPATCH_CLIENT_ACTION',
-    REQUEST_COMMIT_MUTATION = 'REQUEST_COMMIT_MUTATION',
+    REQUEST_STORE_COMMIT = 'REQUEST_STORE_COMMIT',
+    RESPONSE_STORE_COMMIT = 'RESPONSE_STORE_COMMIT',
+    REQUEST_STORE_CREATE_DIFF = 'REQUEST_STORE_CREATE_DIFF',
+    RESPONSE_STORE_CREATE_DIFF = 'RESPONSE_STORE_CREATE_DIFF',
+    BROADCAST_STORE_APPLY_DIFF = 'BROADCAST_STORE_APPLY_DIFF',
+    REQUEST_STORE_REGISTER_NAMESPACE = 'REQUEST_STORE_REGISTER_NAMESPACE',
+    RESPONSE_STORE_REGISTER_NAMESPACE = 'RESPONSE_STORE_REGISTER_NAMESPACE',
+    REQUEST_STORE_UNREGISTER_NAMESPACE = 'REQUEST_STORE_UNREGISTER_NAMESPACE',
+    RESPONSE_STORE_UNREGISTER_NAMESPACE = 'RESPONSE_STORE_UNREGISTER_NAMESPACE',
+    REQUEST_STORE_REGISTER_MODULE = 'REQUEST_STORE_REGISTER_MODULE',
+    RESPONSE_STORE_REGISTER_MODULE = 'RESPONSE_STORE_REGISTER_MODULE',
+    REQUEST_STORE_UNREGISTER_MODULE = 'REQUEST_STORE_UNREGISTER_MODULE',
+    RESPONSE_STORE_UNREGISTER_MODULE = 'RESPONSE_STORE_UNREGISTER_MODULE',
+
+    // General purpose
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
     BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
     REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
+    BROADCAST_APP_SHUTDOWN = 'BROADCAST_APP_SHUTDOWN',
+
+    // Plugin API
+    NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
+    NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
 }
 
 export interface IPCPacket {
@@ -103,9 +127,12 @@ export interface Request extends Message {
     | MessageType.REQUEST_REGISTER_CLIENT
     | MessageType.REQUEST_UNREGISTER_CLIENT
     | MessageType.REQUEST_STORE_STATE
-    | MessageType.REQUEST_DISPATCH_ACTION
-    | MessageType.REQUEST_DISPATCH_CLIENT_ACTION
-    | MessageType.REQUEST_COMMIT_MUTATION
+    | MessageType.REQUEST_STORE_COMMIT
+    | MessageType.REQUEST_STORE_CREATE_DIFF
+    | MessageType.REQUEST_STORE_REGISTER_NAMESPACE
+    | MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE
+    | MessageType.REQUEST_STORE_REGISTER_MODULE
+    | MessageType.REQUEST_STORE_UNREGISTER_MODULE
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
     ;
@@ -114,6 +141,15 @@ export interface Request extends Message {
 export interface Broadcast extends Message {
     type:
     | MessageType.BROADCAST_GLOBAL_EVENT
+    | MessageType.BROADCAST_APP_SHUTDOWN
+    | MessageType.BROADCAST_STORE_APPLY_DIFF
+    ;
+}
+
+export interface Notification extends Message {
+    type:
+    | MessageType.NOTIFY_PLUGIN_PROCESS_READY
+    | MessageType.NOTIFY_PLUGIN_PROCESS_DED
     ;
 }
 
@@ -125,8 +161,12 @@ export interface Response extends Message {
     | MessageType.RESPONSE_REGISTER_CLIENT
     | MessageType.RESPONSE_UNREGISTER_CLIENT
     | MessageType.RESPONSE_STORE_STATE
-    | MessageType.RESPONSE_DISPATCH_ACTION
-    | MessageType.RESPONSE_DISPATCH_CLIENT_ACTION
+    | MessageType.RESPONSE_STORE_COMMIT
+    | MessageType.RESPONSE_STORE_CREATE_DIFF
+    | MessageType.RESPONSE_STORE_REGISTER_NAMESPACE
+    | MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE
+    | MessageType.RESPONSE_STORE_REGISTER_MODULE
+    | MessageType.RESPONSE_STORE_UNREGISTER_MODULE
     | MessageType.RESPONSE_INVALID_REQUEST
     ;
     /**
@@ -141,6 +181,14 @@ export interface Response extends Message {
      * The Error why the request couldn't be processed.
      */
     error?: ResponseError;
+}
+
+/**
+ * Internal message structure for local message bus in single process
+ */
+export interface LocalMessage {
+    messageId: string;
+    content: any;
 }
 
 /**
@@ -209,103 +257,160 @@ export interface StoreStateRequest extends Request {
 /**
  * Response which contains the most recent state of the store.
  */
-export interface StoreStateResponse extends Response {
+export interface StoreStateResponse<S extends StoreState> extends Response {
     type: MessageType.RESPONSE_STORE_STATE;
     /**
      * The most recent state of the store.
      */
-    state: RootState;
+    state: S;
+    /**
+     * The monoton-id of the current state
+     */
+    monotonId: number;
 }
 
 /**
- * Request to apply an action on the proper process.
+ * Request to perform an commit in the store
  */
-export interface DispatchActionReqeust extends Request {
-    type: MessageType.REQUEST_DISPATCH_ACTION;
+export interface StoreCommitRequest extends Request {
+    type: MessageType.REQUEST_STORE_COMMIT;
     /**
-     * The action name that should be applied.
+     * The Commit to execute
      */
-    action: string;
-    /**
-     * Payload for the action.
-     */
-    payload?: any;
-    /**
-     * Options for dispatching the action.
-     */
-    options?: DispatchOptions;
+    commit: Commit;
 }
 
 /**
- * Response if the Server successfully applied the Action,
- * and the return value of the action.
+ * Response to return the result of the commit
  */
-export interface DispatchActionResponse extends Response {
-    type: MessageType.RESPONSE_DISPATCH_ACTION;
-    /**
-     * The value returned from the action after completion.
-     */
-    returnValue?: any;
+export interface StoreCommitResponse extends Response {
+    type: MessageType.RESPONSE_STORE_COMMIT;
 }
 
 /**
- * Request that an Action should be handled by a client in it's context.
+ * Request to create a diff from a commit
  */
-export interface DispatchClientActionRequest extends Request {
-    type: MessageType.REQUEST_DISPATCH_CLIENT_ACTION;
+export interface StoreCreateDiffRequest extends Request {
+    type: MessageType.REQUEST_STORE_CREATE_DIFF;
     /**
-     * Which client should handle this dispatch action in it's context.
+     * The commit that the client should create a diff for
      */
-    clientId: string;
-    /**
-     * The action name that should be applied.
-     */
-    action: string;
-    /**
-     * Payload for the action.
-     */
-    payload?: any;
-    /**
-     * Options for dispatching the action.
-     */
-    options?: DispatchOptions;
+    commit: Commit;
 }
 
 /**
- * Response if the Server successfully applied the Action,
- * and the return value of the action.
- * Additionally also contains all commits the action attempted to perform.
+ * Response with the created diff
  */
-export interface DispatchClientActionResponse extends Response {
-    type: MessageType.RESPONSE_DISPATCH_CLIENT_ACTION;
+export interface StoreCreateDiffResponse extends Response {
+    type: MessageType.RESPONSE_STORE_CREATE_DIFF;
     /**
-     * The value returned from the action after completion.
+     * The created diff
      */
-    returnValue?: any;
-    /**
-     * The commits that the action attempted to perform.
-     * These commits may not be handled by the client, but by the server.
-     */
-    commits?: { name: string; payload?: any; options?: CommitOptions }[];
+    diff?: any;
 }
 
 /**
- * Request to apply a mutation to the store.
+ * A broadcast to all clients to apply the specified diff to the store
  */
-export interface CommitMutationRequest extends Request {
-    type: MessageType.REQUEST_COMMIT_MUTATION;
+export interface StoreApplyDiffBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_STORE_APPLY_DIFF;
     /**
-     * The mutation that should be applied.
+     * The diff that needs to be applied
      */
-    mutation: string;
+    diff: any;
     /**
-     * Payload for the mutation.
+     * The monoton id to keep the commits in order
      */
-    payload?: any;
+    monotonId: number;
     /**
-     * Options for commiting the mutation.
+     * The commit which caused the state update.
+     * Is null when it's registering/unregistering modules and namespaces
      */
-    options?: CommitOptions;
+    commit?: Commit;
+}
+
+/**
+ * Request to register a namespace to the client
+ */
+export interface StoreRegisterNamespaceRequest extends Request {
+    type: MessageType.REQUEST_STORE_REGISTER_NAMESPACE;
+    /**
+     * The namespace the client should handle
+     */
+    namespace: string;
+}
+
+/**
+ * Response for registering a namespace as a client
+ */
+export interface StoreRegisterNamespaceResponse extends Response {
+    type: MessageType.RESPONSE_STORE_REGISTER_NAMESPACE;
+}
+
+/**
+ * Request to unregister the client from the namespace
+ */
+export interface StoreUnregisterNamespaceRequest extends Request {
+    type: MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE;
+    /**
+     * The namespace to unregister from the client
+     */
+    namespace: string;
+}
+
+/**
+ * Response for unregistering a client from the namespace
+ */
+export interface StoreUnregisterNamespaceResponse extends Response {
+    type: MessageType.RESPONSE_STORE_UNREGISTER_NAMESPACE;
+}
+
+/**
+ * Request to register a module on the server
+ */
+export interface StoreRegisterModuleRequest extends Request {
+    type: MessageType.REQUEST_STORE_REGISTER_MODULE;
+    /**
+     * To which namespace the module should get registered to
+     */
+    namespace: string;
+    /**
+     * The module name the client wants to register
+     */
+    module: string;
+    /**
+     * The initial state of the module
+     */
+    state: any;
+}
+
+/**
+ * Response to register a module on the server
+ */
+export interface StoreRegisterMouleResponse extends Response {
+    type: MessageType.RESPONSE_STORE_REGISTER_MODULE;
+}
+
+/**
+ * Request to unregister a module on the server
+ */
+export interface StoreUnregisterModuleRequest extends Request {
+    type: MessageType.REQUEST_STORE_UNREGISTER_MODULE;
+    /**
+     * To which namespace the module should get unregistered from
+     */
+    namespace: string;
+    /**
+     * The module name the client wants to unregister
+     */
+    module: string;
+}
+
+/**
+ * Response to unregister a module on the server
+ */
+export interface StoreUnregisterModuleResponse extends Response {
+    type: MessageType.RESPONSE_STORE_UNREGISTER_MODULE;
 }
 
 /**
@@ -354,9 +459,22 @@ export interface LogOnServerRequest extends Request {
 }
 
 /**
- * Internal message structure for local message bus in single process
+ * Notify main process that plugin process is ready
  */
-export interface LocalMessage {
-    messageId: string;
-    content: any;
+export interface PluginProcessReadyNotification extends Notification {
+    type: MessageType.NOTIFY_PLUGIN_PROCESS_READY;
+}
+
+/**
+ * Notify main process that plugin process is ded
+ */
+export interface PluginProcessDedNotification extends Notification {
+    type: MessageType.NOTIFY_PLUGIN_PROCESS_DED;
+}
+
+/**
+ * Broadcast a shutdown event
+ */
+export interface AppShutdownBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_APP_SHUTDOWN;
 }

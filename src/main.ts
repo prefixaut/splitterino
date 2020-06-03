@@ -2,26 +2,36 @@
 import { app, BrowserWindow, protocol } from 'electron';
 import { join } from 'path';
 import * as pino from 'pino';
+import { first, map, timeout } from 'rxjs/operators';
 import { format as formatUrl } from 'url';
-import uuid from 'uuid';
-import Vue from 'vue';
+import uuid from 'uuid/v4';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
-import Vuex from 'vuex';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
-import { IPCServer } from './common/ipc-server';
-import { CommitMutationRequest, MessageType } from './models/ipc';
+import { AppShutdownBroadcast, MessageType } from './models/ipc';
+import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/states/root.state';
-import { IO_SERVICE_TOKEN } from './services/io.service';
-import { getStoreConfig } from './store';
-import { ACTION_SET_BINDINGS } from './store/modules/keybindings.module';
-import { getKeybindingsStorePlugin } from './store/plugins/keybindings';
+import { Module } from './models/store';
+import { ServerStoreService } from './services/server-store.service';
+import { registerKeybindingsListener } from './store/listeners/keybindings';
+import { getContextMenuStoreModule } from './store/modules/context-menu.module';
+import { getGameInfoStoreModule } from './store/modules/game-info.module';
+import { getKeybindingsStoreModule, HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
+import { getMetaStoreModule } from './store/modules/meta.module';
+import { getSettingsStoreModule } from './store/modules/settings.module';
+import { getSplitsStoreModule } from './store/modules/splits.module';
+import { getTimerStoreModule } from './store/modules/timer.module';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
-import { createInjector } from './utils/services';
+import { forkPluginProcess } from './utils/plugin';
+import { createBackgroundInjector } from './utils/services';
 
 process.on('uncaughtException', (error: Error) => {
+    // TODO: Fix Logger not logging errors at all (empty string result)
+    // eslint-disable-next-line no-console
+    console.log(error);
+
     Logger.fatal({
         msg: 'Uncaught Exception in background process!',
         error: error,
@@ -79,63 +89,57 @@ process.on('unhandledRejection', (reason, promise) => {
     let mainWindow: BrowserWindow;
 
     /** Instance of an injector with resolved services */
-    const injector = createInjector();
+    const injector = createBackgroundInjector();
 
     /** Parsed command line arguments */
     const args = parseArguments();
 
     // Initialize the logger
-    Logger.initialize(injector, args.logLevel);
+    Logger.initialize(injector, args['log-level']);
 
     // Setting up a log-handler which logs the messages to a file
     const io = injector.get(IO_SERVICE_TOKEN);
     const logFile = join(io.getAssetDirectory(), 'application.log');
-    Logger.registerHandler(pino.destination(logFile), { level: args.logLevel });
+    Logger.registerHandler(pino.destination(logFile), { level: args['log-level'] });
 
-    // Create the IPC Server
-    const ipcServer = new IPCServer();
-
-    // Main instance of the Vuex-Store
-    Vue.use(Vuex);
-    const store = new Vuex.Store<RootState>({
-        ...getStoreConfig(injector),
-        plugins: [
-            storeInstance => {
-                storeInstance.subscribe(mutation => {
-                    try {
-                        const commitRequest: CommitMutationRequest = {
-                            id: uuid(),
-                            type: MessageType.REQUEST_COMMIT_MUTATION,
-                            mutation: mutation.type,
-                            payload: mutation.payload,
-                        };
-                        ipcServer.publishMessage(commitRequest);
-                    } catch (error) {
-                        Logger.error({
-                            msg: 'Error while sending mutation to other processes',
-                            mutation,
-                            error,
-                        });
-                    }
-                });
-            },
-            getKeybindingsStorePlugin(injector),
-        ]
-    });
+    // Get the IPC Server
+    const ipcServer = injector.get(IPC_SERVER_SERVICE_TOKEN);
 
     // Initialize the IPC Server with the store
-    await ipcServer.initialize({
-        store: store,
-        logLevel: args.logLevel || LogLevel.INFO
-    });
+    await ipcServer.initialize(args['log-level'] || LogLevel.INFO);
+
+    // Initialize the Store and it's modules
+    const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
+    store.setupIpcHooks();
+    const coreStoreModules: { [name: string]: Module<any> } = {
+        contextMenu: getContextMenuStoreModule(),
+        gameInfo: getGameInfoStoreModule(),
+        keybindings: getKeybindingsStoreModule(),
+        settings: getSettingsStoreModule(injector),
+        splits: getSplitsStoreModule(injector),
+        timer: getTimerStoreModule(),
+        meta: getMetaStoreModule(),
+    };
+    for (const moduleName of Object.keys(coreStoreModules)) {
+        store.registerModule('splitterino', moduleName, coreStoreModules[moduleName]);
+    }
 
     // load application settings
-    const appSettings = await io.loadApplicationSettingsFromFile(store, args.splitsFile);
+    const appSettings = await io.loadApplicationSettingsFromFile(args.splitsFile);
     // load user settings
-    await io.loadSettingsFromFileToStore(store);
+    await io.loadSettingsFromFileToStore();
 
     // Setup the Keybiding Functions
-    registerDefaultKeybindingFunctions();
+    registerDefaultKeybindingFunctions(injector);
+    registerKeybindingsListener(store);
+
+    // Start plugin child process
+    let pluginProcess = await forkPluginProcess(ipcServer);
+    if (pluginProcess == null) {
+        Logger.fatal('Could not start plugin process');
+    } else {
+        Logger.debug('Started plugin process');
+    }
 
     function createMainWindow() {
         const window = new BrowserWindow(appSettings.windowOptions);
@@ -160,7 +164,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
         // save app settings before main window close
         window.on('close', () => {
-            io.saveApplicationSettingsToFile(mainWindow, store);
+            io.saveApplicationSettingsToFile(mainWindow);
         });
 
         // free window variable after close to avoid usage afterwards
@@ -210,19 +214,58 @@ process.on('unhandledRejection', (reason, promise) => {
     });
 
     // create main BrowserWindow when electron is ready
-    app.on('ready', () => {
+    app.whenReady().then(async () => {
+        if (isDevelopment() && !process.env.IS_TEST) {
+            // Install Vue Devtools
+            await installVueDevtools();
+        }
+
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
-            store.dispatch(ACTION_SET_BINDINGS, appSettings.keybindings);
+            store.commit(HANDLER_SET_BINDINGS, appSettings.keybindings);
         }
 
-        createMainWindow();
+        mainWindow = createMainWindow();
+    });
+
+    let sentShutdown = false;
+    app.on('before-quit', event => {
+        // TODO: Check if timer is running
+        if (pluginProcess != null) {
+            Logger.debug('Trying to gracefully shut down plugin process');
+
+            event.preventDefault();
+            ipcServer.listenToRouterSocket().pipe(
+                map(packet => packet.message),
+                first(message => message.type === MessageType.NOTIFY_PLUGIN_PROCESS_DED),
+                timeout(5000)
+            ).subscribe(() => {
+                pluginProcess.kill('SIGTERM');
+                pluginProcess = null;
+                Logger.debug('Plugin process shut down gracefully');
+                app.quit();
+            }, () => {
+                pluginProcess.kill('SIGKILL');
+                pluginProcess = null;
+                Logger.error('Plugin process could not be shut down');
+                app.quit();
+            });
+        }
+
+        if (!sentShutdown) {
+            const message: AppShutdownBroadcast = {
+                id: uuid(),
+                type: MessageType.BROADCAST_APP_SHUTDOWN
+            };
+            ipcServer.publishMessage(message);
+            sentShutdown = true;
+        }
     });
 
     app.on('quit', (event, exitCode) => {
         ipcServer.close();
-        Logger.info({ msg: 'App will quit!', event, exitCode });
+        Logger.info({ msg: 'App quit!', exitCode });
     });
 
     // Exit cleanly on request from parent process in development mode.
@@ -240,6 +283,9 @@ process.on('unhandledRejection', (reason, promise) => {
         });
     }
 })().catch(err => {
+    // TODO: Fix Logger not logging errors at all (empty string result)
+    // eslint-disable-next-line no-console
+    console.log(err);
     Logger.fatal({
         msg: 'Unknown Error in the main thread!',
         error: err,

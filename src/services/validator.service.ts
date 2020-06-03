@@ -1,25 +1,25 @@
 import Ajv from 'ajv';
-import { Injectable, InjectionToken } from 'lightweight-di';
+import { Injectable } from 'lightweight-di';
+import { valid as validSemver, validRange as validSemverRange } from 'semver';
 
 import { ApplicationSettings } from '../models/application-settings';
-import { Segment } from '../models/segment';
-import { Splits } from '../models/splits';
-import { TemplateMetaFile } from '../models/template-files';
+import { PluginMetaFile, TemplateMetaFile } from '../models/files';
+import { ValidatorServiceInterface } from '../models/services';
+import { Segment, Splits } from '../models/splits';
 import ApplicationSettingsSchema from '../schemas/application-settings.schema.json';
 import DetailedTimeSchema from '../schemas/detailed-time.schema.json';
 import GameInfoSchema from '../schemas/game-info.schema.json';
 import KeybindingSchema from '../schemas/keybinding.schema.json';
 import MetaSchema from '../schemas/meta.schema.json';
+import PluginMetaSchema from '../schemas/plugin-meta.schema.json';
 import SegmentTimeSchema from '../schemas/segment-time.schema.json';
 import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import { Logger } from '../utils/logger';
 
-export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorService>('validator');
-
 @Injectable
-export class ValidatorService {
+export class ValidatorService implements ValidatorServiceInterface {
     private readonly ajv = new Ajv();
 
     constructor() {
@@ -36,6 +36,7 @@ export class ValidatorService {
         this.ajv.addSchema(ApplicationSettingsSchema, 'application-settings.schema.json');
         this.ajv.addSchema(KeybindingSchema, 'keybinding.schema.json');
         this.ajv.addSchema(MetaSchema, 'meta.schema.json');
+        this.ajv.addSchema(PluginMetaSchema, 'plugin-meta.schema.json');
     }
 
     /**
@@ -70,5 +71,60 @@ export class ValidatorService {
 
     public isTemplateMetaFile(data: any): data is TemplateMetaFile {
         return this.validate<TemplateMetaFile>('meta.schema.json', data);
+    }
+
+    public isPluginMetaFile(data: any): data is PluginMetaFile {
+        if (!this.validate<PluginMetaFile>('plugin-meta.schema.json', data)) {
+            return false;
+        }
+
+        // Check if field is valid semver
+        if (validSemver(data.version) == null) {
+            Logger.warn({
+                msg: 'Field "version" in plugin meta file is not a valid semver string',
+                pluginName: data.name,
+                invalidVersionString: data.version
+            });
+
+            return false;
+        }
+
+        if (validSemverRange(data.compatibleVersion) == null) {
+            Logger.warn({
+                msg: 'Field "compatibleVersion" in plugin meta file is not a valid semver range',
+                pluginName: data.name,
+                invalidVersionString: data.compatibleVersion
+            });
+
+            return false;
+        }
+
+        for (const [depName, depVersion] of Object.entries(data.dependencies ?? {})) {
+            if (validSemverRange(depVersion) == null) {
+                Logger.warn({
+                    msg: 'Version range in "dependency" field in plugin meta file not valid',
+                    pluginName: data.name,
+                    depName,
+                    invalidVersionString: depVersion
+                });
+
+                return false;
+            }
+        }
+
+        for (const [depName, depVersion] of Object.entries(data.optionalDependencies ?? {})) {
+            if (validSemverRange(depVersion) == null) {
+                Logger.warn({
+                    msg: 'Version range in "optionalDependencies" field in plugin meta file not valid',
+                    pluginName: data.name,
+                    depName,
+                    invalidVersionString: depVersion
+                });
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }

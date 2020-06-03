@@ -1,4 +1,4 @@
-import { Segment } from '../models/segment';
+import { Segment } from '../models/splits';
 import { getFinalTime } from './time';
 
 export function convertToBoolean(
@@ -46,7 +46,7 @@ export function convertToNumber(
 }
 
 export function asCleanNumber(value: number, cleanValue: number = 0) {
-    return (isNaN(value) || !isFinite(value)) ? cleanValue : value;
+    return (typeof value !== 'number' || isNaN(value) || !isFinite(value)) ? cleanValue : value;
 }
 
 export function asSaveableSegment(segment: Segment): any {

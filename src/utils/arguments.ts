@@ -24,7 +24,7 @@ export function parseArguments(): Arguments {
  * Configures yargs to parse arguments
  */
 function setupArguments(): Arguments & { _: string[]; $0: string } {
-    return options('logLevel', {
+    return options('log-level', {
         default: isDevelopment() ? LogLevel.DEBUG : LogLevel.INFO,
         describe: 'sets level for logger'
     }).parse(process.argv);

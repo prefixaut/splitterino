@@ -7,13 +7,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import AevumFormatMixin from '../mixins/aevum-format.mixin.vue';
-import { Segment, TimingMethod } from '../../models/segment';
+import { Segment, TimingMethod } from '../../models/splits';
+import { State } from '../../utils/store';
 import { getFinalTime } from '../../utils/time';
-
-const splits = namespace('splitterino/splits');
 
 @Component({
     name: 'spl-summary-of-best',
@@ -23,10 +21,10 @@ export default class SummaryOfBestComponent extends Vue {
     @Prop({ type: String, default: 'Sum of Best' })
     public label: string;
 
-    @splits.State('segments')
+    @State('splitterino.splits.segments')
     public segments: Segment[];
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     public get summary() {

@@ -1,9 +1,8 @@
-import { Injectable, InjectionToken } from 'lightweight-di';
+import { Injectable } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 
-import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/splits-file';
-
-export const TRANSFORMER_SERVICE_TOKEN = new InjectionToken<TransformerService>('transformer');
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile } from '../models/files';
+import { TransformerServiceInterface } from '../models/services';
 
 export interface SplitsVersionTransformer {
     fromVersion: string;
@@ -13,7 +12,7 @@ export interface SplitsVersionTransformer {
 }
 
 @Injectable
-export class TransformerService {
+export class TransformerService implements TransformerServiceInterface {
     private splitsVersionTransformers: SplitsVersionTransformer[] = [
         // Transformer to update unversioned alpha versions to 0.1
         {

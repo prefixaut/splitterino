@@ -1,10 +1,26 @@
+import { InjectionToken } from 'lightweight-di';
+
 import { ApplicationSettings } from '../models/application-settings';
 import { SettingsConfigurationNamespace } from '../models/states/settings.state';
 
-/**
- * IPC Constants
+/*
+ * General information
  */
-export const IPC_SERVER_NAME = 'flamingo';
+export const SPLITTERINO_VERSION = process.env.SPLITTERINO_VERSION;
+
+/*
+ * Service constants without corresponding file
+ */
+export const RUNTIME_ENVIRONMENT_TOKEN = new InjectionToken<RuntimeEnvironment>('runtime-environment');
+export const SPLITTERINO_VERSION_TOKEN = new InjectionToken<string>('splitterino-version');
+
+export enum RuntimeEnvironment {
+    BACKGROUND,
+    RENDERER,
+    PLUGIN,
+    TESTS
+}
+
 
 /*
  * Default Values
@@ -84,6 +100,9 @@ export const KEYBINDING_SPLITS_RESET = 'core.splits.reset';
 /*
  * IPC (Inter Process Commuinication)
  */
+export const IPC_SERVER_NAME = 'flamingo';
+export const IPC_PLUGIN_CLIENT_NAME = 'plugin-process';
+
 export const IPC_PUBLISHER_SUBSCRIBER_ADDRESS = 'tcp://127.0.0.1:3730';
 export const IPC_ROUTER_DEALER_ADDRESS = 'tcp://127.0.0.1:3731';
 export const IPC_PULL_PUSH_ADDRESS = 'tcp://127.0.0.1:3732';

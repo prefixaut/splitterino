@@ -40,9 +40,14 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../../models/electron';
-import { IPC_CLIENT_TOKEN, MessageType, GlobalEventBroadcast } from '../../models/ipc';
-import { IOService, IO_SERVICE_TOKEN } from '../../services/io.service';
+import {
+    ELECTRON_SERVICE_TOKEN,
+    ElectronServiceInterface,
+    IO_SERVICE_TOKEN,
+    IOServiceInterface,
+    IPC_CLIENT_SERVICE_TOKEN
+} from '../../models/services';
+import { MessageType, GlobalEventBroadcast } from '../../models/ipc';
 import { Logger } from '../../utils/logger';
 import { openSplitsEditor, openLoadSplits } from '../../utils/windows';
 
@@ -55,19 +60,19 @@ export default class DefaultView extends Vue {
 
     private subscriptions: Subscription[] = [];
 
-    private ioService: IOService;
-    private electron: ElectronInterface;
+    private electron: ElectronServiceInterface;
+    private ioService: IOServiceInterface;
 
     public created() {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
-        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
     }
 
     public mounted() {
         this.registerDragDropHandler();
 
         this.loadTemplate();
-        const sub = this.$services.get(IPC_CLIENT_TOKEN).listenToSubscriberSocket().pipe(
+        const sub = this.$services.get(IPC_CLIENT_SERVICE_TOKEN).listenToSubscriberSocket().pipe(
             // Trim out everything aside from the message itself
             map(packet => packet.message),
             // Filter out messages which aren't "load-template" global events
@@ -88,27 +93,23 @@ export default class DefaultView extends Vue {
     }
 
     public selectSplits() {
-        openLoadSplits(this.electron, this.ioService, this.$store);
+        openLoadSplits(this.$services);
     }
 
     public editSplits() {
-        openSplitsEditor(this.electron, this.$store);
+        openSplitsEditor(this.$services);
     }
 
     private async loadTemplate(templateFile?: string) {
-        const templateFiles = await this.ioService.loadTemplateFile(this.$store, templateFile);
+        const templateFiles = await this.ioService.loadTemplateFile(templateFile);
 
         if (templateFiles == null) {
-            Logger.warn({
-                msg: 'Could not load template file'
-            });
+            Logger.debug('Could not load template file');
 
             // Check if template is already loaded
             // If not, fall back to default template
             if (this.template == null) {
-                Logger.warn({
-                    msg: 'Falling back to default template'
-                });
+                Logger.debug('Falling back to default template');
                 this.template = null;
             }
         } else {
@@ -132,9 +133,9 @@ export default class DefaultView extends Vue {
                     // ? Maybe also warn user in general when splits file is corrupt/invalid
                     if (
                         filePath.endsWith('.splits') &&
-                        this.$store.state.splitterino.timer.status === TimerStatus.STOPPED
+                        this.$state.splitterino.timer.status === TimerStatus.STOPPED
                     ) {
-                        this.ioService.loadSplitsFromFileToStore(this.$store, filePath);
+                        this.ioService.loadSplitsFromFileToStore(filePath);
                     }
                 }
 

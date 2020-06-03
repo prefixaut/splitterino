@@ -31,16 +31,13 @@
 <script lang="ts">
 import { clamp } from 'lodash';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
-import { Segment, TimingMethod } from '../../models/segment';
-import { GETTER_VALUE_BY_PATH } from '../../store/modules/settings.module';
+import { Segment, TimingMethod } from '../../models/splits';
+import { getValueByPath } from '../../store/modules/settings.module';
 import { Logger } from '../../utils/logger';
+import { State } from '../../utils/store';
 import { now, getFinalTime } from '../../utils/time';
-
-const timer = namespace('splitterino/timer');
-const splits = namespace('splitterino/splits');
 
 @Component({ name: 'spl-splits' })
 export default class SplitsComponent extends Vue {
@@ -65,16 +62,16 @@ export default class SplitsComponent extends Vue {
     @Prop({ type: String, default: null })
     public comparisonTimeFormat: string;
 
-    @timer.State('status')
+    @State('splitterino.timer.status')
     public status: TimerStatus;
 
-    @splits.State('segments')
+    @State('splitterino.splits.segments')
     public segments: Segment[];
 
-    @splits.State('current')
+    @State('splitterino.splits.current')
     public currentSegment: number;
 
-    @splits.State('timing')
+    @State('splitterino.splits.timing')
     public timing: TimingMethod;
 
     /**
@@ -101,10 +98,7 @@ export default class SplitsComponent extends Vue {
     };
 
     public created() {
-        this.statusWatcher = this.$store.watch(
-            state => state.splitterino.timer.status,
-            () => this.statusChange()
-        );
+        this.statusWatcher = this.$observe('splitterino.timer.status', () => this.statusChange());
 
         this.calculateCurrentSegmentTime();
         this.statusChange();
@@ -118,7 +112,7 @@ export default class SplitsComponent extends Vue {
         if (this.visibleUpcomingSegments != null) {
             return this.visibleUpcomingSegments;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visibleUpcomingSegments');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.visibleUpcomingSegments');
         }
     }
 
@@ -126,7 +120,7 @@ export default class SplitsComponent extends Vue {
         if (this.visiblePreviousSegments != null) {
             return this.visiblePreviousSegments;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.visiblePreviousSegments');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.visiblePreviousSegments');
         }
     }
 
@@ -134,7 +128,7 @@ export default class SplitsComponent extends Vue {
         if (this.pinLastSegment != null) {
             return this.pinLastSegment;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.pinLastSegment');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.pinLastSegment');
         }
     }
 
@@ -142,7 +136,7 @@ export default class SplitsComponent extends Vue {
         if (this.segmentTimeFormat != null) {
             return this.segmentTimeFormat;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatSegmentTime');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.formatSegmentTime');
         }
     }
 
@@ -150,7 +144,7 @@ export default class SplitsComponent extends Vue {
         if (this.comparisonTimeFormat != null) {
             return this.comparisonTimeFormat;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.splits.formatComparisonTime');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.formatComparisonTime');
         }
     }
 

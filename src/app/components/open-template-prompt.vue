@@ -24,22 +24,21 @@
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_INTERFACE_TOKEN, ElectronInterface } from '../../models/electron';
+import { ELECTRON_SERVICE_TOKEN, ElectronServiceInterface, IO_SERVICE_TOKEN, IOServiceInterface } from '../../models/services';
 import { RecentlyOpenedTemplate } from '../../models/states/meta.state';
-import { IO_SERVICE_TOKEN, IOService } from '../../services/io.service';
 
 @Component({ name: 'spl-open-template-prompt' })
 export default class OpenTemplatePromptComponent extends Vue {
     // TODO: Export to interface
     public recentTemplateFiles: (RecentlyOpenedTemplate & { fileName: string })[] = [];
-    private ioService: IOService;
-    private electron: ElectronInterface;
+    private ioService: IOServiceInterface;
+    private electron: ElectronServiceInterface;
 
     public created() {
         this.ioService = this.$services.get(IO_SERVICE_TOKEN);
-        this.electron = this.$services.get(ELECTRON_INTERFACE_TOKEN);
+        this.electron = this.$services.get(ELECTRON_SERVICE_TOKEN);
 
-        const lastTemplateFiles = this.$store.state.splitterino.meta.lastOpenedTemplateFiles;
+        const lastTemplateFiles = this.$state.splitterino.meta.lastOpenedTemplateFiles;
         this.recentTemplateFiles = lastTemplateFiles
             .slice(0, 5)
             .map(file => {

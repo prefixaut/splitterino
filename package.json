@@ -38,9 +38,10 @@
         "serve": "vue-cli-service electron:serve",
         "build": "vue-cli-service electron:build",
         "lint": "vue-cli-service lint --no-fix ./src/**/*.vue ./src/**/*.ts",
-        "postinstall": "patch-package && electron-builder install-app-deps",
+        "postinstall": "electron-builder install-app-deps",
         "test:unit": "vue-cli-service test:unit",
-        "test:unit:coverage": "nyc vue-cli-service test:unit"
+        "test:unit:coverage": "nyc vue-cli-service test:unit",
+        "test:integration": "ts-mocha --project tests/integration/tsconfig.json --no-package --recursive tests/integration/**/*.ts"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^1.2.25",
@@ -48,6 +49,7 @@
         "@fortawesome/vue-fontawesome": "^0.1.8",
         "aevum": "^2.0.3",
         "ajv": "^6.10.2",
+        "dependency-graph": "^0.9.0",
         "electron": "5.0.13",
         "gunzip-maybe": "^1.4.1",
         "iso-639-1": "^2.1.0",
@@ -58,6 +60,7 @@
         "pino": "^5.14.0",
         "pino-pretty": "^3.4.0",
         "rxjs": "^6.5.3",
+        "semver": "^7.3.2",
         "tar-stream": "^2.1.0",
         "tslib": "^1.10.0",
         "uuid": "^3.3.3",
@@ -79,6 +82,7 @@
         "@types/node": "^12.12.14",
         "@types/optimist": "^0.0.29",
         "@types/pino": "^5.8.13",
+        "@types/semver": "^7.2.0",
         "@types/tar-stream": "^1.6.1",
         "@types/uuid": "^3.4.6",
         "@types/zeromq": "^4.6.3",
@@ -98,10 +102,9 @@
         "lint-staged": "^9.5.0",
         "node-sass": "^4.13.0",
         "nyc": "^14.1.1",
-        "patch-package": "^6.2.0",
-        "postinstall-postinstall": "^2.0.0",
         "sass-loader": "^8.0.0",
         "sasspect": "^1.1.0",
+        "ts-mocha": "^7.0.0",
         "typescript": "^3.7.2",
         "vue-cli-plugin-electron-builder": "^1.4.2",
         "vue-template-compiler": "^2.6.10"

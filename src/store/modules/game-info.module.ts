@@ -1,34 +1,27 @@
 import ISO6391 from 'iso-639-1';
-import { ActionContext, Module } from 'vuex';
 
-import { GameInfoState, Region } from '../../models/states/game-info.state';
-import { RootState } from '../../models/states/root.state';
+import { SplitsFile } from '../../models/files';
+import { Region } from '../../models/splits';
+import { GameInfoState } from '../../models/states/game-info.state';
+import { Module } from '../../models/store';
 
 export const MODULE_PATH = 'splitterino/gameInfo';
 
-export const ID_MUTATION_SET_GAME_NAME = 'setGameName';
-export const ID_MUTATION_SET_CATEGORY = 'setCategory';
-export const ID_MUTATION_SET_LANGUAGE = 'setLanguage';
-export const ID_MUTATION_SET_PLATFORM = 'setPlatform';
-export const ID_MUTATION_SET_REGION = 'setRegion';
+export const ID_HANDLER_SET_GAME_NAME = 'setGameName';
+export const ID_HANDLER_SET_CATEGORY = 'setCategory';
+export const ID_HANDLER_SET_LANGUAGE = 'setLanguage';
+export const ID_HANDLER_SET_PLATFORM = 'setPlatform';
+export const ID_HANDLER_SET_REGION = 'setRegion';
+export const ID_HANDLER_APPLY_SPLITS_FILE = 'applySplitsFile';
+export const ID_HANDLER_APPLY_GAMEINFO = 'applyGameInfo';
 
-export const ID_ACTION_SET_GAME_NAME = 'setGameName';
-export const ID_ACTION_SET_CATEGORY = 'setCategory';
-export const ID_ACTION_SET_LANGUAGE = 'setLanguage';
-export const ID_ACTION_SET_PLATFORM = 'setPlatform';
-export const ID_ACTION_SET_REGION = 'setRegion';
-
-export const MUTATION_SET_GAME_NAME = `${MODULE_PATH}/${ID_MUTATION_SET_GAME_NAME}`;
-export const MUTATION_SET_CATEGORY = `${MODULE_PATH}/${ID_MUTATION_SET_CATEGORY}`;
-export const MUTATION_SET_LANGUAGE = `${MODULE_PATH}/${ID_MUTATION_SET_LANGUAGE}`;
-export const MUTATION_SET_PLATFORM = `${MODULE_PATH}/${ID_MUTATION_SET_PLATFORM}`;
-export const MUTATION_SET_REGION = `${MODULE_PATH}/${ID_MUTATION_SET_REGION}`;
-
-export const ACTION_SET_GAME_NAME = `${MODULE_PATH}/${ID_ACTION_SET_GAME_NAME}`;
-export const ACTION_SET_CATEGORY = `${MODULE_PATH}/${ID_ACTION_SET_CATEGORY}`;
-export const ACTION_SET_LANGUAGE = `${MODULE_PATH}/${ID_ACTION_SET_LANGUAGE}`;
-export const ACTION_SET_PLATFORM = `${MODULE_PATH}/${ID_ACTION_SET_PLATFORM}`;
-export const ACTION_SET_REGION = `${MODULE_PATH}/${ID_ACTION_SET_REGION}`;
+export const HANDLER_SET_GAME_NAME = `${MODULE_PATH}/${ID_HANDLER_SET_GAME_NAME}`;
+export const HANDLER_SET_CATEGORY = `${MODULE_PATH}/${ID_HANDLER_SET_CATEGORY}`;
+export const HANDLER_SET_LANGUAGE = `${MODULE_PATH}/${ID_HANDLER_SET_LANGUAGE}`;
+export const HANDLER_SET_PLATFORM = `${MODULE_PATH}/${ID_HANDLER_SET_PLATFORM}`;
+export const HANDLER_SET_REGION = `${MODULE_PATH}/${ID_HANDLER_SET_REGION}`;
+export const HANDLER_APPLY_SPLITS_FILE = `${MODULE_PATH}/${ID_HANDLER_APPLY_SPLITS_FILE}`;
+export const HANDLER_APPLY_GAMEINFO = `${MODULE_PATH}/${ID_HANDLER_APPLY_GAMEINFO}`;
 
 const allRegions: Region[] = [
     Region.NTSC,
@@ -40,112 +33,59 @@ const allRegions: Region[] = [
     Region.PAL_EUR,
 ];
 
-export function getGameInfoStoreModule(): Module<GameInfoState, RootState> {
+export function getGameInfoStoreModule(): Module<GameInfoState> {
     return {
-        namespaced: true,
-        state: {
-            name: null,
-            category: null,
-            language: null,
-            platform: null,
-            region: null,
+        initialize() {
+            return {
+                name: null,
+                category: null,
+                language: null,
+                platform: null,
+                region: null,
+            };
         },
-        getters: {},
-        mutations: {
-            [ID_MUTATION_SET_GAME_NAME](state: GameInfoState, name: string) {
+        handlers: {
+            [ID_HANDLER_SET_GAME_NAME](state: GameInfoState, name: string) {
                 if (typeof name !== 'string') {
-                    return;
+                    return {};
                 }
 
-                state.name = name;
+                return { name };
             },
-            [ID_MUTATION_SET_CATEGORY](state: GameInfoState, category: string) {
+            [ID_HANDLER_SET_CATEGORY](state: GameInfoState, category: string) {
                 if (typeof category !== 'string') {
-                    return;
+                    return {};
                 }
 
-                state.category = category;
+                return { category };
             },
-            [ID_MUTATION_SET_LANGUAGE](state: GameInfoState, language: string) {
+            [ID_HANDLER_SET_LANGUAGE](state: GameInfoState, language: string) {
                 if (!ISO6391.validate(language)) {
-                    return;
+                    return {};
                 }
 
-                state.language = language;
+                return { language };
             },
-            [ID_MUTATION_SET_PLATFORM](state: GameInfoState, platform: string) {
+            [ID_HANDLER_SET_PLATFORM](state: GameInfoState, platform: string) {
                 if (typeof platform !== 'string') {
-                    return;
+                    return {};
                 }
 
-                state.platform = platform;
+                return { platform };
             },
-            [ID_MUTATION_SET_REGION](state: GameInfoState, region: Region) {
+            [ID_HANDLER_SET_REGION](state: GameInfoState, region: Region) {
                 if (!allRegions.includes(region)) {
-                    return;
+                    return {};
                 }
 
-                state.region = region;
+                return { region };
             },
-        },
-        actions: {
-            [ID_ACTION_SET_GAME_NAME](
-                context: ActionContext<GameInfoState, RootState>,
-                name: string
-            ): Promise<boolean> {
-                if (typeof name !== 'string') {
-                    return Promise.resolve(false);
-                }
-
-                context.commit(ID_MUTATION_SET_GAME_NAME, name);
-
-                return Promise.resolve(true);
+            [ID_HANDLER_APPLY_SPLITS_FILE](state: GameInfoState, splitsFile: SplitsFile) {
+                return splitsFile.splits.game;
             },
-            [ID_ACTION_SET_CATEGORY](
-                context: ActionContext<GameInfoState, RootState>,
-                category: string
-            ): Promise<boolean> {
-                if (typeof category !== 'string') {
-                    return Promise.resolve(false);
-                }
-
-                context.commit(ID_MUTATION_SET_CATEGORY, category);
-
-                return Promise.resolve(true);
-            },
-            [ID_ACTION_SET_LANGUAGE](
-                context: ActionContext<GameInfoState, RootState>,
-                language: string
-            ): Promise<boolean> {
-                if (!ISO6391.validate(language)) {
-                    return Promise.resolve(false);
-                }
-
-                context.commit(ID_MUTATION_SET_LANGUAGE, language);
-
-                return Promise.resolve(true);
-            },
-            [ID_ACTION_SET_PLATFORM](
-                context: ActionContext<GameInfoState, RootState>,
-                platform: string
-            ): Promise<boolean> {
-                if (typeof platform !== 'string') {
-                    return Promise.resolve(false);
-                }
-
-                context.commit(ID_MUTATION_SET_PLATFORM, platform);
-
-                return Promise.resolve(true);
-            },
-            [ID_ACTION_SET_REGION](context: ActionContext<GameInfoState, RootState>, region: Region): Promise<boolean> {
-                if (!allRegions.includes(region)) {
-                    return Promise.resolve(false);
-                }
-
-                context.commit(ID_MUTATION_SET_REGION, region);
-
-                return Promise.resolve(true);
-            },
+            [ID_HANDLER_APPLY_GAMEINFO](state: GameInfoState, gameInfo: GameInfoState) {
+                return gameInfo;
+            }
         },
     };
 }

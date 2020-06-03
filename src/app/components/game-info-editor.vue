@@ -50,7 +50,8 @@
 import ISO6391 from 'iso-639-1';
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
-import { Region, GameInfoState } from '../../models/states/game-info.state';
+import { GameInfoState } from '../../models/states/game-info.state';
+import { Region } from '../../models/splits';
 
 interface SingleLanguage {
     code: string;
@@ -80,7 +81,19 @@ export default class GameInfoEditorComponent extends Vue {
     ];
 
     created() {
-        this.allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes());
+        this.allLanguages = ISO6391.getLanguages(ISO6391.getAllCodes())
+            .sort((a, b) => {
+                const aLang = a.name;
+                const bLang = b.name;
+
+                if (aLang < bLang) {
+                    return -1;
+                } else if (aLang > bLang) {
+                    return 1;
+                }
+
+                return 0;
+            });
     }
 
     public updateName(name: string) {

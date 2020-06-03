@@ -25,18 +25,12 @@
 import { isEqual, cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
-import { Segment } from '../../models/segment';
+import { Segment } from '../../models/splits';
 import { GameInfoState } from '../../models/states/game-info.state';
-import { IO_SERVICE_TOKEN } from '../../services/io.service';
-import { ACTION_SET_ALL_SEGMENTS } from '../../store/modules/splits.module';
-import {
-    ACTION_SET_GAME_NAME,
-    ACTION_SET_CATEGORY,
-    ACTION_SET_LANGUAGE,
-    ACTION_SET_PLATFORM,
-    ACTION_SET_REGION
-} from '../../store/modules/game-info.module';
-import { ACTION_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
+import { IO_SERVICE_TOKEN } from '../../models/services';
+import { HANDLER_SET_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
+import { HANDLER_SET_ALL_SEGMENTS } from '../../store/modules/splits.module';
+import { HANDLER_APPLY_GAMEINFO } from '../../store/modules/game-info.module';
 
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {
@@ -55,7 +49,7 @@ export default class SplitsEditorView extends Vue {
 
     created() {
         // Disable the bindings while in the editor
-        this.$store.dispatch(ACTION_DISABLE_BINDINGS, true);
+        this.$commit(HANDLER_SET_DISABLE_BINDINGS, true);
     }
 
     mounted() {
@@ -64,11 +58,11 @@ export default class SplitsEditorView extends Vue {
 
     beforeDestroy() {
         // Enable the bindings again, as the editor is getting removed
-        this.$store.dispatch(ACTION_DISABLE_BINDINGS, false);
+        this.$commit(HANDLER_SET_DISABLE_BINDINGS, false);
     }
 
     loadDataFromStore() {
-        const root = this.$store.state;
+        const root = this.$state;
         // Create a copy of the current Segments to the component
         // They should not be reactive as editing it would be quite
         // a trouble.
@@ -78,14 +72,11 @@ export default class SplitsEditorView extends Vue {
     }
 
     get haveSegmentsChanged() {
-        return !isEqual(
-            this.$store.state.splitterino.splits.segments,
-            this.segments
-        );
+        return !isEqual(this.$state.splitterino.splits.segments, this.segments);
     }
 
     get hasGameInfoChanged() {
-        return !isEqual(this.$store.state.splitterino.gameInfo, this.gameInfo);
+        return !isEqual(this.$state.splitterino.gameInfo, this.gameInfo);
     }
 
     updateSegments(segments: Segment[]) {
@@ -98,22 +89,17 @@ export default class SplitsEditorView extends Vue {
 
     async saveSplits() {
         await Promise.all([
-            this.$store.dispatch(ACTION_SET_ALL_SEGMENTS, this.segments),
-            this.$store.dispatch(ACTION_SET_GAME_NAME, this.gameInfo.name),
-            this.$store.dispatch(ACTION_SET_CATEGORY, this.gameInfo.category),
-            this.$store.dispatch(ACTION_SET_LANGUAGE, this.gameInfo.language),
-            this.$store.dispatch(ACTION_SET_PLATFORM, this.gameInfo.platform),
-            this.$store.dispatch(ACTION_SET_REGION, this.gameInfo.region),
+            this.$commit(HANDLER_SET_ALL_SEGMENTS, this.segments),
+            this.$commit(HANDLER_APPLY_GAMEINFO, this.gameInfo),
         ]);
 
         this.loadDataFromStore();
-        const meta = this.$store.state.splitterino.meta;
+        const meta = this.$state.splitterino.meta;
         let path: string = null;
         if (meta.lastOpenedSplitsFiles != null && meta.lastOpenedSplitsFiles.length > 0) {
             path = meta.lastOpenedSplitsFiles[0].path;
         }
-        const didSave = await this.$services.get(IO_SERVICE_TOKEN)
-            .saveSplitsFromStoreToFile(this.$store, path);
+        const didSave = await this.$services.get(IO_SERVICE_TOKEN).saveSplitsFromStoreToFile(path);
         if (didSave) {
             window.close();
         }

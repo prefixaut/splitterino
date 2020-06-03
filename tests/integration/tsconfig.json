@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "commonjs",
+        "strict": false,
+        "jsx": "preserve",
+        "resolveJsonModule": true,
+        "importHelpers": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "types": ["node", "mocha", "chai"],
+        "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+    },
+    "files": ["src/shims-vue.d.ts", "src/vue.d.ts"],
+    "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
+    "exclude": ["node_modules"]
+}

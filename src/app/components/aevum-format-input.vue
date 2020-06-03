@@ -51,7 +51,7 @@ export default class AevumFormatInputComponent extends Vue {
 
     triggerChange(newValue) {
         try {
-            // tslint:disable-next-line no-unused-expression
+            // Create a new instance so aevum can cache the template
             new Aevum(newValue);
             this.internalValue = newValue;
             this.$emit('change', newValue);

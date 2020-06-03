@@ -6,13 +6,11 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { namespace } from 'vuex-class';
 
 import { TimerStatus } from '../../common/timer-status';
-import { GETTER_VALUE_BY_PATH } from '../../store/modules/settings.module';
+import { getValueByPath } from '../../store/modules/settings.module';
+import { State } from '../../utils/store';
 import { now } from '../../utils/time';
-
-const timer = namespace('splitterino/timer');
 
 @Component({ name: 'spl-timer' })
 export default class TimerComponent extends Vue {
@@ -25,22 +23,22 @@ export default class TimerComponent extends Vue {
     @Prop({ type: String, default: null })
     public format: string;
 
-    @timer.State('status')
+    @State('splitterino.timer.status')
     public status: TimerStatus;
 
-    @timer.State('startDelay')
+    @State('splitterino.timer.startDelay')
     public startDelay: number;
 
-    @timer.State('startTime')
+    @State('splitterino.timer.startTime')
     public startTime: number;
 
-    @timer.State('pauseTotal')
+    @State('splitterino.timer.pauseTotal')
     public pauseTotal: number;
 
-    @timer.State('igtPauseTotal')
+    @State('splitterino.timer.igtPauseTotal')
     public igtPauseTotal: number;
 
-    @timer.State('finishTime')
+    @State('splitterino.timer.finishTime')
     public finishTime: number;
 
     /**
@@ -59,10 +57,7 @@ export default class TimerComponent extends Vue {
     };
 
     public created() {
-        this.statusWatcher = this.$store.watch(
-            state => state.splitterino.timer.status,
-            () => this.statusChange()
-        );
+        this.statusWatcher = this.$observe('splitterino.timer.status', () => this.statusChange());
 
         this.calculateCurrentTime();
         this.statusChange();
@@ -76,7 +71,7 @@ export default class TimerComponent extends Vue {
         if (this.format != null) {
             return this.format;
         } else {
-            return this.$store.getters[GETTER_VALUE_BY_PATH]('splitterino.core.timer.format');
+            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.timer.format');
         }
     }
 
