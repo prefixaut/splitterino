@@ -301,14 +301,16 @@ export class PluginManager {
                     if (this.depGraph.dependantsOf(metaFile.name).length > 0) {
                         Logger.error({
                             msg: 'Could not run plugin entry file and plugin has depdendants',
-                            pluginName: metaFile.name
+                            pluginName: metaFile.name,
+                            error: e.message
                         });
 
                         return false;
                     } else {
                         Logger.warn({
                             msg: 'Could not run plugin entry file',
-                            pluginName: metaFile.name
+                            pluginName: metaFile.name,
+                            error: e.message
                         });
 
                         return true;
