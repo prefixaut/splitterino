@@ -10,6 +10,7 @@ import { getContextMenuStoreModule } from '../../../src/store/modules/context-me
 import { getGameInfoStoreModule } from '../../../src/store/modules/game-info.module';
 import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
 import { getMetaStoreModule, HANDLER_ADD_OPENED_SPLITS_FILE } from '../../../src/store/modules/meta.module';
+import { getPluginStoreModule } from '../../../src/store/modules/plugin.module';
 import { getSettingsStoreModule } from '../../../src/store/modules/settings.module';
 import {
     getSplitsStoreModule,
@@ -43,10 +44,11 @@ describe('Action-Service', () => {
             contextMenu: getContextMenuStoreModule(),
             gameInfo: getGameInfoStoreModule(),
             keybindings: getKeybindingsStoreModule(),
+            meta: getMetaStoreModule(),
+            plugin: getPluginStoreModule(),
             settings: getSettingsStoreModule(injector),
             splits: getSplitsStoreModule(injector),
             timer: getTimerStoreModule(),
-            meta: getMetaStoreModule(),
         }).forEach(([moduleName, storeModule]) => {
             newState.splitterino[moduleName] = storeModule.initialize();
         });
