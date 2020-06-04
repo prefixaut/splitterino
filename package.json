@@ -50,7 +50,7 @@
         "aevum": "^2.0.3",
         "ajv": "^6.10.2",
         "dependency-graph": "^0.9.0",
-        "electron": "5.0.13",
+        "electron": "9.0.2",
         "gunzip-maybe": "^1.4.1",
         "iso-639-1": "^2.1.0",
         "keycode": "^2.2.0",
@@ -73,7 +73,7 @@
         "vuedraggable": "^2.23.2",
         "vuex": "^3.1.2",
         "vuex-class": "^0.3.1",
-        "zeromq": "^5.2.0"
+        "zeromq": "^6.0.0-beta.5"
     },
     "devDependencies": {
         "@types/chai": "^4.2.5",
@@ -81,7 +81,7 @@
         "@types/mocha": "^5.2.4",
         "@types/node": "^12.12.14",
         "@types/optimist": "^0.0.29",
-        "@types/pino": "^5.8.13",
+        "@types/pino": "^6.0.1",
         "@types/semver": "^7.2.0",
         "@types/tar-stream": "^1.6.1",
         "@types/uuid": "^3.4.6",

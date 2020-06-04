@@ -67,69 +67,70 @@ export class ElectronService implements ElectronServiceInterface {
         this.getCurrentWindow().close();
     }
 
-    public showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "open-file" dialog ...');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                const paths = dialogToUse.showOpenDialog(browserWindow, options);
-                Logger.debug({
-                    msg: '"open-file" dialog closed',
-                    files: paths,
-                });
-                resolve(paths);
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "open-file" dialog',
-                    error: e
-                });
-                reject(e);
-            }
-        });
+    public async showOpenDialog(browserWindow: BrowserWindow, options: OpenDialogOptions): Promise<string[]> {
+        try {
+            Logger.debug('Opening "open-file" dialog ...');
+            const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+            // eslint-disable-next-line @typescript-eslint/await-thenable
+            const paths = await dialogToUse.showOpenDialog(browserWindow, options);
+
+            Logger.debug({
+                msg: '"open-file" dialog closed',
+                files: paths,
+            });
+
+            return paths.filePaths;
+        } catch (e) {
+            Logger.debug({
+                msg: 'Error while opening "open-file" dialog',
+                error: e
+            });
+            throw e;
+        }
     }
 
-    public showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "save-file" dialog ...');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showSaveDialog(browserWindow, options, path => {
-                    Logger.debug({
-                        msg: '"save-file" dialog closed',
-                        file: path,
-                    });
-                    resolve(path);
-                });
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "save-file" dialog',
-                    error: e
-                });
-                reject(e);
-            }
-        });
+    public async showSaveDialog(browserWindow: BrowserWindow, options: SaveDialogOptions): Promise<string> {
+        try {
+            Logger.debug('Opening "save-file" dialog ...');
+            const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+            // eslint-disable-next-line @typescript-eslint/await-thenable
+            const result = await dialogToUse.showSaveDialog(browserWindow, options);
+
+            Logger.debug({
+                msg: '"save-file" dialog closed',
+                file: result,
+            });
+
+            return result.filePath;
+        } catch (e) {
+            Logger.debug({
+                msg: 'Error while opening "save-file" dialog',
+                error: e
+            });
+            throw e;
+        }
     }
 
-    public showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
-        return new Promise((resolve, reject) => {
-            try {
-                Logger.debug('Opening "message" dialog');
-                const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
-                dialogToUse.showMessageBox(browserWindow, options, response => {
-                    Logger.debug({
-                        msg: '"message" dialog closed',
-                        response,
-                    });
-                    resolve(response);
-                });
-            } catch (e) {
-                Logger.debug({
-                    msg: 'Error while opening "message" dialog',
-                    error: e
-                });
-                reject(e);
-            }
-        });
+    public async showMessageDialog(browserWindow: BrowserWindow, options: MessageBoxOptions): Promise<number> {
+        try {
+            Logger.debug('Opening "message" dialog');
+            const dialogToUse = this.isRenderProcess() ? remote.dialog : dialog;
+            // eslint-disable-next-line @typescript-eslint/await-thenable
+            const response = await dialogToUse.showMessageBox(browserWindow, options);
+
+            Logger.debug({
+                msg: '"message" dialog closed',
+                response,
+            });
+
+            return response.response;
+        } catch (e) {
+            Logger.debug({
+                msg: 'Error while opening "message" dialog',
+                error: e
+            });
+            throw e;
+        }
     }
 
     public newWindow(settings: BrowserWindowConstructorOptions, route: string = ''): BrowserWindow {

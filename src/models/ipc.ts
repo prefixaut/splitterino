@@ -1,5 +1,4 @@
 import { Observable } from 'rxjs';
-import { Socket } from 'zeromq';
 
 import { Commit, StoreState } from '../models/store';
 import { LogLevel } from '../utils/logger';
@@ -36,14 +35,6 @@ export interface ClientInformation {
 
 export interface RegistationResult {
     logLevel: LogLevel;
-}
-
-export interface IPCSocket extends Socket {
-    type: 'dealer' | 'sub' | 'pub' | 'push' | 'pull';
-}
-
-export interface IPCRouterSocket extends Socket {
-    type: 'router';
 }
 
 export interface SubscriberTable {

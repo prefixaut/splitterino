@@ -2,7 +2,7 @@ import { Injectable } from 'lightweight-di';
 import { Observable, Subject } from 'rxjs';
 import { filter, first, map, timeout } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
-import { socket, ZMQ_IDENTITY } from 'zeromq';
+import { Dealer, Push, Subscriber } from 'zeromq';
 
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
@@ -14,7 +14,6 @@ import {
     ClientInformation,
     IPCClientInterface,
     IPCPacket,
-    IPCSocket,
     LocalMessage,
     Message,
     MessageType,
@@ -41,9 +40,9 @@ export class ClientNotRegisteredError extends Error {
 @Injectable
 export class IPCClientService implements IPCClientInterface {
 
-    private subscriber: IPCSocket;
-    private dealer: IPCSocket;
-    private push: IPCSocket;
+    private subscriber: Subscriber;
+    private dealer: Dealer;
+    private push: Push;
 
     private subscriberMessages: Observable<IPCPacket>;
 
@@ -71,20 +70,20 @@ export class IPCClientService implements IPCClientInterface {
         this.clientId = uuid();
 
         // Safe type assertion since type is missing in official typings
-        this.subscriber = socket('sub') as IPCSocket;
+        this.subscriber = new Subscriber();
         this.subscriber.connect(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
         this.subscriber.subscribe('');
 
         this.subscriberMessages = createSharedObservableFromSocket(this.subscriber);
 
-        this.dealer = socket('dealer') as IPCSocket;
+        this.dealer = new Dealer({
+            routingId: this.clientId,
+        });
         this.dealer.connect(IPC_ROUTER_DEALER_ADDRESS);
-        // Set identity to clientid
-        this.dealer.setsockopt(ZMQ_IDENTITY, Buffer.from(this.clientId));
 
         this.dealerMessages = createSharedObservableFromSocket(this.dealer, this.clientId);
 
-        this.push = socket('push') as IPCSocket;
+        this.push = new Push();
         this.push.connect(IPC_PULL_PUSH_ADDRESS);
 
         try {

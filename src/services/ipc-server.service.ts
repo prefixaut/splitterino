@@ -1,7 +1,7 @@
 import { Injectable } from 'lightweight-di';
 import { Observable, Subscription } from 'rxjs';
 import { v4 as uuid } from 'uuid';
-import { socket } from 'zeromq';
+import { Publisher, Pull, Router } from 'zeromq';
 
 import {
     IPC_PUBLISHER_SUBSCRIBER_ADDRESS,
@@ -13,9 +13,7 @@ import {
     GlobalEventBroadcast,
     IPCPacket,
     IPCRouterPacket,
-    IPCRouterSocket,
     IPCServerInterface,
-    IPCSocket,
     LogOnServerRequest,
     Message,
     MessageType,
@@ -51,9 +49,9 @@ type RouterFn = (identity: Buffer, receivedFrom: string, message: Message, respo
 @Injectable
 export class IPCServerService implements IPCServerInterface {
 
-    private publisher: IPCSocket;
-    private router: IPCRouterSocket;
-    private pull: IPCSocket;
+    private publisher: Publisher;
+    private router: Router;
+    private pull: Pull;
 
     private logLevel: LogLevel;
 
@@ -83,22 +81,22 @@ export class IPCServerService implements IPCServerInterface {
         return this.initialized;
     }
 
-    public initialize(logLevel: LogLevel): Promise<void> {
+    public async initialize(logLevel: LogLevel): Promise<void> {
         if (this.initialized) {
-            return Promise.resolve();
+            return;
         }
 
         this.logLevel = logLevel;
 
         // Safe type assertion since type is missing in official typings
-        this.publisher = socket('pub') as IPCSocket;
-        this.publisher.bindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+        this.publisher = new Publisher();
+        await this.publisher.bind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
 
-        this.router = socket('router') as IPCRouterSocket;
-        this.router.bindSync(IPC_ROUTER_DEALER_ADDRESS);
+        this.router = new Router();
+        await this.router.bind(IPC_ROUTER_DEALER_ADDRESS);
 
-        this.pull = socket('pull') as IPCSocket;
-        this.pull.bindSync(IPC_PULL_PUSH_ADDRESS);
+        this.pull = new Pull();
+        await this.pull.bind(IPC_PULL_PUSH_ADDRESS);
 
         this.routerMessages = createSharedObservableFromSocket(this.router, IPC_SERVER_NAME);
 
@@ -113,23 +111,21 @@ export class IPCServerService implements IPCServerInterface {
         });
 
         this.initialized = true;
-
-        return Promise.resolve();
     }
 
-    public close(): Promise<void> {
+    public async close(): Promise<void> {
         if (!this.initialized) {
-            return Promise.resolve();
+            return;
         }
 
         if (this.publisher) {
-            this.publisher.unbindSync(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
+            await this.publisher.unbind(IPC_PUBLISHER_SUBSCRIBER_ADDRESS);
             this.publisher.close();
             this.publisher = null;
         }
 
         if (this.router) {
-            this.router.unbindSync(IPC_ROUTER_DEALER_ADDRESS);
+            await this.router.unbind(IPC_ROUTER_DEALER_ADDRESS);
             this.router.close();
             this.router = null;
         }
@@ -144,7 +140,7 @@ export class IPCServerService implements IPCServerInterface {
         }
 
         if (this.pull) {
-            this.pull.unbindSync(IPC_PULL_PUSH_ADDRESS);
+            await this.pull.unbind(IPC_PULL_PUSH_ADDRESS);
             this.pull.close();
             this.pull = null;
         }
@@ -159,8 +155,6 @@ export class IPCServerService implements IPCServerInterface {
         }
 
         this.initialized = false;
-
-        return Promise.resolve();
     }
 
     public listenToRouterSocket() {
