@@ -4,7 +4,7 @@ import {
     Menu,
     MessageBoxOptions,
     OpenDialogOptions,
-    SaveDialogOptions,
+    SaveDialogOptions
 } from 'electron';
 import { Dirent } from 'fs';
 import { InjectionToken } from 'lightweight-di';
@@ -16,6 +16,7 @@ import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
 import { IPCClientInterface, IPCServerInterface } from './ipc';
 import { Segment, Splits } from './splits';
+import { LoadedPlugin } from './states/plugin.state';
 import { RootState } from './states/root.state';
 
 export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionServiceInterface>('action');
@@ -74,7 +75,7 @@ export interface IOServiceInterface {
     saveApplicationSettingsToFile(window: BrowserWindow): void;
     saveSettingsToFile(): void;
     loadSettingsFromFileToStore(): Promise<void>;
-    loadPluginMetaFiles(): PluginMetaFile[];
+    loadPluginFiles(): LoadedPlugin[];
 }
 
 export interface StoreInterface<S extends StoreState> {

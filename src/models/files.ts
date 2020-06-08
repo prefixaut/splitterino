@@ -1,4 +1,5 @@
 import { Splits } from './splits';
+import { PluginIdentifier } from './states/plugin.state';
 
 export const MOST_RECENT_SPLITS_VERSION = '0.1';
 
@@ -9,19 +10,15 @@ export interface Dependencies {
 /**
  * Contains meta information about a plugin e.g. version, author, ...
  */
-export interface PluginMetaFile {
+export interface PluginMetaFile extends PluginIdentifier {
     /** Main plugin author */
     author: string;
     /** Optional list of contributors for plugin */
     contributors?: string[];
-    /** Plugin identification-name */
-    name: string;
     /** Plugin display-name */
     displayName?: string;
     /** Description of the Plugin */
     decription?: string;
-    /** Plugin semver */
-    version: string;
     /** Semver comparison string */
     compatibleVersion: string;
     /** URL to github repository for plugin */
@@ -40,8 +37,6 @@ export interface PluginMetaFile {
      * Tries to load this plugin after dependencies were loaded.
      */
     optionalDependencies?: Dependencies;
-
-    folderName?: string;
 }
 
 /**

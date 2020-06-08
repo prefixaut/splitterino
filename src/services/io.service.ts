@@ -15,7 +15,7 @@ import {
     RuntimeEnvironment,
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
-import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles, PluginMetaFile } from '../models/files';
+import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
 import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import {
     ACTION_SERVICE_TOKEN,
@@ -47,6 +47,7 @@ import { HANDLER_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
 import { Logger } from '../utils/logger';
+import { LoadedPlugin } from '../models/states/plugin.state';
 
 @Injectable
 export class IOService implements IOServiceInterface {
@@ -705,10 +706,10 @@ export class IOService implements IOServiceInterface {
         }
     }
 
-    public loadPluginMetaFiles(): PluginMetaFile[] {
+    public loadPluginFiles(): LoadedPlugin[] {
         const pluginDir = this.getPluginDirectory();
         const dirs = this.listDirectories(pluginDir, '');
-        const metaFiles: PluginMetaFile[] = [];
+        const loadedPlugins: LoadedPlugin[] = [];
 
         for (const dir of dirs) {
             const content = this.listDirectoryContent(dir.name, pluginDir);
@@ -729,10 +730,13 @@ export class IOService implements IOServiceInterface {
                 continue;
             }
 
-            metaFile.folderName = dir.name;
-            metaFiles.push(metaFile);
+            loadedPlugins.push({
+                meta: metaFile,
+                dependants: [],
+                folderName: dir.name
+            });
         }
 
-        return metaFiles;
+        return loadedPlugins;
     }
 }

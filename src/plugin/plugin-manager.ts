@@ -4,7 +4,6 @@ import { join } from 'path';
 import { satisfies as semverSatisfies } from 'semver';
 import { Context, createContext, Script } from 'vm';
 
-import { PluginMetaFile } from '../models/files';
 import { Plugin } from '../models/plugins';
 import {
     ACTION_SERVICE_TOKEN,
@@ -14,19 +13,21 @@ import {
     IPC_CLIENT_SERVICE_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
-    VALIDATOR_SERVICE_TOKEN,
+    VALIDATOR_SERVICE_TOKEN
 } from '../models/services';
+import { LoadedPlugin } from '../models/states/plugin.state';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';
+import { HANDLER_REPLACE_PLUGINS } from '../store/modules/plugin.module';
 
-interface LoadedPlugin {
-    meta: PluginMetaFile;
+interface InstantiatedPlugin {
+    loadedPlugin: LoadedPlugin;
     instance: Plugin;
 }
 
 export class PluginManager {
-    private static loadedPlugins: LoadedPlugin[] = [];
-    private static depGraph: DepGraph<PluginMetaFile>;
+    private static instantiatedPlugins: InstantiatedPlugin[] = [];
+    private static depGraph: DepGraph<LoadedPlugin>;
     private static ioService: IOServiceInterface;
     private static injector: Injector;
 
@@ -36,14 +37,15 @@ export class PluginManager {
 
         this.injector = injector;
         this.ioService = injector.get(IO_SERVICE_TOKEN);
-        const metaFiles = this.ioService.loadPluginMetaFiles();
-        const validMetaFiles: PluginMetaFile[] = [];
+        const loadedPlugins = this.ioService.loadPluginFiles();
+        const validPlugins: LoadedPlugin[] = [];
         this.depGraph = new DepGraph();
         const nodesMarkedForRemoval: string[] = [];
 
         Logger.debug('Loaded plugin meta files from directy. Starting initialization...');
 
-        for (const meta of metaFiles) {
+        for (const plugin of loadedPlugins) {
+            const { meta } = plugin;
             // Check if at least one file is available to load
             if (
                 meta.entryFile == null &&
@@ -63,11 +65,12 @@ export class PluginManager {
                 continue;
             }
 
-            this.addToDepGraph(meta);
-            validMetaFiles.push(meta);
+            this.addToDepGraph(plugin);
+            validPlugins.push(plugin);
         }
 
-        for (const meta of validMetaFiles) {
+        for (const plugin of validPlugins) {
+            const { meta } = plugin;
             // Required deps
             for (const [depName, depVersion] of Object.entries(meta.dependencies ?? {})) {
                 const nodeToRemove = this.addDependency(meta.name, depName, depVersion);
@@ -89,13 +92,27 @@ export class PluginManager {
 
         await this.loadEntryFilesFromDepGraph();
 
+        for (const plugin of this.instantiatedPlugins) {
+            const deps = this.depGraph.dependantsOf(plugin.loadedPlugin.meta.name);
+            for (const dep of deps) {
+                const version = this.depGraph.getNodeData(dep).meta.version;
+                plugin.loadedPlugin.dependants.push({
+                    name: dep,
+                    version,
+                });
+            }
+        }
+
+        const store = this.injector.get(STORE_SERVICE_TOKEN);
+        store.commit(HANDLER_REPLACE_PLUGINS, this.instantiatedPlugins.map(instance => instance.loadedPlugin));
+
         Logger.info('Initialized all compatible plugins');
-        if (this.loadedPlugins.length > 0) {
+        if (this.instantiatedPlugins.length > 0) {
             Logger.info({
                 msg: 'List of loaded plugins',
-                plugins: this.loadedPlugins.map(pl => {
+                plugins: this.instantiatedPlugins.map(pl => {
                     return {
-                        [pl.meta.name]: pl.meta.version
+                        [pl.loadedPlugin.meta.name]: pl.loadedPlugin.meta.version
                     };
                 }).reduce((prev, curr) => {
                     return {
@@ -113,20 +130,20 @@ export class PluginManager {
         const order = this.depGraph.overallOrder().reverse();
 
         for (const plugin of order) {
-            const loadedPlugin = this.loadedPlugins.find(pl => pl.meta.name === plugin);
-            if (loadedPlugin != null) {
-                await this.teardownSinglePlugin(loadedPlugin);
+            const instantiatedPlugin = this.instantiatedPlugins.find(pl => pl.loadedPlugin.meta.name === plugin);
+            if (instantiatedPlugin != null) {
+                await this.teardownSinglePlugin(instantiatedPlugin);
             }
         }
     }
 
-    private static addToDepGraph(metaFile: PluginMetaFile) {
-        if (this.depGraph.hasNode(metaFile.name)) {
+    private static addToDepGraph(loadedPlugin: LoadedPlugin) {
+        if (this.depGraph.hasNode(loadedPlugin.meta.name)) {
             // TODO: Do better error handling like removing older version etc.
-            throw new Error(`Dependency graph already contains a node for plugin "${metaFile.name}"`);
+            throw new Error(`Dependency graph already contains a node for plugin "${loadedPlugin.meta.name}"`);
         }
 
-        this.depGraph.addNode(metaFile.name, metaFile);
+        this.depGraph.addNode(loadedPlugin.meta.name, loadedPlugin);
     }
 
     private static addDependency(from: string, depName: string, depVersion: string): string {
@@ -146,14 +163,14 @@ export class PluginManager {
         }
 
         // Check if version is correct
-        const nodeInfo = this.depGraph.getNodeData(depName);
-        if (!semverSatisfies(nodeInfo.version, depVersion)) {
+        const { meta } = this.depGraph.getNodeData(depName);
+        if (!semverSatisfies(meta.version, depVersion)) {
             Logger.error({
                 msg: `Required plugin dependency found but wrong version. Removing all nodes dependant on "${from}"`,
                 pluginName: from,
                 requiredDep: depName,
                 requiredDepVersion: depVersion,
-                foundVersion: nodeInfo.version
+                foundVersion: meta.version
             });
 
             return from;
@@ -177,14 +194,14 @@ export class PluginManager {
             return;
         }
 
-        const nodeInfo = this.depGraph.getNodeData(depName);
-        if (!semverSatisfies(nodeInfo.version, depVersion)) {
+        const { meta } = this.depGraph.getNodeData(depName);
+        if (!semverSatisfies(meta.version, depVersion)) {
             Logger.warn({
                 msg: 'Optional plugin dependency found but wrong version. Not adding dependency!',
                 pluginName: from,
                 optionalDep: depName,
                 optionalDepVersion: depVersion,
-                foundVersion: nodeInfo.version
+                foundVersion: meta.version
             });
 
             return;
@@ -222,15 +239,15 @@ export class PluginManager {
         });
 
         for (const node of order) {
-            const meta = this.depGraph.getNodeData(node);
-            if (!(await this.loadEntryFromFile(meta, context))) {
+            const loadedPlugin = this.depGraph.getNodeData(node);
+            if (!(await this.loadEntryFromFile(loadedPlugin, context))) {
                 Logger.error({
                     // eslint-disable-next-line
                     msg: 'Something went wrong initializing plugin entry file. Removing all connected dependants from load chain',
-                    pluginName: meta.name
+                    pluginName: loadedPlugin.meta.name
                 });
 
-                await this.removeDependantsAndReload(meta.name);
+                await this.removeDependantsAndReload(loadedPlugin.meta.name);
             }
         }
     }
@@ -249,15 +266,21 @@ export class PluginManager {
         await this.loadEntryFilesFromDepGraph();
     }
 
-    private static async loadEntryFromFile(metaFile: PluginMetaFile, context: Context): Promise<boolean> {
-        if (this.alreadyLoaded(metaFile.name)) {
-            Logger.debug(`Plugin "${metaFile.name}" already loaded`);
+    private static async loadEntryFromFile(loadedPlugin: LoadedPlugin, context: Context): Promise<boolean> {
+        const { meta }  = loadedPlugin;
+
+        if (this.alreadyLoaded(meta.name)) {
+            Logger.debug(`Plugin "${meta.name}" already loaded`);
 
             return true;
         }
 
-        if (metaFile.entryFile != null) {
-            const entryFilePath = join(this.ioService.getPluginDirectory(), metaFile.folderName, metaFile.entryFile);
+        if (meta.entryFile != null) {
+            const entryFilePath = join(
+                this.ioService.getPluginDirectory(),
+                loadedPlugin.folderName,
+                meta.entryFile
+            );
             const entryFile = this.ioService.loadFile(
                 entryFilePath,
                 ''
@@ -266,10 +289,10 @@ export class PluginManager {
             if (entryFile == null) {
                 // Check if plugin has any dependants
                 // If it does not, we don't really care what happens
-                if (this.depGraph.dependantsOf(metaFile.name).length > 0) {
+                if (this.depGraph.dependantsOf(meta.name).length > 0) {
                     Logger.error({
                         msg: 'Could not load plugin entry file and plugin has depdendants',
-                        pluginName: metaFile.name,
+                        pluginName: meta.name,
                         entryFilePath
                     });
 
@@ -277,7 +300,7 @@ export class PluginManager {
                 } else {
                     Logger.warn({
                         msg: 'Could not load plugin entry file',
-                        pluginName: metaFile.name,
+                        pluginName: meta.name,
                         entryFilePath
                     });
 
@@ -290,27 +313,27 @@ export class PluginManager {
 
                     const plugin: Plugin = new context.Plugin();
                     // TODO: Create custom scoped injector
-                    const pluginInjector = createPluginInstanceInjector(this.injector, metaFile.name);
+                    const pluginInjector = createPluginInstanceInjector(this.injector, meta.name);
 
                     if (await plugin.initialize(pluginInjector)) {
-                        this.loadedPlugins.push({
-                            meta: metaFile,
+                        this.instantiatedPlugins.push({
+                            loadedPlugin,
                             instance: plugin
                         });
                     } else {
                         // Check if plugin has any dependants
                         // If it does not, we don't really care what happens
-                        if (this.depGraph.dependantsOf(metaFile.name).length > 0) {
+                        if (this.depGraph.dependantsOf(meta.name).length > 0) {
                             Logger.error({
                                 msg: 'Plugin init function returned false and plugin has depdendants',
-                                pluginName: metaFile.name
+                                pluginName: meta.name
                             });
 
                             return false;
                         } else {
                             Logger.warn({
                                 msg: 'Plugin init function returned false',
-                                pluginName: metaFile.name
+                                pluginName: meta.name
                             });
 
                             return true;
@@ -320,10 +343,10 @@ export class PluginManager {
                 } catch (e) {
                     // Check if plugin has any dependants
                     // If it does not, we don't really care what happens
-                    if (this.depGraph.dependantsOf(metaFile.name).length > 0) {
+                    if (this.depGraph.dependantsOf(meta.name).length > 0) {
                         Logger.error({
                             msg: 'Could not run plugin entry file and plugin has depdendants',
-                            pluginName: metaFile.name,
+                            pluginName: meta.name,
                             error: e.message
                         });
 
@@ -331,7 +354,7 @@ export class PluginManager {
                     } else {
                         Logger.warn({
                             msg: 'Could not run plugin entry file',
-                            pluginName: metaFile.name,
+                            pluginName: meta.name,
                             error: e.message
                         });
 
@@ -345,23 +368,24 @@ export class PluginManager {
     }
 
     private static alreadyLoaded(pluginName: string): boolean {
-        return this.loadedPlugins.findIndex(entry => entry.meta.name === pluginName) > -1;
+        return this.instantiatedPlugins.findIndex(entry => entry.loadedPlugin.meta.name === pluginName) > -1;
     }
 
-    private static async teardownSinglePlugin(plugin: LoadedPlugin): Promise<void> {
-        Logger.debug(`Trying to destroy plugin "${plugin.meta.name}"`);
+    private static async teardownSinglePlugin(plugin: InstantiatedPlugin): Promise<void> {
+        const meta = plugin.loadedPlugin.meta;
+        Logger.debug(`Trying to destroy plugin "${meta.name}"`);
 
         try {
             if (!await plugin.instance.destroy()) {
                 Logger.error({
                     msg: 'Plugin method "destroy" returned false',
-                    pluginName: plugin.meta.name
+                    pluginName: meta.name
                 });
             }
         } catch (e) {
             Logger.error({
                 msg: 'Could not gracefully destroy plugin instance',
-                pluginName: plugin.meta.name,
+                pluginName: meta.name,
                 error: e.message
             });
         }
