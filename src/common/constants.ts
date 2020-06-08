@@ -83,7 +83,7 @@ export const CTX_MENU_SPLITS_LOAD_FROM_FILE = 'core.splits.load-from-file';
 export const CTX_MENU_SPLITS_SAVE_TO_FILE = 'core.splits.save-to-file';
 
 export const CTX_MENU_SETTINGS_OPEN = 'core.settings.open';
-
+export const CTX_MENU_PLUGIN_MANAGER_OPEN = 'core.plugin-manager.open';
 export const CTX_MENU_KEYBINDINGS_OPEN = 'core.keybindings.open';
 
 export const CTX_MENU_TEMPLATES_LOAD_FROM_FILE = 'core.templates.load-from-file';

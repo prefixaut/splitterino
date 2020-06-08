@@ -37,6 +37,20 @@ export function openSettingsEditor(electron: ElectronServiceInterface) {
     );
 }
 
+export function openPluginManager(electron: ElectronServiceInterface) {
+    electron.newWindow(
+        {
+            title: 'Plugin Manager',
+            parent: electron.getCurrentWindow(),
+            width: 650,
+            height: 310,
+            modal: true,
+            minimizable: false
+        },
+        '/plugin-manager'
+    );
+}
+
 export function openLoadSplits(injector: Injector) {
     const electron = injector.get(ELECTRON_SERVICE_TOKEN);
     const io = injector.get(IO_SERVICE_TOKEN);

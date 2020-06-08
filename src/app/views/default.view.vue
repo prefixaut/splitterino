@@ -1,7 +1,7 @@
 <template>
     <div
         ref="splitsView"
-        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'templates', 'def']"
+        v-spl-ctx-menu="['settings', 'keybindings', 'splitter', 'templates', 'plugins', 'def']"
         class="default-view"
     >
         <div v-if="templateLoaded">

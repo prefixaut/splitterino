@@ -1,5 +1,6 @@
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
+    CTX_MENU_PLUGIN_MANAGER_OPEN,
     CTX_MENU_SETTINGS_OPEN,
     CTX_MENU_SPLITS_EDIT,
     CTX_MENU_SPLITS_LOAD_FROM_FILE,
@@ -50,6 +51,12 @@ export function getContextMenuStoreModule(): Module<ContextMenuState> {
                     {
                         label: 'Settings ...',
                         actions: [CTX_MENU_SETTINGS_OPEN],
+                    },
+                ],
+                plugins: [
+                    {
+                        label: 'Plugin Manager ...',
+                        action: [CTX_MENU_PLUGIN_MANAGER_OPEN],
                     },
                 ],
                 keybindings: [

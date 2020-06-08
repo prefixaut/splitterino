@@ -7,11 +7,13 @@ import {
     openKeybindgsEditor,
     openLoadSplits,
     openLoadTemplate,
+    openPluginManager,
     openSettingsEditor,
     openSplitsEditor,
 } from '../utils/windows';
 import {
     CTX_MENU_KEYBINDINGS_OPEN,
+    CTX_MENU_PLUGIN_MANAGER_OPEN,
     CTX_MENU_SETTINGS_OPEN,
     CTX_MENU_SPLITS_EDIT,
     CTX_MENU_SPLITS_LOAD_FROM_FILE,
@@ -96,6 +98,10 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
      */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_KEYBINDINGS_OPEN, () => {
         openKeybindgsEditor(electron);
+    });
+
+    FunctionRegistry.registerContextMenuAction(CTX_MENU_PLUGIN_MANAGER_OPEN, () => {
+        openPluginManager(electron);
     });
 
     /*
