@@ -81,6 +81,8 @@ export enum MessageType {
     // General purpose
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
     BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
+    BROADCAST_KEYBINDING_TRIGGER = 'BROADCAST_KEYBINDING_TRIGGER',
+    BROADCAST_CONTEXT_MENU_TRIGGER = 'BROADCAST_CONTEXT_MENU_TRIGGER',
     REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
     BROADCAST_APP_SHUTDOWN = 'BROADCAST_APP_SHUTDOWN',
@@ -141,6 +143,8 @@ export interface Request extends Message {
 export interface Broadcast extends Message {
     type:
     | MessageType.BROADCAST_GLOBAL_EVENT
+    | MessageType.BROADCAST_KEYBINDING_TRIGGER
+    | MessageType.BROADCAST_CONTEXT_MENU_TRIGGER
     | MessageType.BROADCAST_APP_SHUTDOWN
     | MessageType.BROADCAST_STORE_APPLY_DIFF
     ;
@@ -441,6 +445,28 @@ export interface GlobalEventBroadcast extends Broadcast {
      * The payload that goes along with the event
      */
     payload?: any;
+}
+
+/**
+ * A broadcast whenever a keybinding has been triggered
+ */
+export interface KeybindingTriggerBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_KEYBINDING_TRIGGER;
+    /**
+     * The keybinding ID that has been triggered
+     */
+    keybinding: string;
+}
+
+/**
+ * A broadcast whenever a context-menu entry has been triggered
+ */
+export interface ContextMenuTriggerBroadcast extends Broadcast {
+    type: MessageType.BROADCAST_CONTEXT_MENU_TRIGGER;
+    /**
+     * The context-menu ID that has been triggered
+     */
+    contextMenu: string;
 }
 
 /**

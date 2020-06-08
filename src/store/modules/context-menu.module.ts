@@ -56,7 +56,7 @@ export function getContextMenuStoreModule(): Module<ContextMenuState> {
                 plugins: [
                     {
                         label: 'Plugin Manager ...',
-                        action: [CTX_MENU_PLUGIN_MANAGER_OPEN],
+                        actions: [CTX_MENU_PLUGIN_MANAGER_OPEN],
                     },
                 ],
                 keybindings: [

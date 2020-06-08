@@ -100,6 +100,9 @@ export function registerDefaultContextMenuFunctions(injector: Injector) {
         openKeybindgsEditor(electron);
     });
 
+    /*
+     * Plugin Actions
+     */
     FunctionRegistry.registerContextMenuAction(CTX_MENU_PLUGIN_MANAGER_OPEN, () => {
         openPluginManager(electron);
     });

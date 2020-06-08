@@ -19,8 +19,14 @@ import { VNode } from 'vue';
 
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../models/context-menu-item';
-import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
-import { ElectronServiceInterface, IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
+import {
+    ContextMenuTriggerBroadcast,
+    IPCClientInterface,
+    IPCServerInterface,
+    MessageType,
+    PublishGlobalEventRequest,
+} from '../models/ipc';
+import { ElectronServiceInterface, IPC_CLIENT_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN } from '../models/services';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 
@@ -41,7 +47,10 @@ export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {
 export class ElectronService implements ElectronServiceInterface {
     private readonly url = 'http://localhost:8080#';
 
-    constructor(@Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface) { }
+    constructor(
+        @Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface,
+        @Inject(IPC_SERVER_SERVICE_TOKEN) protected ipcServer: IPCServerInterface
+    ) { }
 
     public isRenderProcess() {
         return !!remote;
@@ -197,16 +206,27 @@ export class ElectronService implements ElectronServiceInterface {
             options.click = (electronMenuItem, browserWindow, event) => {
                 menuItem.actions
                     .filter(actionName => typeof actionName === 'string' && actionName.length > 0)
-                    .map(actionName => FunctionRegistry.getContextMenuAction(actionName))
-                    .filter(action => typeof action === 'function')
-                    .forEach(action =>
-                        action({
-                            vNode,
-                            menuItem: electronMenuItem,
-                            browserWindow,
-                            event,
-                        })
-                    );
+                    .forEach(actionName => {
+                        const fn = FunctionRegistry.getContextMenuAction(actionName);
+
+                        if (typeof fn === 'function') {
+                            fn({
+                                vNode,
+                                menuItem: electronMenuItem,
+                                browserWindow,
+                                event,
+                            });
+                        }
+
+                        if (this.ipcServer != null) {
+                            const msg: ContextMenuTriggerBroadcast = {
+                                id: uuid(),
+                                type: MessageType.BROADCAST_CONTEXT_MENU_TRIGGER,
+                                contextMenu: actionName,
+                            };
+                            this.ipcServer.publishMessage(msg);
+                        }
+                    });
             };
         }
 

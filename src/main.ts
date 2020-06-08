@@ -4,7 +4,7 @@ import { join } from 'path';
 import * as pino from 'pino';
 import { first, map, timeout } from 'rxjs/operators';
 import { format as formatUrl } from 'url';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
@@ -133,7 +133,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Setup the Keybiding Functions
     registerDefaultKeybindingFunctions(injector);
-    registerKeybindingsListener(store);
+    registerKeybindingsListener(injector);
 
     // Start plugin child process
     let pluginProcess = await forkPluginProcess(ipcServer);
