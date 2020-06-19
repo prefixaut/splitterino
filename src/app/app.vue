@@ -40,11 +40,21 @@ export default class AppComponent extends Vue {
 
     .app-content {
         overflow: auto;
-        height: calc(100% - #{$spl-title-bar-height});
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: auto;
     }
 
     &.is-main-window:not(.show-title-bar) .app-content {
         height: 100%;
+    }
+
+    .title-bar + .app-content {
+        height: calc(100% - #{$spl-title-bar-height});
+        top: #{$spl-title-bar-height};
     }
 }
 </style>
