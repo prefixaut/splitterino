@@ -11,8 +11,7 @@ import {
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
 } from '../../src/models/services';
-import { RootState } from '../../src/models/states/root.state';
-import { Module } from '../../src/models/store';
+import { Module, RootState } from '../../src/models/store';
 import { ActionService } from '../../src/services/action.service';
 import { IOService } from '../../src/services/io.service';
 import { IPCServerService } from '../../src/services/ipc-server.service';

@@ -5,7 +5,7 @@ import { merge } from 'lodash';
 import { TimerStatus } from '../../../src/common/timer-status';
 import { ACTION_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../../src/models/services';
 import { Region, Segment } from '../../../src/models/splits';
-import { RootState } from '../../../src/models/states/root.state';
+import { RootState } from '../../../src/models/store';
 import { getContextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
 import { getGameInfoStoreModule } from '../../../src/store/modules/game-info.module';
 import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';

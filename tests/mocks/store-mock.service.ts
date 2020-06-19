@@ -1,8 +1,7 @@
 import { Injectable } from 'lightweight-di';
 
 import { StoreInterface } from '../../src/models/services';
-import { RootState } from '../../src/models/states/root.state';
-import { Commit } from '../../src/models/store';
+import { Commit, RootState } from '../../src/models/store';
 import { createCommit } from '../../src/utils/store';
 
 @Injectable

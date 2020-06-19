@@ -6,7 +6,7 @@ import { createPluginTestInjector } from '../../utils';
 import { Plugin } from '../../../src/models/plugins';
 import { STORE_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
 import { ReceiverStoreService } from '../../../src/services/receiver-store.service';
-import { RootState } from '../../../src/models/states/root.state';
+import { RootState } from '../../../src/models/store';
 
 let pluginInjector: Injector;
 

@@ -3,12 +3,12 @@ import { Aevum } from 'aevum';
 import { expect } from 'chai';
 import { Store } from 'vuex';
 
-import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
-import { TimerStatus } from '../../../src/common/timer-status';
 import TimerComponent from '../../../src/app/components/timer.vue';
 import { aevumFilter } from '../../../src/app/filters/aevum.filter';
-import { RootState } from '../../../src/models/states/root.state';
+import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
+import { TimerStatus } from '../../../src/common/timer-status';
 import { TimerState } from '../../../src/models/states/timer.state';
+import { RootState } from '../../../src/models/store';
 import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, wait } from '../../utils';

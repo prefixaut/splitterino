@@ -107,8 +107,8 @@ process.on('unhandledRejection', (reason, promise) => {
     const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
     store.setupIpcHooks();
     const splitterinoModules = getSplitterinoModules(injector);
-    for (const [moduleName, module] of Object.values(splitterinoModules)) {
-        store.registerModule(SPLITTERINO_NAMESPACE_NAME, moduleName, module);
+    for (const moduleName of Object.keys(splitterinoModules)) {
+        store.registerModule(SPLITTERINO_NAMESPACE_NAME, moduleName, splitterinoModules[moduleName]);
     }
 
     // load application settings

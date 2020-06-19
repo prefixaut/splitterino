@@ -15,7 +15,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
 import { PluginMetaFile } from '../../models/files';
-import { PluginIdentifier } from '../../models/states/plugin.state';
+import { PluginIdentifier } from '../../models/states/plugins.state';
 import { HANDLER_ENABLE_PLUGIN, HANDLER_DISABLE_PLUGIN } from '../../store/modules/plugin.module';
 
 @Component({ name: 'spl-plugin-list' })
