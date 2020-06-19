@@ -13,7 +13,7 @@ export interface LoadedPlugin {
     folderName: string;
 }
 
-export interface PluginState {
+export interface PluginsState {
     pluginList: LoadedPlugin[];
     enabledPlugins: PluginIdentifier[];
 }

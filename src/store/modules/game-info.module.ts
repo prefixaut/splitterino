@@ -1,11 +1,12 @@
 import ISO6391 from 'iso-639-1';
 
+import { GAME_INFO_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
 import { SplitsFile } from '../../models/files';
 import { Region } from '../../models/splits';
 import { GameInfoState } from '../../models/states/game-info.state';
 import { Module } from '../../models/store';
 
-export const MODULE_PATH = 'splitterino/gameInfo';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${GAME_INFO_MODULE_NAME}`;
 
 export const ID_HANDLER_SET_GAME_NAME = 'setGameName';
 export const ID_HANDLER_SET_CATEGORY = 'setCategory';

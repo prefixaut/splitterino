@@ -1,6 +1,22 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 
+import {
+    DEFAULT_ROUTE,
+    DEFAULT_ROUTE_NAME,
+    KEYBINDINGS_ROUTE,
+    KEYBINDINGS_ROUTE_NAME,
+    OPEN_SPLITS_ROUTE,
+    OPEN_SPLITS_ROUTE_NAME,
+    OPEN_TEMPLATE_ROUTE,
+    OPEN_TEMPLATE_ROUTE_NAME,
+    PLUGIN_MANAGER_ROUTE,
+    PLUGIN_MANAGER_ROUTE_NAME,
+    SETTINGS_ROUTE,
+    SETTINGS_ROUTE_NAME,
+    SPLITS_EDITOR_ROUTE,
+    SPLITS_EDITOR_ROUTE_NAME,
+} from '../common/constants';
 import DefaultView from './views/default.view.vue';
 import KeybindingsEditorView from './views/keybindings-editor.view.vue';
 import OpenSplitsView from './views/open-splits.view.vue';
@@ -16,41 +32,41 @@ export const router = new Router({
     routes: [
         {
             path: '/',
-            redirect: '/default'
+            redirect: DEFAULT_ROUTE,
         },
         {
-            path: '/default',
-            name: 'default',
+            path: DEFAULT_ROUTE,
+            name: DEFAULT_ROUTE_NAME,
             component: DefaultView,
         },
         {
-            path: '/keybindings',
-            name: 'keybindings',
+            path: KEYBINDINGS_ROUTE,
+            name: KEYBINDINGS_ROUTE_NAME,
             component: KeybindingsEditorView,
         },
         {
-            path: '/settings',
-            name: 'settings',
+            path: SETTINGS_ROUTE,
+            name: SETTINGS_ROUTE_NAME,
             component: SettingsEditorView,
         },
         {
-            path: '/splits-editor',
-            name: 'editor',
+            path: SPLITS_EDITOR_ROUTE,
+            name: SPLITS_EDITOR_ROUTE_NAME,
             component: SplitsEditorView,
         },
         {
-            path: '/open-splits',
-            name: 'open-splits',
+            path: OPEN_SPLITS_ROUTE,
+            name: OPEN_SPLITS_ROUTE_NAME,
             component: OpenSplitsView,
         },
         {
-            path: '/open-template',
-            name: 'open-template',
+            path: OPEN_TEMPLATE_ROUTE,
+            name: OPEN_TEMPLATE_ROUTE_NAME,
             component: OpenTemplateView,
         },
         {
-            path: '/plugin-manager',
-            name: 'plugin-manager',
+            path: PLUGIN_MANAGER_ROUTE,
+            name: PLUGIN_MANAGER_ROUTE_NAME,
             component: PluginManagerView,
         },
     ]

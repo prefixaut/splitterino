@@ -34,8 +34,9 @@ import {
 import { TimingMethod } from '../models/splits';
 import { GameInfoState } from '../models/states/game-info.state';
 import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
-import { RootState } from '../models/states/root.state';
+import { LoadedPlugin } from '../models/states/plugins.state';
 import { Settings } from '../models/states/settings.state';
+import { RootState } from '../models/store';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_GAME_MODULE_SPLITS_FILE } from '../store/modules/game-info.module';
 import {
     HANDLER_ADD_OPENED_SPLITS_FILE,
@@ -47,7 +48,6 @@ import { HANDLER_SET_ALL_SETTINGS } from '../store/modules/settings.module';
 import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
 import { Logger } from '../utils/logger';
-import { LoadedPlugin } from '../models/states/plugin.state';
 
 @Injectable
 export class IOService implements IOServiceInterface {

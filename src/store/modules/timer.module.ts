@@ -1,9 +1,10 @@
+import { SPLITTERINO_NAMESPACE_NAME, TIMER_MODULE_NAME } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
 import { TimerState } from '../../models/states/timer.state';
 import { Module } from '../../models/store';
 import { now } from '../../utils/time';
 
-export const MODULE_PATH = 'splitterino/timer';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${TIMER_MODULE_NAME}`;
 
 export const ID_HANDLER_SET_START_DELAY = 'setStartDelay';
 export const ID_HANDLER_SET_STATUS = 'setStatus';

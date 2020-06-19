@@ -14,7 +14,7 @@ import {
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
 } from '../models/services';
-import { RootState } from '../models/states/root.state';
+import { RootState } from '../models/store';
 import { HandlerStoreService } from '../services/handler-store.service';
 import { PluginInstanceStoreService } from '../services/plugin-instance-store.service';
 import { isDevelopment } from '../utils/is-development';

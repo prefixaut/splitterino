@@ -11,7 +11,7 @@ import {
 } from '../models/services';
 import { Segment, TimingMethod } from '../models/splits';
 import { RecentlyOpenedSplit } from '../models/states/meta.state';
-import { RootState } from '../models/states/root.state';
+import { RootState } from '../models/store';
 import { HANDLER_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
 import {
     HANDLER_DISCARDING_RESET,

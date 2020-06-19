@@ -1,8 +1,8 @@
+import { PLUGINS_NAMESPACE_NAME } from '../common/constants';
 import { StoreInterface } from '../models/services';
-import { RootState } from '../models/states/root.state';
-import { Commit, Module } from '../models/store';
-import { HandlerStoreService } from './handler-store.service';
+import { Commit, Module, RootState } from '../models/store';
 import { Logger } from '../utils/logger';
+import { HandlerStoreService } from './handler-store.service';
 
 export class PluginInstanceStoreService implements StoreInterface<RootState> {
     constructor(
@@ -28,6 +28,6 @@ export class PluginInstanceStoreService implements StoreInterface<RootState> {
             plugin: this.moduleName,
         });
 
-        return this.store.registerModule('plugins', this.moduleName, module);
+        return this.store.registerModule(PLUGINS_NAMESPACE_NAME, this.moduleName, module);
     }
 }

@@ -1,9 +1,8 @@
 import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
-import { Commit, StoreState } from '../models/store';
+import { Commit, RootState, StoreState } from '../models/store';
 import { LogLevel } from '../utils/logger';
-import { RootState } from './states/root.state';
 
 export interface IPCClientInterface {
     isInitialized(): boolean;
@@ -81,7 +80,9 @@ export enum MessageType {
     // General purpose
     REQUEST_PUBLISH_GLOBAL_EVENT = 'REQUEST_PUBLISH_GLOBAL_EVENT',
     BROADCAST_GLOBAL_EVENT = 'BROADCAST_GLOBAL_EVENT',
+    REQUEST_TRIGGER_KEYBINDING = 'REQUEST_TRIGGER_KEYBINDING',
     BROADCAST_KEYBINDING_TRIGGER = 'BROADCAST_KEYBINDING_TRIGGER',
+    REQUEST_TRIGGER_CONTEXT_MENU = 'REQUEST_TRIGGER_CONTEXT_MENU',
     BROADCAST_CONTEXT_MENU_TRIGGER = 'BROADCAST_CONTEXT_MENU_TRIGGER',
     REQUEST_LOG_ON_SERVER = 'REQUEST_LOG_ON_SERVER',
     RESPONSE_INVALID_REQUEST = 'RESPONSE_INVALID_REQUEST',
@@ -135,6 +136,8 @@ export interface Request extends Message {
     | MessageType.REQUEST_STORE_UNREGISTER_NAMESPACE
     | MessageType.REQUEST_STORE_REGISTER_MODULE
     | MessageType.REQUEST_STORE_UNREGISTER_MODULE
+    | MessageType.REQUEST_TRIGGER_CONTEXT_MENU
+    | MessageType.REQUEST_TRIGGER_KEYBINDING
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
     ;
@@ -448,6 +451,18 @@ export interface GlobalEventBroadcast extends Broadcast {
 }
 
 /**
+ * A request to trigger a keybinding action
+ */
+export interface TriggerKeybindingRequest extends Request {
+    type: MessageType.REQUEST_TRIGGER_KEYBINDING;
+    /**
+     * The keybinding ID that should get triggered
+     */
+    keybinding: string;
+}
+
+
+/**
  * A broadcast whenever a keybinding has been triggered
  */
 export interface KeybindingTriggerBroadcast extends Broadcast {
@@ -456,6 +471,17 @@ export interface KeybindingTriggerBroadcast extends Broadcast {
      * The keybinding ID that has been triggered
      */
     keybinding: string;
+}
+
+/**
+ * A request to trigger a context-menu action
+ */
+export interface TriggerContextMenuRequest extends Request {
+    type: MessageType.REQUEST_TRIGGER_CONTEXT_MENU;
+    /**
+     * The context-menu ID that should get triggered
+     */
+    contextMenu: string;
 }
 
 /**

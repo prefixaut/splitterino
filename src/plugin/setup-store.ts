@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 
 import { STORE_SERVICE_TOKEN } from '../models/services';
-import { RootState } from '../models/states/root.state';
+import { RootState } from '../models/store';
 import { HandlerStoreService } from '../services/handler-store.service';
 import { Logger } from '../utils/logger';
 

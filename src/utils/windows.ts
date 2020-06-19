@@ -1,5 +1,13 @@
 import { Injector } from 'lightweight-di';
 
+import {
+    KEYBINDINGS_ROUTE,
+    OPEN_SPLITS_ROUTE,
+    OPEN_TEMPLATE_ROUTE,
+    PLUGIN_MANAGER_ROUTE,
+    SETTINGS_ROUTE,
+    SPLITS_EDITOR_ROUTE,
+} from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
 import {
     ACTION_SERVICE_TOKEN,
@@ -19,7 +27,7 @@ export function openKeybindgsEditor(electron: ElectronServiceInterface) {
             modal: true,
             minimizable: false
         },
-        '/keybindings'
+        KEYBINDINGS_ROUTE
     );
 }
 
@@ -33,7 +41,7 @@ export function openSettingsEditor(electron: ElectronServiceInterface) {
             modal: true,
             minimizable: false
         },
-        '/settings'
+        SETTINGS_ROUTE
     );
 }
 
@@ -47,7 +55,7 @@ export function openPluginManager(electron: ElectronServiceInterface) {
             modal: true,
             minimizable: false
         },
-        '/plugin-manager'
+        PLUGIN_MANAGER_ROUTE
     );
 }
 
@@ -74,7 +82,7 @@ export function openSplitsBrowser(electron: ElectronServiceInterface) {
             modal: true,
             minimizable: false
         },
-        '/open-splits'
+        OPEN_SPLITS_ROUTE
     );
 }
 
@@ -101,7 +109,7 @@ export function openTemplateBrowser(electron: ElectronServiceInterface) {
             modal: true,
             minimizable: false
         },
-        '/open-template'
+        OPEN_TEMPLATE_ROUTE
     );
 }
 
@@ -132,6 +140,6 @@ export async function openSplitsEditor(injector: Injector) {
             modal: true,
             minimizable: false
         },
-        '/splits-editor'
+        SPLITS_EDITOR_ROUTE
     );
 }

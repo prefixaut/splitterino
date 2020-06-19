@@ -1,5 +1,6 @@
 import { Injector } from 'lightweight-di';
 
+import { SPLITS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
 import { SplitsFile } from '../../models/files';
 import { VALIDATOR_SERVICE_TOKEN } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
@@ -8,7 +9,7 @@ import { Module } from '../../models/store';
 import { asCleanNumber } from '../../utils/converters';
 import { getFinalTime } from '../../utils/time';
 
-export const MODULE_PATH = 'splitterino/splits';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${SPLITS_MODULE_NAME}`;
 
 export const ID_HANDLER_SET_CURRENT = 'setCurrent';
 export const ID_HANDLER_SET_TIMING = 'setTiming';

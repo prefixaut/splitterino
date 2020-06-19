@@ -7,6 +7,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
+import { SETTING_TIMER_FORMAT } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
 import { getValueByPath } from '../../store/modules/settings.module';
 import { State } from '../../utils/store';
@@ -71,7 +72,7 @@ export default class TimerComponent extends Vue {
         if (this.format != null) {
             return this.format;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.timer.format');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_TIMER_FORMAT);
         }
     }
 

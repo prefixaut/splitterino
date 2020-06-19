@@ -68,6 +68,45 @@ export const DEFAULT_APPLICATION_SETTINGS: ApplicationSettings = {
 };
 
 /*
+ * Store namespaces/modules
+ */
+export const SPLITTERINO_NAMESPACE_NAME = 'splitterino';
+export const PLUGINS_NAMESPACE_NAME = 'plugins';
+
+export const CONTEXT_MENU_MODULE_NAME = 'contextMenu';
+export const GAME_INFO_MODULE_NAME = 'gameInfo';
+export const KEYBINDINGS_MODULE_NAME = 'keybindings';
+export const META_MODULE_NAME = 'meta';
+export const PLUGINS_MODULE_NAME = 'plugins';
+export const SETTINGS_MODULE_NAME = 'settings';
+export const SPLITS_MODULE_NAME = 'splits';
+export const TIMER_MODULE_NAME = 'timer';
+
+/*
+ * Routes
+ */
+export const DEFAULT_ROUTE = '/default';
+export const DEFAULT_ROUTE_NAME = 'default';
+
+export const KEYBINDINGS_ROUTE = '/keybindings';
+export const KEYBINDINGS_ROUTE_NAME = 'keybindings';
+
+export const SETTINGS_ROUTE = '/settings';
+export const SETTINGS_ROUTE_NAME = 'settings';
+
+export const SPLITS_EDITOR_ROUTE = '/splits-editor';
+export const SPLITS_EDITOR_ROUTE_NAME = 'splits-editor';
+
+export const OPEN_SPLITS_ROUTE = '/open-splits';
+export const OPEN_SPLITS_ROUTE_NAME = 'open-splits';
+
+export const OPEN_TEMPLATE_ROUTE = '/open-template';
+export const OPEN_TEMPLATE_ROUTE_NAME = 'open-template';
+
+export const PLUGIN_MANAGER_ROUTE = '/plugin-manager';
+export const PLUGIN_MANAGER_ROUTE_NAME = 'plugin-manager';
+
+/*
  * Global Event names
  */
 export const GLOBAL_EVENT_LOAD_TEMPLATE = 'load-template';
@@ -110,44 +149,60 @@ export const IPC_PULL_PUSH_ADDRESS = 'tcp://127.0.0.1:3732';
 /*
  * Settings
  */
+export const SETTINGS_NAMESPACE_CORE = 'core';
+
+export const SETTINGS_GROUP_SPLITS = 'splits';
+export const SETTINGS_GROUP_TIMER = 'timer';
+export const SETTINGS_GROUP_APP = 'app';
+
+export const SETTING_ID_PIN_LAST_SEGMENT = 'pinLastSegment';
+export const SETTING_ID_VISIBLE_UPCOMING_SEGMENTS = 'visibleUpcomingSegments';
+export const SETTING_ID_VISIBLE_PREVIOUS_SEGMENTS = 'visiblePreviousSegments';
+export const SETTING_ID_SEGMENT_TIME_FORMAT = 'segmentTimeFormat';
+export const SETTING_ID_COMPARISON_TIME_FORMAT = 'comparisonTimeFormat';
+
+export const SETTING_ID_FORMAT = 'format';
+
+export const SETTING_ID_SHOW_TITLE_BAR = 'showTitleBar';
+
 export const CORE_SETTINGS: SettingsConfigurationNamespace = {
-    key: 'core',
+    key: SETTINGS_NAMESPACE_CORE,
     label: 'Core',
     groups: [
         {
-            key: 'splits',
+            key: SETTINGS_GROUP_SPLITS,
             label: 'Splits',
             settings: [
                 {
-                    key: 'pinLastSegment',
+                    key: SETTING_ID_PIN_LAST_SEGMENT,
                     label: 'Pin the last Segment',
                     component: 'spl-checkbox',
                     componentProps: {},
                     defaultValue: false,
                 },
                 {
-                    key: 'visibleUpcomingSegments',
+                    key: SETTING_ID_VISIBLE_UPCOMING_SEGMENTS,
                     label: 'Visible upcoming Segments',
                     component: 'spl-number-input',
                     componentProps: {},
                     defaultValue: 2,
                 },
                 {
-                    key: 'visiblePreviousSegments',
+                    key: SETTING_ID_VISIBLE_PREVIOUS_SEGMENTS,
                     label: 'Visible previous Segments',
                     component: 'spl-number-input',
                     componentProps: {},
                     defaultValue: 1,
                 },
                 {
-                    key: 'formatSegmentTime',
+                    key: SETTING_ID_SEGMENT_TIME_FORMAT,
                     label: 'Segment Time Format',
                     component: 'spl-aevum-format-input',
                     componentProps: {},
                     defaultValue: DEFAULT_TIMER_FORMAT,
                 },
                 {
-                    key: 'formatComparisonTime',
+                    key: SETTING_ID_COMPARISON_TIME_FORMAT,
                     label: 'Segment Comparison Format',
                     component: 'spl-aevum-format-input',
                     componentProps: {},
@@ -156,11 +211,11 @@ export const CORE_SETTINGS: SettingsConfigurationNamespace = {
             ]
         },
         {
-            key: 'timer',
+            key: SETTINGS_GROUP_TIMER,
             label: 'Timer',
             settings: [
                 {
-                    key: 'format',
+                    key: SETTING_ID_FORMAT,
                     label: 'Format',
                     component: 'spl-aevum-format-input',
                     componentProps: {},
@@ -169,11 +224,11 @@ export const CORE_SETTINGS: SettingsConfigurationNamespace = {
             ]
         },
         {
-            key: 'app',
+            key: SETTINGS_GROUP_APP,
             label: 'Application',
             settings: [
                 {
-                    key: 'showTitleBar',
+                    key: SETTING_ID_SHOW_TITLE_BAR,
                     label: 'Show Title Bar',
                     component: 'spl-checkbox',
                     componentProps: {},
@@ -183,3 +238,11 @@ export const CORE_SETTINGS: SettingsConfigurationNamespace = {
         },
     ]
 };
+
+export const SETTING_SPLITS_PIN_LAST_SEGMENT = `${SETTINGS_NAMESPACE_CORE}.${SETTINGS_GROUP_SPLITS}.${SETTING_ID_PIN_LAST_SEGMENT}`;
+export const SETTING_SPLITS_VISIBLE_UPCOMING_SEGMENTS = `${SETTINGS_NAMESPACE_CORE}.${SETTINGS_GROUP_SPLITS}.${SETTING_ID_VISIBLE_UPCOMING_SEGMENTS}`;
+export const SETTING_SPLITS_VISIBLE_PREVIOUS_SEGMENTS = `${SETTINGS_NAMESPACE_CORE}.${SETTINGS_GROUP_SPLITS}.${SETTING_ID_VISIBLE_PREVIOUS_SEGMENTS}`;
+export const SETTING_SPLITS_SEGMENT_TIME_FORMAT = `${SETTINGS_NAMESPACE_CORE}.${SETTINGS_GROUP_SPLITS}.${SETTING_ID_SEGMENT_TIME_FORMAT}`;
+export const SETTING_SPLITS_COMPARISON_TIME_FORMAT = `${SETTINGS_NAMESPACE_CORE}.${SETTINGS_GROUP_SPLITS}.${SETTING_ID_COMPARISON_TIME_FORMAT}`;
+export const SETTING_TIMER_FORMAT = `${SETTINGS_NAMESPACE_CORE}/${SETTINGS_GROUP_TIMER}/${SETTING_ID_FORMAT}`;
+export const SETTING_APP_SHOW_TITLE_BAR = `${SETTINGS_NAMESPACE_CORE}/${SETTINGS_GROUP_APP}/${SETTING_ID_SHOW_TITLE_BAR}`;

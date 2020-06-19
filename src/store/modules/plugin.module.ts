@@ -1,7 +1,8 @@
-import { LoadedPlugin, PluginIdentifier, PluginState } from '../../models/states/plugin.state';
+import { PLUGINS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import { LoadedPlugin, PluginIdentifier, PluginsState } from '../../models/states/plugins.state';
 import { Module } from '../../models/store';
 
-const MODULE_PATH = 'splitterino/plugin';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${PLUGINS_MODULE_NAME}`;
 
 export const ID_HANDLER_REPLACE_PLUGINS = 'replacePlugins';
 export const ID_HANDLER_ADD_PLUGIN = 'addPlugin';
@@ -15,7 +16,7 @@ export const HANDLER_REMOVE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_REMOVE_PLUGIN}
 export const HANDLER_ENABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_ENABLE_PLUGIN}`;
 export const HANDLER_DISABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_DISABLE_PLUGIN}`;
 
-export function getPluginStoreModule(): Module<PluginState> {
+export function getPluginStoreModule(): Module<PluginsState> {
     return {
         initialize() {
             return {
@@ -24,7 +25,7 @@ export function getPluginStoreModule(): Module<PluginState> {
             };
         },
         handlers: {
-            [ID_HANDLER_REPLACE_PLUGINS](state: PluginState, loadedPlugins: LoadedPlugin[]) {
+            [ID_HANDLER_REPLACE_PLUGINS](state: PluginsState, loadedPlugins: LoadedPlugin[]) {
                 if (loadedPlugins == null) {
                     return {};
                 }
@@ -33,7 +34,7 @@ export function getPluginStoreModule(): Module<PluginState> {
                     pluginList: loadedPlugins
                 };
             },
-            [ID_HANDLER_ADD_PLUGIN](state: PluginState, loadedPlugin: LoadedPlugin) {
+            [ID_HANDLER_ADD_PLUGIN](state: PluginsState, loadedPlugin: LoadedPlugin) {
                 if (state.pluginList.findIndex(
                     plugin => {
                         const loadedMeta = loadedPlugin.meta;
@@ -52,7 +53,7 @@ export function getPluginStoreModule(): Module<PluginState> {
                     ]
                 };
             },
-            [ID_HANDLER_REMOVE_PLUGIN](state: PluginState, identifier: PluginIdentifier) {
+            [ID_HANDLER_REMOVE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
                 // If the plugin isn't registered yet, ignore the request
                 // TODO: Move this and other to helper function to stay DRY
                 const index = state.pluginList.findIndex(
@@ -67,7 +68,7 @@ export function getPluginStoreModule(): Module<PluginState> {
                     plugin => plugin.name === identifier.name && plugin.version === identifier.version
                 );
 
-                const result: Partial<PluginState> = {
+                const result: Partial<PluginsState> = {
                     pluginList: [
                         ...state.pluginList.slice(0, index),
                         ...state.pluginList.slice(index + 1),
@@ -84,7 +85,7 @@ export function getPluginStoreModule(): Module<PluginState> {
 
                 return result;
             },
-            [ID_HANDLER_ENABLE_PLUGIN](state: PluginState, identifier: PluginIdentifier) {
+            [ID_HANDLER_ENABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
                 // If the plugin isn't registered or already enabled, ignore the request
                 if (state.pluginList.findIndex(
                     plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version
@@ -101,7 +102,7 @@ export function getPluginStoreModule(): Module<PluginState> {
                     ],
                 };
             },
-            [ID_HANDLER_DISABLE_PLUGIN](state: PluginState, identifier: PluginIdentifier) {
+            [ID_HANDLER_DISABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
                 // If the plugin isn't enabled yet ignore it
                 if (state.pluginList.findIndex(
                     plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version

@@ -9,8 +9,7 @@ import draggable from 'vuedraggable';
 
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
 import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
-import { RootState } from '../models/states/root.state';
-import { Commit } from '../models/store';
+import { Commit, RootState } from '../models/store';
 import { ReceiverStoreService } from '../services/receiver-store.service';
 import { Logger, LogLevel } from '../utils/logger';
 import { createRendererInjector } from '../utils/services';

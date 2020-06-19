@@ -10,14 +10,13 @@ import { Dirent } from 'fs';
 import { InjectionToken } from 'lightweight-di';
 import { VNode } from 'vue';
 
-import { Commit, StoreState } from '../models/store';
+import { Commit, StoreState, RootState } from '../models/store';
 import { ApplicationSettings } from './application-settings';
 import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
 import { IPCClientInterface, IPCServerInterface } from './ipc';
 import { Segment, Splits } from './splits';
-import { LoadedPlugin } from './states/plugin.state';
-import { RootState } from './states/root.state';
+import { LoadedPlugin } from './states/plugins.state';
 
 export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionServiceInterface>('action');
 export const ELECTRON_SERVICE_TOKEN = new InjectionToken<ElectronServiceInterface>('electron');

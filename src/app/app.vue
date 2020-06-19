@@ -11,6 +11,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
+import { SETTING_APP_SHOW_TITLE_BAR } from '../common/constants';
 import { ELECTRON_SERVICE_TOKEN } from '../models/services';
 import { getValueByPath } from '../store/modules/settings.module';
 
@@ -25,7 +26,7 @@ export default class AppComponent extends Vue {
     }
 
     public get showTitleBar() {
-        return getValueByPath(this.$state.splitterino.settings)('splitterino.core.app.showTitleBar');
+        return getValueByPath(this.$state.splitterino.settings)(SETTING_APP_SHOW_TITLE_BAR);
     }
 }
 </script>

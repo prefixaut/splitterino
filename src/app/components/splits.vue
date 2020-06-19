@@ -32,6 +32,13 @@
 import { clamp } from 'lodash';
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
+import {
+    SETTING_SPLITS_VISIBLE_UPCOMING_SEGMENTS,
+    SETTING_SPLITS_VISIBLE_PREVIOUS_SEGMENTS,
+    SETTING_SPLITS_PIN_LAST_SEGMENT,
+    SETTING_SPLITS_SEGMENT_TIME_FORMAT,
+    SETTING_SPLITS_COMPARISON_TIME_FORMAT
+} from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
 import { Segment, TimingMethod } from '../../models/splits';
 import { getValueByPath } from '../../store/modules/settings.module';
@@ -112,7 +119,7 @@ export default class SplitsComponent extends Vue {
         if (this.visibleUpcomingSegments != null) {
             return this.visibleUpcomingSegments;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.visibleUpcomingSegments');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_SPLITS_VISIBLE_UPCOMING_SEGMENTS);
         }
     }
 
@@ -120,7 +127,7 @@ export default class SplitsComponent extends Vue {
         if (this.visiblePreviousSegments != null) {
             return this.visiblePreviousSegments;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.visiblePreviousSegments');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_SPLITS_VISIBLE_PREVIOUS_SEGMENTS);
         }
     }
 
@@ -128,7 +135,7 @@ export default class SplitsComponent extends Vue {
         if (this.pinLastSegment != null) {
             return this.pinLastSegment;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.pinLastSegment');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_SPLITS_PIN_LAST_SEGMENT);
         }
     }
 
@@ -136,7 +143,7 @@ export default class SplitsComponent extends Vue {
         if (this.segmentTimeFormat != null) {
             return this.segmentTimeFormat;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.formatSegmentTime');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_SPLITS_SEGMENT_TIME_FORMAT);
         }
     }
 
@@ -144,15 +151,20 @@ export default class SplitsComponent extends Vue {
         if (this.comparisonTimeFormat != null) {
             return this.comparisonTimeFormat;
         } else {
-            return getValueByPath(this.$state.splitterino.settings)('splitterino.core.splits.formatComparisonTime');
+            return getValueByPath(this.$state.splitterino.settings)(SETTING_SPLITS_COMPARISON_TIME_FORMAT);
         }
     }
 
     public get showTime() {
         return (index: number, comparison: boolean) => (
-            (this.status === 'running' || this.status === 'paused' || this.status === 'running_igt_pause') &&
-            index <= this.currentSegment
-        ) || this.status === 'finished' || (comparison && this.status === 'stopped');
+            (
+                this.status === TimerStatus.RUNNING ||
+                this.status === TimerStatus.PAUSED ||
+                this.status === TimerStatus.RUNNING_IGT_PAUSE
+            ) && index <= this.currentSegment
+        ) ||
+        this.status === TimerStatus.FINISHED ||
+        (comparison && this.status === TimerStatus.STOPPED);
     }
 
     public get visibleIndicies(): number[] {

@@ -28,7 +28,7 @@ import {
     UnregisterClientRequest,
     UnregisterClientResponse,
 } from '../models/ipc';
-import { RootState } from '../models/states/root.state';
+import { RootState } from '../models/store';
 import { createSharedObservableFromSocket } from '../utils/ipc';
 import { Logger } from '../utils/logger';
 

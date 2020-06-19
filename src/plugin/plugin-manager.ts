@@ -15,7 +15,7 @@ import {
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN
 } from '../models/services';
-import { LoadedPlugin } from '../models/states/plugin.state';
+import { LoadedPlugin } from '../models/states/plugins.state';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';
 import { HANDLER_REPLACE_PLUGINS } from '../store/modules/plugin.module';

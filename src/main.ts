@@ -10,23 +10,17 @@ import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-buil
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, MessageType } from './models/ipc';
 import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
-import { RootState } from './models/states/root.state';
-import { Module } from './models/store';
+import { RootState } from './models/store';
 import { ServerStoreService } from './services/server-store.service';
 import { registerKeybindingsListener } from './store/listeners/keybindings';
-import { getContextMenuStoreModule } from './store/modules/context-menu.module';
-import { getGameInfoStoreModule } from './store/modules/game-info.module';
-import { getKeybindingsStoreModule, HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
-import { getMetaStoreModule } from './store/modules/meta.module';
-import { getPluginStoreModule } from './store/modules/plugin.module';
-import { getSettingsStoreModule } from './store/modules/settings.module';
-import { getSplitsStoreModule } from './store/modules/splits.module';
-import { getTimerStoreModule } from './store/modules/timer.module';
+import { HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
 import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
+import { getSplitterinoModules } from './utils/store';
+import { SPLITTERINO_NAMESPACE_NAME } from './common/constants';
 
 process.on('uncaughtException', (error: Error) => {
     // TODO: Fix Logger not logging errors at all (empty string result)
@@ -112,18 +106,9 @@ process.on('unhandledRejection', (reason, promise) => {
     // Initialize the Store and it's modules
     const store = injector.get(STORE_SERVICE_TOKEN) as ServerStoreService<RootState>;
     store.setupIpcHooks();
-    const coreStoreModules: { [name: string]: Module<any> } = {
-        contextMenu: getContextMenuStoreModule(),
-        gameInfo: getGameInfoStoreModule(),
-        keybindings: getKeybindingsStoreModule(),
-        meta: getMetaStoreModule(),
-        plugin: getPluginStoreModule(),
-        settings: getSettingsStoreModule(injector),
-        splits: getSplitsStoreModule(injector),
-        timer: getTimerStoreModule(),
-    };
-    for (const moduleName of Object.keys(coreStoreModules)) {
-        store.registerModule('splitterino', moduleName, coreStoreModules[moduleName]);
+    const splitterinoModules = getSplitterinoModules(injector);
+    for (const [moduleName, module] of Object.values(splitterinoModules)) {
+        store.registerModule(SPLITTERINO_NAMESPACE_NAME, moduleName, module);
     }
 
     // load application settings

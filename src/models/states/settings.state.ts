@@ -1,4 +1,3 @@
-/** Settings state */
 export interface SettingsState {
     /** Configuration for settings */
     configuration: SettingsConfiguration;

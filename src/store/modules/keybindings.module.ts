@@ -4,12 +4,14 @@ import {
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
+    SPLITTERINO_NAMESPACE_NAME,
+    KEYBINDINGS_MODULE_NAME,
 } from '../../common/constants';
 import { ActionKeybinding, isActionKeybinding } from '../../models/keybindings';
 import { KeybindingsState } from '../../models/states/keybindings.state';
 import { Module } from '../../models/store';
 
-const MODULE_PATH = 'splitterino/keybindings';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${KEYBINDINGS_MODULE_NAME}`;
 
 export const ID_HANDLER_SET_BINDINGS = 'setBindings';
 export const ID_HANDLER_DISABLE_BINDINGS = 'disableBindings';

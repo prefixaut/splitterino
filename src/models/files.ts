@@ -1,5 +1,5 @@
 import { Splits } from './splits';
-import { PluginIdentifier } from './states/plugin.state';
+import { PluginIdentifier } from './states/plugins.state';
 
 export const MOST_RECENT_SPLITS_VERSION = '0.1';
 

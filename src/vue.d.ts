@@ -2,8 +2,7 @@ import { Injector } from 'lightweight-di';
 import { WatchOptions } from 'vue';
 import Vue from 'vuex';
 
-import { RootState } from './models/states/root.state';
-import { Commit } from './models/store';
+import { Commit, RootState } from './models/store';
 
 type StoreObserveHandler = (state: RootState) => any;
 

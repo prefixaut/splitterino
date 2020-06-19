@@ -1,7 +1,8 @@
+import { META_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
 import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../models/states/meta.state';
 import { Module } from '../../models/store';
 
-const MODULE_PATH = 'splitterino/meta';
+const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${META_MODULE_NAME}`;
 
 export const ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES = 'setLastOpenedSplitsFiles';
 export const ID_HANDLER_ADD_OPENED_SPLITS_FILE = 'addOpenedSplitsFile';
