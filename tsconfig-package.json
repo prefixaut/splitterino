@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "ES2017",
+        "module": "CommonJS",
+        "outDir": "dist",
+        "moduleResolution": "Node",
+        "sourceMap": false,
+        "declaration": true,
+        "strict": false,
+        "importHelpers": true,
+        "experimentalDecorators": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "types": ["node"],
+        "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+    },
+    "include": ["src/package-export.ts"],
+    "exclude": ["node_modules", "tests"]
+}
