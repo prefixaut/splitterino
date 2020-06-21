@@ -18,7 +18,7 @@ import {
 import { LoadedPlugin } from '../models/states/plugins.state';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';
-import { HANDLER_REPLACE_PLUGINS } from '../store/modules/plugin.module';
+import { HANDLER_REPLACE_PLUGINS } from '../store/modules/plugins.module';
 
 interface InstantiatedPlugin {
     loadedPlugin: LoadedPlugin;

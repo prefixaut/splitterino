@@ -1,4 +1,5 @@
 import { PLUGINS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
 import { LoadedPlugin, PluginIdentifier, PluginsState } from '../../models/states/plugins.state';
 import { Module } from '../../models/store';
 
@@ -16,7 +17,9 @@ export const HANDLER_REMOVE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_REMOVE_PLUGIN}
 export const HANDLER_ENABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_ENABLE_PLUGIN}`;
 export const HANDLER_DISABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_DISABLE_PLUGIN}`;
 
-export function getPluginStoreModule(): Module<PluginsState> {
+export function getPluginStoreModule(injector): Module<PluginsState> {
+    const validator = injector.get(VALIDATOR_SERVICE_TOKEN) as ValidatorServiceInterface;
+
     return {
         initialize() {
             return {
@@ -35,14 +38,11 @@ export function getPluginStoreModule(): Module<PluginsState> {
                 };
             },
             [ID_HANDLER_ADD_PLUGIN](state: PluginsState, loadedPlugin: LoadedPlugin) {
-                if (state.pluginList.findIndex(
-                    plugin => {
-                        const loadedMeta = loadedPlugin.meta;
-                        const pluginMeta = plugin.meta;
+                if (!validator.isPluginMetaFile(loadedPlugin.meta)) {
+                    return {};
+                }
 
-                        return pluginMeta.name === loadedMeta.name && pluginMeta.version === loadedMeta.version;
-                    }
-                ) === -1) {
+                if (isPluginRegisteredGetter(state)(loadedPlugin.meta)) {
                     return {};
                 }
 
@@ -54,19 +54,14 @@ export function getPluginStoreModule(): Module<PluginsState> {
                 };
             },
             [ID_HANDLER_REMOVE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
-                // If the plugin isn't registered yet, ignore the request
-                // TODO: Move this and other to helper function to stay DRY
-                const index = state.pluginList.findIndex(
-                    plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version
-                );
+                // If the plugin isn't registered yet, ignore it
+                const index = registeredPluginIndexGetter(state)(identifier);
                 if (index > -1) {
                     return {};
                 }
 
                 // See if the plugin is enabled
-                const enabledIndex = state.enabledPlugins.findIndex(
-                    plugin => plugin.name === identifier.name && plugin.version === identifier.version
-                );
+                const enabledIndex = enabledPluginIndexGetter(state)(identifier);
 
                 const result: Partial<PluginsState> = {
                     pluginList: [
@@ -87,45 +82,72 @@ export function getPluginStoreModule(): Module<PluginsState> {
             },
             [ID_HANDLER_ENABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
                 // If the plugin isn't registered or already enabled, ignore the request
-                if (state.pluginList.findIndex(
-                    plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version
-                ) === -1 || state.enabledPlugins.findIndex(
-                    plugin => plugin.name === identifier.name && plugin.version === identifier.version
-                ) !== -1) {
+                if (!isPluginRegisteredGetter(state)(identifier) || isPluginEnabledGetter(state)(identifier)) {
+                    console.log('plugin not registered yet or already enabled!', identifier);
+
                     return {};
                 }
 
                 return {
                     enabledPlugins: [
                         ...state.enabledPlugins,
-                        identifier,
+                        {
+                            name: identifier.name,
+                            version: identifier.version,
+                        }
                     ],
                 };
             },
             [ID_HANDLER_DISABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
-                // If the plugin isn't enabled yet ignore it
-                if (state.pluginList.findIndex(
-                    plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version
-                ) === -1) {
+                console.log('disabling plugin:', identifier);
+                // If the plugin isn't registered yet, ignore it
+                if (!isPluginRegisteredGetter(state)(identifier)) {
+                    console.log('plugin is not registered, can not disabled it');
+
                     return {};
                 }
 
                 // Can't disable the plugin if it isn't enabled
-                const index = state.enabledPlugins.findIndex(
-                    plugin => plugin.name === identifier.name && plugin.version === identifier.version
-                );
+                const index = enabledPluginIndexGetter(state)(identifier);
 
                 if (index === -1) {
+                    console.log('plugin is not enabled, can not disable it');
+
                     return {};
                 }
 
-                return {
+                const r = {
                     enabledPlugins: [
                         ...state.enabledPlugins.slice(0, index),
                         ...state.enabledPlugins.slice(index + 1),
                     ]
                 };
+                console.log(r);
+
+                return r;
             }
         }
     };
+}
+
+export function registeredPluginIndexGetter(state: PluginsState) {
+    return (identifier: PluginIdentifier) =>
+        state.pluginList.findIndex(
+            plugin => plugin.meta.name === identifier.name && plugin.meta.version === identifier.version
+        );
+}
+
+export function isPluginRegisteredGetter(state: PluginsState) {
+    return (identifier: PluginIdentifier) => registeredPluginIndexGetter(state)(identifier) !== -1;
+}
+
+export function enabledPluginIndexGetter(state: PluginsState) {
+    return (identifier: PluginIdentifier) =>
+        state.enabledPlugins.findIndex(
+            plugin => plugin.name === identifier.name && plugin.version === identifier.version
+        );
+}
+
+export function isPluginEnabledGetter(state: PluginsState) {
+    return (identifier: PluginIdentifier) => enabledPluginIndexGetter(state)(identifier) !== -1;
 }

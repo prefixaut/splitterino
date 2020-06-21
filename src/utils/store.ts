@@ -17,7 +17,7 @@ import { getContextMenuStoreModule } from '../store/modules/context-menu.module'
 import { getGameInfoStoreModule } from '../store/modules/game-info.module';
 import { getKeybindingsStoreModule } from '../store/modules/keybindings.module';
 import { getMetaStoreModule } from '../store/modules/meta.module';
-import { getPluginStoreModule } from '../store/modules/plugin.module';
+import { getPluginStoreModule } from '../store/modules/plugins.module';
 import { getSettingsStoreModule, getValueByPath } from '../store/modules/settings.module';
 import { getSplitsStoreModule } from '../store/modules/splits.module';
 import { getTimerStoreModule } from '../store/modules/timer.module';

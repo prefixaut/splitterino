@@ -6,21 +6,15 @@ import { TimerStatus } from '../../../src/common/timer-status';
 import { ACTION_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../../src/models/services';
 import { Region, Segment } from '../../../src/models/splits';
 import { RootState } from '../../../src/models/store';
-import { getContextMenuStoreModule } from '../../../src/store/modules/context-menu.module';
-import { getGameInfoStoreModule } from '../../../src/store/modules/game-info.module';
-import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
-import { getMetaStoreModule, HANDLER_ADD_OPENED_SPLITS_FILE } from '../../../src/store/modules/meta.module';
-import { getPluginStoreModule } from '../../../src/store/modules/plugin.module';
-import { getSettingsStoreModule } from '../../../src/store/modules/settings.module';
+import { HANDLER_ADD_OPENED_SPLITS_FILE } from '../../../src/store/modules/meta.module';
 import {
-    getSplitsStoreModule,
     HANDLER_SET_CURRENT,
     HANDLER_SET_PREVIOUS_IGT_TIME,
     HANDLER_SET_PREVIOUS_RTA_TIME,
     HANDLER_SET_SEGMENT,
 } from '../../../src/store/modules/splits.module';
-import { getTimerStoreModule, HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
-import { createCommit } from '../../../src/utils/store';
+import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
+import { createCommit, getSplitterinoModules } from '../../../src/utils/store';
 import { getTotalTime, now } from '../../../src/utils/time';
 import { ActionMockService } from '../../mocks/action-mock.service';
 import { StoreMockService } from '../../mocks/store-mock.service';
@@ -40,16 +34,7 @@ describe('Action-Service', () => {
             splitterino: {},
         } as RootState;
 
-        Object.entries({
-            contextMenu: getContextMenuStoreModule(),
-            gameInfo: getGameInfoStoreModule(),
-            keybindings: getKeybindingsStoreModule(),
-            meta: getMetaStoreModule(),
-            plugin: getPluginStoreModule(),
-            settings: getSettingsStoreModule(injector),
-            splits: getSplitsStoreModule(injector),
-            timer: getTimerStoreModule(),
-        }).forEach(([moduleName, storeModule]) => {
+        Object.entries(getSplitterinoModules(injector)).forEach(([moduleName, storeModule]) => {
             newState.splitterino[moduleName] = storeModule.initialize();
         });
 
