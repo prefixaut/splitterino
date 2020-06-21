@@ -25,7 +25,6 @@ import KeybindingInputComponent from './components/keybinding-input.vue';
 import NumberInputComponent from './components/number-input.vue';
 import OpenSplitsPromptComponent from './components/open-splits-prompt.vue';
 import OpenTemplatePromptComponent from './components/open-template-prompt.vue';
-import PluginListComponent from './components/plugin-list.vue';
 import PluginManagerComponent from './components/plugin-manager.vue';
 import PossibleTimeSaveComponent from './components/possible-time-save.vue';
 import PreviousSegmentComponent from './components/previous-segment.vue';
@@ -49,6 +48,9 @@ process.on('uncaughtException', error => {
         error: error,
     });
 
+    // eslint-disable-next-line no-console
+    console.error(error);
+
     // Close the window
     window.close();
 
@@ -62,6 +64,9 @@ process.on('unhandledRejection', (reason, promise) => {
         promise,
         error: reason,
     });
+
+    // eslint-disable-next-line no-console
+    console.error(reason);
 });
 
 (async () => {
@@ -143,7 +148,6 @@ function setupVueElements(injector: Injector) {
     Vue.component('spl-keybinding-editor', KeybindingEditorComponent);
     Vue.component('spl-keybinding-input', KeybindingInputComponent);
     Vue.component('spl-number-input', NumberInputComponent);
-    Vue.component('spl-plugin-list', PluginListComponent);
     Vue.component('spl-plugin-manager', PluginManagerComponent);
     Vue.component('spl-possible-time-save', PossibleTimeSaveComponent);
     Vue.component('spl-previous-segment', PreviousSegmentComponent);
