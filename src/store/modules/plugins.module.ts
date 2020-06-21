@@ -1,21 +1,13 @@
-import { PLUGINS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import {
+    ID_HANDLER_ADD_PLUGIN,
+    ID_HANDLER_DISABLE_PLUGIN,
+    ID_HANDLER_ENABLE_PLUGIN,
+    ID_HANDLER_REMOVE_PLUGIN,
+    ID_HANDLER_REPLACE_PLUGINS,
+} from '../../common/constants';
 import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
 import { LoadedPlugin, PluginIdentifier, PluginsState } from '../../models/states/plugins.state';
 import { Module } from '../../models/store';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${PLUGINS_MODULE_NAME}`;
-
-export const ID_HANDLER_REPLACE_PLUGINS = 'replacePlugins';
-export const ID_HANDLER_ADD_PLUGIN = 'addPlugin';
-export const ID_HANDLER_REMOVE_PLUGIN = 'removePlugin';
-export const ID_HANDLER_ENABLE_PLUGIN = 'enablePlugin';
-export const ID_HANDLER_DISABLE_PLUGIN = 'disablePlugin';
-
-export const HANDLER_REPLACE_PLUGINS = `${MODULE_PATH}/${ID_HANDLER_REPLACE_PLUGINS}`;
-export const HANDLER_ADD_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_ADD_PLUGIN}`;
-export const HANDLER_REMOVE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_REMOVE_PLUGIN}`;
-export const HANDLER_ENABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_ENABLE_PLUGIN}`;
-export const HANDLER_DISABLE_PLUGIN = `${MODULE_PATH}/${ID_HANDLER_DISABLE_PLUGIN}`;
 
 export function getPluginStoreModule(injector): Module<PluginsState> {
     const validator = injector.get(VALIDATOR_SERVICE_TOKEN) as ValidatorServiceInterface;

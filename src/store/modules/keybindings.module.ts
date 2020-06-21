@@ -1,23 +1,15 @@
 import {
+    ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS,
+    ID_HANDLER_SET_KEYBINDINGS_BINDINGS,
     KEYBINDING_SPLITS_RESET,
     KEYBINDING_SPLITS_SKIP,
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
-    SPLITTERINO_NAMESPACE_NAME,
-    KEYBINDINGS_MODULE_NAME,
 } from '../../common/constants';
 import { ActionKeybinding, isActionKeybinding } from '../../models/keybindings';
 import { KeybindingsState } from '../../models/states/keybindings.state';
 import { Module } from '../../models/store';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${KEYBINDINGS_MODULE_NAME}`;
-
-export const ID_HANDLER_SET_BINDINGS = 'setBindings';
-export const ID_HANDLER_DISABLE_BINDINGS = 'disableBindings';
-
-export const HANDLER_SET_BINDINGS = `${MODULE_PATH}/${ID_HANDLER_SET_BINDINGS}`;
-export const HANDLER_SET_DISABLE_BINDINGS = `${MODULE_PATH}/${ID_HANDLER_DISABLE_BINDINGS}`;
 
 export function getKeybindingsStoreModule(): Module<KeybindingsState> {
     return {
@@ -50,14 +42,14 @@ export function getKeybindingsStoreModule(): Module<KeybindingsState> {
             };
         },
         handlers: {
-            [ID_HANDLER_SET_BINDINGS](state: KeybindingsState, payload: ActionKeybinding[]) {
+            [ID_HANDLER_SET_KEYBINDINGS_BINDINGS](state: KeybindingsState, payload: ActionKeybinding[]) {
                 if (!Array.isArray(payload)) {
                     payload = [payload];
                 }
 
                 return { bindings: payload.filter(isActionKeybinding) };
             },
-            [ID_HANDLER_DISABLE_BINDINGS](state: KeybindingsState, payload: boolean) {
+            [ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS](state: KeybindingsState, payload: boolean) {
                 return { disableBindings: !!payload };
             }
         }

@@ -5,11 +5,10 @@ import { Store } from 'vuex';
 
 import TimerComponent from '../../../src/app/components/timer.vue';
 import { aevumFilter } from '../../../src/app/filters/aevum.filter';
-import { DEFAULT_TIMER_FORMAT } from '../../../src/common/constants';
+import { DEFAULT_TIMER_FORMAT, HANDLER_SET_TIMER_STATUS } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
 import { TimerState } from '../../../src/models/states/timer.state';
 import { RootState } from '../../../src/models/store';
-import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { createMockInjector, randomInt, wait } from '../../utils';
 
@@ -414,7 +413,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.PAUSED);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.PAUSED);
 
         await wait(secondWaitTime);
 
@@ -473,7 +472,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -532,7 +531,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -591,7 +590,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -653,7 +652,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.PAUSED);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.PAUSED);
 
         await wait(secondWaitTime);
 
@@ -712,7 +711,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -772,7 +771,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING);
 
         await wait(secondWaitTime);
 
@@ -832,7 +831,7 @@ describe('Timer.vue', () => {
         await wait(firstWaitTime);
 
         // Pausing the timer
-        store.commit(HANDLER_SET_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
+        store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.RUNNING_IGT_PAUSE);
 
         await wait(secondWaitTime);
 
@@ -891,7 +890,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -947,7 +946,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1003,7 +1002,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1058,7 +1057,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1115,7 +1114,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 
@@ -1172,7 +1171,7 @@ describe('Timer.vue', () => {
 
         // Pausing the timer
         const finishTime = now();
-        store.commit(HANDLER_SET_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
+        store.commit(HANDLER_SET_TIMER_STATUS, { status: TimerStatus.FINISHED, time: finishTime });
 
         await wait(secondWaitTime);
 

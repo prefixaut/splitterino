@@ -1,14 +1,14 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
 
-import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../../src/models/states/meta.state';
 import {
-    getMetaStoreModule,
-    ID_HANDLER_ADD_OPENED_SPLITS_FILE,
-    ID_HANDLER_ADD_OPENED_TEMPLATE_FILE,
-    ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES,
-    ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES,
-} from '../../../src/store/modules/meta.module';
+    ID_HANDLER_ADD_META_OPENED_SPLITS_FILE,
+    ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE,
+    ID_HANDLER_SET_META_LAST_OPENED_SPLITS_FILES,
+    ID_HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES,
+} from '../../../src/common/constants';
+import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../../src/models/states/meta.state';
+import { getMetaStoreModule } from '../../../src/store/modules/meta.module';
 
 function generateRandomSplitFileEntries(count: number = 10): RecentlyOpenedSplit[] {
     const splitFiles: RecentlyOpenedSplit[] = [];
@@ -49,7 +49,7 @@ describe('Meta Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES, () => {
+        describe(ID_HANDLER_SET_META_LAST_OPENED_SPLITS_FILES, () => {
             it('should set the last opened splits files', () => {
                 const state = metaModule.initialize();
                 const recentlyOpenedSplits: RecentlyOpenedSplit[] = [{
@@ -57,12 +57,12 @@ describe('Meta Store-Module', () => {
                     category: 'foo',
                     path: '/path/to/file'
                 }];
-                const diff = metaModule.handlers[ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES](state, recentlyOpenedSplits);
+                const diff = metaModule.handlers[ID_HANDLER_SET_META_LAST_OPENED_SPLITS_FILES](state, recentlyOpenedSplits);
                 expect(diff.lastOpenedSplitsFiles).to.deep.equal(recentlyOpenedSplits);
             });
         });
 
-        describe(ID_HANDLER_ADD_OPENED_SPLITS_FILE, () => {
+        describe(ID_HANDLER_ADD_META_OPENED_SPLITS_FILE, () => {
             it('should add a splits file to recently opened ones', () => {
                 const recentlyOpenedSplit: RecentlyOpenedSplit = {
                     gameName: 'test',
@@ -70,7 +70,7 @@ describe('Meta Store-Module', () => {
                     path: '/path/to/file'
                 };
                 const state = metaModule.initialize();
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_SPLITS_FILE](
                     state,
                     recentlyOpenedSplit
                 );
@@ -95,7 +95,7 @@ describe('Meta Store-Module', () => {
                     ],
                     lastOpenedTemplateFiles: [],
                 };
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_SPLITS_FILE](
                     state,
                     recentlyOpenedSplit
                 );
@@ -115,7 +115,7 @@ describe('Meta Store-Module', () => {
                     lastOpenedSplitsFiles: generateRandomSplitFileEntries(),
                     lastOpenedTemplateFiles: [],
                 };
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_SPLITS_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_SPLITS_FILE](
                     state,
                     recentlyOpenedSplit
                 );
@@ -124,7 +124,7 @@ describe('Meta Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES, () => {
+        describe(ID_HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES, () => {
             it('should set the last opened template files', () => {
                 const recentlyOpenedTemplates: RecentlyOpenedTemplate[] = [{
                     name: 'test',
@@ -132,7 +132,7 @@ describe('Meta Store-Module', () => {
                     path: '/path/to/template'
                 }];
                 const state = metaModule.initialize();
-                const diff = metaModule.handlers[ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES](
+                const diff = metaModule.handlers[ID_HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES](
                     state,
                     recentlyOpenedTemplates
                 );
@@ -140,7 +140,7 @@ describe('Meta Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_ADD_OPENED_TEMPLATE_FILE, () => {
+        describe(ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE, () => {
             it('should add a template file to recently opened ones', () => {
                 const recentlyOpenedTemplate: RecentlyOpenedTemplate = {
                     name: 'test',
@@ -148,7 +148,7 @@ describe('Meta Store-Module', () => {
                     path: '/path/to/template'
                 };
                 const state = metaModule.initialize();
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE](
                     state,
                     recentlyOpenedTemplate
                 );
@@ -173,7 +173,7 @@ describe('Meta Store-Module', () => {
                         recentlyOpenedTemplate
                     ],
                 };
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE](
                     state,
                     recentlyOpenedTemplate
                 );
@@ -193,7 +193,7 @@ describe('Meta Store-Module', () => {
                     lastOpenedSplitsFiles: [],
                     lastOpenedTemplateFiles: generateRandomTemplateFileEntries(),
                 };
-                const diff = metaModule.handlers[ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](
+                const diff = metaModule.handlers[ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE](
                     state,
                     recentlyOpenedTemplate
                 );

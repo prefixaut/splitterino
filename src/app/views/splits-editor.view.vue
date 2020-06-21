@@ -25,12 +25,14 @@
 import { isEqual, cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
+import {
+    HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS,
+    HANDLER_SET_ALL_SPLITS_SEGMENTS,
+    HANDLER_APPLY_GAME_INFO
+} from '../../common/constants';
 import { Segment } from '../../models/splits';
-import { GameInfoState } from '../../models/states/game-info.state';
 import { IO_SERVICE_TOKEN } from '../../models/services';
-import { HANDLER_SET_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
-import { HANDLER_SET_ALL_SEGMENTS } from '../../store/modules/splits.module';
-import { HANDLER_APPLY_GAMEINFO } from '../../store/modules/game-info.module';
+import { GameInfoState } from '../../models/states/game-info.state';
 
 @Component({ name: 'spl-splits-editor-view' })
 export default class SplitsEditorView extends Vue {
@@ -49,7 +51,7 @@ export default class SplitsEditorView extends Vue {
 
     created() {
         // Disable the bindings while in the editor
-        this.$commit(HANDLER_SET_DISABLE_BINDINGS, true);
+        this.$commit(HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS, true);
     }
 
     mounted() {
@@ -58,7 +60,7 @@ export default class SplitsEditorView extends Vue {
 
     beforeDestroy() {
         // Enable the bindings again, as the editor is getting removed
-        this.$commit(HANDLER_SET_DISABLE_BINDINGS, false);
+        this.$commit(HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS, false);
     }
 
     loadDataFromStore() {
@@ -89,8 +91,8 @@ export default class SplitsEditorView extends Vue {
 
     async saveSplits() {
         await Promise.all([
-            this.$commit(HANDLER_SET_ALL_SEGMENTS, this.segments),
-            this.$commit(HANDLER_APPLY_GAMEINFO, this.gameInfo),
+            this.$commit(HANDLER_SET_ALL_SPLITS_SEGMENTS, this.segments),
+            this.$commit(HANDLER_APPLY_GAME_INFO, this.gameInfo),
         ]);
 
         this.loadDataFromStore();

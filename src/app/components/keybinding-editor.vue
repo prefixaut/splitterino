@@ -36,7 +36,7 @@ import { cloneDeep } from 'lodash';
 import { Vue, Component } from 'vue-property-decorator';
 
 import { ActionKeybinding, KeybindingDescriptor, Keybinding, isActionKeybinding } from '../../models/keybindings';
-import { HANDLER_SET_BINDINGS } from '../../store/modules/keybindings.module';
+import { HANDLER_SET_KEYBINDINGS_BINDINGS } from '../../common/constants';
 
 @Component({ name: 'spl-keybinding-editor' })
 export default class KeybindingEditorComponent extends Vue {
@@ -90,7 +90,7 @@ export default class KeybindingEditorComponent extends Vue {
     saveBindings() {
         const filteredBindings = this.bindings.slice(0).filter(isActionKeybinding);
         if (filteredBindings.length > 0) {
-            this.$commit(HANDLER_SET_BINDINGS, filteredBindings).then(() => {
+            this.$commit(HANDLER_SET_KEYBINDINGS_BINDINGS, filteredBindings).then(() => {
                 window.close();
             });
         }

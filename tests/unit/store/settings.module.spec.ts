@@ -2,16 +2,11 @@
 import { expect } from 'chai';
 import { Subscription } from 'rxjs';
 
+import { ID_HANDLER_SET_SETTINGS_ALL, ID_HANDLER_SET_SETTINGS_BULK } from '../../../src/common/constants';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
 import { Module } from '../../../src/models/store';
-import {
-    getConfigurationByPath,
-    getSettingsStoreModule,
-    getValueByPath,
-    ID_HANDLER_BULK_SET_SETTINGS,
-    ID_HANDLER_SET_ALL_SETTINGS,
-} from '../../../src/store/modules/settings.module';
+import { getConfigurationByPath, getSettingsStoreModule, getValueByPath } from '../../../src/store/modules/settings.module';
 import { createMockInjector } from '../../utils';
 
 const injector = createMockInjector();
@@ -56,7 +51,7 @@ describe('Settings Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_ALL_SETTINGS, () => {
+        describe(ID_HANDLER_SET_SETTINGS_ALL, () => {
             it('should set all settings values', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -67,14 +62,14 @@ describe('Settings Store-Module', () => {
                     plugins: {}
                 };
                 const state = settingsModule.initialize();
-                const diff = settingsModule.handlers[ID_HANDLER_SET_ALL_SETTINGS](state, {
+                const diff = settingsModule.handlers[ID_HANDLER_SET_SETTINGS_ALL](state, {
                     values: newSettings
                 });
                 expect(diff).to.deep.equal({ values: newSettings });
             });
         });
 
-        describe(ID_HANDLER_BULK_SET_SETTINGS, () => {
+        describe(ID_HANDLER_SET_SETTINGS_BULK, () => {
             it('should set individual settings', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -86,7 +81,7 @@ describe('Settings Store-Module', () => {
                     plugins: {}
                 };
                 const state = settingsModule.initialize();
-                const diff = settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                const diff = settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
                     values: newSettings
                 });
                 expect(diff).to.deep.equal({ values: newSettings });
@@ -129,7 +124,7 @@ describe('Settings Store-Module', () => {
                     doNotChange: 'hello',
                 };
 
-                settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
                     values: newSettings
                 });
 
@@ -177,7 +172,7 @@ describe('Settings Store-Module', () => {
                     doNotChange: 'hello',
                 };
 
-                settingsModule.handlers[ID_HANDLER_BULK_SET_SETTINGS](state, {
+                settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
                     values: newSettings
                 });
 

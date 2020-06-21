@@ -45,9 +45,10 @@ import { set, isEqual, merge } from 'lodash';
 import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
+import { HANDLER_SET_SETTINGS_BULK } from '../../common/constants';
 import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
-import { HANDLER_BULK_SET_SETTINGS, getConfigurationByPath, getValueByPath } from '../../store/modules/settings.module';
+import { getConfigurationByPath, getValueByPath } from '../../store/modules/settings.module';
 
 @Component({ name: 'spl-settings-editor' })
 export default class SettingsEditorComponent extends Vue {
@@ -90,7 +91,7 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public applySettings() {
-        this.$commit(HANDLER_BULK_SET_SETTINGS, { values: this.changesValues });
+        this.$commit(HANDLER_SET_SETTINGS_BULK, { values: this.changesValues });
     }
 
     public saveSettings() {

@@ -4,6 +4,7 @@ import { join } from 'path';
 import { satisfies as semverSatisfies } from 'semver';
 import { Context, createContext, Script } from 'vm';
 
+import { HANDLER_REPLACE_PLUGINS } from '../common/constants';
 import { Plugin } from '../models/plugins';
 import {
     ACTION_SERVICE_TOKEN,
@@ -13,12 +14,11 @@ import {
     IPC_CLIENT_SERVICE_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
-    VALIDATOR_SERVICE_TOKEN
+    VALIDATOR_SERVICE_TOKEN,
 } from '../models/services';
 import { LoadedPlugin } from '../models/states/plugins.state';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';
-import { HANDLER_REPLACE_PLUGINS } from '../store/modules/plugins.module';
 
 interface InstantiatedPlugin {
     loadedPlugin: LoadedPlugin;
@@ -267,7 +267,7 @@ export class PluginManager {
     }
 
     private static async loadEntryFromFile(loadedPlugin: LoadedPlugin, context: Context): Promise<boolean> {
-        const { meta }  = loadedPlugin;
+        const { meta } = loadedPlugin;
 
         if (this.alreadyLoaded(meta.name)) {
             Logger.debug(`Plugin "${meta.name}" already loaded`);

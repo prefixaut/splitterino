@@ -7,18 +7,18 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import { HANDLER_SET_DISABLE_BINDINGS } from '../../store/modules/keybindings.module';
+import { HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS } from '../../common/constants';
 
 @Component({ name: 'spl-settings-editor-view' })
 export default class SettingsEditorView extends Vue {
     created() {
         // Disable the bindings while in the editor
-        this.$commit(HANDLER_SET_DISABLE_BINDINGS, true);
+        this.$commit(HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS, true);
     }
 
     beforeDestroy() {
         // Enable the bindings again, as the editor is getting removed
-        this.$commit(HANDLER_SET_DISABLE_BINDINGS, false);
+        this.$commit(HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS, false);
     }
 }
 </script>

@@ -34,14 +34,13 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
+import { HANDLER_DISABLE_PLUGIN, HANDLER_ENABLE_PLUGIN } from '../../common/constants';
 import { ELECTRON_SERVICE_TOKEN } from '../../models/services';
-import { State } from '../../utils/store';
 import { LoadedPlugin, PluginIdentifier } from '../../models/states/plugins.state';
 import {
-    HANDLER_DISABLE_PLUGIN,
-    HANDLER_ENABLE_PLUGIN,
     isPluginEnabledGetter,
 } from '../../store/modules/plugins.module';
+import { State } from '../../utils/store';
 
 @Component({ name: 'spl-plugin-manager' })
 export default class PluginManagerComponent extends Vue {

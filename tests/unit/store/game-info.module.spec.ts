@@ -1,20 +1,20 @@
 /* eslint-disable no-unused-expressions,id-blacklist */
 import { expect } from 'chai';
 
+import {
+    ID_HANDLER_APPLY_GAME_INFO,
+    ID_HANDLER_APPLY_GAME_INFO_SPLITS_FILE,
+    ID_HANDLER_SET_GAME_INFO_CATEGORY,
+    ID_HANDLER_SET_GAME_INFO_GAME_NAME,
+    ID_HANDLER_SET_GAME_INFO_LANGUAGE,
+    ID_HANDLER_SET_GAME_INFO_PLATFORM,
+    ID_HANDLER_SET_GAME_INFO_REGION,
+} from '../../../src/common/constants';
 import { SplitsFile } from '../../../src/models/files';
 import { GameInfo, Region, TimingMethod } from '../../../src/models/splits';
 import { GameInfoState } from '../../../src/models/states/game-info.state';
 import { Module } from '../../../src/models/store';
-import {
-    getGameInfoStoreModule,
-    ID_HANDLER_APPLY_GAMEINFO,
-    ID_HANDLER_APPLY_SPLITS_FILE,
-    ID_HANDLER_SET_CATEGORY,
-    ID_HANDLER_SET_GAME_NAME,
-    ID_HANDLER_SET_LANGUAGE,
-    ID_HANDLER_SET_PLATFORM,
-    ID_HANDLER_SET_REGION,
-} from '../../../src/store/modules/game-info.module';
+import { getGameInfoStoreModule } from '../../../src/store/modules/game-info.module';
 
 describe('Game-Info Store-State', () => {
     const gameInfoModule: Module<GameInfoState> = getGameInfoStoreModule();
@@ -29,7 +29,7 @@ describe('Game-Info Store-State', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_GAME_NAME, () => {
+        describe(ID_HANDLER_SET_GAME_INFO_GAME_NAME, () => {
             it('should set valid names', () => {
                 const state = gameInfoModule.initialize();
 
@@ -39,7 +39,7 @@ describe('Game-Info Store-State', () => {
                     'äöafr432v',
                     'ВКЪߖຕផ',
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_NAME](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_GAME_NAME](state, value);
                     expect(diff).to.deep.equal({ name: value });
                 });
             });
@@ -61,13 +61,13 @@ describe('Game-Info Store-State', () => {
                     null,
                     undefined,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_NAME](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_GAME_NAME](state, value);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_CATEGORY, () => {
+        describe(ID_HANDLER_SET_GAME_INFO_CATEGORY, () => {
             it('should set valid categories', () => {
                 const state = gameInfoModule.initialize();
 
@@ -78,7 +78,7 @@ describe('Game-Info Store-State', () => {
                     'ВКЪߖຕផ',
                     'any%'
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_CATEGORY](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_CATEGORY](state, value);
                     expect(diff).to.deep.equal({ category: value });
                 });
             });
@@ -100,13 +100,13 @@ describe('Game-Info Store-State', () => {
                     null,
                     undefined,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_CATEGORY](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_CATEGORY](state, value);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_LANGUAGE, () => {
+        describe(ID_HANDLER_SET_GAME_INFO_LANGUAGE, () => {
             it('should set valid languages', () => {
                 const state = gameInfoModule.initialize();
 
@@ -119,7 +119,7 @@ describe('Game-Info Store-State', () => {
                     'fa',
                     'aa',
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_LANGUAGE](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_LANGUAGE](state, value);
                     expect(diff).to.deep.equal({ language: value });
                 });
             });
@@ -146,13 +146,13 @@ describe('Game-Info Store-State', () => {
                     null,
                     undefined,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_LANGUAGE](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_LANGUAGE](state, value);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_PLATFORM, () => {
+        describe(ID_HANDLER_SET_GAME_INFO_PLATFORM, () => {
             it('should set valid platforms', () => {
                 const state = gameInfoModule.initialize();
 
@@ -163,7 +163,7 @@ describe('Game-Info Store-State', () => {
                     'ВКЪߖຕផ',
                     'any%'
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_PLATFORM](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_PLATFORM](state, value);
                     expect(diff).to.deep.equal({ platform: value });
                 });
             });
@@ -185,13 +185,13 @@ describe('Game-Info Store-State', () => {
                     null,
                     undefined,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_PLATFORM](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_PLATFORM](state, value);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_REGION, () => {
+        describe(ID_HANDLER_SET_GAME_INFO_REGION, () => {
             it('should set valid platforms', () => {
                 const state = gameInfoModule.initialize();
 
@@ -204,7 +204,7 @@ describe('Game-Info Store-State', () => {
                     Region.PAL_CHN,
                     Region.PAL_EUR,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_REGION](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_REGION](state, value);
                     expect(diff).to.deep.equal({ region: value });
                 });
             });
@@ -234,13 +234,13 @@ describe('Game-Info Store-State', () => {
                     null,
                     undefined,
                 ].forEach(value => {
-                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_REGION](state, value);
+                    const diff = gameInfoModule.handlers[ID_HANDLER_SET_GAME_INFO_REGION](state, value);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_APPLY_SPLITS_FILE, () => {
+        describe(ID_HANDLER_APPLY_GAME_INFO_SPLITS_FILE, () => {
             it('should set the game-info from the splits-file', () => {
                 const state = gameInfoModule.initialize();
                 const gameInfo: GameInfo = {
@@ -259,12 +259,12 @@ describe('Game-Info Store-State', () => {
                     version: '1.0'
                 };
 
-                const diff = gameInfoModule.handlers[ID_HANDLER_APPLY_SPLITS_FILE](state, splitsFile);
+                const diff = gameInfoModule.handlers[ID_HANDLER_APPLY_GAME_INFO_SPLITS_FILE](state, splitsFile);
                 expect(diff).to.deep.equal(gameInfo);
             });
         });
 
-        describe(ID_HANDLER_APPLY_GAMEINFO, () => {
+        describe(ID_HANDLER_APPLY_GAME_INFO, () => {
             it('should set the game-info', () => {
                 const state = gameInfoModule.initialize();
                 const gameInfo: GameInfo = {
@@ -275,7 +275,7 @@ describe('Game-Info Store-State', () => {
                     region: Region.NTSC_JPN,
                 };
 
-                const diff = gameInfoModule.handlers[ID_HANDLER_APPLY_GAMEINFO](state, gameInfo);
+                const diff = gameInfoModule.handlers[ID_HANDLER_APPLY_GAME_INFO](state, gameInfo);
                 expect(diff).to.deep.equal(gameInfo);
             });
         });

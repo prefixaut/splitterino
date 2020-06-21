@@ -1,11 +1,18 @@
 /* eslint-disable no-unused-expressions,id-blacklist */
 import { expect } from 'chai';
 
+import {
+    ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS,
+    ID_HANDLER_SET_KEYBINDINGS_BINDINGS,
+    KEYBINDING_SPLITS_RESET,
+    KEYBINDING_SPLITS_SPLIT,
+    KEYBINDING_SPLITS_TOGGLE_PAUSE,
+    KEYBINDING_SPLITS_UNDO,
+} from '../../../src/common/constants';
+import { ActionKeybinding } from '../../../src/models/keybindings';
 import { KeybindingsState } from '../../../src/models/states/keybindings.state';
 import { Module } from '../../../src/models/store';
-import { getKeybindingsStoreModule, ID_HANDLER_SET_BINDINGS, ID_HANDLER_DISABLE_BINDINGS } from '../../../src/store/modules/keybindings.module';
-import { ActionKeybinding } from '../../../src/models/keybindings';
-import { KEYBINDING_SPLITS_SPLIT, KEYBINDING_SPLITS_UNDO, KEYBINDING_SPLITS_TOGGLE_PAUSE, KEYBINDING_SPLITS_RESET } from '../../../src/common/constants';
+import { getKeybindingsStoreModule } from '../../../src/store/modules/keybindings.module';
 
 describe('Keybindings Store-Module', () => {
     const keybindingsModule: Module<KeybindingsState> = getKeybindingsStoreModule();
@@ -20,7 +27,7 @@ describe('Keybindings Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_BINDINGS, () => {
+        describe(ID_HANDLER_SET_KEYBINDINGS_BINDINGS, () => {
             it('should set the bindings', () => {
                 const state = keybindingsModule.initialize();
                 const newBindings: ActionKeybinding[] = [
@@ -44,7 +51,7 @@ describe('Keybindings Store-Module', () => {
                         ]
                     },
                 ];
-                const diff = keybindingsModule.handlers[ID_HANDLER_SET_BINDINGS](state, newBindings);
+                const diff = keybindingsModule.handlers[ID_HANDLER_SET_KEYBINDINGS_BINDINGS](state, newBindings);
                 expect(diff).to.deep.equal({ bindings: newBindings });
             });
 
@@ -80,7 +87,7 @@ describe('Keybindings Store-Module', () => {
                         keys: [],
                     },
                 ];
-                const diff = keybindingsModule.handlers[ID_HANDLER_SET_BINDINGS](state, newBindings);
+                const diff = keybindingsModule.handlers[ID_HANDLER_SET_KEYBINDINGS_BINDINGS](state, newBindings);
                 expect(diff).to.deep.equal({
                     bindings: [
                         {
@@ -106,7 +113,7 @@ describe('Keybindings Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_DISABLE_BINDINGS, () => {
+        describe(ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS, () => {
             it('should set the flag correctly', () => {
                 const state = keybindingsModule.initialize();
                 [
@@ -117,7 +124,7 @@ describe('Keybindings Store-Module', () => {
                     NaN,
                     '',
                 ].forEach(value => {
-                    const diff = keybindingsModule.handlers[ID_HANDLER_DISABLE_BINDINGS](state, value);
+                    const diff = keybindingsModule.handlers[ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS](state, value);
                     expect(diff.disableBindings).to.equal(false);
                 });
                 [
@@ -131,7 +138,7 @@ describe('Keybindings Store-Module', () => {
                     [],
                     {},
                 ].forEach(value => {
-                    const diff = keybindingsModule.handlers[ID_HANDLER_DISABLE_BINDINGS](state, value);
+                    const diff = keybindingsModule.handlers[ID_HANDLER_DISABLE_KEYBINDINGS_BINDINGS](state, value);
                     expect(diff.disableBindings).to.equal(true);
                 });
             });

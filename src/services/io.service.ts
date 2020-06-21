@@ -11,6 +11,13 @@ import { v4 as uuid } from 'uuid';
 import {
     DEFAULT_APPLICATION_SETTINGS,
     GLOBAL_EVENT_LOAD_TEMPLATE,
+    HANDLER_ADD_META_OPENED_SPLITS_FILE,
+    HANDLER_ADD_META_OPENED_TEMPLATE_FILE,
+    HANDLER_APPLY_GAME_INFO_SPLITS_FILE,
+    HANDLER_APPLY_SPLITS_FILE,
+    HANDLER_SET_META_LAST_OPENED_SPLITS_FILES,
+    HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES,
+    HANDLER_SET_SETTINGS_ALL,
     RUNTIME_ENVIRONMENT_TOKEN,
     RuntimeEnvironment,
 } from '../common/constants';
@@ -37,15 +44,6 @@ import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/me
 import { LoadedPlugin } from '../models/states/plugins.state';
 import { Settings } from '../models/states/settings.state';
 import { RootState } from '../models/store';
-import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_GAME_MODULE_SPLITS_FILE } from '../store/modules/game-info.module';
-import {
-    HANDLER_ADD_OPENED_SPLITS_FILE,
-    HANDLER_ADD_OPENED_TEMPLATE_FILE,
-    HANDLER_SET_LAST_OPENED_SPLITS_FILES,
-    HANDLER_SET_LAST_OPENED_TEMPLATE_FILES,
-} from '../store/modules/meta.module';
-import { HANDLER_SET_ALL_SETTINGS } from '../store/modules/settings.module';
-import { HANDLER_APPLY_SPLITS_FILE as HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE } from '../store/modules/splits.module';
 import { asSaveableSegment } from '../utils/converters';
 import { Logger } from '../utils/logger';
 
@@ -274,11 +272,11 @@ export class IOService implements IOServiceInterface {
                 Logger.debug('Loaded splits are valid! Applying to this.store ...');
 
                 const values = await Promise.all([
-                    this.store.commit(HANDLER_APPLY_SPLITS_MODULE_SPLITS_FILE, loadedSplits),
-                    this.store.commit(HANDLER_APPLY_GAME_MODULE_SPLITS_FILE, loadedSplits),
+                    this.store.commit(HANDLER_APPLY_SPLITS_FILE, loadedSplits),
+                    this.store.commit(HANDLER_APPLY_GAME_INFO_SPLITS_FILE, loadedSplits),
                 ]);
 
-                await this.store.commit(HANDLER_ADD_OPENED_SPLITS_FILE, filePath);
+                await this.store.commit(HANDLER_ADD_META_OPENED_SPLITS_FILE, filePath);
 
                 return values[0];
             })
@@ -476,7 +474,7 @@ export class IOService implements IOServiceInterface {
                             }
                         }
 
-                        this.store.commit(HANDLER_ADD_OPENED_TEMPLATE_FILE, {
+                        this.store.commit(HANDLER_ADD_META_OPENED_TEMPLATE_FILE, {
                             path: file,
                             author: templateFiles.meta.author,
                             name: templateFiles.meta.name
@@ -575,7 +573,7 @@ export class IOService implements IOServiceInterface {
                     );
 
                     if (lastOpenedSplitsFiles.length > 0) {
-                        await this.store.commit(HANDLER_SET_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
+                        await this.store.commit(HANDLER_SET_META_LAST_OPENED_SPLITS_FILES, lastOpenedSplitsFiles);
                         await this.loadSplitsFromFileToStore(lastOpenedSplitsFiles[0].path);
                     }
                 }
@@ -587,7 +585,7 @@ export class IOService implements IOServiceInterface {
                     );
 
                     if (lastOpenedTemplateFiles.length > 0) {
-                        await this.store.commit(HANDLER_SET_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
+                        await this.store.commit(HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
                     }
                 }
             }
@@ -699,7 +697,7 @@ export class IOService implements IOServiceInterface {
             }
         }
 
-        await this.store.commit(HANDLER_SET_ALL_SETTINGS, { values: parsedSettings });
+        await this.store.commit(HANDLER_SET_SETTINGS_ALL, { values: parsedSettings });
 
         if (usedDefaultValue) {
             this.saveSettingsToFile();

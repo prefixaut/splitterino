@@ -1,18 +1,11 @@
-import { META_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import {
+    ID_HANDLER_ADD_META_OPENED_SPLITS_FILE,
+    ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE,
+    ID_HANDLER_SET_META_LAST_OPENED_SPLITS_FILES,
+    ID_HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES,
+} from '../../common/constants';
 import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../models/states/meta.state';
 import { Module } from '../../models/store';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${META_MODULE_NAME}`;
-
-export const ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES = 'setLastOpenedSplitsFiles';
-export const ID_HANDLER_ADD_OPENED_SPLITS_FILE = 'addOpenedSplitsFile';
-export const ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES = 'setLastOpenedTemplateFiles';
-export const ID_HANDLER_ADD_OPENED_TEMPLATE_FILE = 'addOpenedTemplateFile';
-
-export const HANDLER_SET_LAST_OPENED_SPLITS_FILES = `${MODULE_PATH}/${ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES}`;
-export const HANDLER_ADD_OPENED_SPLITS_FILE = `${MODULE_PATH}/${ID_HANDLER_ADD_OPENED_SPLITS_FILE}`;
-export const HANDLER_SET_LAST_OPENED_TEMPLATE_FILES = `${MODULE_PATH}/${ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES}`;
-export const HANDLER_ADD_OPENED_TEMPLATE_FILE = `${MODULE_PATH}/${ID_HANDLER_ADD_OPENED_TEMPLATE_FILE}`;
 
 export function getMetaStoreModule(): Module<MetaState> {
     return {
@@ -23,10 +16,13 @@ export function getMetaStoreModule(): Module<MetaState> {
             };
         },
         handlers: {
-            [ID_HANDLER_SET_LAST_OPENED_SPLITS_FILES](state: MetaState, lastOpenedSplitsFiles: RecentlyOpenedSplit[]) {
+            [ID_HANDLER_SET_META_LAST_OPENED_SPLITS_FILES](
+                state: MetaState,
+                lastOpenedSplitsFiles: RecentlyOpenedSplit[]
+            ) {
                 return { lastOpenedSplitsFiles: lastOpenedSplitsFiles };
             },
-            [ID_HANDLER_ADD_OPENED_SPLITS_FILE](state: MetaState, splitsFile: RecentlyOpenedSplit) {
+            [ID_HANDLER_ADD_META_OPENED_SPLITS_FILE](state: MetaState, splitsFile: RecentlyOpenedSplit) {
                 let newSplitFiles = state.lastOpenedSplitsFiles.filter(file => file.path !== splitsFile.path);
                 newSplitFiles.unshift(splitsFile);
 
@@ -36,13 +32,13 @@ export function getMetaStoreModule(): Module<MetaState> {
 
                 return { lastOpenedSplitsFiles: newSplitFiles };
             },
-            [ID_HANDLER_SET_LAST_OPENED_TEMPLATE_FILES](
+            [ID_HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES](
                 state: MetaState,
                 lastOpenedTemplateFiles: RecentlyOpenedTemplate[]
             ) {
                 return { lastOpenedTemplateFiles: lastOpenedTemplateFiles };
             },
-            [ID_HANDLER_ADD_OPENED_TEMPLATE_FILE](state: MetaState, templateFile: RecentlyOpenedTemplate) {
+            [ID_HANDLER_ADD_META_OPENED_TEMPLATE_FILE](state: MetaState, templateFile: RecentlyOpenedTemplate) {
                 let newTemplateFiles = state.lastOpenedTemplateFiles.filter(file => file.path !== templateFile.path);
                 newTemplateFiles.unshift(templateFile);
 

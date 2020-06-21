@@ -1,6 +1,16 @@
 import { Inject, Injectable } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 
+import {
+    HANDLER_ADD_META_OPENED_SPLITS_FILE,
+    HANDLER_DISCARDING_SPLITS_RESET,
+    HANDLER_SAVING_SPLITS_RESET,
+    HANDLER_SET_SPLITS_CURRENT,
+    HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME,
+    HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
+    HANDLER_SET_SPLITS_SEGMENT,
+    HANDLER_SET_TIMER_STATUS,
+} from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
 import {
     ActionServiceInterface,
@@ -12,16 +22,6 @@ import {
 import { Segment, TimingMethod } from '../models/splits';
 import { RecentlyOpenedSplit } from '../models/states/meta.state';
 import { RootState } from '../models/store';
-import { HANDLER_ADD_OPENED_SPLITS_FILE } from '../store/modules/meta.module';
-import {
-    HANDLER_DISCARDING_RESET,
-    HANDLER_SAVING_RESET,
-    HANDLER_SET_CURRENT,
-    HANDLER_SET_PREVIOUS_IGT_TIME,
-    HANDLER_SET_PREVIOUS_RTA_TIME,
-    HANDLER_SET_SEGMENT,
-} from '../store/modules/splits.module';
-import { HANDLER_SET_STATUS } from '../store/modules/timer.module';
 import { getTotalTime, now } from '../utils/time';
 
 @Injectable
@@ -43,7 +43,7 @@ export class ActionService implements ActionServiceInterface {
             region: gameInfoState.region
         };
 
-        return this.store.commit(HANDLER_ADD_OPENED_SPLITS_FILE, recentlyOpenedSplit);
+        return this.store.commit(HANDLER_ADD_META_OPENED_SPLITS_FILE, recentlyOpenedSplit);
     }
 
     public async startTimer(time: number = now()): Promise<boolean> {
@@ -56,21 +56,21 @@ export class ActionService implements ActionServiceInterface {
         const commits: Promise<any>[] = [];
         const { rtaPersonalBest, igtPersonalBest } = getTotalTime(this.store.state.splitterino.splits.segments);
 
-        commits.push(this.store.commit(HANDLER_SET_PREVIOUS_RTA_TIME, rtaPersonalBest));
-        commits.push(this.store.commit(HANDLER_SET_PREVIOUS_IGT_TIME, igtPersonalBest));
+        commits.push(this.store.commit(HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME, rtaPersonalBest));
+        commits.push(this.store.commit(HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME, igtPersonalBest));
 
         const firstSegment = this.store.state.splitterino.splits.segments[0];
 
-        commits.push(this.store.commit(HANDLER_SET_SEGMENT, {
+        commits.push(this.store.commit(HANDLER_SET_SPLITS_SEGMENT, {
             index: 0,
             segment: {
                 ...firstSegment,
                 startTime: time
             }
         }));
-        commits.push(this.store.commit(HANDLER_SET_CURRENT, 0));
+        commits.push(this.store.commit(HANDLER_SET_SPLITS_CURRENT, 0));
         commits.push(this.store.commit(
-            HANDLER_SET_STATUS,
+            HANDLER_SET_TIMER_STATUS,
             { time, status: TimerStatus.RUNNING }
         ));
 
@@ -127,14 +127,14 @@ export class ActionService implements ActionServiceInterface {
             currentSegment.previousOverallBest = null;
         }
 
-        this.store.commit(HANDLER_SET_SEGMENT, {
+        this.store.commit(HANDLER_SET_SPLITS_SEGMENT, {
             index: currentIndex,
             segment: currentSegment
         });
 
         // Check if it is the last split
         if (currentIndex + 1 >= splitsState.segments.length) {
-            await this.store.commit(HANDLER_SET_STATUS, TimerStatus.FINISHED);
+            await this.store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.FINISHED);
 
             return true;
         }
@@ -147,11 +147,11 @@ export class ActionService implements ActionServiceInterface {
             skipped: false
         };
 
-        await this.store.commit(HANDLER_SET_SEGMENT, {
+        await this.store.commit(HANDLER_SET_SPLITS_SEGMENT, {
             index: currentIndex + 1,
             segment: next
         });
-        await this.store.commit(HANDLER_SET_CURRENT, currentIndex + 1);
+        await this.store.commit(HANDLER_SET_SPLITS_CURRENT, currentIndex + 1);
 
         return true;
     }
@@ -184,8 +184,8 @@ export class ActionService implements ActionServiceInterface {
             passed: false
         };
 
-        await this.store.commit(HANDLER_SET_SEGMENT, { index, segment });
-        await this.store.commit(HANDLER_SET_CURRENT, index + 1);
+        await this.store.commit(HANDLER_SET_SPLITS_SEGMENT, { index, segment });
+        await this.store.commit(HANDLER_SET_SPLITS_CURRENT, index + 1);
 
         return true;
     }
@@ -235,9 +235,9 @@ export class ActionService implements ActionServiceInterface {
         // Remove the currentTime from the segment now
         segment.currentTime = null;
 
-        await this.store.commit(HANDLER_SET_SEGMENT, { index, segment });
-        await this.store.commit(HANDLER_SET_SEGMENT, { index: index - 1, segment: previous });
-        await this.store.commit(HANDLER_SET_CURRENT, index - 1);
+        await this.store.commit(HANDLER_SET_SPLITS_SEGMENT, { index, segment });
+        await this.store.commit(HANDLER_SET_SPLITS_SEGMENT, { index: index - 1, segment: previous });
+        await this.store.commit(HANDLER_SET_SPLITS_CURRENT, index - 1);
 
         return true;
     }
@@ -258,7 +258,7 @@ export class ActionService implements ActionServiceInterface {
         }
 
         await this.store.commit(
-            HANDLER_SET_STATUS,
+            HANDLER_SET_TIMER_STATUS,
             { time, status: toStatus }
         );
 
@@ -298,8 +298,8 @@ export class ActionService implements ActionServiceInterface {
         }
         segment.currentTime.igt.pauseTime += igtPauseAddition;
 
-        await this.store.commit(HANDLER_SET_SEGMENT, { index, segment });
-        await this.store.commit(HANDLER_SET_STATUS, {
+        await this.store.commit(HANDLER_SET_SPLITS_SEGMENT, { index, segment });
+        await this.store.commit(HANDLER_SET_TIMER_STATUS, {
             time,
             status: TimerStatus.RUNNING
         });
@@ -365,17 +365,17 @@ export class ActionService implements ActionServiceInterface {
     }
 
     public async discardingReset(): Promise<boolean> {
-        await this.store.commit(HANDLER_SET_STATUS, TimerStatus.STOPPED);
-        await this.store.commit(HANDLER_SET_CURRENT, -1);
-        await this.store.commit(HANDLER_DISCARDING_RESET);
+        await this.store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.STOPPED);
+        await this.store.commit(HANDLER_SET_SPLITS_CURRENT, -1);
+        await this.store.commit(HANDLER_DISCARDING_SPLITS_RESET);
 
         return true;
     }
 
     public async savingReset(): Promise<boolean> {
-        await this.store.commit(HANDLER_SET_STATUS, TimerStatus.STOPPED);
-        await this.store.commit(HANDLER_SET_CURRENT, -1);
-        await this.store.commit(HANDLER_SAVING_RESET);
+        await this.store.commit(HANDLER_SET_TIMER_STATUS, TimerStatus.STOPPED);
+        await this.store.commit(HANDLER_SET_SPLITS_CURRENT, -1);
+        await this.store.commit(HANDLER_SAVING_SPLITS_RESET);
 
         return true;
     }

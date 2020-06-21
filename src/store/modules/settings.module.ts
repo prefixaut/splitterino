@@ -1,7 +1,7 @@
 import { Injector } from 'lightweight-di';
 import { cloneDeep, get, isEqual, merge } from 'lodash';
 
-import { CORE_SETTINGS, SETTINGS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import { CORE_SETTINGS, ID_HANDLER_SET_SETTINGS_ALL, ID_HANDLER_SET_SETTINGS_BULK } from '../../common/constants';
 import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
 import {
     Settings,
@@ -10,14 +10,6 @@ import {
     SettingsState,
 } from '../../models/states/settings.state';
 import { Module } from '../../models/store';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${SETTINGS_MODULE_NAME}`;
-
-export const ID_HANDLER_SET_ALL_SETTINGS = 'setAllSettings';
-export const ID_HANDLER_BULK_SET_SETTINGS = 'bulkSetSettings';
-
-export const HANDLER_SET_ALL_SETTINGS = `${MODULE_PATH}/${ID_HANDLER_SET_ALL_SETTINGS}`;
-export const HANDLER_BULK_SET_SETTINGS = `${MODULE_PATH}/${ID_HANDLER_BULK_SET_SETTINGS}`;
 
 export interface SettingsPayload {
     values: Settings;
@@ -42,11 +34,11 @@ export function getSettingsStoreModule(injector: Injector): Module<SettingsState
             };
         },
         handlers: {
-            [ID_HANDLER_SET_ALL_SETTINGS](state: SettingsState, payload: SettingsPayload) {
+            [ID_HANDLER_SET_SETTINGS_ALL](state: SettingsState, payload: SettingsPayload) {
                 // TODO: check if there is not conflict with interface so state stays conistent
                 return { values: payload.values };
             },
-            [ID_HANDLER_BULK_SET_SETTINGS](state: SettingsState, payload: SettingsPayload) {
+            [ID_HANDLER_SET_SETTINGS_BULK](state: SettingsState, payload: SettingsPayload) {
                 const newSettings = merge({}, state.values, payload.values);
                 const oldSettings = cloneDeep(state.values);
 

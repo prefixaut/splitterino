@@ -2,23 +2,23 @@
 import { expect } from 'chai';
 import { v4 as uuid } from 'uuid';
 
+import {
+    ID_HANDLER_ADD_SPLITS_SEGMENT,
+    ID_HANDLER_CLEAR_SPLITS_SEGMENTS,
+    ID_HANDLER_DISCARDING_SPLITS_RESET,
+    ID_HANDLER_REMOVE_SPLITS_SEGMENT,
+    ID_HANDLER_SAVING_SPLITS_RESET,
+    ID_HANDLER_SET_ALL_SPLITS_SEGMENTS,
+    ID_HANDLER_SET_SPLITS_CURRENT,
+    ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME,
+    ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
+    ID_HANDLER_SET_SPLITS_SEGMENT,
+    ID_HANDLER_SET_SPLITS_TIMING,
+} from '../../../src/common/constants';
 import { Segment, TimingMethod } from '../../../src/models/splits';
 import { SplitsState } from '../../../src/models/states/splits.state';
 import { Module } from '../../../src/models/store';
-import {
-    getSplitsStoreModule,
-    ID_HANDLER_ADD_SEGMENT,
-    ID_HANDLER_CLEAR_SEGMENTS,
-    ID_HANDLER_DISCARDING_RESET,
-    ID_HANDLER_REMOVE_SEGMENT,
-    ID_HANDLER_SAVING_RESET,
-    ID_HANDLER_SET_ALL_SEGMENTS,
-    ID_HANDLER_SET_CURRENT,
-    ID_HANDLER_SET_PREVIOUS_IGT_TIME,
-    ID_HANDLER_SET_PREVIOUS_RTA_TIME,
-    ID_HANDLER_SET_SEGMENT,
-    ID_HANDLER_SET_TIMING,
-} from '../../../src/store/modules/splits.module';
+import { getSplitsStoreModule } from '../../../src/store/modules/splits.module';
 import { createMockInjector, generateSegmentArray, randomInt } from '../../utils';
 
 // Initialize the Dependency-Injection
@@ -38,7 +38,7 @@ describe('Splits Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_CURRENT, () => {
+        describe(ID_HANDLER_SET_SPLITS_CURRENT, () => {
             it('should apply the valid value', () => {
                 const newCurrent = 15;
 
@@ -50,7 +50,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_CURRENT](state, newCurrent);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_CURRENT](state, newCurrent);
                 expect(diff).to.deep.equal({ current: newCurrent });
             });
 
@@ -78,13 +78,13 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(invalidCurrent => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_CURRENT](state, invalidCurrent);
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_CURRENT](state, invalidCurrent);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_TIMING, () => {
+        describe(ID_HANDLER_SET_SPLITS_TIMING, () => {
             it('should apply valid timings', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -96,7 +96,7 @@ describe('Splits Store-Module', () => {
 
                 const valid = [TimingMethod.IGT, TimingMethod.RTA];
                 valid.forEach(timing => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_TIMING](state, timing);
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_TIMING](state, timing);
                     expect(diff).to.deep.equal({ timing: timing });
                 });
             });
@@ -127,13 +127,13 @@ describe('Splits Store-Module', () => {
                     'cool',
                     '',
                 ].forEach(timing => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_TIMING](state, timing);
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_TIMING](state, timing);
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_PREVIOUS_RTA_TIME, () => {
+        describe(ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME, () => {
             it('should apply a valid previous rta time', () => {
                 const newTime = randomInt(99999);
                 const state: SplitsState = {
@@ -144,7 +144,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_RTA_TIME](state, newTime);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME](state, newTime);
 
                 expect(diff).to.deep.equal({ previousRTATotal: newTime });
             });
@@ -159,7 +159,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_RTA_TIME](state, newTime);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME](state, newTime);
 
                 expect(diff).to.deep.equal({ previousRTATotal: -1 });
             });
@@ -186,14 +186,14 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(invalidTime => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_RTA_TIME](state, invalidTime);
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME](state, invalidTime);
 
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_PREVIOUS_IGT_TIME, () => {
+        describe(ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME, () => {
             it('should apply a valid previous igt time', () => {
                 const newTime = randomInt(99999);
                 const state: SplitsState = {
@@ -204,7 +204,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_IGT_TIME](state, newTime);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME](state, newTime);
 
                 expect(diff).to.deep.equal({ previousIGTTotal: newTime });
             });
@@ -219,7 +219,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 0,
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_IGT_TIME](state, newTime);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME](state, newTime);
 
                 expect(diff).to.deep.equal({ previousIGTTotal: -1 });
             });
@@ -246,14 +246,14 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(invalidTime => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_PREVIOUS_IGT_TIME](state, invalidTime);
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME](state, invalidTime);
 
                     expect(diff).to.deep.equal({});
                 });
             });
         });
 
-        describe(ID_HANDLER_ADD_SEGMENT, () => {
+        describe(ID_HANDLER_ADD_SPLITS_SEGMENT, () => {
             it('should add a valid segment', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -268,7 +268,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_ADD_SEGMENT](state, newSegment);
+                const diff = splitsModule.handlers[ID_HANDLER_ADD_SPLITS_SEGMENT](state, newSegment);
 
                 expect(diff).to.deep.equal({ segments: [newSegment] });
             });
@@ -285,7 +285,7 @@ describe('Splits Store-Module', () => {
                 const segments = generateSegmentArray(10);
 
                 segments.forEach((newSegment, index) => {
-                    const diff = splitsModule.handlers[ID_HANDLER_ADD_SEGMENT](state, newSegment);
+                    const diff = splitsModule.handlers[ID_HANDLER_ADD_SPLITS_SEGMENT](state, newSegment);
 
                     expect(diff).to.deep.equal({ segments: segments.slice(0, index + 1) });
 
@@ -321,14 +321,14 @@ describe('Splits Store-Module', () => {
                     { uuid: 'but no name' },
                     { name: 'invalid uuid', uuid: 'cool test' },
                 ].forEach(segment => {
-                    const diff = splitsModule.handlers[ID_HANDLER_ADD_SEGMENT](state, segment);
+                    const diff = splitsModule.handlers[ID_HANDLER_ADD_SPLITS_SEGMENT](state, segment);
 
                     expect(diff).to.deep.equal({}, `"${segment}" was accepted as valid segment`);
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_SEGMENT, () => {
+        describe(ID_HANDLER_SET_SPLITS_SEGMENT, () => {
             it('should set the valid segment', () => {
                 const originalSegments: Segment[] = [
                     { id: uuid(), name: '0' },
@@ -348,7 +348,7 @@ describe('Splits Store-Module', () => {
                     name: 'test',
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_SEGMENT](state, {
+                const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_SEGMENT](state, {
                     index: 0,
                     segment: newSegment
                 });
@@ -395,7 +395,7 @@ describe('Splits Store-Module', () => {
                     { uuid: 'but no name' },
                     { name: 'invalid uuid', uuid: 'cool test' },
                 ].forEach(segment => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_SEGMENT](state, {
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_SEGMENT](state, {
                         index: 0,
                         segment,
                     });
@@ -437,7 +437,7 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(index => {
-                    const diff = splitsModule.handlers[ID_HANDLER_SET_SEGMENT](state, {
+                    const diff = splitsModule.handlers[ID_HANDLER_SET_SPLITS_SEGMENT](state, {
                         index,
                         segment: newSegment
                     });
@@ -447,7 +447,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_SET_ALL_SEGMENTS, () => {
+        describe(ID_HANDLER_SET_ALL_SPLITS_SEGMENTS, () => {
             it('should set all segments', () => {
                 const originalSegments = generateSegmentArray(5);
                 const state: SplitsState = {
@@ -463,7 +463,7 @@ describe('Splits Store-Module', () => {
 
                 const newSegments = generateSegmentArray(10);
 
-                const diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SEGMENTS](state, newSegments);
+                const diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state, newSegments);
 
                 expect(diff).to.deep.equal({ segments: newSegments });
             });
@@ -503,22 +503,22 @@ describe('Splits Store-Module', () => {
                 ].forEach(invalidSegment => {
                     let diff: Partial<SplitsState>;
 
-                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SEGMENTS](state, [invalidSegment]);
+                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state, [invalidSegment]);
                     expect(diff).to.deep.equal({}, `"${[invalidSegment]}" were accepted as valid segments`);
 
-                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SEGMENTS](state, [invalidSegment, validSegment]);
+                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state, [invalidSegment, validSegment]);
                     expect(diff).to.deep.equal(
                         {},
                         `"${[invalidSegment, validSegment]}" were accepted as valid segments`
                     );
 
-                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SEGMENTS](state, [validSegment, invalidSegment]);
+                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state, [validSegment, invalidSegment]);
                     expect(diff).to.deep.equal(
                         {},
                         `"${[validSegment, invalidSegment]}" were accepted as valid segments`
                     );
 
-                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SEGMENTS](state, [
+                    diff = splitsModule.handlers[ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state, [
                         validSegment,
                         invalidSegment,
                         validSegment,
@@ -531,7 +531,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_REMOVE_SEGMENT, () => {
+        describe(ID_HANDLER_REMOVE_SPLITS_SEGMENT, () => {
             it('should remove the segment ', () => {
                 const deleteIndicies = [0, 1, 2];
                 const originalSegments = generateSegmentArray(deleteIndicies.length);
@@ -545,7 +545,7 @@ describe('Splits Store-Module', () => {
                         previousIGTTotal: randomInt(99999),
                     };
 
-                    const diff = splitsModule.handlers[ID_HANDLER_REMOVE_SEGMENT](state, deleteIndex);
+                    const diff = splitsModule.handlers[ID_HANDLER_REMOVE_SPLITS_SEGMENT](state, deleteIndex);
 
                     // Create a copy
                     const expectedSegments = originalSegments.slice(0);
@@ -584,13 +584,13 @@ describe('Splits Store-Module', () => {
                     true,
                     false,
                 ].forEach(value => {
-                    const diff = splitsModule.handlers[ID_HANDLER_REMOVE_SEGMENT](state, value);
+                    const diff = splitsModule.handlers[ID_HANDLER_REMOVE_SPLITS_SEGMENT](state, value);
                     expect(diff).to.deep.equals({});
                 });
             });
         });
 
-        describe(ID_HANDLER_CLEAR_SEGMENTS, () => {
+        describe(ID_HANDLER_CLEAR_SPLITS_SEGMENTS, () => {
             it('should apply the mutation correctly', () => {
                 const state: SplitsState = {
                     current: -1,
@@ -600,13 +600,13 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_CLEAR_SEGMENTS](state, null);
+                const diff = splitsModule.handlers[ID_HANDLER_CLEAR_SPLITS_SEGMENTS](state, null);
 
                 expect(diff).to.deep.equal({ segments: [] });
             });
         });
 
-        describe(ID_HANDLER_DISCARDING_RESET, () => {
+        describe(ID_HANDLER_DISCARDING_SPLITS_RESET, () => {
             it('should reset the segments correctly', () => {
                 const originalSegments: Segment[] = [
                     {
@@ -709,7 +709,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SAVING_RESET](state, null);
+                const diff = splitsModule.handlers[ID_HANDLER_SAVING_SPLITS_RESET](state, null);
 
                 expect(diff).to.deep.equal({
                     segments: [
@@ -736,7 +736,7 @@ describe('Splits Store-Module', () => {
             });
         });
 
-        describe(ID_HANDLER_SAVING_RESET, () => {
+        describe(ID_HANDLER_SAVING_SPLITS_RESET, () => {
             it('should apply the time without personal-bests mutation correctly', () => {
                 const originalSegments: Segment[] = [
                     {
@@ -839,7 +839,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: randomInt(99999),
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SAVING_RESET](state, null);
+                const diff = splitsModule.handlers[ID_HANDLER_SAVING_SPLITS_RESET](state, null);
 
                 expect(diff).to.deep.equal({
                     segments: [
@@ -914,7 +914,7 @@ describe('Splits Store-Module', () => {
                     previousIGTTotal: 1_000_000,
                 };
 
-                const diff = splitsModule.handlers[ID_HANDLER_SAVING_RESET](state, null);
+                const diff = splitsModule.handlers[ID_HANDLER_SAVING_SPLITS_RESET](state, null);
 
                 expect(diff).to.deep.equal({
                     segments: [

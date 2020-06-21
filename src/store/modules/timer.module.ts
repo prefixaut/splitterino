@@ -1,16 +1,8 @@
-import { SPLITTERINO_NAMESPACE_NAME, TIMER_MODULE_NAME } from '../../common/constants';
+import { ID_HANDLER_SET_TIMER_START_DELAY, ID_HANDLER_SET_TIMER_STATUS } from '../../common/constants';
 import { TimerStatus } from '../../common/timer-status';
 import { TimerState } from '../../models/states/timer.state';
 import { Module } from '../../models/store';
 import { now } from '../../utils/time';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${TIMER_MODULE_NAME}`;
-
-export const ID_HANDLER_SET_START_DELAY = 'setStartDelay';
-export const ID_HANDLER_SET_STATUS = 'setStatus';
-
-export const HANDLER_SET_START_DELAY = `${MODULE_PATH}/${ID_HANDLER_SET_START_DELAY}`;
-export const HANDLER_SET_STATUS = `${MODULE_PATH}/${ID_HANDLER_SET_STATUS}`;
 
 export interface StatusChangePayload {
     time: number;
@@ -32,7 +24,7 @@ export function getTimerStoreModule(): Module<TimerState> {
             };
         },
         handlers: {
-            [ID_HANDLER_SET_START_DELAY](state: TimerState, to: number) {
+            [ID_HANDLER_SET_TIMER_START_DELAY](state: TimerState, to: number) {
                 // Don't allow invalid content to be set
                 if (typeof to !== 'number' || isNaN(to) || !isFinite(to) || to < 0) {
                     return {};
@@ -40,7 +32,7 @@ export function getTimerStoreModule(): Module<TimerState> {
 
                 return { startDelay: to };
             },
-            [ID_HANDLER_SET_STATUS](
+            [ID_HANDLER_SET_TIMER_STATUS](
                 state: TimerState,
                 payload: TimerStatus | StatusChangePayload
             ) {

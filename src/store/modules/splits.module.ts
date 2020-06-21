@@ -1,6 +1,19 @@
 import { Injector } from 'lightweight-di';
 
-import { SPLITS_MODULE_NAME, SPLITTERINO_NAMESPACE_NAME } from '../../common/constants';
+import {
+    ID_HANDLER_ADD_SPLITS_SEGMENT,
+    ID_HANDLER_APPLY_SPLITS_FILE,
+    ID_HANDLER_CLEAR_SPLITS_SEGMENTS,
+    ID_HANDLER_DISCARDING_SPLITS_RESET,
+    ID_HANDLER_REMOVE_SPLITS_SEGMENT,
+    ID_HANDLER_SAVING_SPLITS_RESET,
+    ID_HANDLER_SET_ALL_SPLITS_SEGMENTS,
+    ID_HANDLER_SET_SPLITS_CURRENT,
+    ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME,
+    ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
+    ID_HANDLER_SET_SPLITS_SEGMENT,
+    ID_HANDLER_SET_SPLITS_TIMING,
+} from '../../common/constants';
 import { SplitsFile } from '../../models/files';
 import { VALIDATOR_SERVICE_TOKEN } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
@@ -8,34 +21,6 @@ import { SplitsState } from '../../models/states/splits.state';
 import { Module } from '../../models/store';
 import { asCleanNumber } from '../../utils/converters';
 import { getFinalTime } from '../../utils/time';
-
-const MODULE_PATH = `${SPLITTERINO_NAMESPACE_NAME}/${SPLITS_MODULE_NAME}`;
-
-export const ID_HANDLER_SET_CURRENT = 'setCurrent';
-export const ID_HANDLER_SET_TIMING = 'setTiming';
-export const ID_HANDLER_CLEAR_SEGMENTS = 'clearSegments';
-export const ID_HANDLER_REMOVE_SEGMENT = 'removeSegment';
-export const ID_HANDLER_ADD_SEGMENT = 'addSegment';
-export const ID_HANDLER_SET_ALL_SEGMENTS = 'setAllSegments';
-export const ID_HANDLER_SET_SEGMENT = 'setSegment';
-export const ID_HANDLER_SET_PREVIOUS_RTA_TIME = 'setPreviousRTATime';
-export const ID_HANDLER_SET_PREVIOUS_IGT_TIME = 'setPreviousIGTTime';
-export const ID_HANDLER_DISCARDING_RESET = 'discardingReset';
-export const ID_HANDLER_SAVING_RESET = 'savingReset';
-export const ID_HANDLER_APPLY_SPLITS_FILE = 'applySplitsFile';
-
-export const HANDLER_SET_CURRENT = `${MODULE_PATH}/${ID_HANDLER_SET_CURRENT}`;
-export const HANDLER_SET_TIMING = `${MODULE_PATH}/${ID_HANDLER_SET_TIMING}`;
-export const HANDLER_CLEAR_SEGMENTS = `${MODULE_PATH}/${ID_HANDLER_CLEAR_SEGMENTS}`;
-export const HANDLER_REMOVE_SEGMENT = `${MODULE_PATH}/${ID_HANDLER_REMOVE_SEGMENT}`;
-export const HANDLER_ADD_SEGMENT = `${MODULE_PATH}/${ID_HANDLER_ADD_SEGMENT}`;
-export const HANDLER_SET_ALL_SEGMENTS = `${MODULE_PATH}/${ID_HANDLER_SET_ALL_SEGMENTS}`;
-export const HANDLER_SET_SEGMENT = `${MODULE_PATH}/${ID_HANDLER_SET_SEGMENT}`;
-export const HANDLER_SET_PREVIOUS_RTA_TIME = `${MODULE_PATH}/${ID_HANDLER_SET_PREVIOUS_RTA_TIME}`;
-export const HANDLER_SET_PREVIOUS_IGT_TIME = `${MODULE_PATH}/${ID_HANDLER_SET_PREVIOUS_IGT_TIME}`;
-export const HANDLER_DISCARDING_RESET = `${MODULE_PATH}/${ID_HANDLER_DISCARDING_RESET}`;
-export const HANDLER_SAVING_RESET = `${MODULE_PATH}/${ID_HANDLER_SAVING_RESET}`;
-export const HANDLER_APPLY_SPLITS_FILE = `${MODULE_PATH}/${ID_HANDLER_APPLY_SPLITS_FILE}`;
 
 export interface PausePayload {
     igtOnly: boolean;
@@ -74,7 +59,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
             };
         },
         handlers: {
-            [ID_HANDLER_SET_CURRENT](state: SplitsState, index: number) {
+            [ID_HANDLER_SET_SPLITS_CURRENT](state: SplitsState, index: number) {
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
@@ -87,7 +72,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
 
                 return { current: index };
             },
-            [ID_HANDLER_SET_TIMING](state: SplitsState, timing: TimingMethod) {
+            [ID_HANDLER_SET_SPLITS_TIMING](state: SplitsState, timing: TimingMethod) {
                 // Be sure that the timing is valid
                 switch (timing) {
                     case TimingMethod.RTA:
@@ -97,7 +82,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                         return {};
                 }
             },
-            [ID_HANDLER_SET_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
+            [ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME](state: SplitsState, newTime: number) {
                 newTime = asCleanNumber(newTime, null);
                 if (newTime == null) {
                     return {};
@@ -105,7 +90,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
 
                 return { previousRTATotal: Math.max(newTime, -1) };
             },
-            [ID_HANDLER_SET_PREVIOUS_IGT_TIME](state: SplitsState, newTime: number) {
+            [ID_HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME](state: SplitsState, newTime: number) {
                 newTime = asCleanNumber(newTime, null);
                 if (newTime == null) {
                     return {};
@@ -113,7 +98,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
 
                 return { previousIGTTotal: Math.max(newTime, -1) };
             },
-            [ID_HANDLER_ADD_SEGMENT](state: SplitsState, segment: Segment) {
+            [ID_HANDLER_ADD_SPLITS_SEGMENT](state: SplitsState, segment: Segment) {
                 if (!validator.isSegment(segment)) {
                     return {};
                 }
@@ -121,14 +106,14 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                 // Create a new array
                 return { segments: [...state.segments, segment] };
             },
-            [ID_HANDLER_SET_ALL_SEGMENTS](state: SplitsState, segments: Segment[]) {
+            [ID_HANDLER_SET_ALL_SPLITS_SEGMENTS](state: SplitsState, segments: Segment[]) {
                 if (!Array.isArray(segments) || segments.findIndex(segment => !validator.isSegment(segment)) > -1) {
                     return {};
                 }
 
                 return { segments: segments };
             },
-            [ID_HANDLER_SET_SEGMENT](
+            [ID_HANDLER_SET_SPLITS_SEGMENT](
                 state: SplitsState,
                 payload: { index: number; segment: Segment }
             ) {
@@ -151,7 +136,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
 
                 return { segments: [...state.segments.slice(0, index), segment, ...state.segments.slice(index + 1)] };
             },
-            [ID_HANDLER_REMOVE_SEGMENT](state: SplitsState, index: number) {
+            [ID_HANDLER_REMOVE_SPLITS_SEGMENT](state: SplitsState, index: number) {
                 if (
                     typeof index !== 'number' ||
                     isNaN(index) ||
@@ -164,10 +149,10 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
 
                 return { segments: [...state.segments.slice(0, index), ...state.segments.slice(index + 1)] };
             },
-            [ID_HANDLER_CLEAR_SEGMENTS]() {
+            [ID_HANDLER_CLEAR_SPLITS_SEGMENTS]() {
                 return { segments: [] };
             },
-            [ID_HANDLER_DISCARDING_RESET](state: SplitsState) {
+            [ID_HANDLER_DISCARDING_SPLITS_RESET](state: SplitsState) {
                 return {
                     segments: state.segments.map(segment => {
                         const newSegment = resetSegment(segment);
@@ -180,7 +165,7 @@ export function getSplitsStoreModule(injector: Injector): Module<SplitsState> {
                     }),
                 };
             },
-            [ID_HANDLER_SAVING_RESET](state: SplitsState) {
+            [ID_HANDLER_SAVING_SPLITS_RESET](state: SplitsState) {
                 let newRTATotal = 0;
                 let newIGTTotal = 0;
 

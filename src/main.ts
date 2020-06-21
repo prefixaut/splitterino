@@ -7,20 +7,19 @@ import { format as formatUrl } from 'url';
 import { v4 as uuid } from 'uuid';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 
+import { HANDLER_SET_KEYBINDINGS_BINDINGS, SPLITTERINO_NAMESPACE_NAME } from './common/constants';
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, MessageType } from './models/ipc';
 import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/store';
 import { ServerStoreService } from './services/server-store.service';
 import { registerKeybindingsListener } from './store/listeners/keybindings';
-import { HANDLER_SET_BINDINGS } from './store/modules/keybindings.module';
 import { parseArguments } from './utils/arguments';
 import { isDevelopment } from './utils/is-development';
 import { Logger, LogLevel } from './utils/logger';
 import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
 import { getSplitterinoModules } from './utils/store';
-import { SPLITTERINO_NAMESPACE_NAME } from './common/constants';
 
 process.on('uncaughtException', (error: Error) => {
     // TODO: Fix Logger not logging errors at all (empty string result)
@@ -210,7 +209,7 @@ process.on('unhandledRejection', (reason, promise) => {
         // Load the keybindings once the application is actually loaded
         // Has to be done before creating the main window.
         if (Array.isArray(appSettings.keybindings)) {
-            store.commit(HANDLER_SET_BINDINGS, appSettings.keybindings);
+            store.commit(HANDLER_SET_KEYBINDINGS_BINDINGS, appSettings.keybindings);
         }
 
         mainWindow = createMainWindow();

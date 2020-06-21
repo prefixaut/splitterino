@@ -1,14 +1,11 @@
 /* eslint-disable no-unused-expressions,id-blacklist */
 import { expect } from 'chai';
 
+import { ID_HANDLER_SET_TIMER_START_DELAY, ID_HANDLER_SET_TIMER_STATUS } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
 import { TimerState } from '../../../src/models/states/timer.state';
 import { Module } from '../../../src/models/store';
-import {
-    getTimerStoreModule,
-    ID_HANDLER_SET_START_DELAY,
-    ID_HANDLER_SET_STATUS,
-} from '../../../src/store/modules/timer.module';
+import { getTimerStoreModule } from '../../../src/store/modules/timer.module';
 import { now } from '../../../src/utils/time';
 import { randomInt } from '../../utils';
 
@@ -27,7 +24,7 @@ describe('Timer Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_START_DELAY, () => {
+        describe(ID_HANDLER_SET_TIMER_START_DELAY, () => {
             it('should set the delay of the timer when its stopped', () => {
                 const newDelay = 1_000;
                 const state: TimerState = {
@@ -41,7 +38,7 @@ describe('Timer Store-Module', () => {
                     finishTime: 0,
                 };
 
-                const diff = timerModule.handlers[ID_HANDLER_SET_START_DELAY](state, newDelay);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_START_DELAY](state, newDelay);
                 expect(diff).to.deep.equal({ startDelay: newDelay });
             });
 
@@ -72,13 +69,13 @@ describe('Timer Store-Module', () => {
                     {},
                     []
                 ].forEach(newDelay => {
-                    const diff = timerModule.handlers[ID_HANDLER_SET_START_DELAY](state, newDelay);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_START_DELAY](state, newDelay);
                     expect(diff).to.deep.equal({}, `Applied wrongfully following delay: "${newDelay}"!`);
                 });
             });
         });
 
-        describe(ID_HANDLER_SET_STATUS, () => {
+        describe(ID_HANDLER_SET_TIMER_STATUS, () => {
             it('should not switch to an invalid status', () => {
                 const state: TimerState = {
                     status: TimerStatus.STOPPED,
@@ -105,11 +102,11 @@ describe('Timer Store-Module', () => {
                     [],
                 ].forEach(invalidStatus => {
                     let diff: Partial<TimerState>;
-                    diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, invalidStatus);
+                    diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, invalidStatus);
 
                     expect(diff).to.deep.equal({});
 
-                    diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, { time: now(), status: invalidStatus });
+                    diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, { time: now(), status: invalidStatus });
 
                     expect(diff).to.deep.equal({});
                 });
@@ -128,7 +125,7 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, {
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, {
                     time,
                     status: TimerStatus.RUNNING,
                 });
@@ -152,7 +149,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.startTime).to.be.within(time, time + maxTimeDeviation);
@@ -173,7 +170,7 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.pauseTime).to.equal(0);
@@ -203,7 +200,7 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.igtPauseTime).to.equal(0);
@@ -228,7 +225,7 @@ describe('Timer Store-Module', () => {
                     finishTime: randomInt(99_999),
                 };
 
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING);
 
                 expect(diff.status).to.equal(TimerStatus.RUNNING);
                 expect(diff.finishTime).to.equal(0);
@@ -265,7 +262,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING);
 
                     expect(diff).to.deep.equal({});
                 });
@@ -284,7 +281,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.PAUSED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(diff.pauseTime).to.be.within(time, time + maxTimeDeviation);
@@ -303,7 +300,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.PAUSED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.PAUSED);
                 expect(diff.pauseTime).to.be.within(time, time + maxTimeDeviation);
@@ -343,7 +340,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.PAUSED);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.PAUSED);
 
                     expect(diff).to.deep.equal({});
                 });
@@ -362,7 +359,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(diff.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(diff.igtPauseTime).to.be.within(time, time + maxTimeDeviation);
@@ -381,7 +378,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(diff.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(diff.igtPauseTime).to.be.within(time, time + maxTimeDeviation);
@@ -400,7 +397,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                 expect(diff.status).to.deep.equal(TimerStatus.RUNNING_IGT_PAUSE);
                 expect(diff.pauseTime).to.equal(0);
@@ -443,7 +440,7 @@ describe('Timer Store-Module', () => {
                             status: invalidStatus,
                         };
 
-                        const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
+                        const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.RUNNING_IGT_PAUSE);
 
                         expect(diff).to.deep.equal({});
                     });
@@ -462,7 +459,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.FINISHED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(diff.pauseTime).to.equal(0);
@@ -491,7 +488,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.FINISHED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(diff.igtPauseTime).to.equal(0);
@@ -515,7 +512,7 @@ describe('Timer Store-Module', () => {
                 };
 
                 const time = now();
-                const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
+                const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.FINISHED);
 
                 expect(diff.status).to.deep.equal(TimerStatus.FINISHED);
                 expect(diff.finishTime).to.be.within(time, time + maxTimeDeviation);
@@ -553,7 +550,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.FINISHED);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.FINISHED);
 
                     expect(diff).to.deep.equal({});
                 });
@@ -582,7 +579,7 @@ describe('Timer Store-Module', () => {
                         status: status,
                     };
 
-                    const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.STOPPED);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.STOPPED);
 
                     expect(diff).to.deep.equal({
                         status: TimerStatus.STOPPED,
@@ -627,7 +624,7 @@ describe('Timer Store-Module', () => {
                         status: invalidStatus,
                     };
 
-                    const diff = timerModule.handlers[ID_HANDLER_SET_STATUS](state, TimerStatus.STOPPED);
+                    const diff = timerModule.handlers[ID_HANDLER_SET_TIMER_STATUS](state, TimerStatus.STOPPED);
 
                     expect(diff).to.deep.equal({});
                 });

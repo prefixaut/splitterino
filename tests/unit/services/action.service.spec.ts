@@ -2,18 +2,18 @@
 import { expect } from 'chai';
 import { merge } from 'lodash';
 
+import {
+    HANDLER_ADD_META_OPENED_SPLITS_FILE,
+    HANDLER_SET_SPLITS_CURRENT,
+    HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME,
+    HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
+    HANDLER_SET_SPLITS_SEGMENT,
+    HANDLER_SET_TIMER_STATUS,
+} from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
 import { ACTION_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../../src/models/services';
 import { Region, Segment } from '../../../src/models/splits';
 import { RootState } from '../../../src/models/store';
-import { HANDLER_ADD_OPENED_SPLITS_FILE } from '../../../src/store/modules/meta.module';
-import {
-    HANDLER_SET_CURRENT,
-    HANDLER_SET_PREVIOUS_IGT_TIME,
-    HANDLER_SET_PREVIOUS_RTA_TIME,
-    HANDLER_SET_SEGMENT,
-} from '../../../src/store/modules/splits.module';
-import { HANDLER_SET_STATUS } from '../../../src/store/modules/timer.module';
 import { createCommit, getSplitterinoModules } from '../../../src/utils/store';
 import { getTotalTime, now } from '../../../src/utils/time';
 import { ActionMockService } from '../../mocks/action-mock.service';
@@ -58,7 +58,7 @@ describe('Action-Service', () => {
             await service.addOpenedSplitsFile(path);
 
             expect(store.history).to.deep.equal([
-                createCommit(HANDLER_ADD_OPENED_SPLITS_FILE, {
+                createCommit(HANDLER_ADD_META_OPENED_SPLITS_FILE, {
                     path,
                     category: meta.category,
                     gameName: meta.name,
@@ -111,17 +111,17 @@ describe('Action-Service', () => {
             await service.startTimer(time);
 
             expect(store.history).to.deep.equal([
-                createCommit(HANDLER_SET_PREVIOUS_RTA_TIME, rtaPersonalBest),
-                createCommit(HANDLER_SET_PREVIOUS_IGT_TIME, igtPersonalBest),
-                createCommit(HANDLER_SET_SEGMENT, {
+                createCommit(HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME, rtaPersonalBest),
+                createCommit(HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME, igtPersonalBest),
+                createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                     index: 0,
                     segment: {
                         ...segments[0],
                         startTime: time,
                     }
                 }),
-                createCommit(HANDLER_SET_CURRENT, 0),
-                createCommit(HANDLER_SET_STATUS, {
+                createCommit(HANDLER_SET_SPLITS_CURRENT, 0),
+                createCommit(HANDLER_SET_TIMER_STATUS, {
                     time,
                     status: TimerStatus.RUNNING
                 }),
@@ -235,7 +235,7 @@ describe('Action-Service', () => {
             await service.splitTimer(time);
 
             expect(store.history).to.deep.equal([
-                createCommit(HANDLER_SET_SEGMENT, {
+                createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                     index: currentIndex,
                     segment: {
                         ...currentSegment,
@@ -253,7 +253,7 @@ describe('Action-Service', () => {
                         skipped: false,
                     },
                 }),
-                createCommit(HANDLER_SET_SEGMENT, {
+                createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                     index: currentIndex + 1,
                     segment: {
                         ...segments[currentIndex + 1],
@@ -263,7 +263,7 @@ describe('Action-Service', () => {
                         skipped: false,
                     }
                 }),
-                createCommit(HANDLER_SET_CURRENT, currentIndex + 1),
+                createCommit(HANDLER_SET_SPLITS_CURRENT, currentIndex + 1),
             ]);
             expect(service.callStack).to.be.have.lengthOf(1);
         });
@@ -301,7 +301,7 @@ describe('Action-Service', () => {
 
             await service.splitTimer(time);
 
-            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SEGMENT, {
+            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                 index: currentIndex,
                 segment: {
                     ...currentSegment,
@@ -358,7 +358,7 @@ describe('Action-Service', () => {
 
             await service.splitTimer(time);
 
-            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SEGMENT, {
+            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                 index: currentIndex,
                 segment: {
                     ...currentSegment,
@@ -413,7 +413,7 @@ describe('Action-Service', () => {
 
             await service.splitTimer(time);
 
-            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SEGMENT, {
+            expect(store.history[0]).to.deep.equal(createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                 index: currentIndex,
                 segment: {
                     ...currentSegment,
@@ -463,7 +463,7 @@ describe('Action-Service', () => {
             await service.splitTimer(time);
 
             expect(store.history).to.deep.equal([
-                createCommit(HANDLER_SET_SEGMENT, {
+                createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                     index: currentIndex,
                     segment: {
                         ...currentSegment,
@@ -481,7 +481,7 @@ describe('Action-Service', () => {
                         skipped: false,
                     },
                 }),
-                createCommit(HANDLER_SET_STATUS, TimerStatus.FINISHED),
+                createCommit(HANDLER_SET_TIMER_STATUS, TimerStatus.FINISHED),
             ]);
             expect(service.callStack).to.be.have.lengthOf(1);
         });
@@ -541,7 +541,7 @@ describe('Action-Service', () => {
             expect(result).to.equal(true);
             expect(service.callStack).to.have.lengthOf(1);
             expect(store.history).to.deep.equal([
-                createCommit(HANDLER_SET_SEGMENT, {
+                createCommit(HANDLER_SET_SPLITS_SEGMENT, {
                     index: currentIndex,
                     segment: {
                         ...segments[currentIndex],
@@ -559,7 +559,7 @@ describe('Action-Service', () => {
                         },
                     },
                 }),
-                createCommit(HANDLER_SET_CURRENT, currentIndex + 1),
+                createCommit(HANDLER_SET_SPLITS_CURRENT, currentIndex + 1),
             ]);
         });
     });
