@@ -1,5 +1,4 @@
 import { Inject, Injectable } from 'lightweight-di';
-import { merge } from 'lodash';
 import { first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
@@ -25,7 +24,7 @@ import { IPC_SERVER_SERVICE_TOKEN } from '../models/services';
 import { Commit, DiffHandler, DiffHandlerTree, Module, StoreState } from '../models/store';
 import { BaseStore } from '../store/base-store';
 import { Logger } from '../utils/logger';
-import { createCommit, defineGetterProperty } from '../utils/store';
+import { createCommit, defineGetterProperty, storeMerge } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
 
 interface Client {
@@ -337,7 +336,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             }
         });
 
-        merge(this.internalState, diff);
+        storeMerge(this.internalState, diff);
 
 
         this.isCommitting = false;

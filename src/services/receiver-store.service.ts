@@ -1,5 +1,4 @@
 import { Inject, Injectable } from 'lightweight-di';
-import { merge } from 'lodash';
 import { filter, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
@@ -7,7 +6,7 @@ import { MessageType, StoreApplyDiffBroadcast, StoreCommitRequest, StoreStateRes
 import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Commit, RootState, StoreState } from '../models/store';
 import { ReactiveStore } from '../store/reactive-store';
-import { createCommit, defineGetterProperty } from '../utils/store';
+import { createCommit, defineGetterProperty, storeMerge } from '../utils/store';
 import { IPCClientService } from './ipc-client.service';
 
 @Injectable
@@ -80,7 +79,9 @@ export class ReceiverStoreService<S extends StoreState> extends ReactiveStore<S>
             }
         });
 
-        Object.entries(merge({}, this.getterInstance.$data.$state, diff)).forEach(([key, value]) => {
+        const mergedState = storeMerge(this.internalState, diff);
+
+        Object.entries(mergedState).forEach(([key, value]) => {
             this.getterInstance.$set(this.getterInstance.$data.$state, key, value);
         });
 

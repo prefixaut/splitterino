@@ -83,8 +83,6 @@ export function getPluginStoreModule(injector): Module<PluginsState> {
             [ID_HANDLER_ENABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
                 // If the plugin isn't registered or already enabled, ignore the request
                 if (!isPluginRegisteredGetter(state)(identifier) || isPluginEnabledGetter(state)(identifier)) {
-                    console.log('plugin not registered yet or already enabled!', identifier);
-
                     return {};
                 }
 
@@ -99,11 +97,8 @@ export function getPluginStoreModule(injector): Module<PluginsState> {
                 };
             },
             [ID_HANDLER_DISABLE_PLUGIN](state: PluginsState, identifier: PluginIdentifier) {
-                console.log('disabling plugin:', identifier);
                 // If the plugin isn't registered yet, ignore it
                 if (!isPluginRegisteredGetter(state)(identifier)) {
-                    console.log('plugin is not registered, can not disabled it');
-
                     return {};
                 }
 
@@ -111,8 +106,6 @@ export function getPluginStoreModule(injector): Module<PluginsState> {
                 const index = enabledPluginIndexGetter(state)(identifier);
 
                 if (index === -1) {
-                    console.log('plugin is not enabled, can not disable it');
-
                     return {};
                 }
 
@@ -122,7 +115,6 @@ export function getPluginStoreModule(injector): Module<PluginsState> {
                         ...state.enabledPlugins.slice(index + 1),
                     ]
                 };
-                console.log(r);
 
                 return r;
             }

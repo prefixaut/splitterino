@@ -1,5 +1,5 @@
 import { Injector } from 'lightweight-di';
-import { get } from 'lodash';
+import { get, mergeWith } from 'lodash';
 import { createDecorator } from 'vue-class-component';
 
 import {
@@ -56,11 +56,21 @@ export function getSplitterinoModules(injector: Injector): SplitterinoModules {
         [GAME_INFO_MODULE_NAME]: getGameInfoStoreModule(),
         [KEYBINDINGS_MODULE_NAME]: getKeybindingsStoreModule(),
         [META_MODULE_NAME]: getMetaStoreModule(),
-        [PLUGINS_MODULE_NAME]: getPluginStoreModule(),
+        [PLUGINS_MODULE_NAME]: getPluginStoreModule(injector),
         [SETTINGS_MODULE_NAME]: getSettingsStoreModule(injector),
         [SPLITS_MODULE_NAME]: getSplitsStoreModule(injector),
         [TIMER_MODULE_NAME]: getTimerStoreModule(),
     };
+}
+
+export function storeMerge(dest: any, ...sources: any[]): any {
+    return mergeWith(dest, ...sources, (origin, src) => {
+        if (Array.isArray(src)) {
+            return src;
+        } else if (src != null && typeof src === 'object') {
+            return storeMerge(origin, src);
+        }
+    });
 }
 
 export function createGetterTree<T>(
