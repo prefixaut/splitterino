@@ -9,7 +9,9 @@ import { extract } from 'tar-stream';
 import { v4 as uuid } from 'uuid';
 
 import {
+    ACTION_SERVICE_TOKEN,
     DEFAULT_APPLICATION_SETTINGS,
+    ELECTRON_SERVICE_TOKEN,
     GLOBAL_EVENT_LOAD_TEMPLATE,
     HANDLER_ADD_META_OPENED_SPLITS_FILE,
     HANDLER_ADD_META_OPENED_TEMPLATE_FILE,
@@ -18,24 +20,22 @@ import {
     HANDLER_SET_META_LAST_OPENED_SPLITS_FILES,
     HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES,
     HANDLER_SET_SETTINGS_ALL,
+    IPC_CLIENT_SERVICE_TOKEN,
     RUNTIME_ENVIRONMENT_TOKEN,
     RuntimeEnvironment,
+    STORE_SERVICE_TOKEN,
+    TRANSFORMER_SERVICE_TOKEN,
+    VALIDATOR_SERVICE_TOKEN,
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
 import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import {
-    ACTION_SERVICE_TOKEN,
     ActionServiceInterface,
-    ELECTRON_SERVICE_TOKEN,
     ElectronServiceInterface,
     IOServiceInterface,
-    IPC_CLIENT_SERVICE_TOKEN,
-    STORE_SERVICE_TOKEN,
     StoreInterface,
-    TRANSFORMER_SERVICE_TOKEN,
     TransformerServiceInterface,
-    VALIDATOR_SERVICE_TOKEN,
     ValidatorServiceInterface,
 } from '../models/services';
 import { TimingMethod } from '../models/splits';

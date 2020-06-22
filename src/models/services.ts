@@ -4,28 +4,17 @@ import {
     Menu,
     MessageBoxOptions,
     OpenDialogOptions,
-    SaveDialogOptions
+    SaveDialogOptions,
 } from 'electron';
 import { Dirent } from 'fs';
-import { InjectionToken } from 'lightweight-di';
 import { VNode } from 'vue';
 
-import { Commit, StoreState, RootState } from '../models/store';
+import { Commit, StoreState } from '../models/store';
 import { ApplicationSettings } from './application-settings';
 import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
-import { IPCClientInterface, IPCServerInterface } from './ipc';
 import { Segment, Splits } from './splits';
 import { LoadedPlugin } from './states/plugins.state';
-
-export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionServiceInterface>('action');
-export const ELECTRON_SERVICE_TOKEN = new InjectionToken<ElectronServiceInterface>('electron');
-export const IO_SERVICE_TOKEN = new InjectionToken<IOServiceInterface>('io');
-export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
-export const IPC_SERVER_SERVICE_TOKEN = new InjectionToken<IPCServerInterface>('ipc-server');
-export const STORE_SERVICE_TOKEN = new InjectionToken<StoreInterface<RootState>>('store');
-export const TRANSFORMER_SERVICE_TOKEN = new InjectionToken<TransformerServiceInterface>('transformer');
-export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorServiceInterface>('validator');
 
 export interface ActionServiceInterface {
     addOpenedSplitsFile(filePath: string): Promise<boolean>;

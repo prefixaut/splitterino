@@ -28,10 +28,10 @@ import { Vue, Component } from 'vue-property-decorator';
 import {
     HANDLER_SET_KEYBINDINGS_DISABLE_BINDINGS,
     HANDLER_SET_ALL_SPLITS_SEGMENTS,
-    HANDLER_APPLY_GAME_INFO
+    HANDLER_APPLY_GAME_INFO,
+    IO_SERVICE_TOKEN
 } from '../../common/constants';
 import { Segment } from '../../models/splits';
-import { IO_SERVICE_TOKEN } from '../../models/services';
 import { GameInfoState } from '../../models/states/game-info.state';
 
 @Component({ name: 'spl-splits-editor-view' })

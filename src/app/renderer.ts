@@ -7,8 +7,8 @@ import Vue, { WatchOptions } from 'vue';
 import VueSelect from 'vue-select';
 import draggable from 'vuedraggable';
 
+import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../common/constants';
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
-import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
 import { Commit, RootState } from '../models/store';
 import { ReceiverStoreService } from '../services/receiver-store.service';
 import { Logger, LogLevel } from '../utils/logger';

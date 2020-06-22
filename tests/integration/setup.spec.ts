@@ -1,16 +1,17 @@
 import { Injector } from 'lightweight-di';
 
-import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment } from '../../src/common/constants';
 import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
     IO_SERVICE_TOKEN,
     IPC_CLIENT_SERVICE_TOKEN,
     IPC_SERVER_SERVICE_TOKEN,
+    RUNTIME_ENVIRONMENT_TOKEN,
+    RuntimeEnvironment,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
-} from '../../src/models/services';
+} from '../../src/common/constants';
 import { Module, RootState } from '../../src/models/store';
 import { ActionService } from '../../src/services/action.service';
 import { IOService } from '../../src/services/io.service';

@@ -1,7 +1,17 @@
 import { InjectionToken } from 'lightweight-di';
 
 import { ApplicationSettings } from '../models/application-settings';
+import { IPCClientInterface, IPCServerInterface } from '../models/ipc';
+import {
+    ActionServiceInterface,
+    ElectronServiceInterface,
+    IOServiceInterface,
+    StoreInterface,
+    TransformerServiceInterface,
+    ValidatorServiceInterface,
+} from '../models/services';
 import { SettingsConfigurationNamespace } from '../models/states/settings.state';
+import { RootState } from '../models/store';
 
 /*
  * General information
@@ -11,8 +21,16 @@ export const SPLITTERINO_VERSION = process.env.SPLITTERINO_VERSION;
 /*
  * Service constants without corresponding file
  */
+export const ACTION_SERVICE_TOKEN = new InjectionToken<ActionServiceInterface>('action');
+export const ELECTRON_SERVICE_TOKEN = new InjectionToken<ElectronServiceInterface>('electron');
+export const IO_SERVICE_TOKEN = new InjectionToken<IOServiceInterface>('io');
+export const IPC_CLIENT_SERVICE_TOKEN = new InjectionToken<IPCClientInterface>('ipc-client');
+export const IPC_SERVER_SERVICE_TOKEN = new InjectionToken<IPCServerInterface>('ipc-server');
 export const RUNTIME_ENVIRONMENT_TOKEN = new InjectionToken<RuntimeEnvironment>('runtime-environment');
 export const SPLITTERINO_VERSION_TOKEN = new InjectionToken<string>('splitterino-version');
+export const STORE_SERVICE_TOKEN = new InjectionToken<StoreInterface<RootState>>('store');
+export const TRANSFORMER_SERVICE_TOKEN = new InjectionToken<TransformerServiceInterface>('transformer');
+export const VALIDATOR_SERVICE_TOKEN = new InjectionToken<ValidatorServiceInterface>('validator');
 
 export enum RuntimeEnvironment {
     BACKGROUND,

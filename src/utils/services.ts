@@ -1,16 +1,19 @@
 import { Injector } from 'lightweight-di';
 
-import { RUNTIME_ENVIRONMENT_TOKEN, RuntimeEnvironment, SPLITTERINO_VERSION_TOKEN, SPLITTERINO_VERSION } from '../common/constants';
 import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
     IO_SERVICE_TOKEN,
     IPC_CLIENT_SERVICE_TOKEN,
     IPC_SERVER_SERVICE_TOKEN,
+    RUNTIME_ENVIRONMENT_TOKEN,
+    RuntimeEnvironment,
+    SPLITTERINO_VERSION,
+    SPLITTERINO_VERSION_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
-} from '../models/services';
+} from '../common/constants';
 import { ActionService } from '../services/action.service';
 import { ElectronService } from '../services/electron.service';
 import { HandlerStoreService } from '../services/handler-store.service';

@@ -24,7 +24,8 @@
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_SERVICE_TOKEN, ElectronServiceInterface, IO_SERVICE_TOKEN, IOServiceInterface } from '../../models/services';
+import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../../common/constants';
+import { ElectronServiceInterface, IOServiceInterface } from '../../models/services';
 import { RecentlyOpenedTemplate } from '../../models/states/meta.state';
 
 @Component({ name: 'spl-open-template-prompt' })

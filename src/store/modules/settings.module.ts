@@ -1,8 +1,12 @@
 import { Injector } from 'lightweight-di';
 import { cloneDeep, get, isEqual, merge } from 'lodash';
 
-import { CORE_SETTINGS, ID_HANDLER_SET_SETTINGS_ALL, ID_HANDLER_SET_SETTINGS_BULK } from '../../common/constants';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
+import {
+    CORE_SETTINGS,
+    ID_HANDLER_SET_SETTINGS_ALL,
+    ID_HANDLER_SET_SETTINGS_BULK,
+    IPC_CLIENT_SERVICE_TOKEN,
+} from '../../common/constants';
 import {
     Settings,
     SettingsConfigurationNamespace,

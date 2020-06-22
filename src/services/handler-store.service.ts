@@ -2,6 +2,7 @@ import { Inject, Injectable } from 'lightweight-di';
 import { filter, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
+import { IPC_CLIENT_SERVICE_TOKEN } from '../common/constants';
 import {
     MessageType,
     StoreCreateDiffRequest,
@@ -11,11 +12,10 @@ import {
     StoreUnregisterModuleRequest,
     StoreUnregisterNamespaceRequest,
 } from '../models/ipc';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Commit, DiffHandler, Module, StoreState } from '../models/store';
+import { Logger } from '../utils/logger';
 import { IPCClientService } from './ipc-client.service';
 import { ReceiverStoreService } from './receiver-store.service';
-import { Logger } from '../utils/logger';
 
 @Injectable
 export class HandlerStoreService<S extends StoreState> extends ReceiverStoreService<S> {

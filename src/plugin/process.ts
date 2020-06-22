@@ -1,12 +1,12 @@
+import { first, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
-import { MessageType, IPCClientInterface, PluginProcessDedNotification } from '../models/ipc';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
+
+import { IPC_CLIENT_SERVICE_TOKEN, IPC_PLUGIN_CLIENT_NAME } from '../common/constants';
+import { IPCClientInterface, MessageType, PluginProcessDedNotification } from '../models/ipc';
 import { Logger, LogLevel } from '../utils/logger';
-import { IPC_PLUGIN_CLIENT_NAME } from '../common/constants';
 import { createPluginInjector } from '../utils/services';
-import { setupStore } from './setup-store';
-import { map, first } from 'rxjs/operators';
 import { PluginManager } from './plugin-manager';
+import { setupStore } from './setup-store';
 
 (async () => {
     const injector = createPluginInjector();

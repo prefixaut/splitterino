@@ -2,11 +2,11 @@
 import { expect } from 'chai';
 import { Injector } from 'lightweight-di';
 
-import { createPluginTestInjector } from '../../utils';
+import { IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../../src/common/constants';
 import { Plugin } from '../../../src/models/plugins';
-import { STORE_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
-import { ReceiverStoreService } from '../../../src/services/receiver-store.service';
 import { RootState } from '../../../src/models/store';
+import { ReceiverStoreService } from '../../../src/services/receiver-store.service';
+import { createPluginTestInjector } from '../../utils';
 
 let pluginInjector: Injector;
 

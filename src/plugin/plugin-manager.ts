@@ -4,18 +4,18 @@ import { join } from 'path';
 import { satisfies as semverSatisfies } from 'semver';
 import { Context, createContext, Script } from 'vm';
 
-import { HANDLER_REPLACE_PLUGINS } from '../common/constants';
-import { Plugin } from '../models/plugins';
 import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
+    HANDLER_REPLACE_PLUGINS,
     IO_SERVICE_TOKEN,
-    IOServiceInterface,
     IPC_CLIENT_SERVICE_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
-} from '../models/services';
+} from '../common/constants';
+import { Plugin } from '../models/plugins';
+import { IOServiceInterface } from '../models/services';
 import { LoadedPlugin } from '../models/states/plugins.state';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';

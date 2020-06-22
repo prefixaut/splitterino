@@ -34,8 +34,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import { HANDLER_DISABLE_PLUGIN, HANDLER_ENABLE_PLUGIN } from '../../common/constants';
-import { ELECTRON_SERVICE_TOKEN } from '../../models/services';
+import { ELECTRON_SERVICE_TOKEN, HANDLER_DISABLE_PLUGIN, HANDLER_ENABLE_PLUGIN } from '../../common/constants';
 import { LoadedPlugin, PluginIdentifier } from '../../models/states/plugins.state';
 import {
     isPluginEnabledGetter,

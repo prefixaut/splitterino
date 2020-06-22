@@ -2,8 +2,8 @@ import { Inject, Injectable } from 'lightweight-di';
 import { filter, map } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
+import { IPC_CLIENT_SERVICE_TOKEN } from '../common/constants';
 import { MessageType, StoreApplyDiffBroadcast, StoreCommitRequest, StoreStateResponse } from '../models/ipc';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../models/services';
 import { Commit, RootState, StoreState } from '../models/store';
 import { ReactiveStore } from '../store/reactive-store';
 import { createCommit, defineGetterProperty, storeMerge } from '../utils/store';

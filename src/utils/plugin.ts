@@ -3,17 +3,18 @@ import { Injector } from 'lightweight-di';
 import { join } from 'path';
 import { first, map, timeout } from 'rxjs/operators';
 
-import { RUNTIME_ENVIRONMENT_TOKEN, SPLITTERINO_VERSION_TOKEN } from '../common/constants';
-import { IPCServerInterface, MessageType } from '../models/ipc';
 import {
     ACTION_SERVICE_TOKEN,
     ELECTRON_SERVICE_TOKEN,
     IO_SERVICE_TOKEN,
     IPC_CLIENT_SERVICE_TOKEN,
+    RUNTIME_ENVIRONMENT_TOKEN,
+    SPLITTERINO_VERSION_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
-} from '../models/services';
+} from '../common/constants';
+import { IPCServerInterface, MessageType } from '../models/ipc';
 import { RootState } from '../models/store';
 import { HandlerStoreService } from '../services/handler-store.service';
 import { PluginInstanceStoreService } from '../services/plugin-instance-store.service';

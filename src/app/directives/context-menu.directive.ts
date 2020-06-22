@@ -1,8 +1,8 @@
 import { Injector } from 'lightweight-di';
 import { DirectiveOptions, VNode, VNodeDirective } from 'vue';
 
+import { ELECTRON_SERVICE_TOKEN } from '../../common/constants';
 import { ContextMenuItem } from '../../models/context-menu-item';
-import { ELECTRON_SERVICE_TOKEN } from '../../models/services';
 import { contextMenuGetter } from '../../store/modules/context-menu.module';
 
 export function getContextMenuDirective(injector: Injector): DirectiveOptions {

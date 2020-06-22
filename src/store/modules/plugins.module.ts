@@ -4,8 +4,9 @@ import {
     ID_HANDLER_ENABLE_PLUGIN,
     ID_HANDLER_REMOVE_PLUGIN,
     ID_HANDLER_REPLACE_PLUGINS,
+    VALIDATOR_SERVICE_TOKEN,
 } from '../../common/constants';
-import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
+import { ValidatorServiceInterface } from '../../models/services';
 import { LoadedPlugin, PluginIdentifier, PluginsState } from '../../models/states/plugins.state';
 import { Module } from '../../models/store';
 

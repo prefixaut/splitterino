@@ -3,15 +3,16 @@ import { expect } from 'chai';
 import { merge } from 'lodash';
 
 import {
+    ACTION_SERVICE_TOKEN,
     HANDLER_ADD_META_OPENED_SPLITS_FILE,
     HANDLER_SET_SPLITS_CURRENT,
     HANDLER_SET_SPLITS_PREVIOUS_IGT_TIME,
     HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
     HANDLER_SET_SPLITS_SEGMENT,
     HANDLER_SET_TIMER_STATUS,
+    STORE_SERVICE_TOKEN,
 } from '../../../src/common/constants';
 import { TimerStatus } from '../../../src/common/timer-status';
-import { ACTION_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../../src/models/services';
 import { Region, Segment } from '../../../src/models/splits';
 import { RootState } from '../../../src/models/store';
 import { createCommit, getSplitterinoModules } from '../../../src/utils/store';

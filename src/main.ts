@@ -7,10 +7,15 @@ import { format as formatUrl } from 'url';
 import { v4 as uuid } from 'uuid';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
 
-import { HANDLER_SET_KEYBINDINGS_BINDINGS, SPLITTERINO_NAMESPACE_NAME } from './common/constants';
+import {
+    HANDLER_SET_KEYBINDINGS_BINDINGS,
+    IO_SERVICE_TOKEN,
+    IPC_SERVER_SERVICE_TOKEN,
+    SPLITTERINO_NAMESPACE_NAME,
+    STORE_SERVICE_TOKEN,
+} from './common/constants';
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
 import { AppShutdownBroadcast, MessageType } from './models/ipc';
-import { IO_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from './models/services';
 import { RootState } from './models/store';
 import { ServerStoreService } from './services/server-store.service';
 import { registerKeybindingsListener } from './store/listeners/keybindings';

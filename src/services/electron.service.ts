@@ -17,6 +17,7 @@ import { format as formatUrl } from 'url';
 import { v4 as uuid } from 'uuid';
 import { VNode } from 'vue';
 
+import { IPC_CLIENT_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN } from '../common/constants';
 import { FunctionRegistry } from '../common/function-registry';
 import { ContextMenuItem } from '../models/context-menu-item';
 import {
@@ -26,7 +27,7 @@ import {
     MessageType,
     PublishGlobalEventRequest,
 } from '../models/ipc';
-import { ElectronServiceInterface, IPC_CLIENT_SERVICE_TOKEN, IPC_SERVER_SERVICE_TOKEN } from '../models/services';
+import { ElectronServiceInterface } from '../models/services';
 import { isDevelopment } from '../utils/is-development';
 import { Logger } from '../utils/logger';
 

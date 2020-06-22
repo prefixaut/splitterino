@@ -2,7 +2,6 @@ import { Injector } from 'lightweight-di';
 
 import { ContextMenuItemActionFunction } from '../models/context-menu-item';
 import { KeybindingActionFunction } from '../models/keybindings';
-import { ACTION_SERVICE_TOKEN, ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../models/services';
 import {
     openKeybindgsEditor,
     openLoadSplits,
@@ -12,6 +11,7 @@ import {
     openSplitsEditor,
 } from '../utils/windows';
 import {
+    ACTION_SERVICE_TOKEN,
     CTX_MENU_KEYBINDINGS_OPEN,
     CTX_MENU_PLUGIN_MANAGER_OPEN,
     CTX_MENU_SETTINGS_OPEN,
@@ -21,11 +21,14 @@ import {
     CTX_MENU_TEMPLATES_LOAD_FROM_FILE,
     CTX_MENU_WINDOW_CLOSE,
     CTX_MENU_WINDOW_RELOAD,
+    ELECTRON_SERVICE_TOKEN,
+    IO_SERVICE_TOKEN,
     KEYBINDING_SPLITS_RESET,
     KEYBINDING_SPLITS_SKIP,
     KEYBINDING_SPLITS_SPLIT,
     KEYBINDING_SPLITS_TOGGLE_PAUSE,
     KEYBINDING_SPLITS_UNDO,
+    STORE_SERVICE_TOKEN,
 } from './constants';
 import { TimerStatus } from './timer-status';
 

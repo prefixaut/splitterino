@@ -2,8 +2,11 @@
 import { expect } from 'chai';
 import { Subscription } from 'rxjs';
 
-import { ID_HANDLER_SET_SETTINGS_ALL, ID_HANDLER_SET_SETTINGS_BULK } from '../../../src/common/constants';
-import { IPC_CLIENT_SERVICE_TOKEN } from '../../../src/models/services';
+import {
+    ID_HANDLER_SET_SETTINGS_ALL,
+    ID_HANDLER_SET_SETTINGS_BULK,
+    IPC_CLIENT_SERVICE_TOKEN,
+} from '../../../src/common/constants';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
 import { Module } from '../../../src/models/store';
 import { getConfigurationByPath, getSettingsStoreModule, getValueByPath } from '../../../src/store/modules/settings.module';

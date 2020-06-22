@@ -13,9 +13,9 @@ import {
     ID_HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
     ID_HANDLER_SET_SPLITS_SEGMENT,
     ID_HANDLER_SET_SPLITS_TIMING,
+    VALIDATOR_SERVICE_TOKEN,
 } from '../../common/constants';
 import { SplitsFile } from '../../models/files';
-import { VALIDATOR_SERVICE_TOKEN } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
 import { SplitsState } from '../../models/states/splits.state';
 import { Module } from '../../models/store';

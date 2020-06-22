@@ -3,10 +3,9 @@ import { Injector } from 'lightweight-di';
 import { filter, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 
-import { HANDLER_SET_KEYBINDINGS_BINDINGS } from '../../common/constants';
+import { HANDLER_SET_KEYBINDINGS_BINDINGS, IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../common/constants';
 import { FunctionRegistry } from '../../common/function-registry';
 import { KeybindingTriggerBroadcast, MessageType } from '../../models/ipc';
-import { IPC_SERVER_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../../models/services';
 import { RootState } from '../../models/store';
 import { Logger } from '../../utils/logger';
 import { BaseStore } from '../base-store';

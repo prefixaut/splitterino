@@ -11,8 +11,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-import { SETTING_APP_SHOW_TITLE_BAR } from '../common/constants';
-import { ELECTRON_SERVICE_TOKEN } from '../models/services';
+import { ELECTRON_SERVICE_TOKEN, SETTING_APP_SHOW_TITLE_BAR } from '../common/constants';
 import { getValueByPath } from '../store/modules/settings.module';
 
 @Component

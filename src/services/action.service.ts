@@ -2,6 +2,7 @@ import { Inject, Injectable } from 'lightweight-di';
 import { cloneDeep } from 'lodash';
 
 import {
+    ELECTRON_SERVICE_TOKEN,
     HANDLER_ADD_META_OPENED_SPLITS_FILE,
     HANDLER_DISCARDING_SPLITS_RESET,
     HANDLER_SAVING_SPLITS_RESET,
@@ -10,15 +11,10 @@ import {
     HANDLER_SET_SPLITS_PREVIOUS_RTA_TIME,
     HANDLER_SET_SPLITS_SEGMENT,
     HANDLER_SET_TIMER_STATUS,
+    STORE_SERVICE_TOKEN,
 } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
-import {
-    ActionServiceInterface,
-    ELECTRON_SERVICE_TOKEN,
-    ElectronServiceInterface,
-    STORE_SERVICE_TOKEN,
-    StoreInterface,
-} from '../models/services';
+import { ActionServiceInterface, ElectronServiceInterface, StoreInterface } from '../models/services';
 import { Segment, TimingMethod } from '../models/splits';
 import { RecentlyOpenedSplit } from '../models/states/meta.state';
 import { RootState } from '../models/store';

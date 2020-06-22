@@ -2,6 +2,7 @@ import { Inject, Injectable } from 'lightweight-di';
 import { first, map, timeout } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
+import { IPC_SERVER_SERVICE_TOKEN } from '../common/constants';
 import {
     MessageType,
     StoreApplyDiffBroadcast,
@@ -20,7 +21,6 @@ import {
     StoreUnregisterNamespaceRequest,
     StoreUnregisterNamespaceResponse,
 } from '../models/ipc';
-import { IPC_SERVER_SERVICE_TOKEN } from '../models/services';
 import { Commit, DiffHandler, DiffHandlerTree, Module, StoreState } from '../models/store';
 import { BaseStore } from '../store/base-store';
 import { Logger } from '../utils/logger';

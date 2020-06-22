@@ -25,7 +25,8 @@ import { upperCase } from 'lodash';
 import { basename } from 'path';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { ELECTRON_SERVICE_TOKEN, ElectronServiceInterface, IO_SERVICE_TOKEN, IOServiceInterface } from '../../models/services';
+import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN } from '../../common/constants';
+import { ElectronServiceInterface, IOServiceInterface } from '../../models/services';
 import { RecentlyOpenedSplit } from '../../models/states/meta.state';
 
 @Component({ name: 'spl-open-splits-prompt' })

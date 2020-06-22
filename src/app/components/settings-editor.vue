@@ -45,8 +45,12 @@ import { set, isEqual, merge } from 'lodash';
 import { Subscription } from 'rxjs';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { HANDLER_SET_SETTINGS_BULK } from '../../common/constants';
-import { ELECTRON_SERVICE_TOKEN, IO_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN } from '../../models/services';
+import {
+    ELECTRON_SERVICE_TOKEN,
+    HANDLER_SET_SETTINGS_BULK,
+    IO_SERVICE_TOKEN,
+    IPC_CLIENT_SERVICE_TOKEN
+} from '../../common/constants';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
 import { getConfigurationByPath, getValueByPath } from '../../store/modules/settings.module';
 

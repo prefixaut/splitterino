@@ -38,15 +38,14 @@ import { Subscription } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { Component, Vue } from 'vue-property-decorator';
 
-import { GLOBAL_EVENT_LOAD_TEMPLATE } from '../../common/constants';
-import { TimerStatus } from '../../common/timer-status';
 import {
     ELECTRON_SERVICE_TOKEN,
-    ElectronServiceInterface,
+    GLOBAL_EVENT_LOAD_TEMPLATE,
     IO_SERVICE_TOKEN,
-    IOServiceInterface,
     IPC_CLIENT_SERVICE_TOKEN
-} from '../../models/services';
+} from '../../common/constants';
+import { TimerStatus } from '../../common/timer-status';
+import { ElectronServiceInterface, IOServiceInterface } from '../../models/services';
 import { MessageType, GlobalEventBroadcast } from '../../models/ipc';
 import { Logger } from '../../utils/logger';
 import { openSplitsEditor, openLoadSplits } from '../../utils/windows';

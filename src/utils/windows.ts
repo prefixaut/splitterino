@@ -1,21 +1,19 @@
 import { Injector } from 'lightweight-di';
 
 import {
+    ACTION_SERVICE_TOKEN,
+    ELECTRON_SERVICE_TOKEN,
+    IO_SERVICE_TOKEN,
     KEYBINDINGS_ROUTE,
     OPEN_SPLITS_ROUTE,
     OPEN_TEMPLATE_ROUTE,
     PLUGIN_MANAGER_ROUTE,
     SETTINGS_ROUTE,
     SPLITS_EDITOR_ROUTE,
+    STORE_SERVICE_TOKEN,
 } from '../common/constants';
 import { TimerStatus } from '../common/timer-status';
-import {
-    ACTION_SERVICE_TOKEN,
-    ELECTRON_SERVICE_TOKEN,
-    ElectronServiceInterface,
-    IO_SERVICE_TOKEN,
-    STORE_SERVICE_TOKEN,
-} from '../models/services';
+import { ElectronServiceInterface } from '../models/services';
 
 export function openKeybindgsEditor(electron: ElectronServiceInterface) {
     electron.newWindow(

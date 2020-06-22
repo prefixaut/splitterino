@@ -77,8 +77,8 @@ import { cloneDeep } from 'lodash';
 import { v4 as uuid } from 'uuid';
 import { Vue, Component, Prop, Watch, Emit } from 'vue-property-decorator';
 
-import { DEFAULT_SPLIT } from '../../common/constants';
-import { VALIDATOR_SERVICE_TOKEN, ValidatorServiceInterface } from '../../models/services';
+import { DEFAULT_SPLIT, VALIDATOR_SERVICE_TOKEN } from '../../common/constants';
+import { ValidatorServiceInterface } from '../../models/services';
 import { Segment, TimingMethod } from '../../models/splits';
 import { State } from '../../utils/store';
 import { getFinalTime } from '../../utils/time';
