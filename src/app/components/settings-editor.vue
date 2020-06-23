@@ -47,9 +47,7 @@ import { Component, Vue } from 'vue-property-decorator';
 
 import {
     ELECTRON_SERVICE_TOKEN,
-    HANDLER_SET_SETTINGS_BULK,
-    IO_SERVICE_TOKEN,
-    IPC_CLIENT_SERVICE_TOKEN
+    HANDLER_MERGE_SETTINGS
 } from '../../common/constants';
 import { SettingsConfigurationValue, Settings } from '../../models/states/settings.state';
 import { getConfigurationByPath, getValueByPath } from '../../store/modules/settings.module';
@@ -65,14 +63,6 @@ export default class SettingsEditorComponent extends Vue {
         plugins: {}
     };
     private settingsSubscription: Subscription;
-
-    public created() {
-        this.settingsSubscription = this.$services.get(IPC_CLIENT_SERVICE_TOKEN)
-            .listenForLocalMessage('settings-changed')
-            .subscribe(() => {
-                this.$services.get(IO_SERVICE_TOKEN).saveSettingsToFile();
-            });
-    }
 
     public get settingsValue() {
         return getValueByPath(this.$state.splitterino.settings);
@@ -95,11 +85,11 @@ export default class SettingsEditorComponent extends Vue {
     }
 
     public applySettings() {
-        this.$commit(HANDLER_SET_SETTINGS_BULK, { values: this.changesValues });
+        return this.$commit(HANDLER_MERGE_SETTINGS, { values: this.changesValues });
     }
 
-    public saveSettings() {
-        this.applySettings();
+    public async saveSettings() {
+        await this.applySettings();
         this.close();
     }
 

@@ -9,7 +9,7 @@ import {
 import { Dirent } from 'fs';
 import { VNode } from 'vue';
 
-import { Commit, StoreState } from '../models/store';
+import { Commit, StoreState, StoreListener } from '../models/store';
 import { ApplicationSettings } from './application-settings';
 import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
@@ -70,6 +70,9 @@ export interface StoreInterface<S extends StoreState> {
     state: S;
     monotonousId: number;
     commit(handlerOrCommit: string | Commit, data?: any): Promise<boolean>;
+    onCommit(listener: StoreListener<S>): void;
+
+    offCommit(listener: StoreListener<S>): void;
 }
 
 export interface TransformerServiceInterface {

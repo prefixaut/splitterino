@@ -54,7 +54,7 @@ before(async () => {
         contextMenu: getContextMenuStoreModule(),
         gameInfo: getGameInfoStoreModule(),
         keybindings: getKeybindingsStoreModule(),
-        settings: getSettingsStoreModule(mainInjector),
+        settings: getSettingsStoreModule(),
         splits: getSplitsStoreModule(mainInjector),
         timer: getTimerStoreModule(),
         meta: getMetaStoreModule(),

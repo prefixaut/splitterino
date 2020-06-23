@@ -1,17 +1,11 @@
-import { Injector } from 'lightweight-di';
-import { cloneDeep, get, isEqual, merge } from 'lodash';
+import { get } from 'lodash';
 
-import {
-    CORE_SETTINGS,
-    ID_HANDLER_SET_SETTINGS_ALL,
-    ID_HANDLER_SET_SETTINGS_BULK,
-    IPC_CLIENT_SERVICE_TOKEN,
-} from '../../common/constants';
+import { CORE_SETTINGS, ID_HANDLER_MERGE_SETTINGS } from '../../common/constants';
 import {
     Settings,
     SettingsConfigurationNamespace,
     SettingsConfigurationValue,
-    SettingsState,
+    SettingsState
 } from '../../models/states/settings.state';
 import { Module } from '../../models/store';
 
@@ -19,9 +13,7 @@ export interface SettingsPayload {
     values: Settings;
 }
 
-export function getSettingsStoreModule(injector: Injector): Module<SettingsState> {
-    const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-
+export function getSettingsStoreModule(): Module<SettingsState> {
     return {
         initialize() {
             return {
@@ -38,34 +30,8 @@ export function getSettingsStoreModule(injector: Injector): Module<SettingsState
             };
         },
         handlers: {
-            [ID_HANDLER_SET_SETTINGS_ALL](state: SettingsState, payload: SettingsPayload) {
-                // TODO: check if there is not conflict with interface so state stays conistent
+            [ID_HANDLER_MERGE_SETTINGS](state: SettingsState, payload: SettingsPayload) {
                 return { values: payload.values };
-            },
-            [ID_HANDLER_SET_SETTINGS_BULK](state: SettingsState, payload: SettingsPayload) {
-                const newSettings = merge({}, state.values, payload.values);
-                const oldSettings = cloneDeep(state.values);
-
-                for (const [moduleKey, modulE] of Object.entries(payload.values)) {
-                    for (const [namespaceKey, namespacE] of Object.entries(modulE)) {
-                        for (const [groupKey, group] of Object.entries(namespacE)) {
-                            for (const [settingKey, setting] of Object.entries(group)) {
-                                const path = `${moduleKey}.${namespaceKey}.${groupKey}.${settingKey}`;
-                                const oldValue = get(
-                                    oldSettings,
-                                    path
-                                );
-                                if (!isEqual(setting, oldValue)) {
-                                    ipcClient.sendLocalMessage(`setting-changed:${path}`, setting);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                ipcClient.sendLocalMessage('settings-changed');
-
-                return { values: newSettings };
             }
         },
     };

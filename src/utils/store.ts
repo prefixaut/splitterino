@@ -57,7 +57,7 @@ export function getSplitterinoModules(injector: Injector): SplitterinoModules {
         [KEYBINDINGS_MODULE_NAME]: getKeybindingsStoreModule(),
         [META_MODULE_NAME]: getMetaStoreModule(),
         [PLUGINS_MODULE_NAME]: getPluginStoreModule(injector),
-        [SETTINGS_MODULE_NAME]: getSettingsStoreModule(injector),
+        [SETTINGS_MODULE_NAME]: getSettingsStoreModule(),
         [SPLITS_MODULE_NAME]: getSplitsStoreModule(injector),
         [TIMER_MODULE_NAME]: getTimerStoreModule(),
     };

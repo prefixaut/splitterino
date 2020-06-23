@@ -17,26 +17,30 @@ import {
     HANDLER_ADD_META_OPENED_TEMPLATE_FILE,
     HANDLER_APPLY_GAME_INFO_SPLITS_FILE,
     HANDLER_APPLY_SPLITS_FILE,
+    HANDLER_MERGE_SETTINGS,
     HANDLER_SET_META_LAST_OPENED_SPLITS_FILES,
     HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES,
-    HANDLER_SET_SETTINGS_ALL,
+    ID_HANDLER_MERGE_SETTINGS,
     IPC_CLIENT_SERVICE_TOKEN,
+    IPC_SERVER_SERVICE_TOKEN,
     RUNTIME_ENVIRONMENT_TOKEN,
     RuntimeEnvironment,
+    SETTINGS_MODULE_NAME,
+    SPLITTERINO_NAMESPACE_NAME,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
-    VALIDATOR_SERVICE_TOKEN,
+    VALIDATOR_SERVICE_TOKEN
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
-import { IPCClientInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
+import { IPCClientInterface, IPCServerInterface, MessageType, PublishGlobalEventRequest } from '../models/ipc';
 import {
     ActionServiceInterface,
     ElectronServiceInterface,
     IOServiceInterface,
     StoreInterface,
     TransformerServiceInterface,
-    ValidatorServiceInterface,
+    ValidatorServiceInterface
 } from '../models/services';
 import { TimingMethod } from '../models/splits';
 import { GameInfoState } from '../models/states/game-info.state';
@@ -53,6 +57,7 @@ export class IOService implements IOServiceInterface {
         @Inject(ACTION_SERVICE_TOKEN) protected actions: ActionServiceInterface,
         @Inject(ELECTRON_SERVICE_TOKEN) protected electron: ElectronServiceInterface,
         @Inject(IPC_CLIENT_SERVICE_TOKEN) protected ipcClient: IPCClientInterface,
+        @Inject(IPC_SERVER_SERVICE_TOKEN) protected ipcServer: IPCServerInterface,
         @Inject(RUNTIME_ENVIRONMENT_TOKEN) protected runtimeEnv: RuntimeEnvironment,
         @Inject(STORE_SERVICE_TOKEN) protected store: StoreInterface<RootState>,
         @Inject(TRANSFORMER_SERVICE_TOKEN) protected transformer: TransformerServiceInterface,
@@ -62,6 +67,7 @@ export class IOService implements IOServiceInterface {
 
         if (runtimeEnv === RuntimeEnvironment.BACKGROUND) {
             this.initializeFolderStructure();
+            this.setupStoreHooks();
         }
     }
 
@@ -697,7 +703,7 @@ export class IOService implements IOServiceInterface {
             }
         }
 
-        await this.store.commit(HANDLER_SET_SETTINGS_ALL, { values: parsedSettings });
+        await this.store.commit(HANDLER_MERGE_SETTINGS, { values: parsedSettings });
 
         if (usedDefaultValue) {
             this.saveSettingsToFile();
@@ -736,5 +742,17 @@ export class IOService implements IOServiceInterface {
         }
 
         return loadedPlugins;
+    }
+
+    private setupStoreHooks() {
+        this.store.onCommit(commit => {
+            if (
+                commit.namespace === SPLITTERINO_NAMESPACE_NAME &&
+                commit.module === SETTINGS_MODULE_NAME &&
+                commit.handler === ID_HANDLER_MERGE_SETTINGS
+            ) {
+                this.saveSettingsToFile();
+            }
+        });
     }
 }

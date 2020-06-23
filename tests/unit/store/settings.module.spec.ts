@@ -1,18 +1,10 @@
 /* eslint-disable no-unused-expressions */
 import { expect } from 'chai';
-import { Subscription } from 'rxjs';
 
-import {
-    ID_HANDLER_SET_SETTINGS_ALL,
-    ID_HANDLER_SET_SETTINGS_BULK,
-    IPC_CLIENT_SERVICE_TOKEN,
-} from '../../../src/common/constants';
+import { ID_HANDLER_MERGE_SETTINGS } from '../../../src/common/constants';
 import { Settings, SettingsState } from '../../../src/models/states/settings.state';
 import { Module } from '../../../src/models/store';
 import { getConfigurationByPath, getSettingsStoreModule, getValueByPath } from '../../../src/store/modules/settings.module';
-import { createMockInjector } from '../../utils';
-
-const injector = createMockInjector();
 
 function generateDummyConfiguration(settingsModule: Module<SettingsState>): SettingsState {
     const state = settingsModule.initialize();
@@ -42,7 +34,7 @@ function generateDummyConfiguration(settingsModule: Module<SettingsState>): Sett
 }
 
 describe('Settings Store-Module', () => {
-    const settingsModule: Module<SettingsState> = getSettingsStoreModule(injector);
+    const settingsModule: Module<SettingsState> = getSettingsStoreModule();
 
     it('should be a valid module', () => {
         expect(settingsModule).to.be.a('object');
@@ -54,25 +46,8 @@ describe('Settings Store-Module', () => {
     });
 
     describe('Handlers', () => {
-        describe(ID_HANDLER_SET_SETTINGS_ALL, () => {
-            it('should set all settings values', () => {
-                const newSettings: Settings = {
-                    splitterino: {
-                        core: {
-                            test: {}
-                        }
-                    },
-                    plugins: {}
-                };
-                const state = settingsModule.initialize();
-                const diff = settingsModule.handlers[ID_HANDLER_SET_SETTINGS_ALL](state, {
-                    values: newSettings
-                });
-                expect(diff).to.deep.equal({ values: newSettings });
-            });
-        });
 
-        describe(ID_HANDLER_SET_SETTINGS_BULK, () => {
+        describe(ID_HANDLER_MERGE_SETTINGS, () => {
             it('should set individual settings', () => {
                 const newSettings: Settings = {
                     splitterino: {
@@ -84,115 +59,10 @@ describe('Settings Store-Module', () => {
                     plugins: {}
                 };
                 const state = settingsModule.initialize();
-                const diff = settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
+                const diff = settingsModule.handlers[ID_HANDLER_MERGE_SETTINGS](state, {
                     values: newSettings
                 });
                 expect(diff).to.deep.equal({ values: newSettings });
-            });
-
-            it('should only emit events for changed settings', async () => {
-                const messages: string[] = [];
-                const ipcClient = injector.get(IPC_CLIENT_SERVICE_TOKEN);
-                const subscriptions: Subscription[] = [];
-
-                const mySettingSub = ipcClient
-                    .listenForLocalMessage('setting-changed:splitterino.core.test.mySetting')
-                    .subscribe(() => {
-                        messages.push('mySetting');
-                    });
-                subscriptions.push(mySettingSub);
-
-                // Dummy listener that should not fire
-                const doNotChangeSub = ipcClient
-                    .listenForLocalMessage('setting-changed:splitterino.core.test.doNotChange')
-                    .subscribe(() => {
-                        messages.push('doNotChange');
-                    });
-                subscriptions.push(doNotChangeSub);
-
-                const newSettings: Settings = {
-                    splitterino: {
-                        core: {
-                            test: {
-                                mySetting: 9999,
-                                doNotChange: 'hello'
-                            }
-                        }
-                    },
-                    plugins: {}
-                };
-                const state = settingsModule.initialize();
-                state.values.splitterino.core.test = {
-                    mySetting: 1,
-                    doNotChange: 'hello',
-                };
-
-                settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
-                    values: newSettings
-                });
-
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        if (messages.length !== 1) {
-                            reject();
-                        }
-
-                        if (messages[0] !== 'mySetting') {
-                            reject();
-                        }
-
-                        for (const sub of subscriptions) {
-                            sub.unsubscribe();
-                        }
-                        resolve();
-                    }, 1);
-                });
-            });
-
-            it('should emit the changed setting', async () => {
-                const messages: any[] = [];
-
-                const mySettingSub = injector.get(IPC_CLIENT_SERVICE_TOKEN)
-                    .listenForLocalMessage('setting-changed:splitterino.core.test.mySetting')
-                    .subscribe((setting: any) => {
-                        messages.push(setting);
-                    });
-
-                const newSettings: Settings = {
-                    splitterino: {
-                        core: {
-                            test: {
-                                mySetting: 9999,
-                                doNotChange: 'hello'
-                            }
-                        }
-                    },
-                    plugins: {}
-                };
-                const state = settingsModule.initialize();
-                state.values.splitterino.core.test = {
-                    mySetting: 1,
-                    doNotChange: 'hello',
-                };
-
-                settingsModule.handlers[ID_HANDLER_SET_SETTINGS_BULK](state, {
-                    values: newSettings
-                });
-
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        if (messages.length !== 1) {
-                            reject();
-                        }
-
-                        if (messages[0] !== 9999) {
-                            reject();
-                        }
-
-                        mySettingSub.unsubscribe();
-                        resolve();
-                    }, 1);
-                });
             });
         });
     });
