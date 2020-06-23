@@ -1,8 +1,28 @@
-/*
- * Export the constants
- */
-export * from './common/constants';
-export * from './common/timer-status';
+import { InjectionToken } from 'lightweight-di';
+
+import { RuntimeEnvironment } from './common/constants';
+import { IPCClientInterface } from './models/ipc';
+import {
+    ActionServiceInterface,
+    ElectronServiceInterface,
+    IOServiceInterface,
+    PluginInstanceStore,
+    TransformerServiceInterface,
+    ValidatorServiceInterface,
+} from './models/services';
+import { RootState } from './models/store';
+
+/* eslint-disable no-var */
+declare var ACTION_SERVICE_TOKEN: InjectionToken<ActionServiceInterface>;
+declare var ELECTRON_SERVICE_TOKEN: InjectionToken<ElectronServiceInterface>;
+declare var IO_SERVICE_TOKEN: InjectionToken<IOServiceInterface>;
+declare var IPC_CLIENT_SERVICE_TOKEN: InjectionToken<IPCClientInterface>;
+declare var RUNTIME_ENVIRONMENT_TOKEN: InjectionToken<RuntimeEnvironment>; // TODO: put to global
+declare var SPLITTERINO_VERSION_TOKEN: InjectionToken<string>;
+declare var STORE_SERVICE_TOKEN: InjectionToken<PluginInstanceStore<RootState>>;
+declare var TRANSFORMER_SERVICE_TOKEN: InjectionToken<TransformerServiceInterface>;
+declare var VALIDATOR_SERVICE_TOKEN: InjectionToken<ValidatorServiceInterface>;
+/* eslint-enable no-var */
 
 /*
  * Export store states
@@ -36,28 +56,4 @@ export {
 export * from './models/splits';
 export * from './models/store';
 
-/*
- * Utility functions
- */
-export * from './utils/converters';
-export * from './utils/is-development';
-export * from './utils/keys';
-export { Config, State } from './utils/store';
-export * from './utils/time';
-
-/*
- * Store Module Handler-Constants and Getters
- */
-export { contextMenuGetter } from './store/modules/context-menu.module';
-export {
-    getConfigurationByPath,
-    getValueByPath,
-} from './store/modules/settings.module';
-export {
-    PausePayload,
-    ResetPayload,
-    SavingResetPayload,
-} from './store/modules/splits.module';
-export {
-    StatusChangePayload
-} from './store/modules/timer.module';
+// TODO: Add payloads i guess

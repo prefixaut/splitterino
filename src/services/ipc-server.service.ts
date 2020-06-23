@@ -9,6 +9,7 @@ import {
     IPC_ROUTER_DEALER_ADDRESS,
     IPC_SERVER_NAME,
 } from '../common/constants';
+import { LogLevel } from '../common/log-level';
 import {
     GlobalEventBroadcast,
     IPCPacket,
@@ -26,7 +27,7 @@ import {
     UnregisterClientResponse,
 } from '../models/ipc';
 import { createSharedObservableFromSocket } from '../utils/ipc';
-import { Logger, LogLevel } from '../utils/logger';
+import { Logger } from '../utils/logger';
 
 /**
  * Internal representation of a IPC Client.

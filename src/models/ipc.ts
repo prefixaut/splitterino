@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs';
 import { Socket } from 'zeromq';
 
+import { LogLevel } from '../common/log-level';
 import { Commit, RootState, StoreState } from '../models/store';
-import { LogLevel } from '../utils/logger';
 import { PluginIdentifier } from './states/plugins.state';
 
 export interface IPCClientInterface {
@@ -533,7 +533,7 @@ export interface PluginProcessDedNotification extends Notification {
 
 export interface PluginProcessManagementRequest extends Request {
     type: MessageType.REQUEST_ENABLE_PLUGIN
-        | MessageType.REQUEST_DISABLE_PLUGIN;
+    | MessageType.REQUEST_DISABLE_PLUGIN;
     pluginId: PluginIdentifier;
 }
 

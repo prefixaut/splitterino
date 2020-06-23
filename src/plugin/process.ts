@@ -2,8 +2,9 @@ import { first, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 
 import { IPC_CLIENT_SERVICE_TOKEN, IPC_PLUGIN_CLIENT_NAME } from '../common/constants';
+import { LogLevel } from '../common/log-level';
 import { IPCClientInterface, MessageType, PluginProcessDedNotification } from '../models/ipc';
-import { Logger, LogLevel } from '../utils/logger';
+import { Logger } from '../utils/logger';
 import { createPluginInjector } from '../utils/services';
 import { PluginManager } from './plugin-manager';
 import { setupStore } from './setup-store';

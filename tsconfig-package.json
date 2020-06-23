@@ -2,7 +2,8 @@
     "compilerOptions": {
         "target": "ES2017",
         "module": "CommonJS",
-        "outDir": "dist",
+        "outDir": "dist_package/void",
+        "declarationDir": "dist_package/src",
         "moduleResolution": "Node",
         "sourceMap": false,
         "declaration": true,

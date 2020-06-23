@@ -1,7 +1,7 @@
 import { Injectable } from 'lightweight-di';
 
 import { StoreInterface } from '../../src/models/services';
-import { Commit, RootState } from '../../src/models/store';
+import { Commit, RootState, StoreListener } from '../../src/models/store';
 import { createCommit } from '../../src/utils/store';
 
 @Injectable
@@ -22,5 +22,13 @@ export class StoreMockService implements StoreInterface<RootState> {
         }
 
         return Promise.resolve(true);
+    }
+
+    onCommit(listener: StoreListener<RootState>): void {
+        // TODO: implement it
+    }
+
+    offCommit(listener: StoreListener<RootState>): void {
+        // TODO: implement it
     }
 }

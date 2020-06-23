@@ -14,8 +14,9 @@ import {
     IPC_CLIENT_SERVICE_TOKEN,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
-    VALIDATOR_SERVICE_TOKEN
+    VALIDATOR_SERVICE_TOKEN,
 } from '../common/constants';
+import { Dependencies } from '../models/files';
 import { MessageType, PluginProcessManagementRequest } from '../models/ipc';
 import { Plugin } from '../models/plugins';
 import { IOServiceInterface, StoreInterface } from '../models/services';
@@ -23,7 +24,6 @@ import { LoadedPlugin, PluginIdentifier, PluginStatus } from '../models/states/p
 import { RootState } from '../models/store';
 import { Logger } from '../utils/logger';
 import { createPluginInstanceInjector } from '../utils/plugin';
-import { Dependencies } from '../models/files';
 
 interface InstantiatedPlugin {
     loadedPlugin: LoadedPlugin;
@@ -138,7 +138,7 @@ export class PluginManager {
 
         ipcClient.listenToSubscriberSocket().pipe(
             map(packet => packet.message),
-            filter(message =>(
+            filter(message => (
                 message.type === MessageType.REQUEST_ENABLE_PLUGIN ||
                 message.type === MessageType.REQUEST_DISABLE_PLUGIN
             ))

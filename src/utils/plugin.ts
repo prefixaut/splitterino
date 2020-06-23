@@ -18,7 +18,7 @@ import { IPCServerInterface, MessageType } from '../models/ipc';
 import { RootState } from '../models/store';
 import { HandlerStoreService } from '../services/handler-store.service';
 import { PluginInstanceStoreService } from '../services/plugin-instance-store.service';
-import { isDevelopment } from '../utils/is-development';
+import { isDevelopment } from './internal';
 
 export async function forkPluginProcess(ipcServer: IPCServerInterface): Promise<ChildProcess | null> {
     return new Promise<ChildProcess | null>((resolve, reject) => {

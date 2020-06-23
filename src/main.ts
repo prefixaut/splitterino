@@ -15,16 +15,16 @@ import {
     STORE_SERVICE_TOKEN,
 } from './common/constants';
 import { registerDefaultKeybindingFunctions } from './common/function-registry';
+import { LogLevel } from './common/log-level';
 import { AppShutdownBroadcast, MessageType } from './models/ipc';
 import { RootState } from './models/store';
 import { ServerStoreService } from './services/server-store.service';
 import { registerKeybindingsListener } from './store/listeners/keybindings';
 import { parseArguments } from './utils/arguments';
-import { isDevelopment } from './utils/is-development';
-import { Logger, LogLevel } from './utils/logger';
+import { getSplitterinoModules, isDevelopment } from './utils/internal';
+import { Logger } from './utils/logger';
 import { forkPluginProcess } from './utils/plugin';
 import { createBackgroundInjector } from './utils/services';
-import { getSplitterinoModules } from './utils/store';
 
 process.on('uncaughtException', (error: Error) => {
     // TODO: Fix Logger not logging errors at all (empty string result)

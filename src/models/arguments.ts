@@ -1,4 +1,5 @@
-import { LogLevel } from '../utils/logger';
+import { LogLevel } from '../common/log-level';
+
 
 export interface Arguments {
     splitsFile?: string;

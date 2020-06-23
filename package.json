@@ -38,14 +38,13 @@
     "scripts": {
         "serve": "vue-cli-service electron:serve",
         "build": "vue-cli-service electron:build",
-        "build-package": "tsc --build tsconfig-package.json",
+        "build-package": "rm -rf ./dist_package && tsc --build tsconfig-package.json && node build/builder.js && rm -rf ./dist_package/void",
         "lint": "vue-cli-service lint --no-fix ./src/**/*.vue ./src/**/*.ts",
         "postinstall": "electron-builder install-app-deps",
         "test:unit": "vue-cli-service test:unit",
         "test:unit:coverage": "nyc vue-cli-service test:unit",
         "test:integration": "ts-mocha --project tests/integration/tsconfig.json --no-package --recursive tests/integration/**/*.ts"
     },
-    "files": [ "dist/**/*" ],
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^1.2.25",
         "@fortawesome/free-solid-svg-icons": "^5.11.2",

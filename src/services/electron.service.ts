@@ -28,7 +28,7 @@ import {
     PublishGlobalEventRequest,
 } from '../models/ipc';
 import { ElectronServiceInterface } from '../models/services';
-import { isDevelopment } from '../utils/is-development';
+import { isDevelopment } from '../utils/internal';
 import { Logger } from '../utils/logger';
 
 export const DEFAULT_WINDOW_SETTINGS: BrowserWindowConstructorOptions = {

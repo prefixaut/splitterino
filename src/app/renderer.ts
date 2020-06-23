@@ -9,9 +9,10 @@ import draggable from 'vuedraggable';
 
 import { ELECTRON_SERVICE_TOKEN, IPC_CLIENT_SERVICE_TOKEN, STORE_SERVICE_TOKEN } from '../common/constants';
 import { registerDefaultContextMenuFunctions } from '../common/function-registry';
+import { LogLevel } from '../common/log-level';
 import { Commit, RootState } from '../models/store';
 import { ReceiverStoreService } from '../services/receiver-store.service';
-import { Logger, LogLevel } from '../utils/logger';
+import { Logger } from '../utils/logger';
 import { createRendererInjector } from '../utils/services';
 import App from './app.vue';
 import AevumFormatInputComponent from './components/aevum-format-input.vue';

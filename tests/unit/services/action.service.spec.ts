@@ -15,7 +15,8 @@ import {
 import { TimerStatus } from '../../../src/common/timer-status';
 import { Region, Segment } from '../../../src/models/splits';
 import { RootState } from '../../../src/models/store';
-import { createCommit, getSplitterinoModules } from '../../../src/utils/store';
+import { getSplitterinoModules } from '../../../src/utils/internal';
+import { createCommit } from '../../../src/utils/store';
 import { getTotalTime, now } from '../../../src/utils/time';
 import { ActionMockService } from '../../mocks/action-mock.service';
 import { StoreMockService } from '../../mocks/store-mock.service';

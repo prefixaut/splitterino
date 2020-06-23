@@ -39,7 +39,6 @@ export enum RuntimeEnvironment {
     TESTS
 }
 
-
 /*
  * Default Values
  */

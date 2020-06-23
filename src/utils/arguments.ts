@@ -1,8 +1,8 @@
 import { options } from 'optimist';
 
+import { LogLevel } from '../common/log-level';
 import { Arguments } from '../models/arguments';
-import { isDevelopment } from './is-development';
-import { LogLevel } from './logger';
+import { isDevelopment } from './internal';
 
 /**
  * Parses command line arguments to Arguments object

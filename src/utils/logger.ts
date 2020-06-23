@@ -8,19 +8,8 @@ import {
     RUNTIME_ENVIRONMENT_TOKEN,
     RuntimeEnvironment,
 } from '../common/constants';
+import { LogLevel } from '../common/log-level';
 import { IPCClientInterface, LogOnServerRequest, MessageType } from '../models/ipc';
-
-/**
- * Enum to map log levels
- */
-export enum LogLevel {
-    TRACE = 'trace',
-    DEBUG = 'debug',
-    INFO = 'info',
-    WARN = 'warn',
-    ERROR = 'error',
-    FATAL = 'fatal'
-}
 
 /**
  * Wrapper Class to nearly log all messages from Splitterino
