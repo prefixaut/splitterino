@@ -4,7 +4,7 @@
     "title": "Application Settings",
     "description": "Settings to persist over application sessions",
     "type": "object",
-    "required": ["windowOptions"],
+    "required": ["windowOptions", "enabledPlugins"],
     "properties": {
         "windowOptions": {
             "description": "Electron browser window constructor options",
@@ -56,6 +56,21 @@
             "type": "array",
             "items": {
                 "$ref": "keybinding.schema.json"
+            }
+        },
+        "enabledPlugins": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    }
+                },
+                "required": ["name", "version"]
             }
         }
     }

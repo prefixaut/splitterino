@@ -7,6 +7,7 @@ import { homedir } from 'os';
 import { dirname, join } from 'path';
 import { extract } from 'tar-stream';
 import { v4 as uuid } from 'uuid';
+import { satisfies as semverSatisfies } from 'semver';
 
 import {
     ACTION_SERVICE_TOKEN,
@@ -29,7 +30,9 @@ import {
     SPLITTERINO_NAMESPACE_NAME,
     STORE_SERVICE_TOKEN,
     TRANSFORMER_SERVICE_TOKEN,
-    VALIDATOR_SERVICE_TOKEN
+    VALIDATOR_SERVICE_TOKEN,
+    HANDLER_REPLACE_ENABLED_PLUGINS,
+    HANDLER_REPLACE_LOADED_PLUGINS
 } from '../common/constants';
 import { ApplicationSettings } from '../models/application-settings';
 import { MOST_RECENT_SPLITS_VERSION, SplitsFile, TemplateFiles } from '../models/files';
@@ -45,7 +48,7 @@ import {
 import { TimingMethod } from '../models/splits';
 import { GameInfoState } from '../models/states/game-info.state';
 import { RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../models/states/meta.state';
-import { LoadedPlugin } from '../models/states/plugins.state';
+import { LoadedPlugin, PluginStatus } from '../models/states/plugins.state';
 import { Settings } from '../models/states/settings.state';
 import { RootState } from '../models/store';
 import { asSaveableSegment } from '../utils/converters';
@@ -594,6 +597,8 @@ export class IOService implements IOServiceInterface {
                         await this.store.commit(HANDLER_SET_META_LAST_OPENED_TEMPLATE_FILES, lastOpenedTemplateFiles);
                     }
                 }
+
+                await this.store.commit(HANDLER_REPLACE_ENABLED_PLUGINS, appSettings.enabledPlugins);
             }
         } catch (error) {
             // Ignore error since already being logged
@@ -623,6 +628,7 @@ export class IOService implements IOServiceInterface {
         const lastOpenedSplitsFiles = this.store.state.splitterino.meta.lastOpenedSplitsFiles;
         const lastOpenedTemplateFiles = this.store.state.splitterino.meta.lastOpenedTemplateFiles;
         const keybindings = this.store.state.splitterino.keybindings.bindings;
+        const enabledPlugins = this.store.state.splitterino.plugins.enabledPlugins;
 
         const newAppSettings: ApplicationSettings = {
             windowOptions: {
@@ -634,6 +640,7 @@ export class IOService implements IOServiceInterface {
             lastOpenedSplitsFiles,
             lastOpenedTemplateFiles,
             keybindings,
+            enabledPlugins,
         };
 
         Logger.debug({
@@ -734,12 +741,38 @@ export class IOService implements IOServiceInterface {
                 continue;
             }
 
+            let status = PluginStatus.VALID;
+
+            // Check if at least one file is available to load
+            if (
+                metaFile.entryFile == null &&
+                (metaFile.components == null || metaFile.components.length === 0)
+            ) {
+                Logger.warn(`Plugin "${metaFile.name}" does not contain a reference to an entry file or component`);
+                status = PluginStatus.NO_ENTRY_OR_COMPONENT;
+                continue;
+            }
+
+            // Check if plugin is compatible with current splitterino version
+            if (!semverSatisfies(process.env.SPL_VERSION, metaFile.compatibleVersion)) {
+                Logger.warn({
+                    msg: `Plugin "${metaFile.name}" is not compatible with the current splitterino version`,
+                    currentVersion: process.env.SPL_VERSION,
+                    compatibleVersions: metaFile.compatibleVersion
+                });
+                status = PluginStatus.INCOMPATIBLE_VERSION;
+                continue;
+            }
+
             loadedPlugins.push({
                 meta: metaFile,
                 dependants: [],
-                folderName: dir.name
+                folderName: dir.name,
+                status
             });
         }
+
+        this.store.commit(HANDLER_REPLACE_LOADED_PLUGINS, loadedPlugins);
 
         return loadedPlugins;
     }

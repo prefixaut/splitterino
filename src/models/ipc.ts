@@ -3,6 +3,7 @@ import { Socket } from 'zeromq';
 
 import { Commit, RootState, StoreState } from '../models/store';
 import { LogLevel } from '../utils/logger';
+import { PluginIdentifier } from './states/plugins.state';
 
 export interface IPCClientInterface {
     isInitialized(): boolean;
@@ -91,6 +92,10 @@ export enum MessageType {
     // Plugin API
     NOTIFY_PLUGIN_PROCESS_READY = 'NOTIFY_PLUGIN_PROCESS_READY',
     NOTIFY_PLUGIN_PROCESS_DED = 'NOTIFY_PLUGIN_PROCESS_DED',
+    REQUEST_ENABLE_PLUGIN = 'REQUEST_ENABLE_PLUGIN',
+    RESPONSE_ENABLE_PLUGIN = 'RESPONSE_ENABLE_PLUGIN',
+    REQUEST_DISABLE_PLUGIN = 'REQUEST_DISABLE_PLUGIN',
+    RESPONSE_DISABLE_PLUGIN = 'RESPONSE_DISABLE_PLUGIN',
 }
 
 export interface IPCPacket {
@@ -140,6 +145,8 @@ export interface Request extends Message {
     | MessageType.REQUEST_TRIGGER_KEYBINDING
     | MessageType.REQUEST_PUBLISH_GLOBAL_EVENT
     | MessageType.REQUEST_LOG_ON_SERVER
+    | MessageType.REQUEST_ENABLE_PLUGIN
+    | MessageType.REQUEST_DISABLE_PLUGIN
     ;
 }
 
@@ -522,6 +529,12 @@ export interface PluginProcessReadyNotification extends Notification {
  */
 export interface PluginProcessDedNotification extends Notification {
     type: MessageType.NOTIFY_PLUGIN_PROCESS_DED;
+}
+
+export interface PluginProcessManagementRequest extends Request {
+    type: MessageType.REQUEST_ENABLE_PLUGIN
+        | MessageType.REQUEST_DISABLE_PLUGIN;
+    pluginId: PluginIdentifier;
 }
 
 /**

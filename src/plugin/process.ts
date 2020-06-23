@@ -26,7 +26,9 @@ import { setupStore } from './setup-store';
 
     await setupStore(injector);
 
-    await PluginManager.loadPluginsIntoContext(injector);
+    PluginManager.init(injector);
+    PluginManager.setupIPCHooks();
+    await PluginManager.loadPluginsIntoContext();
 
     ipcClient.sendDealerMessage({
         id: uuid(),

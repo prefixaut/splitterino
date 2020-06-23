@@ -3,8 +3,9 @@ import {
     ID_HANDLER_DISABLE_PLUGIN,
     ID_HANDLER_ENABLE_PLUGIN,
     ID_HANDLER_REMOVE_PLUGIN,
-    ID_HANDLER_REPLACE_PLUGINS,
+    ID_HANDLER_REPLACE_LOADED_PLUGINS,
     VALIDATOR_SERVICE_TOKEN,
+    ID_HANDLER_REPLACE_ENABLED_PLUGINS,
 } from '../../common/constants';
 import { ValidatorServiceInterface } from '../../models/services';
 import { LoadedPlugin, PluginIdentifier, PluginsState } from '../../models/states/plugins.state';
@@ -21,13 +22,22 @@ export function getPluginStoreModule(injector): Module<PluginsState> {
             };
         },
         handlers: {
-            [ID_HANDLER_REPLACE_PLUGINS](state: PluginsState, loadedPlugins: LoadedPlugin[]) {
+            [ID_HANDLER_REPLACE_LOADED_PLUGINS](state: PluginsState, loadedPlugins: LoadedPlugin[]) {
                 if (loadedPlugins == null) {
                     return {};
                 }
 
                 return {
                     pluginList: loadedPlugins
+                };
+            },
+            [ID_HANDLER_REPLACE_ENABLED_PLUGINS](state: PluginsState, enabledPlugins: PluginIdentifier[]) {
+                if (enabledPlugins == null) {
+                    return {};
+                }
+
+                return {
+                    enabledPlugins
                 };
             },
             [ID_HANDLER_ADD_PLUGIN](state: PluginsState, loadedPlugin: LoadedPlugin) {
