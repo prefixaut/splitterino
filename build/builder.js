@@ -34,13 +34,9 @@ const newPackage = {
 });
 
 [
-    'aevum',
     'electron',
     'lightweight-di',
-    'pino',
     'rxjs',
-    'vue',
-    'vue-class-component',
     'zeromq'
 ].forEach(dependency => {
     newPackage.dependencies[dependency] = allOriginalDependencies[dependency];

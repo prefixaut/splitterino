@@ -10,7 +10,6 @@ import {
     TransformerServiceInterface,
     ValidatorServiceInterface,
 } from './models/services';
-import { RootState } from './models/store';
 
 /* eslint-disable no-var*/
 declare global {
@@ -20,7 +19,7 @@ declare global {
     const IPC_CLIENT_SERVICE_TOKEN: InjectionToken<IPCClientInterface>;
     const RUNTIME_ENVIRONMENT_TOKEN: InjectionToken<RuntimeEnvironment>; // TODO: put to global
     const SPLITTERINO_VERSION_TOKEN: InjectionToken<string>;
-    const STORE_SERVICE_TOKEN: InjectionToken<PluginInstanceStore<RootState>>;
+    const STORE_SERVICE_TOKEN: InjectionToken<PluginInstanceStore<any>>;
     const TRANSFORMER_SERVICE_TOKEN: InjectionToken<TransformerServiceInterface>;
     const VALIDATOR_SERVICE_TOKEN: InjectionToken<ValidatorServiceInterface>;
 }
