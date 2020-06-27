@@ -1,13 +1,15 @@
+import { Injector } from 'lightweight-di';
 import { first, map } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 
-import { IPC_CLIENT_SERVICE_TOKEN, IPC_PLUGIN_CLIENT_NAME } from '../common/constants';
+import { IPC_CLIENT_SERVICE_TOKEN, IPC_PLUGIN_CLIENT_NAME, STORE_SERVICE_TOKEN } from '../common/constants';
 import { LogLevel } from '../common/log-level';
 import { IPCClientInterface, MessageType, PluginProcessDedNotification } from '../models/ipc';
+import { RootState } from '../models/store';
+import { HandlerStoreService } from '../services/handler-store.service';
 import { Logger } from '../utils/logger';
 import { createPluginInjector } from '../utils/services';
 import { PluginManager } from './plugin-manager';
-import { setupStore } from './setup-store';
 
 (async () => {
     const injector = createPluginInjector();
@@ -35,11 +37,13 @@ import { setupStore } from './setup-store';
         id: uuid(),
         type: MessageType.NOTIFY_PLUGIN_PROCESS_READY
     });
-})().catch(error => {
+})().catch((error: Error) => {
     Logger.error({
         msg: 'Unknown error thrown in plugin process!',
         error: {
+            name: error.name,
             message: error.message,
+            stack: error.stack,
         }
     });
 });
@@ -57,4 +61,16 @@ function setupShutdownListener(ipcClient: IPCClientInterface) {
             ipcClient.sendDealerMessage(message);
         });
     });
+}
+
+async function setupStore(injector: Injector) {
+    const store = injector.get(STORE_SERVICE_TOKEN) as HandlerStoreService<RootState>;
+    store.setupIpcHooks();
+
+    await store.requestNewState();
+
+    Logger.debug('registering plugins namespace ...');
+    // Register the store namespace
+    await store.registerNamespace('plugins');
+    Logger.debug('namespace registered!');
 }

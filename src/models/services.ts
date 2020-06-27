@@ -9,7 +9,7 @@ import {
 import { Dirent } from 'fs';
 import { VNode } from 'vue';
 
-import { Commit, Module, StoreListener, StoreState } from '../models/store';
+import { Commit, Module, StoreListener, StoreState, RootState } from '../models/store';
 import { ApplicationSettings } from './application-settings';
 import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
@@ -74,8 +74,9 @@ export interface StoreInterface<S extends StoreState> {
     offCommit(listener: StoreListener<S>): void;
 }
 
-export interface PluginInstanceStore<S extends StoreState> {
-    registerModule<T>(module: Module<T>): Promise<boolean>;
+export interface PluginInstanceStore<T> extends StoreInterface<RootState> {
+    moduleState: T;
+    registerModule(module: Module<T>): Promise<boolean>;
 }
 
 export interface TransformerServiceInterface {

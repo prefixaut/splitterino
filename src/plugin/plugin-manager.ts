@@ -18,16 +18,16 @@ import {
 } from '../common/constants';
 import { Dependencies } from '../models/files';
 import { MessageType, PluginProcessManagementRequest } from '../models/ipc';
-import { Plugin } from '../models/plugins';
+import { SplitterinoPlugin } from '../models/plugins';
 import { IOServiceInterface, StoreInterface } from '../models/services';
 import { LoadedPlugin, PluginIdentifier, PluginStatus } from '../models/states/plugins.state';
 import { RootState } from '../models/store';
 import { Logger } from '../utils/logger';
-import { createPluginInstanceInjector } from '../utils/plugin';
+import { createPluginInstanceInjector, createPluginApiInstance } from '../utils/plugin';
 
 interface InstantiatedPlugin {
     loadedPlugin: LoadedPlugin;
-    instance: Plugin;
+    instance: SplitterinoPlugin;
 }
 
 export class PluginManager {
@@ -392,6 +392,7 @@ export class PluginManager {
 
         const context = createContext({
             exports: {},
+            console: {}, // TODO: Custom overload from logger
             IPC_CLIENT_SERVICE_TOKEN,
             ACTION_SERVICE_TOKEN,
             TRANSFORMER_SERVICE_TOKEN,
@@ -501,12 +502,12 @@ export class PluginManager {
                     fileScript.runInContext(context);
 
                     // Create plugin class instance
-                    const plugin: Plugin = new context.Plugin();
+                    const plugin: SplitterinoPlugin = new context.Plugin();
                     // TODO: Create custom scoped injector
                     const pluginInjector = createPluginInstanceInjector(this.injector, meta.name);
 
                     // Try to initialize plugin
-                    if (await plugin.initialize(pluginInjector)) {
+                    if (await plugin.initialize(createPluginApiInstance(pluginInjector))) {
                         this.instantiatedPlugins.push({
                             loadedPlugin,
                             instance: plugin

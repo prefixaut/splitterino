@@ -12,6 +12,7 @@ import {
     TRANSFORMER_SERVICE_TOKEN,
     VALIDATOR_SERVICE_TOKEN,
 } from '../../src/common/constants';
+import { LogLevel } from '../../src/common/log-level';
 import { Module, RootState } from '../../src/models/store';
 import { ActionService } from '../../src/services/action.service';
 import { IOService } from '../../src/services/io.service';
@@ -26,7 +27,7 @@ import { getMetaStoreModule } from '../../src/store/modules/meta.module';
 import { getSettingsStoreModule } from '../../src/store/modules/settings.module';
 import { getSplitsStoreModule } from '../../src/store/modules/splits.module';
 import { getTimerStoreModule } from '../../src/store/modules/timer.module';
-import { Logger, LogLevel } from '../../src/utils/logger';
+import { Logger } from '../../src/utils/logger';
 import { ElectronMockService } from '../mocks/electron-mock.service';
 
 let mainInjector: Injector;
