@@ -12,16 +12,18 @@ import {
 } from './models/services';
 import { RootState } from './models/store';
 
-/* eslint-disable no-var */
-declare var ACTION_SERVICE_TOKEN: InjectionToken<ActionServiceInterface>;
-declare var ELECTRON_SERVICE_TOKEN: InjectionToken<ElectronServiceInterface>;
-declare var IO_SERVICE_TOKEN: InjectionToken<IOServiceInterface>;
-declare var IPC_CLIENT_SERVICE_TOKEN: InjectionToken<IPCClientInterface>;
-declare var RUNTIME_ENVIRONMENT_TOKEN: InjectionToken<RuntimeEnvironment>; // TODO: put to global
-declare var SPLITTERINO_VERSION_TOKEN: InjectionToken<string>;
-declare var STORE_SERVICE_TOKEN: InjectionToken<PluginInstanceStore<RootState>>;
-declare var TRANSFORMER_SERVICE_TOKEN: InjectionToken<TransformerServiceInterface>;
-declare var VALIDATOR_SERVICE_TOKEN: InjectionToken<ValidatorServiceInterface>;
+/* eslint-disable no-var*/
+declare global {
+    const ACTION_SERVICE_TOKEN: InjectionToken<ActionServiceInterface>;
+    const ELECTRON_SERVICE_TOKEN: InjectionToken<ElectronServiceInterface>;
+    const IO_SERVICE_TOKEN: InjectionToken<IOServiceInterface>;
+    const IPC_CLIENT_SERVICE_TOKEN: InjectionToken<IPCClientInterface>;
+    const RUNTIME_ENVIRONMENT_TOKEN: InjectionToken<RuntimeEnvironment>; // TODO: put to global
+    const SPLITTERINO_VERSION_TOKEN: InjectionToken<string>;
+    const STORE_SERVICE_TOKEN: InjectionToken<PluginInstanceStore<RootState>>;
+    const TRANSFORMER_SERVICE_TOKEN: InjectionToken<TransformerServiceInterface>;
+    const VALIDATOR_SERVICE_TOKEN: InjectionToken<ValidatorServiceInterface>;
+}
 /* eslint-enable no-var */
 
 /*
