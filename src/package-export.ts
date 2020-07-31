@@ -50,6 +50,7 @@ export {
     ActionServiceInterface,
     ElectronServiceInterface,
     IOServiceInterface,
+    PluginInstanceStore,
     StoreInterface,
     TransformerServiceInterface,
     ValidatorServiceInterface,

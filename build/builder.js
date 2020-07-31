@@ -37,7 +37,8 @@ const newPackage = {
     'electron',
     'lightweight-di',
     'rxjs',
-    'zeromq'
+    'zeromq',
+    '@types/zeromq',
 ].forEach(dependency => {
     newPackage.dependencies[dependency] = allOriginalDependencies[dependency];
 });
