@@ -24,7 +24,7 @@ import {
 import { Commit, DiffHandler, DiffHandlerTree, Module, StoreState } from '../models/store';
 import { BaseStore } from '../store/base-store';
 import { Logger } from '../utils/logger';
-import { createCommit, defineGetterProperty, storeMerge } from '../utils/store';
+import { createCommit, defineGetterProperty, dereferenceGetters, storeMerge } from '../utils/store';
 import { IPCServerService } from './ipc-server.service';
 
 interface Client {
@@ -336,8 +336,7 @@ export class ServerStoreService<S extends StoreState> extends BaseStore<S> {
             }
         });
 
-        storeMerge(this.internalState, diff);
-
+        storeMerge(this.internalState, dereferenceGetters(diff));
 
         this.isCommitting = false;
     }

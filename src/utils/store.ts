@@ -136,6 +136,21 @@ export function makeValueGetter(
     }
 }
 
+export function dereferenceGetters<T>(getterObj: T): T {
+    const obj = {};
+
+    Object.keys(getterObj).forEach(key => {
+        const value = getterObj[key];
+        if (value != null && typeof value === 'object') {
+            obj[key] = dereferenceGetters(value);
+        } else {
+            obj[key] = value;
+        }
+    });
+
+    return obj as T;
+}
+
 export function createCommit(handler: string, data?: any): Commit {
     const parts = handler.split('/');
     const commit: Commit = {
