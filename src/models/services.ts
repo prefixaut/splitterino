@@ -15,6 +15,7 @@ import { ContextMenuItem } from './context-menu-item';
 import { PluginMetaFile, SplitsFile, TemplateFiles, TemplateMetaFile } from './files';
 import { Segment, Splits } from './splits';
 import { LoadedPlugin } from './states/plugins.state';
+import { RecentlyOpenedSplit } from './states/meta.state';
 
 export interface ActionServiceInterface {
     addOpenedSplitsFile(filePath: string): Promise<boolean>;
@@ -91,4 +92,5 @@ export interface ValidatorServiceInterface {
     isApplicationSettings(data: any): data is ApplicationSettings;
     isTemplateMetaFile(data: any): data is TemplateMetaFile;
     isPluginMetaFile(data: any): data is PluginMetaFile;
+    isRecentlyOpenedSplit(split: any): split is RecentlyOpenedSplit;
 }

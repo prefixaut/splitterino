@@ -285,7 +285,13 @@ export class IOService implements IOServiceInterface {
                     this.store.commit(HANDLER_APPLY_GAME_INFO_SPLITS_FILE, loadedSplits),
                 ]);
 
-                await this.store.commit(HANDLER_ADD_META_OPENED_SPLITS_FILE, filePath);
+                await this.store.commit(HANDLER_ADD_META_OPENED_SPLITS_FILE, {
+                    gameName: loadedSplits.splits.game.name,
+                    category: loadedSplits.splits.game.category,
+                    platform: loadedSplits.splits.game.platform,
+                    region: loadedSplits.splits.game.region,
+                    path: filePath,
+                });
 
                 return values[0];
             })

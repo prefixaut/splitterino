@@ -9,6 +9,7 @@ import {
 } from '../../../src/common/constants';
 import { MetaState, RecentlyOpenedSplit, RecentlyOpenedTemplate } from '../../../src/models/states/meta.state';
 import { getMetaStoreModule } from '../../../src/store/modules/meta.module';
+import { createMockInjector } from '../../utils';
 
 function generateRandomSplitFileEntries(count: number = 10): RecentlyOpenedSplit[] {
     const splitFiles: RecentlyOpenedSplit[] = [];
@@ -36,8 +37,11 @@ function generateRandomTemplateFileEntries(count: number = 10): RecentlyOpenedTe
     return templateFiles;
 }
 
+// Initialize the Dependency-Injection
+const injector = createMockInjector();
+
 describe('Meta Store-Module', () => {
-    const metaModule = getMetaStoreModule();
+    const metaModule = getMetaStoreModule(injector);
 
     it('should be a valid module', () => {
         expect(metaModule).to.be.a('object');

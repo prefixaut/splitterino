@@ -264,13 +264,13 @@ process.on('unhandledRejection', (reason, promise) => {
         process.on('message', data => {
             if (data === 'graceful-exit') {
                 Logger.info('Received message to shutdown! Closing app ...');
-                app.quit();
+                mainWindow.close();
             }
         });
     } else {
         process.on('SIGTERM', () => {
             Logger.info('Received message to shutdown! Closing app ...');
-            app.quit();
+            mainWindow.close();
         });
     }
 })().catch(err => {

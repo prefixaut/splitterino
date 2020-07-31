@@ -58,7 +58,7 @@ before(async () => {
         settings: getSettingsStoreModule(),
         splits: getSplitsStoreModule(mainInjector),
         timer: getTimerStoreModule(),
-        meta: getMetaStoreModule(),
+        meta: getMetaStoreModule(mainInjector),
     };
     for (const moduleName of Object.keys(coreStoreModules)) {
         store.registerModule('splitterino', moduleName, coreStoreModules[moduleName]);

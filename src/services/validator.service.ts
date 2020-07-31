@@ -17,6 +17,7 @@ import SegmentSchema from '../schemas/segment.schema.json';
 import SplitsSchema from '../schemas/splits.schema.json';
 import TimingMethodSchema from '../schemas/timing-method.schema.json';
 import { Logger } from '../utils/logger';
+import { RecentlyOpenedSplit } from '../models/states/meta.state';
 
 @Injectable
 export class ValidatorService implements ValidatorServiceInterface {
@@ -126,5 +127,13 @@ export class ValidatorService implements ValidatorServiceInterface {
         }
 
         return true;
+    }
+
+    public isRecentlyOpenedSplit(split: any): split is RecentlyOpenedSplit {
+        return split != null
+            && typeof split === 'object'
+            && typeof split.path === 'string'
+            && typeof split.category === 'string'
+            && typeof split.region === 'string';
     }
 }

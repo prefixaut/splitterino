@@ -29,7 +29,7 @@ export function getSplitterinoModules(injector: Injector): SplitterinoModules {
         [CONTEXT_MENU_MODULE_NAME]: getContextMenuStoreModule(),
         [GAME_INFO_MODULE_NAME]: getGameInfoStoreModule(),
         [KEYBINDINGS_MODULE_NAME]: getKeybindingsStoreModule(),
-        [META_MODULE_NAME]: getMetaStoreModule(),
+        [META_MODULE_NAME]: getMetaStoreModule(injector),
         [PLUGINS_MODULE_NAME]: getPluginStoreModule(injector),
         [SETTINGS_MODULE_NAME]: getSettingsStoreModule(),
         [SPLITS_MODULE_NAME]: getSplitsStoreModule(injector),
